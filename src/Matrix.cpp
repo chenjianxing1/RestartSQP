@@ -2,7 +2,7 @@
 
 namespace SQPhotstart {
 
-        /** Constructor for an empty matrix with N non-zero entries*/
+    /** Constructor for an empty matrix with N non-zero entries*/
     Matrix::Matrix(int EntryNum, int RowNum, int ColNum) :
             RowIndex_(NULL),
             ColIndex_(NULL),
@@ -87,72 +87,72 @@ namespace SQPhotstart {
     /** MATRIX WITH IDENTITY*/
 
 
-    /** Constructor which assigns the number of nonzero entry and number of identity matrix to
-     * class members and allocate memory to the class member to be used*/
-    MatrixWithIdentity::MatrixWithIdentity(int num_nontrivial_entry, int num_of_I)
-            :
-            num_I_(num_of_I),
-            num_I_assigned_(0),
-            RowIndex_I_(NULL),
-            ColIndex_I_(NULL),
-            size_I_(NULL),
-            sign_I_(NULL) {
-        EntryNum_ = num_nontrivial_entry;
-        RowIndex_I_ = new int[num_of_I]();
-        ColIndex_I_ = new int[num_of_I]();
-        size_I_ = new int[num_of_I]();
-        sign_I_ = new int[num_of_I]();
-    }
-
-
-    /** Default destructor, will free all memory*/
-    MatrixWithIdentity::~MatrixWithIdentity() {
-        freeMemory();
-    }
-
-    /**
-     * This method adds the data of a identity matrix to be stored in the class members
-     *
-     * @param row_index the starting row index of the identity matrix
-     * @param col_index the starting column index of the identity matrix
-     * @param size      the size of the identity matrix
-     * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
-     * 		     will record 1; otherwise, it will record -1
-     */
-    bool MatrixWithIdentity::add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index,
-                                   const SQPhotstart::Index size, bool isPositive) {
-
-
-        RowIndex_I_[num_I_assigned_] = row_index;
-        ColIndex_I_[num_I_assigned_] = col_index;
-        size_I_[num_I_assigned_] = size;
-
-        if (isPositive) sign_I_[num_I_assigned_] = 1;
-        else sign_I_[num_I_assigned_] = -1;
-        num_I_assigned_++;
-        return true;
-    }
-
-
-    /** Free all the memory ヽ( ^∀^)ﾉ*/
-    bool MatrixWithIdentity::freeMemory() {
-        delete[] RowIndex_;
-        RowIndex_ = NULL;
-        delete[] ColIndex_;
-        ColIndex_ = NULL;
-        delete[] MatVal_;
-        MatVal_ = NULL;
-        delete[] order_;
-        order_ = NULL;
-        delete[] ColIndex_I_;
-        ColIndex_I_ = NULL;
-        delete[] RowIndex_I_;
-        RowIndex_I_ = NULL;
-        delete[] size_I_;
-        size_I_ = NULL;
-        delete[] sign_I_;
-        sign_I_ = NULL;
-        return true;
-    }
+//    /** Constructor which assigns the number of nonzero entry and number of identity matrix to
+//     * class members and allocate memory to the class member to be used*/
+//    MatrixWithIdentity::MatrixWithIdentity(int num_nontrivial_entry, int num_of_I)
+//            :
+//            num_I_(num_of_I),
+//            num_I_assigned_(0),
+//            RowIndex_I_(NULL),
+//            ColIndex_I_(NULL),
+//            size_I_(NULL),
+//            sign_I_(NULL) {
+//        EntryNum_ = num_nontrivial_entry;
+//        RowIndex_I_ = new int[num_of_I]();
+//        ColIndex_I_ = new int[num_of_I]();
+//        size_I_ = new int[num_of_I]();
+//        sign_I_ = new int[num_of_I]();
+//    }
+//
+//
+//    /** Default destructor, will free all memory*/
+//    MatrixWithIdentity::~MatrixWithIdentity() {
+//        freeMemory();
+//    }
+//
+//    /**
+//     * This method adds the data of a identity matrix to be stored in the class members
+//     *
+//     * @param row_index the starting row index of the identity matrix
+//     * @param col_index the starting column index of the identity matrix
+//     * @param size      the size of the identity matrix
+//     * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
+//     * 		     will record 1; otherwise, it will record -1
+//     */
+//    bool MatrixWithIdentity::add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index,
+//                                   const SQPhotstart::Index size, bool isPositive) {
+//
+//
+//        RowIndex_I_[num_I_assigned_] = row_index;
+//        ColIndex_I_[num_I_assigned_] = col_index;
+//        size_I_[num_I_assigned_] = size;
+//
+//        if (isPositive) sign_I_[num_I_assigned_] = 1;
+//        else sign_I_[num_I_assigned_] = -1;
+//        num_I_assigned_++;
+//        return true;
+//    }
+//
+//
+//    /** Free all the memory ヽ( ^∀^)ﾉ*/
+//    bool MatrixWithIdentity::freeMemory() {
+//        delete[] RowIndex_;
+//        RowIndex_ = NULL;
+//        delete[] ColIndex_;
+//        ColIndex_ = NULL;
+//        delete[] MatVal_;
+//        MatVal_ = NULL;
+//        delete[] order_;
+//        order_ = NULL;
+//        delete[] ColIndex_I_;
+//        ColIndex_I_ = NULL;
+//        delete[] RowIndex_I_;
+//        RowIndex_I_ = NULL;
+//        delete[] size_I_;
+//        size_I_ = NULL;
+//        delete[] sign_I_;
+//        sign_I_ = NULL;
+//        return true;
+//    }
 }
 

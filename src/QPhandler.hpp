@@ -29,16 +29,16 @@ namespace SQPhotstart {
      * It also contains a method which interfaces to the QP solvers that users choose. The
      * interface will pre-process the data required by individual solver.
      */
-    
+
     class QPhandler {
     public:
         /** Default constructor */
         QPhandler();
-        
+
         /** Default destructor */
         virtual ~QPhandler();
-        
-        
+
+
         /**
          * @name Get the optimal solution from the QPsolver_interface
          *
@@ -46,8 +46,8 @@ namespace SQPhotstart {
          * @param p_k 	the pointer to an empty array with the length equal to the size of the QP subproblem
          */
         virtual bool GetOptimalSolution(double* p_k);
-        
-        
+
+
         /**
          *@name Get the multipliers from the QPsolver_interface
          *
@@ -56,7 +56,7 @@ namespace SQPhotstart {
          * @param y_k 	the pointer to an empty array with the length equal to the size of multipliers of the QP subproblem
          */
         virtual bool GetMultipliers(double* y_k);
-        
+
         /**
          * @name This function initializes all objects will be used in this class.
          *
@@ -70,7 +70,7 @@ namespace SQPhotstart {
          * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
          */
         virtual bool init(Index_info nlp_info, QPType qptype);
-        
+
         /**
          *
          * @name setup the bounds for the QP subproblems according to the information from current iterate
@@ -86,7 +86,7 @@ namespace SQPhotstart {
         virtual bool setup_bounds(const Number &delta, shared_ptr<Vector> x_k, shared_ptr<Vector> c_k,
                                   shared_ptr<Vector> x_l, shared_ptr<Vector> x_u, shared_ptr<Vector> c_l,
                                   shared_ptr<Vector> c_u);
-        
+
         /**
          * @name This function sets up the object vector g of the QP problem
          *
@@ -101,21 +101,21 @@ namespace SQPhotstart {
          * @param hessian
          * @return
          */
-        
+
         virtual bool setup_H(shared_ptr<Matrix> hessian);
-        
-        
+
+
         /** @name setup the matrix A for the QP subproblems according to the information from current iterate*/
         virtual bool setup_A(shared_ptr<Matrix> jacobian);
-        
-        
+
+
         /**
          * @name solve the QP subproblem according to the bounds setup before, assuming the first QP
          * subproblem has been solved.
          * */
-        
+
         virtual bool solveQP(shared_ptr<SQPhotstart::Stats> &stats, shared_ptr<Options> options);
-        
+
         /**
          * @name This function copies the information from another QPsolver objects.
          * By default, it will copy the vectors of bounds matrix A information
@@ -125,7 +125,7 @@ namespace SQPhotstart {
          */
         virtual bool copy_QP_info(shared_ptr<QPhandler> rhs,// the QPhandler object that are going to be copied from
                                   QPType qptype) { return false; };                // is the object rhs an LP?
-        
+
         /**
          * @name This function updates the bounds on x if there is any changes to the values
 	 * of trust-region radius
@@ -145,7 +145,7 @@ namespace SQPhotstart {
          * @param nVar 		number of variables in NLP
          */
         virtual bool update_penalty(const SQPhotstart::Number rho);
-        
+
         /**
          * @name This function updates the vector g in the QP subproblem when there
          * are any change to the values of gradient in NLP
@@ -153,34 +153,41 @@ namespace SQPhotstart {
          * @param grad		the gradient vector from NLP
          */
         virtual bool update_grad(shared_ptr<Vector> grad);
-        
-	/*  @name Update the Matrix H of the QP problems when there is any change to the 
-	 *  true function Hessian
-	 *
-	 *  */
-	virtual bool update_H(shared_ptr<Matrix> Hessian);
 
-	/**
-	 * @name Update the Matrix H of the QP problems when there is any change to the
-	 *  Jacobian to the constraints.
-	 */
-    virtual bool update_A(shared_ptr<Matrix> Jacobian);
+        /*  @name Update the Matrix H of the QP problems when there is any change to the
+         *  true function Hessian
+         *
+         *  */
+        virtual bool update_H(shared_ptr<Matrix> Hessian);
+
+        /**
+         * @name Update the Matrix H of the QP problems when there is any change to the
+         *  Jacobian to the constraints.
+         */
+        virtual bool update_A(shared_ptr<Matrix> Jacobian);
 
     private:
         /** allocate memory to class members except QP objects*/
         virtual bool allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
-        
+
         /**free all the memory*/
         virtual bool freeMemory() { return false; };
-        
+
+        /** Copy Constructor */
+        QPhandler(const QPhandler &);
+
+        /** Overloaded Equals Operator */
+        void operator=(const QPhandler &);
+        //@}
+
         /**public class member*/
-        
+
         /** QP problem will be in the following form
          * min 1/2x^T H x+ g^Tx
          * s.t. lbA <= A x <= ubA,
          *      lb  <=   x <= ub.
          */
-        
+
     public:
         //bounds that can be represented as vectors
         Index_info nlp_info_;
@@ -191,11 +198,11 @@ namespace SQPhotstart {
         shared_ptr<Vector> ub_;     //upper bounds of x
         shared_ptr<Vector> g_;
         shared_ptr<Matrix> H_;
-        shared_ptr<MatrixWithIdentity> A_;
+        shared_ptr<Matrix> A_;
         shared_ptr<QPSolverInterface> qp_interface_; //an interface to the standard QP solver specified by the user
         Number qp_obj_;        // the optimal objectives from QPhandler
     };
-    
-    
+
+
 } // namespace SQPhotstart
 #endif //SQPHOTSTART_QP_HPP_ 

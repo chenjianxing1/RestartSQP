@@ -43,7 +43,7 @@ namespace SQPhotstart {
         /**
          *@name Evaluate the objective value
          */
-        virtual bool Eval_f(shared_ptr<Vector> x, Number obj_value);
+        virtual bool Eval_f(shared_ptr<Vector> x, Number &obj_value);
 
         /**
          * @name Evaluate the constraints at point x
@@ -60,7 +60,8 @@ namespace SQPhotstart {
          * @name Get the matrix structure of the Jacobian
          * Always call this before the first time using @Eval_Jacobian
          */
-        virtual bool Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian){return false;}
+        virtual bool Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian);
+
         /**
          *@name Evaluate Jacobian at point x
          */
@@ -73,23 +74,35 @@ namespace SQPhotstart {
          * @param Jacobian
          * @return
          */
-        virtual bool Get_Structure_Hessian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian){return false;}
+        virtual bool Get_Structure_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<Matrix> Hessian);
+
         /**
          *@name Evaluate Hessian of Lagragian function at  (x, lambda)
          */
         virtual bool Eval_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<Matrix> Hessian);
 
+        /**
+         *
+         */
         virtual bool shift_starting_point(shared_ptr<Vector> x, shared_ptr<Vector> x_l, shared_ptr<Vector> x_u);
 
     public:
         Index_info nlp_info_; // the struct record the number of variables, number of constraints,
         // number of nonzeoro entry of Hessian and that of Jacobian
         // Please check Types.hpp for details
-        SmartPtr <TNLP> nlp_;// a local nlp reader
+        SmartPtr <Ipopt::TNLP> nlp_;// a local nlp reader
 
     private:
         /** Default constructor*/
         SQPTNLP();
+
+
+        /** Copy Constructor */
+        SQPTNLP(const SQPTNLP &);
+
+        /** Overloaded Equals Operator */
+        void operator=(const SQPTNLP &);
+        //@}
     };
 }
 

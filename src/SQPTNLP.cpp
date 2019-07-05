@@ -32,7 +32,6 @@ namespace SQPhotstart {
      * TODO: add options to enable user to choose if to use default input or not
      */
     bool SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0) {
-        lambda_0 = make_shared<Vector>(nlp_info_.nCon);
         nlp_->get_starting_point(nlp_info_.nVar, true, x_0->values(),
                                  false, NULL, NULL, nlp_info_.nCon, false, lambda_0->values());
         return true;
@@ -41,7 +40,7 @@ namespace SQPhotstart {
     /**
      *@name Evaluate the objective value
      */
-    bool SQPTNLP::Eval_f(shared_ptr<Vector> x, Number obj_value) {
+    bool SQPTNLP::Eval_f(shared_ptr<Vector> x, Number& obj_value) {
         nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
         return true;
     }
@@ -52,7 +51,7 @@ namespace SQPhotstart {
      */
     bool SQPTNLP::Eval_constraints(shared_ptr<Vector> x, shared_ptr<Vector> constraints) {
         nlp_->eval_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, constraints->values());
-        return true;
+	return true;
     }
 
     /**
@@ -67,22 +66,45 @@ namespace SQPhotstart {
      *@name Evaluate Jacobian at point x
      */
 
-    bool SQPTNLP::Eval_Jacobian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian) {
-
-        nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
+    bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian){    
+	nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), NULL);
-        nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
+     
+    return true;
+    }
+
+
+    /**
+     *@name
+     *@param x
+     *@param Jacobian
+     */
+    bool SQPTNLP::Eval_Jacobian(shared_ptr<Vector> x, shared_ptr<Matrix> Jacobian) {
+       nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), Jacobian->MatVal());
         return true;
     }
+
+        /**
+         *
+         * @param x
+         * @param lambda 
+	 * @param Hessian
+         * @return
+         */
+    bool SQPTNLP::Get_Structure_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<Matrix> Hessian){
+        nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
+                    nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);	
+	return true;
+	}
+
+ 
 
     /**
      *@name Evaluate Hessian of Lagragian function at  (x, lambda)
      */
     bool SQPTNLP::Eval_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<Matrix> Hessian) {
-        nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nCon, lambda->values(), true,
-                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
-        nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nCon, lambda->values(), true,
+	    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), Hessian->MatVal());
         return true;
     }

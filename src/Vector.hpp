@@ -106,6 +106,16 @@ namespace SQPhotstart {
         inline const double* vector() const { return values_; }
 
     private:
+
+        /** Default Constructor*/
+        Vector();
+
+        /** Copy Constructor */
+        Vector(const Vector &);
+
+        /** Overloaded Equals Operator */
+        void operator=(const Vector &);
+
         int size_; /* the size of an vector*/
         double* values_;/*the array stored vector information*/
     };

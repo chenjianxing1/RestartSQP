@@ -103,12 +103,16 @@ namespace SQPhotstart {
         /** free all memory*/
         bool freeMemory();
 
-        /** Public Class Members*/
-    public:
+    /** Copy Constructor */
+    Matrix(const Matrix&);
+
+    /** Overloaded Equals Operator */
+    void operator=(const Matrix&);
+        /** Private Class Members*/
+
+    private:
         double* MatVal_;  // the entry data of a matrix
         int* order_;    // the corresponding original position of a matrix entry
-
-    protected:
         int* RowIndex_;// the row number of a matrix entry
         int* ColIndex_;// the column number of a matrix entry
         int ColNum_;    // the number columns of a matrix
@@ -117,74 +121,74 @@ namespace SQPhotstart {
     };
 
 
-    /**
-     * @MatrixWithIdentity this is a derived class of Matrix. In addition to the data stored in the class 
-     * members stored in the class Matrix, it contains additional pointer to arrays stores the data for  
-     * identity matrix.
-     *
-     */
-    class MatrixWithIdentity : public Matrix {
+ //   /**
+ //    * @MatrixWithIdentity this is a derived class of Matrix. In addition to the data stored in the class 
+ //    * members stored in the class Matrix, it contains additional pointer to arrays stores the data for  
+ //    * identity matrix.
+ //    *
+ //    */
+ //   class MatrixWithIdentity : public Matrix {
 
-    public:
-        /** Constructor which assigns the number of nonzero entry and number of identity matrix to
-         * class members and allocate memory to the class member to be used*/
-        MatrixWithIdentity(int num_nontrivial_entry, int num_of_I);
+ //   public:
+ //       /** Constructor which assigns the number of nonzero entry and number of identity matrix to
+ //        * class members and allocate memory to the class member to be used*/
+ //       MatrixWithIdentity(int num_nontrivial_entry, int num_of_I);
 
-        /** Default destructor, will free all memory*/
-        virtual ~MatrixWithIdentity();
+ //       /** Default destructor, will free all memory*/
+ //       virtual ~MatrixWithIdentity();
 
 
-        /** 
-         * This method adds the data of a identity matrix to be stored in the class members
-         *
-         * @param row_index the starting row index of the identity matrix  
-         * @param col_index the starting column index of the identity matrix 
-         * @param size      the size of the identity matrix
-         * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
-         * 		     will record 1; otherwise, it will record -1
-         */
-        virtual bool
-        add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index, const SQPhotstart::Index size,
-              bool isPositive);
+ //       /** 
+ //        * This method adds the data of a identity matrix to be stored in the class members
+ //        *
+ //        * @param row_index the starting row index of the identity matrix  
+ //        * @param col_index the starting column index of the identity matrix 
+ //        * @param size      the size of the identity matrix
+ //        * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
+ //        * 		     will record 1; otherwise, it will record -1
+ //        */
+ //       virtual bool
+ //       add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index, const SQPhotstart::Index size,
+ //             bool isPositive);
 
-        /**
-         * Get class member info
-         */
-        inline int num_I() { return num_I_; }
+ //       /**
+ //        * Get class member info
+ //        */
+ //       inline int num_I() { return num_I_; }
 
-        inline int current_I_num() { return num_I_assigned_; }
+ //       inline int current_I_num() { return num_I_assigned_; }
 
-        inline int* RowIndex_I() { return RowIndex_I_; }
+ //       inline int* RowIndex_I() { return RowIndex_I_; }
 
-        inline int* ColIndex_I() { return ColIndex_I_; }
+ //       inline int* ColIndex_I() { return ColIndex_I_; }
 
-        inline int* sizeI() { return size_I_; }
+ //       inline int* sizeI() { return size_I_; }
 
-        inline int* signI() { return sign_I_; }
+ //       inline int* signI() { return sign_I_; }
 
-        inline int RowIndex_I_at(int i) { return RowIndex_I_[i]; }
+ //       inline int RowIndex_I_at(int i) { return RowIndex_I_[i]; }
 
-        inline int ColIndex_I_at(int i) { return ColIndex_I_[i]; }
+ //       inline int ColIndex_I_at(int i) { return ColIndex_I_[i]; }
 
-        inline int size_I_at(int i) { return size_I_[i]; }
+ //       inline int size_I_at(int i) { return size_I_[i]; }
 
-        inline int sign_I_at(int i) { return sign_I_[i]; }
+ //       inline int sign_I_at(int i) { return sign_I_[i]; }
 
-    private:
-        int num_I_;             //number of identity submatrix in total
-        int* ColIndex_I_;// each entry will record the starting column of the identity matrix
-        int* RowIndex_I_;//each entry will record the starting row of the identity matrix
-        int* size_I_;     //each entry will record the size of a identity matrix
-        int* sign_I_;    //each entry will record the sign of identity matrix, either -1 or 1
-        int num_I_assigned_;    //number of identity submatrix already assigned to this class
+ //   private:
+ //       int num_I_;             //number of identity submatrix in total
+ //       int* ColIndex_I_;// each entry will record the starting column of the identity matrix
+ //       int* RowIndex_I_;//each entry will record the starting row of the identity matrix
+ //       int* size_I_;     //each entry will record the size of a identity matrix
+ //       int* sign_I_;    //each entry will record the sign of identity matrix, either -1 or 1
+ //       int num_I_assigned_;    //number of identity submatrix already assigned to this class
 
-    private:
-        /** Free all the memory ヽ( ^∀^)ﾉ*/
-        bool freeMemory();
+ //   private:
+ //       /** Free all the memory ヽ( ^∀^)ﾉ*/
+ //       bool freeMemory();
 
-        /** Default constructor*/
-        MatrixWithIdentity();
-    };
+ //       /** Default constructor*/
+ //       MatrixWithIdentity();
+ //   };
 
 
 }

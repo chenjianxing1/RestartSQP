@@ -13,7 +13,6 @@
 #include "Matrix.hpp"
 
 
-
 namespace SQPhotstart {
     /**
      *
@@ -42,22 +41,29 @@ namespace SQPhotstart {
          *
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
-        virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
+        virtual bool Optimize(SmartPtr <Ipopt::TNLP> nlp);
 
 
 
 
         /* Private methods*/
     private:
+
+        /** Copy Constructor */
+        Algorithm(const Algorithm &);
+
+        /** Overloaded Equals Operator */
+        void operator=(const Algorithm &);
+
         /**
-         *
-         *This is the function that checks if the current point is optimal, and decides if to exit the loop or not
-         *
-         *@return
-         * 	 if it decides the function is optimal, the class member _exitflag = OPTIMAL
-         * 	 if it decides that there is an error during the function run or the function cannot be solved, it will assign _exitflag the
-         * 	 	corresponding code according to the error type.
-         */
+             *
+             *This is the function that checks if the current point is optimal, and decides if to exit the loop or not
+             *
+             *@return
+             * 	 if it decides the function is optimal, the class member _exitflag = OPTIMAL
+             * 	 if it decides that there is an error during the function run or the function cannot be solved, it will assign _exitflag the
+             * 	 	corresponding code according to the error type.
+             */
         virtual bool termination_check();
 
         /**
@@ -151,7 +157,7 @@ namespace SQPhotstart {
          *
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
-        bool allocate(SmartPtr<Ipopt::TNLP> nlp);
+        bool allocate(SmartPtr <Ipopt::TNLP> nlp);
 
         /** Check how the constraints are bounded
          *  If there is only upper bounds for constraints, c(x)<=c_u, then _Constraint_type = BOUNDED_ABOVE
@@ -193,8 +199,8 @@ namespace SQPhotstart {
         shared_ptr<Vector> p_k_; /* search direction at x_k*/
         shared_ptr<Matrix> hessian_;/* the Matrix object for hessain of f(x)+sum_{i=1}^m lambda_i c_i(x) //TODO: check the sign*/
         shared_ptr<Matrix> jacobian_;/*the Matrix object for Jacobian from c(x)*/
-        ConstraintType *cons_type_; /* the constraints type, it can be either bounded, bounded above,bounded below, or unbounded*/
-        ConstraintType *bound_cons_type_;/* the variables type, it can be either bounded, bounded above,bounded below, or unbounded*/
+        ConstraintType* cons_type_; /* the constraints type, it can be either bounded, bounded above,bounded below, or unbounded*/
+        ConstraintType* bound_cons_type_;/* the variables type, it can be either bounded, bounded above,bounded below, or unbounded*/
         shared_ptr<Options> options;/* the default options used for now. TODO: modify it*/
         shared_ptr<Stats> stats;
         shared_ptr<QPhandler> myQP;

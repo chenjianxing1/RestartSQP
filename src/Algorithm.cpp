@@ -106,7 +106,9 @@ namespace SQPhotstart {
         nlp_->Eval_f(x_k_, obj_value_);
         nlp_->Eval_gradient(x_k_, grad_f_);
         nlp_->Eval_constraints(x_k_, c_k_);
+	nlp_->Get_Structure_Hessian(x_k_, lambda_, hessian_);
         nlp_->Eval_Hessian(x_k_, lambda_, hessian_);
+	nlp_->Get_Strucutre_Jacobian(x_k_,jacobian_);
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
 
@@ -115,7 +117,8 @@ namespace SQPhotstart {
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
         log->print_header();
-        log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
+        cout<<stats->iter<<endl;
+	log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
         return true;
     }
 
@@ -134,6 +137,7 @@ namespace SQPhotstart {
         x_k_ = make_shared<Vector>(nVar_);
         x_trial_ = make_shared<Vector>(nVar_);
         p_k_ = make_shared<Vector>(nVar_);
+	lambda_ = make_shared<Vector>(nCon_);
         c_k_ = make_shared<Vector>(nCon_);
         c_trial_ = make_shared<Vector>(nCon_);
         x_l_ = make_shared<Vector>(nVar_);

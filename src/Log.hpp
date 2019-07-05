@@ -24,7 +24,7 @@ namespace SQPhotstart{
                              double delta,
                              double rho){
             printf("%6i %23e %9.2e  %9.2e %9.2e %9.2e\n",
-            iter, obj_value, norm_p_k, infea_measure,delta, rho);
+          iter, obj_value, norm_p_k, infea_measure,delta, rho);
         }
 
         void print_final(int iter,

@@ -37,7 +37,7 @@ namespace SQPhotstart {
          * overload this method to optimize a QP with the data specified, update the stats by adding the iteration
          * number used to solve this QP to stats.qp_iter
          */
-        virtual bool optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<MatrixWithIdentity> A,
+        virtual bool optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<Matrix> A,
                                 shared_ptr<Vector> lbA, shared_ptr<Vector> ubA, shared_ptr<Vector> lb,
                                 shared_ptr<Vector> ub, shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
 
@@ -99,7 +99,7 @@ namespace SQPhotstart {
          * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
          * in object stats
          */
-        virtual bool optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<MatrixWithIdentity> A,
+        virtual bool optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<Matrix> A,
                                 shared_ptr<Vector> lbA, shared_ptr<Vector> ubA, shared_ptr<Vector> lb,
                                 shared_ptr<Vector> ub, shared_ptr<Stats> stats, shared_ptr<Options> options);
 
@@ -140,7 +140,7 @@ namespace SQPhotstart {
          * @param M_result     Matrix object prepared as the input for qpOASES
          */
         virtual bool
-        qpOASESMatrixAdapter(shared_ptr<MatrixWithIdentity> M_in_triplet, shared_ptr<qpOASES::SparseMatrix> M_result);
+        qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet, shared_ptr<qpOASES::SparseMatrix> M_result);
 
         virtual bool qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet, shared_ptr<qpOASES::SymSparseMat> M_result);
 
@@ -169,10 +169,8 @@ namespace SQPhotstart {
                                       shared_ptr<T> results, Index RowNum, Index ColNum, bool isA);
 
         template<typename T>
-        bool update_qpOASES_input(shared_ptr<MatrixWithIdentity> input, shared_ptr<T> results) { return false; };
-
-        template<typename T>
         bool update_qpOASES_input(shared_ptr<Matrix> input, shared_ptr<T> results) { return false; };
+
 
         /**
          *This is part of qpOASESMatrixAdapter

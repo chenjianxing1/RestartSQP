@@ -74,9 +74,9 @@ namespace SQPhotstart {
      * @param c_u        the upper bounds for constraints
      */
     bool QPhandler::setup_bounds(const SQPhotstart::Number &delta, shared_ptr<SQPhotstart::Vector> x_k,
-                                shared_ptr<SQPhotstart::Vector> c_k,
-                                shared_ptr<SQPhotstart::Vector> x_l, shared_ptr<SQPhotstart::Vector> x_u,
-                                shared_ptr<SQPhotstart::Vector> c_l, shared_ptr<SQPhotstart::Vector> c_u) {
+                                 shared_ptr<SQPhotstart::Vector> c_k,
+                                 shared_ptr<SQPhotstart::Vector> x_l, shared_ptr<SQPhotstart::Vector> x_u,
+                                 shared_ptr<SQPhotstart::Vector> c_l, shared_ptr<SQPhotstart::Vector> c_u) {
         int nCon = nlp_info_.nCon;
         int nVar = nlp_info_.nVar;
         lb_->assign_n(1, nVar, -delta);
@@ -168,15 +168,15 @@ namespace SQPhotstart {
      * @param jacobian 	the Matrix object for Jacobian from c(x)
      */
     bool QPhandler::setup_A(shared_ptr<Matrix> jacobian) {
-        A_->copyMatrix(jacobian);
-        int nCon = jacobian->RowNum();
-        int nVar = jacobian->ColNum();
-       // FIXME: assign dimension in constructor
-       //  A_->assign_dimension(nCon, nVar + 2 * nCon);
-        if (A_->current_I_num() != A_->num_I()) {
-            A_->add_I(1, nVar + 1, nCon, true);
-            A_->add_I(1, nVar + nCon + 1, nCon, false);
-        }
+        // A_->copyMatrix(jacobian);
+        // int nCon = jacobian->RowNum();
+        // int nVar = jacobian->ColNum();
+        //// FIXME: assign dimension in constructor
+        ////  A_->assign_dimension(nCon, nVar + 2 * nCon);
+        // if (A_->current_I_num() != A_->num_I()) {
+        //     A_->add_I(1, nVar + 1, nCon, true);
+        //     A_->add_I(1, nVar + nCon + 1, nCon, false);
+        // }
 
         return true;
     }
@@ -209,12 +209,12 @@ namespace SQPhotstart {
         int A_colNum;
         int A_rowNum;
 
-        A_colNum = nlp_info.nVar + 2 * nlp_info.nCon;
-        A_rowNum = nlp_info.nCon;
-        A_ = make_shared<MatrixWithIdentity>(nlp_info.nnz_jac_g, 2);
+        // A_colNum = nlp_info.nVar + 2 * nlp_info.nCon;
+        // A_rowNum = nlp_info.nCon;
+        // A_ = make_shared<Matrix>(nlp_info.nnz_jac_g, 2);
 
         if (qptype == QP) {
-            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag,A_colNum, A_colNum);
+            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, A_colNum, A_colNum);
         }
 
         qp_interface_ = std::make_shared<qpOASESInterface>(A_colNum, A_rowNum);
