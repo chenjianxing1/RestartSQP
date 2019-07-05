@@ -117,7 +117,6 @@ namespace SQPhotstart {
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
         log->print_header();
-        cout<<stats->iter<<endl;
 	log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
         return true;
     }
