@@ -218,11 +218,11 @@ namespace SQPhotstart {
      * It will truncate the optimal solution of QP into two parts, the first half (with length equal to the number of variables)
      *to be the search direction.
      *
-     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+     * @param qphandler the QPhandler class object used for solving a QP subproblem with specified QP informations
      */
-    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
-        double *tmp_p_k = new double[qpsolver->A_->ColNum()]();
-        qpsolver->GetOptimalSolution(tmp_p_k);
+    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qphandler) {
+        double *tmp_p_k = new double[qphandler->A_->ColNum()]();
+        qphandler->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         delete[] tmp_p_k;
         return true;
@@ -234,11 +234,11 @@ namespace SQPhotstart {
      *   Note that the QP subproblem will return a multiplier for the constraints and the bound in a single vector, so we only take
      *   the first #constraints number of elements as an approximation of multipliers for the nlp problem
      *
-     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+     * @param qphandler the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
-    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qpsolver) {
-        double *tmp_lambda = new double[qpsolver->A_->RowNum() + qpsolver->A_->ColNum()]();
-        qpsolver->GetMultipliers(tmp_lambda);
+    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
+        double *tmp_lambda = new double[qphandler->A_->RowNum() + qphandler->A_->ColNum()]();
+        qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
         delete[] tmp_lambda;
         return true;

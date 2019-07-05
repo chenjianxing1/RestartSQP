@@ -30,7 +30,7 @@ namespace SQPhotstart {
     /**
      *@name copy the data and number of nontrivial entries.
      */
-    bool Matrix::copyMatrix(std::shared_ptr<Matrix> &rhs) {
+    bool Matrix::copyMatrix(std::shared_ptr<const Matrix> rhs) {
         this->RowIndex_ = rhs->RowIndex_;
         this->ColIndex_ = rhs->ColIndex_;
         this->MatVal_ = rhs->MatVal_;

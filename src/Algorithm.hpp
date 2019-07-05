@@ -123,9 +123,9 @@ namespace SQPhotstart {
          * It will truncate the optimal solution of QP into two parts, the first half (with length equal to the number of variables)
          *to be the search direction.
          *
-         * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+         * @param qphandler the qphandler class object used for solving a QP subproblem with specified QP informations
          */
-        bool get_search_direction(shared_ptr<QPhandler> qpsolver);
+        bool get_search_direction(shared_ptr<QPhandler> qphandler);
 
 
         /**
@@ -146,10 +146,10 @@ namespace SQPhotstart {
          *   so we only take the first #constraints number of elements as an approximation of multipliers for the nlp
          *   problem
          *
-         * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+         * @param qphandler the QPsolver class object used for solving a QP subproblem with specified QP informations
          */
 
-        bool get_multipliers(shared_ptr<QPhandler> qpsolver);
+        bool get_multipliers(shared_ptr<QPhandler> qphandler);
 
         /**
          * This function initializes all the shared pointer which will be used in the Algorithm::Optimize, and it copies all parameters

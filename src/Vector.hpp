@@ -25,7 +25,7 @@ namespace SQPhotstart {
          * constructor that initializes the _size and make a deep copy from vector_value to
          * class member _vector
          */
-        Vector(int vector_size, double* vector_value);
+        Vector(int vector_size, const double* vector_value);
 
         /** Default destructor*/
         virtual ~Vector();
@@ -33,16 +33,16 @@ namespace SQPhotstart {
 
         /** assign a sub-vector into the class member vector without shifting elements' positions
          * */
-        void assign(int Location, const int subvector_size, const double* subvector);
+        void assign(int Location, int subvector_size, const double* subvector);
 
-        inline void assignValueAt(const int location, const double value) {
+        inline void assignValueAt(int location, double value) {
             values_[location] = value;
         }
 
         /** assign a sub-vector with a specific size to the class member vector at a specific location.
          * The sub-vector will have all elements equal to the scaling factor
          * */
-        void assign_n(int Location, const int subvector_size, double scaling_factor);
+        void assign_n(int Location, int subvector_size, double scaling_factor);
 
         /** print the vector*/
         void print() const;
@@ -70,7 +70,7 @@ namespace SQPhotstart {
          * @param iloc the starting location to subtract the subvector
          * @param subvec_size the size of the subvector
          */
-        void subtract_subvector(const int iloc, const int subvec_size, const double* subvector);
+        void subtract_subvector(int iloc, int subvec_size, const double* subvector);
 
         /**copy all the entries from another vector*/
         void copy_vector(const double* copy);
@@ -79,16 +79,16 @@ namespace SQPhotstart {
          * copy a subvector from member_vector from (Location) to (Location+subvector_size) 
          * to the pointer (results)
          */
-        void get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs);
+        void get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs)const;
 
         /** set all entries to be 0*/
         void set_zeros();
 
         /** calculate one norm of the member _vector*/
-        double getOneNorm();
+        double getOneNorm()const;
 
         /** calculate the infinity norm of the member _vector*/
-        double getInfNorm();
+        double getInfNorm()const;
 
         /**
          * get the class member
@@ -98,7 +98,7 @@ namespace SQPhotstart {
         inline double getEntryAt(int location) { return values_[location]; }
 
         inline int Dim() { return size_; }
-
+        inline int Dim() const { return size_; }
         inline double* values() { return values_; }
 
         inline const double* values() const { return values_; }

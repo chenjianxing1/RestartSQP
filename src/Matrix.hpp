@@ -33,7 +33,7 @@ namespace SQPhotstart {
          *@name copy the data and number of nontrivial entries.
          * TODO: cosider not using it...
          */
-        bool copyMatrix(std::shared_ptr<Matrix> &rhs);
+        bool copyMatrix(std::shared_ptr<const Matrix> rhs);
 
         /**
          * @name allocate the data to the class members
@@ -77,6 +77,14 @@ namespace SQPhotstart {
         inline double* MatVal() { return MatVal_; }
 
         inline int* order() { return order_; }
+
+         inline const int* RowIndex() const { return RowIndex_; }
+ 
+         inline const int* ColIndex() const { return ColIndex_; }
+ 
+         inline const double* MatVal() const { return MatVal_; }
+ 
+         inline const int* order() const { return order_; }
 
         inline int RowIndex_at(int i) { return RowIndex_[i]; }
 

@@ -73,10 +73,10 @@ namespace SQPhotstart {
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    bool QPhandler::setup_bounds(const SQPhotstart::Number &delta, shared_ptr<SQPhotstart::Vector> x_k,
-                                 shared_ptr<SQPhotstart::Vector> c_k,
-                                 shared_ptr<SQPhotstart::Vector> x_l, shared_ptr<SQPhotstart::Vector> x_u,
-                                 shared_ptr<SQPhotstart::Vector> c_l, shared_ptr<SQPhotstart::Vector> c_u) {
+    bool QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
+                                 shared_ptr<const Vector> c_k,
+                                 shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
+                                 shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u) {
         int nCon = nlp_info_.nCon;
         int nVar = nlp_info_.nVar;
         lb_->assign_n(1, nVar, -delta);
@@ -109,7 +109,7 @@ namespace SQPhotstart {
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
-    bool QPhandler::setup_g(shared_ptr<Vector> &grad, const Number &rho) {
+    bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
         g_->assign(1, grad->Dim(), grad->vector());
         g_->assign_n(grad->Dim() + 1, g_->Dim() - grad->Dim(), rho);
         return true;
@@ -122,7 +122,7 @@ namespace SQPhotstart {
      * @param delta 	 trust region radius	
      * @param nVar 		 number of variables in NLP
      */
-    bool QPhandler::update_bounds(const SQPhotstart::Number delta) {
+    bool QPhandler::update_bounds(double delta) {
         lb_->assign_n(1, nlp_info_.nVar, -delta);
         ub_->assign_n(1, nlp_info_.nVar, delta);
         return true;
@@ -135,7 +135,7 @@ namespace SQPhotstart {
      * @param nVar 		number of variables in NLP
      */
 
-    bool QPhandler::update_penalty(const SQPhotstart::Number rho) {
+    bool QPhandler::update_penalty(double rho) {
         g_->assign_n(nlp_info_.nVar + 1, g_->Dim() - nlp_info_.nVar, rho);
         return true;
     }
@@ -146,7 +146,7 @@ namespace SQPhotstart {
      *
      * @param grad		the gradient vector from NLP
      */
-    bool QPhandler::update_grad(shared_ptr<Vector> grad) {
+    bool QPhandler::update_grad(shared_ptr<const Vector> grad) {
         g_->assign(1, grad->Dim(), grad->vector());
         return true;
     }
@@ -157,7 +157,7 @@ namespace SQPhotstart {
      *
      * @param hessian 	the Matrix object for Hessian from NLP
      */
-    bool QPhandler::setup_H(shared_ptr<Matrix> hessian) {
+    bool QPhandler::setup_H(shared_ptr<const Matrix> hessian) {
         H_->copyMatrix(hessian);
         return true;
     }
@@ -167,7 +167,7 @@ namespace SQPhotstart {
      *
      * @param jacobian 	the Matrix object for Jacobian from c(x)
      */
-    bool QPhandler::setup_A(shared_ptr<Matrix> jacobian) {
+    bool QPhandler::setup_A(shared_ptr<const Matrix> jacobian) {
         // A_->copyMatrix(jacobian);
         // int nCon = jacobian->RowNum();
         // int nVar = jacobian->ColNum();
@@ -186,7 +186,7 @@ namespace SQPhotstart {
      *
      * @param stats	the static used to record iterations numbers
      */
-    bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> &stats, shared_ptr<Options> options) {
+    bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options) {
         qp_interface_->optimizeQP(H_, g_, A_, lbA_, ubA_, lb_, ub_, stats, options);
         qp_obj_ = qp_interface_->get_obj_value();
         return true;
@@ -226,11 +226,11 @@ namespace SQPhotstart {
         return true;
     }
 
-    bool QPhandler::update_H(shared_ptr<Matrix> Hessian) {
+    bool QPhandler::update_H(shared_ptr<const Matrix> Hessian) {
         return false;
     }
 
-    bool QPhandler::update_A(shared_ptr<Matrix> Jacobian) {
+    bool QPhandler::update_A(shared_ptr<const Matrix> Jacobian) {
         return false;
     }
 

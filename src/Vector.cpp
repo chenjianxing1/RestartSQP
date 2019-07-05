@@ -19,7 +19,7 @@ namespace SQPhotstart {
      * and initializes @vector_ to be @vector_value
      */
 
-    Vector::Vector(int vector_size, double *vector_value)
+    Vector::Vector(int vector_size, const double *vector_value)
     :
     size_(vector_size),
     values_(NULL)
@@ -37,7 +37,7 @@ namespace SQPhotstart {
 
     /** assign a sub-vector into the class member vector
      * without shifting elements' positions*/
-    void Vector::assign(int Location, const int subvector_size, const double *subvector) {
+    void Vector::assign(int Location, int subvector_size, const double *subvector) {
         for (int i = 0; i < subvector_size; i++) {
             values_[Location + i - 1] = subvector[i];
         }
@@ -46,7 +46,7 @@ namespace SQPhotstart {
     
     /** assign a sub-vector with a specific size to the class member vector at a specific location.
      * The sub-vector will have all elements equal to the scaling factor*/
-    void Vector::assign_n(int Location, const int subvector_size, double scaling_factor) {
+    void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
         for (int i = 0; i < subvector_size; i++) {
             values_[Location + i - 1] = scaling_factor;
         }
@@ -99,7 +99,7 @@ namespace SQPhotstart {
      * @param iloc the starting location to subtract the subvector
      * @param subvec_size the size of the subvector
      */
-    void Vector::subtract_subvector(const int iloc, const int subvec_size, const double *subvector) {
+    void Vector::subtract_subvector(int iloc, int subvec_size, const double *subvector) {
         for(int i = 0;i<subvec_size; i++ ){
             values_[i+iloc-1] -= subvector[i];
         }
@@ -114,7 +114,7 @@ namespace SQPhotstart {
     
     
     /** copy a subvector from member_vector from (Location) to (Location+subvector_size) to the pointer (results)*/
-    void Vector::get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs) {
+    void Vector::get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs) const {
         //TODO::test it! not sure if it will work...
         double *tmp = &(values_[Location - 1]);
         rhs->assign(1, subvector_size, tmp);
@@ -122,7 +122,7 @@ namespace SQPhotstart {
     
     
     /** calculate one norm of the member _vector*/
-    double Vector::getInfNorm() {
+    double Vector::getInfNorm() const {
         double infnorm = 0;
         for (int i = 0; i < size_; i++) {
             double absxk;
