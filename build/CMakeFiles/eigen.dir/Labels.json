@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/eigen"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/eigen.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/CMakeFiles/eigen-complete.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-install.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-mkdir.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-download.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-update.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-patch.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-configure.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/eigen/CMakeFiles/eigen-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"eigen"
+		],
+		"name" : "eigen"
+	}
+}

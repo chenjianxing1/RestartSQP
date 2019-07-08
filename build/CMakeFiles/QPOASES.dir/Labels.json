@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/QPOASES"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/QPOASES.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/CMakeFiles/QPOASES-complete.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-install.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-mkdir.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-download.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-update.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-patch.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-configure.rule"
+		},
+		{
+			"file" : "/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/third_party/Stamp/QPOASES/CMakeFiles/QPOASES-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"QPOASES"
+		],
+		"name" : "QPOASES"
+	}
+}
