@@ -1,17 +1,44 @@
 include_directories(${PROJECT_INCLUDE_DIR})
 
+file(GLOB HEADERS ${PROJECT_INCLUDE_DIR}/*.hpp)
+file(GLOB SOURCES . *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
+if (NOT Ipopt)
+  list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/IpoptProgram.cpp)
+endif()
+if (NOT Gurobi)
+  list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/GurobiProgram.cpp)
+endif()
 
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-#SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+if (NOT Cplex)
+    list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/CplexProgram.cpp)
+endif()
 
+add_library(sqphotstart STATIC ${SOURCES} ${HEADERS})
 
-# the RPATH to be used when installing, but only if it's not a system directory
-#SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
+if(ADD_EIGEN)
+ add_dependencies(sqphotstart eigen)
+endif(ADD_EIGEN)
 
-file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/src/*.hpp)
+if(ADD_QPOASES)
+ add_dependencies(sqphotstart QPOASES)
+endif(ADD_QPOASES)
+
+target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${IPOPT_LIBRARIES} ${QPOASES_LIBRARIES})
+#set_target_properties(sqphotstart PROPERTIES LINKER_LANGUAGE CXX)
+if(Cov)
+  set_target_properties(sqphotstart
+  PROPERTIES
+    COMPILE_FLAGS "-ftest-coverage -fprofile-arcs"
+    LINK_FLAGS    "-lgcov --coverage -fprofile-arcs"
+  )
+endif()
+
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
+SET(CMAKE_INSTALL_RPATH "${PROJ_LIB_DIR}")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 
 file(GLOB SQPHOTSTART_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
-add_executable(SQPHOTSTART ${SQPHOTSTART_SRC} ${HEADERS})

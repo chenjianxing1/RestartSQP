@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(SQPHOTSTART)
+project(SQPHOTSTART CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 set(MACOSX_RPATH 1) 
@@ -75,16 +75,13 @@ if (QPOASES_FOUND)
 else(QPOASES_FOUND)
  set(QPOASES_VERSION 3.2.1-1)
  include(ExternalQPOASES)
- set(QPOASES_INCLUDE_DIR ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES)
+ set(QPOASES_INCLUDE_DIR ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/include)
+ set(QPOASES_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/bin)
  set(ADD_QPOASES TRUE)
 endif (QPOASES_FOUND)
+
 include_directories(${QPOASES_INCLUDE_DIR})
-
 include_directories(${THIRDPARTY_INSTALL_PATH}/include)
-
-
-
-
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
 
 

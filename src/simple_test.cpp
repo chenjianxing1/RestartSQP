@@ -4,7 +4,7 @@
 #include "MyNLP.hpp"
 #include "Algorithm.hpp"
 #include "Utils.hpp"
-#include "IpTNLP.hpp"
+#include "coin/IpTNLP.hpp"
 
 
 using namespace SQPhotstart;

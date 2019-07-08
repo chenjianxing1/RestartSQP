@@ -9,7 +9,7 @@
 #ifndef __MYNLP_HPP__
 #define __MYNLP_HPP__
 
-#include "IpTNLP.hpp"
+#include "coin/IpTNLP.hpp"
 using namespace Ipopt;
 
 /** C++ Example NLP for interfacing a problem with IPOPT.

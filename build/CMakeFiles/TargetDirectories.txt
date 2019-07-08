@@ -1,5 +1,0 @@
-/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/QPOASES.dir
-/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/eigen.dir
-/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/ALL_BUILD.dir
-/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/CMakeFiles/ZERO_CHECK.dir
-/Users/xinyiluo/Dropbox/Research/SQPhotstart-LANL/build/src/CMakeFiles/SQPHOTSTART.dir

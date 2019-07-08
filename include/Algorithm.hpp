@@ -1,7 +1,7 @@
 #ifndef SQPHOTSTART_ALG_HPP_
 #define SQPHOTSTART_ALG_HPP_
 
-#include "IpTNLP.hpp"
+#include "coin/IpTNLP.hpp"
 #include "Stats.hpp"
 #include "Types.hpp"
 #include "Options.hpp"

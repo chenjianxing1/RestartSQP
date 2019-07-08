@@ -4,7 +4,7 @@
 #include <memory>
 #include "Utils.hpp"
 #include "MyNLP.hpp"
-#include "IpTNLP.hpp"
+#include "coin/IpTNLP.hpp"
 #include "Vector.hpp"
 #include "Matrix.hpp"
 
