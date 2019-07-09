@@ -14,7 +14,7 @@ option(Cov "Turn on coverage" OFF)
 option(Gurobi "Link to GUROBI libraries" OFF)
 
 # Find IPOPT (optional)
-option(Ipopt "Link to IPOPT libraries" OFF)
+option(Ipopt "Link to IPOPT libraries" ON)
 
 # Find CPLEX (optional)
 option(Cplex "Link to CPLEX libraries" OFF)
