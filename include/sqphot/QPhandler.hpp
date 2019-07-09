@@ -3,7 +3,6 @@
 
 #include <sqphot/Utils.hpp>
 #include <qpOASES.hpp>
-//#include "MyNLP.hpp"
 #include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPsolverInterface.hpp>
@@ -167,6 +166,7 @@ namespace SQPhotstart {
          */
         virtual bool update_A(shared_ptr<const Matrix> Jacobian);
 
+	inline double get_obj(){return qp_obj_;}
     private:
         /** allocate memory to class members except QP objects*/
         virtual bool allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
@@ -187,10 +187,11 @@ namespace SQPhotstart {
          * min 1/2x^T H x+ g^Tx
          * s.t. lbA <= A x <= ubA,
          *      lb  <=   x <= ub.
+	 *
          */
 
-    public:
-        //bounds that can be represented as vectors
+	private:        
+	//bounds that can be represented as vectors
         Index_info nlp_info_;
         QPType qptype_;
         shared_ptr<Vector> lbA_;    // lower bounds of Ax

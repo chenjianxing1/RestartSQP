@@ -116,9 +116,9 @@ namespace SQPhotstart {
         /**set up the QP objects*/
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
-        log->print_header();
-	log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
-        return true;
+//        log->print_header();
+//	log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
+//        return true;
     }
 
     /**
@@ -218,11 +218,12 @@ namespace SQPhotstart {
      * It will truncate the optimal solution of QP into two parts, the first half (with length equal to the number of variables)
      *to be the search direction.
      *
-     * @param qphandler the QPhandler class object used for solving a QP subproblem with specified QP informations
+     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
-    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qphandler) {
-        double *tmp_p_k = new double[qphandler->A_->ColNum()]();
-        qphandler->GetOptimalSolution(tmp_p_k);
+    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
+       // double *tmp_p_k = new double[qpsolver->A_->ColNum()]();
+        double *tmp_p_k = new double[nVar_+2*nCon_];
+        qpsolver->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         delete[] tmp_p_k;
         return true;
@@ -234,11 +235,11 @@ namespace SQPhotstart {
      *   Note that the QP subproblem will return a multiplier for the constraints and the bound in a single vector, so we only take
      *   the first #constraints number of elements as an approximation of multipliers for the nlp problem
      *
-     * @param qphandler the QPsolver class object used for solving a QP subproblem with specified QP informations
+     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
-    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
-        double *tmp_lambda = new double[qphandler->A_->RowNum() + qphandler->A_->ColNum()]();
-        qphandler->GetMultipliers(tmp_lambda);
+    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qpsolver) {
+        double *tmp_lambda = new double[nVar_+3*nCon_];
+        qpsolver->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
         delete[] tmp_lambda;
         return true;
@@ -308,8 +309,7 @@ namespace SQPhotstart {
         Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
         actual_reduction_ = P1x - P1_x_trial;
-        pred_reduction_ = rho_ * infea_measure_ - myQP->qp_obj_;
-
+        pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
             //succesfully update
             //copy information already calculated from the trial point
