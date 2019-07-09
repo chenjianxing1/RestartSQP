@@ -1,6 +1,5 @@
-#include "QPhandler.hpp"
-#include "SQPTNLP.hpp"
-
+#include <sqphot/QPhandler.hpp>
+#include <sqphot/SQPTNLP.hpp>
 namespace SQPhotstart {
     /**
      * Default constructor

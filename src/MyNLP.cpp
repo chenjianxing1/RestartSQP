@@ -6,7 +6,7 @@
 //
 // Authors:  Carl Laird, Andreas Waechter     IBM    2004-11-05
 
-#include "MyNLP.hpp"
+#include <sqphot/MyNLP.hpp>
 #include <cstddef>
 #include <cassert>
 

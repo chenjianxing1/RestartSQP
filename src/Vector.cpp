@@ -1,4 +1,4 @@
-#include "Vector.hpp"
+#include <sqphot/Vector.hpp>
 
 namespace SQPhotstart {
     /**

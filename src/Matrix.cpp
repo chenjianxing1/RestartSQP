@@ -1,4 +1,4 @@
-#include "Matrix.hpp"
+#include <sqphot/Matrix.hpp>
 
 namespace SQPhotstart {
 

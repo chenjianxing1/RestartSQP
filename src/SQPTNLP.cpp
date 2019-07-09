@@ -1,4 +1,4 @@
-#include "SQPTNLP.hpp"
+#include <sqphot/SQPTNLP.hpp>
 
 namespace SQPhotstart {
     /** Default constructor*/

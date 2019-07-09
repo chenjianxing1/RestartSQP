@@ -4,49 +4,44 @@ if(QPOASES_ROOT_DIR)
  message("Looking for QPOASES in ${QPOASES_ROOT_DIR}")
 else(QPOASES_ROOT_DIR)
  message("QPOASES_ROOT_DIR not provided.")
+ message("Looking for QPOASES in ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/include")
 endif(QPOASES_ROOT_DIR)
 
 find_path(QPOASES_INCLUDE_DIR
-  NAMES QPOASES/Core
+  NAMES qpOASES.hpp
+  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/include
   HINTS /usr/local/include
   HINTS /usr/include
-  HINTS ${THIRDPARTY_INSTALL_PATH}/include)
+  HINTS ${THIRDPARTY_INSTALL_PATH}/include
+)
 
-# Extract QPOASES version from QPOASES/src/Core/util/Macros.h
-if (QPOASES_INCLUDE_DIR)
-  set(QPOASES_VERSION_FILE ${QPOASES_INCLUDE_DIR}/QPOASES/src/Core/util/Macros.h)
-  if (NOT EXISTS ${QPOASES_VERSION_FILE})
-    QPOASES_report_not_found(
-      "Could not find file: ${QPOASES_VERSION_FILE} "
-      "containing version information in QPOASES install located at: "
-      "${QPOASES_INCLUDE_DIR}.")
-  else (NOT EXISTS ${QPOASES_VERSION_FILE})
-    file(READ ${QPOASES_VERSION_FILE} QPOASES_VERSION_FILE_CONTENTS)
 
-    string(REGEX MATCH "#define QPOASES_WORLD_VERSION [0-9]+"
-      QPOASES_WORLD_VERSION "${QPOASES_VERSION_FILE_CONTENTS}")
-    string(REGEX REPLACE "#define QPOASES_WORLD_VERSION ([0-9]+)" "\\1"
-      QPOASES_WORLD_VERSION "${QPOASES_WORLD_VERSION}")
+if(APPLE)
+find_library(QPOASES_LIBRARY 
+  libqpOASES.dylib
+  HINTS /usr/local/lib
+  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/bin
+  HINTS ${QPOASES_ROOT_DIR}/bin
+)
+elseif(UNIX)
+find_library(QPOASES_LIBRARY 
+  libqpOASES.so
+  HINTS /usr/local/lib
+  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/bin
+  HINTS ${QPOASES_ROOT_DIR}/bin
+)
+endif()
 
-    string(REGEX MATCH "#define QPOASES_MAJOR_VERSION [0-9]+"
-      QPOASES_MAJOR_VERSION "${QPOASES_VERSION_FILE_CONTENTS}")
-    string(REGEX REPLACE "#define QPOASES_MAJOR_VERSION ([0-9]+)" "\\1"
-      QPOASES_MAJOR_VERSION "${QPOASES_MAJOR_VERSION}")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(QPOASES DEFAULT_MSG QPOASES_LIBRARY QPOASES_INCLUDE_DIR)
 
-    string(REGEX MATCH "#define QPOASES_MINOR_VERSION [0-9]+"
-      QPOASES_MINOR_VERSION "${QPOASES_VERSION_FILE_CONTENTS}")
-    string(REGEX REPLACE "#define QPOASES_MINOR_VERSION ([0-9]+)" "\\1"
-      QPOASES_MINOR_VERSION "${QPOASES_MINOR_VERSION}")
+if(QPOASES_FOUND)  
+  message("—- Found QPOASES include under ${QPOASES_INCLUDE_DIR}")
+    set(QPOASES_INCLUDE_DIRS ${QPOASES_INCLUDE_DIR})
+    set(QPOASES_LIBRARIES ${QPOASES_LIBRARY})
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(QPOASES_LIBRARIES "${QPOASES_LIBRARIES};m;thread")
+    endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+endif(QPOASES_FOUND)
 
-    # This is on a single line s/t CMake does not interpret it as a list of
-    # elements and insert ';' separators which would result in 3.;2.;0 nonsense.
-    set(QPOASES_VERSION "${QPOASES_WORLD_VERSION}.${QPOASES_MAJOR_VERSION}.${QPOASES_MINOR_VERSION}")
-  endif (NOT EXISTS ${QPOASES_VERSION_FILE})
-endif (QPOASES_INCLUDE_DIR)
-
-# Set standard CMake FindPackage variables if found.
-if (QPOASES_FOUND)
-  set(QPOASES_INCLUDE_DIRS ${QPOASES_INCLUDE_DIR})
-else (QPOASES_FOUND)
- message("Cannot find QPOASES, will try pulling it from github.")
-endif (QPOASES_FOUND)
+mark_as_advanced(QPOASES_LIBRARIES QPOASES_INCLUDE_DIR)

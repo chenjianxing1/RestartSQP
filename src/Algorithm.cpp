@@ -1,4 +1,4 @@
-#include "Algorithm.hpp"
+#include <sqphot/Algorithm.hpp>
 
 namespace SQPhotstart {
 

@@ -1,7 +1,7 @@
 include_directories(${PROJECT_INCLUDE_DIR})
 
-file(GLOB HEADERS ${PROJECT_INCLUDE_DIR}/*.hpp)
-file(GLOB SOURCES . *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
+file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/sqphot/*.hpp)
+file(GLOB SOURCES *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
 if (NOT Ipopt)
   list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/IpoptProgram.cpp)
@@ -25,7 +25,6 @@ if(ADD_QPOASES)
 endif(ADD_QPOASES)
 
 target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${IPOPT_LIBRARIES} ${QPOASES_LIBRARIES})
-#set_target_properties(sqphotstart PROPERTIES LINKER_LANGUAGE CXX)
 if(Cov)
   set_target_properties(sqphotstart
   PROPERTIES

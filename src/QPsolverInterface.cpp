@@ -1,4 +1,4 @@
-#include "QPsolverInterface.hpp"
+#include <sqphot/QPsolverInterface.hpp>
 
 namespace SQPhotstart {
 

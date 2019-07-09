@@ -69,20 +69,26 @@ endif (EIGEN_FOUND)
 include_directories(${EIGEN_INCLUDE_DIR})
 
 # QPOASES
-find_package(QPOASES QUIET)
+set(QPOASES_VERSION 3.2.1)
+find_package(QPOASES)
 if (QPOASES_FOUND)
- message("-- Found QPOASES version ${QPOASES_VERSION}: ${QPOASES_INCLUDE_DIRS}")
-else(QPOASES_FOUND)
- set(QPOASES_VERSION 3.2.1-1)
+ message("-- Found QPOASES version ${QPOASES_VERSION}: ${QPOASES_INCLUDE_DIRS}") 
+ set(QPOASES_INCLUDE_DIR1 ${QPOASES_INCLUDE_DIR})
+ set(QPOASES_INCLUDE_DIR2 ${QPOASES_INCLUDE_DIR}/qpOASES)
+ set(LIBS ${LIBS} ${QPOASES_LIBRARIES})
+else(QPOASES_FOUND) 
+    message("-- Was not able to find QPOASES") 
  include(ExternalQPOASES)
- set(QPOASES_INCLUDE_DIR ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/include)
- set(QPOASES_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/bin)
  set(ADD_QPOASES TRUE)
+ set(QPOASES_INCLUDE_DIR1 ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/include/qpOASES)
+ set(QPOASES_INCLUDE_DIR2 ${THIRDPARTY_INSTALL_PATH}/Install/QPOASES/include)
 endif (QPOASES_FOUND)
 
-include_directories(${QPOASES_INCLUDE_DIR})
+
+
+include_directories(${QPOASES_INCLUDE_DIR1})
+include_directories(${QPOASES_INCLUDE_DIR2})
 include_directories(${THIRDPARTY_INSTALL_PATH}/include)
-include_directories(${PROJECT_SOURCE_DIR}/third_party)
 
 
 set(LIBS ${LIBS} ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/lib/Release ${PROJECT_SOURCE_DIR}/lib/Debug)
@@ -116,3 +122,4 @@ endif()
 
 
 add_subdirectory(src)
+add_subdirectory(test)

@@ -1,5 +1,5 @@
 
-#include "Options.hpp"
+#include <sqphot/Options.hpp>
 namespace SQPhotstart{
     
     Options::Options(){

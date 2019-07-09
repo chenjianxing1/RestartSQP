@@ -1,6 +1,6 @@
-#include "Utils.hpp"
+#include <sqphot/Utils.hpp>
+namespace SQPhotstart{
 
-namespace SQPhotstart {
     void print_matrix(Number *M, Index length, Index width) {
         for (int row = 0; row < length; row++) {
             for (int col = 0; col < width; col++) {
@@ -58,5 +58,5 @@ namespace SQPhotstart {
         }
         return infnorm;
     }
-}
 
+}
