@@ -205,23 +205,23 @@ namespace SQPhotstart {
      * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-        int A_colNum = 0;
-        int A_rowNum = 0;
+        int numVar_QP;
+        int numCon_QP;
 
-        // A_colNum = nlp_info.nVar + 2 * nlp_info.nCon;
-        // A_rowNum = nlp_info.nCon;
+         numVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
+         numCon_QP = nlp_info.nCon;
         // A_ = make_shared<Matrix>(nlp_info.nnz_jac_g, 2);
 
         if (qptype == QP) {
-            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, A_rowNum, A_colNum);
+            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, numVar_QP, numVar_QP);
         }
 
-        qp_interface_ = std::make_shared<qpOASESInterface>(A_colNum, A_rowNum);
-        lbA_ = make_shared<Vector>(A_rowNum);
-        ubA_ = make_shared<Vector>(A_rowNum);
-        lb_ = make_shared<Vector>(A_colNum);
-        ub_ = make_shared<Vector>(A_colNum);
-        g_ = make_shared<Vector>(A_colNum);
+        qp_interface_ = std::make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
+        lbA_ = make_shared<Vector>(numCon_QP);
+        ubA_ = make_shared<Vector>(numCon_QP);
+        lb_ = make_shared<Vector>(numVar_QP);
+        ub_ = make_shared<Vector>(numVar_QP);
+        g_ = make_shared<Vector>(numVar_QP);
         return true;
     }
 
