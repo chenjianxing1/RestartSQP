@@ -188,8 +188,8 @@ namespace SQPhotstart {
         static bool
         tuple_sort_rule(const tuple<int, int, Number, int> left, const tuple<int, int, Number, int> right) {
             if (get<1>(left) < get<1>(right)) return true;
-            if (get<1>(left) > get<1>(right)) return false;
-            if (get<1>(left) == get<1>(right)) {
+            else if (get<1>(left) > get<1>(right)) return false;
+            else {
                 if (get<0>(left) < get<0>(right))return true;
                 else return false;
             }

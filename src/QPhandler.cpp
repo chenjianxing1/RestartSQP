@@ -205,15 +205,15 @@ namespace SQPhotstart {
      * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-        int A_colNum;
-        int A_rowNum;
+        int A_colNum = 0;
+        int A_rowNum = 0;
 
         // A_colNum = nlp_info.nVar + 2 * nlp_info.nCon;
         // A_rowNum = nlp_info.nCon;
         // A_ = make_shared<Matrix>(nlp_info.nnz_jac_g, 2);
 
         if (qptype == QP) {
-            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, A_colNum, A_colNum);
+            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, A_rowNum, A_colNum);
         }
 
         qp_interface_ = std::make_shared<qpOASESInterface>(A_colNum, A_rowNum);
