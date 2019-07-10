@@ -2,30 +2,30 @@
 
 namespace SQPhotstart {
 
-    /**Default constructor*/
-       qpOASESInterface::qpOASESInterface() {
-     }
-
-    /**
-     * @name Constructor which also initializes the qpOASES SQProblem objects
-     * @param nVar_QP the number of variables in QP problem
-     * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
-     */
-    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
-//        //FIXME: the qpOASES does not accept any extra input
+//    /**Default constructor*/
+//       qpOASESInterface::qpOASESInterface() {
+//     }
+//
+//    /**
+//     * @name Constructor which also initializes the qpOASES SQProblem objects
+//     * @param nVar_QP the number of variables in QP problem
+//     * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
+//     */
+//    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
+////        //FIXME: the qpOASES does not accept any extra input
 //        _qp = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
-
-    }
-
-    /**Default destructor*/
-    qpOASESInterface::~qpOASESInterface() {}
-
-/**
- * @name This function solves the QP problem specified in the data, with given options. After the QP
- * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
- * in object stats
- */
-    bool qpOASESInterface::optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<Matrix> A,
+//
+//    }
+//
+//    /**Default destructor*/
+//    qpOASESInterface::~qpOASESInterface() {}
+//
+///**
+// * @name This function solves the QP problem specified in the data, with given options. After the QP
+// * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
+// * in object stats
+// */
+    bool qpOASESInterface::optimizeQP(shared_ptr<SpMatrix> H, shared_ptr<Vector> g, shared_ptr<SpMatrix> A,
                                       shared_ptr<Vector> lbA, shared_ptr<Vector> ubA, shared_ptr<Vector> lb,
                                       shared_ptr<Vector> ub, shared_ptr<Stats> stats, shared_ptr<Options> options) {
 //        qpOASESMatrixAdapter(H, H_);
@@ -46,17 +46,17 @@ namespace SQPhotstart {
 //        stats->qp_iter_addValue((int) nWSR);
         return true;
     }
-
-/**
- * This function transforms the representation form of the sparse matrix in triplet form
- * to adapt the format required by the qpOASES(Harwell-Boeing Sparse Matrix).
- *
- * @param M_in_triplet Matrix objects contains data in triplet form
- * @param M_result     Matrix object prepared as the input for qpOASES
- */
-    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
-                                                shared_ptr<qpOASES::SparseMatrix> M_result) {
-
+//
+///**
+// * This function transforms the representation form of the sparse matrix in triplet form
+// * to adapt the format required by the qpOASES(Harwell-Boeing Sparse Matrix).
+// *
+// * @param M_in_triplet Matrix objects contains data in triplet form
+// * @param M_result     Matrix object prepared as the input for qpOASES
+// */
+//    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
+//                                                shared_ptr<qpOASES::SparseMatrix> M_result) {
+//
 //        if (!A_tmp_.isinitialized) {
 //            std::vector<std::tuple<int, int, Number, int>> tmp;
 //            for (int i = 0; i < M_in_triplet->EntryNum(); i++) {
@@ -87,11 +87,11 @@ namespace SQPhotstart {
 //        } else {
 //            update_qpOASES_input(M_in_triplet, M_result);
 //        }
-        return true;
-    }
-
-    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
-                                                shared_ptr<qpOASES::SymSparseMat> M_result) {
+//        return true;
+//    }
+//
+//    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
+//                                                shared_ptr<qpOASES::SymSparseMat> M_result) {
 //        if (!H_tmp_.isinitialized) {
 //            std::vector<std::tuple<int, int, Number, int>> tmp;
 //            for (int i = 0; i < M_in_triplet->EntryNum(); i++) {
@@ -119,26 +119,26 @@ namespace SQPhotstart {
 //        } else {
 //            update_qpOASES_input(M_in_triplet, M_result);
 //        }
-
-        return true;
-    }
-
-/**
- * This is part of qpOASESMatrixAdapter
- *@name process the input data. Transform sorted data in tuple form to the format required by qpOASES QProblem class.
- * It will initialize the matrix object required by the qpOASES
- *
- * @tparam T either be SparseMatrix or SymSparseMat
- * @param input The input data in tuple form, it is the form used to store data in Matrix class
- * @param results The Matrix to be initialize
- * @param RowNum The number of rows of the matrix
- * @param ColNum The number of columns of the matrix
- */
-    template<typename T>
-    bool qpOASESInterface::initialize_qpOASES_input(vector<tuple<int, int, Number, int>> input,
-                                                    shared_ptr<T> results, Index RowNum, Index ColNum,
-                                                    bool isA) {
-        if (isA) {
+//
+//        return true;
+//    }
+//
+///**
+// * This is part of qpOASESMatrixAdapter
+// *@name process the input data. Transform sorted data in tuple form to the format required by qpOASES QProblem class.
+// * It will initialize the matrix object required by the qpOASES
+// *
+// * @tparam T either be SparseMatrix or SymSparseMat
+// * @param input The input data in tuple form, it is the form used to store data in Matrix class
+// * @param results The Matrix to be initialize
+// * @param RowNum The number of rows of the matrix
+// * @param ColNum The number of columns of the matrix
+// */
+//    template<typename T>
+//    bool qpOASESInterface::initialize_qpOASES_input(vector<tuple<int, int, Number, int>> input,
+//                                                    shared_ptr<T> results, Index RowNum, Index ColNum,
+//                                                    bool isA) {
+//        if (isA) {
 //            A_tmp_.RowInd_ = new qpOASES::sparse_int_t[(int) input.size()];
 //            A_tmp_.ColInd_ = new qpOASES::sparse_int_t[ColNum + 1];
 //            A_tmp_.MatVal_ = new qpOASES::real_t[(int) input.size()];
@@ -189,11 +189,11 @@ namespace SQPhotstart {
 ////            for(int i =0; i<=ColNum;i++) cout<<H_tmp_.ColInd_[i]<<endl;
 ////            for(int i =0; i<input.size();i++) cout<<H_tmp_.MatVal_at(i)<<endl;
 //            results = std::make_shared<T>(RowNum, ColNum, H_tmp_.RowInd_, H_tmp_.ColInd_, H_tmp_.MatVal_);
-
-        }
-        return true;
-    }
-
-
+//
+//        }
+//        return true;
+//    }
+//
+//
 }//SQPHOTSTART
 

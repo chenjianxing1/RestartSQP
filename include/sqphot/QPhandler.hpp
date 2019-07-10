@@ -83,7 +83,8 @@ namespace SQPhotstart {
          * @param c_u        the upper bounds for constraints
          */
         virtual bool setup_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> c_k,
-                                  shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_l,
+                                  shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
+                                  shared_ptr<const Vector> c_l,
                                   shared_ptr<const Vector> c_u);
 
         /**
@@ -102,7 +103,6 @@ namespace SQPhotstart {
          */
 
         virtual bool setup_H(shared_ptr<const SpMatrix> hessian);
-	
 
 
         /** @name setup the matrix A for the QP subproblems according to the information from current iterate*/
@@ -123,8 +123,9 @@ namespace SQPhotstart {
          * If qptype ==LP, then it will not copy the Hessian, and the first half of the g)
          * objects in qpOASES
          */
-        virtual bool copy_QP_info(shared_ptr<const QPhandler> rhs,// the QPhandler object that are going to be copied from
-                                  QPType qptype) { return false; };                // is the object rhs an LP?
+        virtual bool
+        copy_QP_info(shared_ptr<const QPhandler> rhs,// the QPhandler object that are going to be copied from
+                     QPType qptype) { return false; };                // is the object rhs an LP?
 
         /**
          * @name This function updates the bounds on x if there is any changes to the values
@@ -133,7 +134,7 @@ namespace SQPhotstart {
          * @param delta 	 trust region radius
          * @param nVar 		 number of variables in NLP
          */
-        virtual bool update_bounds( double delta); //the trust region radius
+        virtual bool update_bounds(double delta); //the trust region radius
 
 
 
@@ -166,7 +167,8 @@ namespace SQPhotstart {
          */
         virtual bool update_A(shared_ptr<const SpMatrix> Jacobian);
 
-	inline double get_obj(){return qp_obj_;}
+        inline double get_obj() { return qp_obj_; }
+
     private:
         /** allocate memory to class members except QP objects*/
         virtual bool allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
@@ -190,8 +192,8 @@ namespace SQPhotstart {
 	 *
          */
 
-	private:        
-	//bounds that can be represented as vectors
+    private:
+        //bounds that can be represented as vectors
         Index_info nlp_info_;
         QPType qptype_;
         shared_ptr<Vector> lbA_;    // lower bounds of Ax

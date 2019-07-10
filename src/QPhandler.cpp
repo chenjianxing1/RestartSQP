@@ -157,6 +157,7 @@ namespace SQPhotstart {
      * @param hessian 	the Matrix object for Hessian from NLP
      */
     bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
+
         //   H_->copyMatrix(hessian);
         return true;
     }
@@ -216,9 +217,9 @@ namespace SQPhotstart {
         if (qptype == QP) {
             H_ = make_shared<SpMatrix>(nlp_info.nnz_h_lag, numVar_QP, numVar_QP);
         }
-    //FIXME constructor problem????
+        //FIXME constructor problem????
 
-        //qp_interface_ = make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
+        qp_interface_ = make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
         lbA_ = make_shared<Vector>(numCon_QP);
         ubA_ = make_shared<Vector>(numCon_QP);
         lb_ = make_shared<Vector>(numVar_QP);

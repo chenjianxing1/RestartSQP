@@ -69,7 +69,6 @@ namespace SQPhotstart {
     bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<SpMatrix> Jacobian){
 	nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), NULL);
-     
     return true;
     }
 

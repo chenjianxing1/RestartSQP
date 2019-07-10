@@ -150,6 +150,8 @@ namespace SQPhotstart {
         /**Default constructor*/
         qpOASESSparseMat(){}
 
+        ~qpOASESSparseMat(){}
+
         /**constructor from the spMatrix, automatically convert data in triplet form
          * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
          */

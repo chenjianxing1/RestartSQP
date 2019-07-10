@@ -33,7 +33,7 @@ namespace SQPhotstart {
 
         // while (stats->iter < options->iter_max) {
         /* setup the QPs and solve them */
-        //    setupQP();
+            setupQP();
         //based on the information given by NLP reader; otherwise, it will do nothing
         //myQP->solveQP(stats, options);//solve the SL1QP problems
         //get_search_direction(myQP);//
