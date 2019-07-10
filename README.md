@@ -1,3 +1,9 @@
+<p align="center">
+<img src="media/fire.svg" width="150">
+<H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
+</p>
+<p align="center"> For Constrained Nonlinear Optimization </p>
+
 DEPENDENCIES
 -------
 cmake: http://www.cmake.org (Version 3.2 or better)
