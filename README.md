@@ -2,7 +2,7 @@
 <img src="media/fire.svg" width="150">
 <H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
 </p>
-<p align="center"> For Constrained Nonlinear Optimization </p>
+<p align="center"> for Constrained Nonlinear Optimization </p>
 
 DEPENDENCIES
 -------
@@ -51,8 +51,8 @@ Note: If Cplex and Gurobi were installed using the standard installer, Cmake sho
 
 * `cmake ..`
 
-All dependencies are switched off by default, to enable a solver that is installed on your system,  
-append the flag `-D$Solvername$=ON`, e.g., `cmake -DIpopt=ON -DGurobi=ON -DCplex=ON ..`.
+All dependencies are switched off by default, except for Ipopt, to enable a solver that is installed on your system,  
+append the flag `-D$Solvername$=ON`, e.g., `cmake -DGurobi=ON -DCplex=ON ..`.
 
 Note: To build an Xcode project append `-G Xcode` to the command above
 
