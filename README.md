@@ -9,6 +9,9 @@ Included ThirdParty Libraries
 
 qpOASES: https://projects.coin-or.org/qpOASES/wiki/WikiStart
 
+The qpOASES library included is not compiled with HSL http://www.hsl.rl.ac.uk/catalogue/ linear solvers.
+If you compile qpOASES with HSL solvers, you just need to replace the libraries libqpOASES.dylib (for MacOS) and libqpOASES.so (for Linux) found under `ThirdParty/qpOASES-3.2.1/bin`.
+
 OPTIONAL
 -------
 
