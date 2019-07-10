@@ -1,3 +1,9 @@
+<p align="center">
+<img src="media/fire.png" width="150">
+<H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
+</p>
+<p align="center"> for Constrained Nonlinear Optimization </p>
+
 DEPENDENCIES
 -------
 cmake: http://www.cmake.org (Version 3.2 or better)
@@ -8,6 +14,9 @@ Included ThirdParty Libraries
 -------
 
 qpOASES: https://projects.coin-or.org/qpOASES/wiki/WikiStart
+
+The qpOASES library included is not compiled with HSL http://www.hsl.rl.ac.uk/catalogue/ linear solvers.
+If you compile qpOASES with HSL solvers, you just need to replace the libraries libqpOASES.dylib (for MacOS) and libqpOASES.so (for Linux) found under `ThirdParty/qpOASES-3.2.1/bin`.
 
 OPTIONAL
 -------
@@ -42,8 +51,8 @@ Note: If Cplex and Gurobi were installed using the standard installer, Cmake sho
 
 * `cmake ..`
 
-All dependencies are switched off by default, to enable a solver that is installed on your system,  
-append the flag `-D$Solvername$=ON`, e.g., `cmake -DIpopt=ON -DGurobi=ON -DCplex=ON ..`.
+All dependencies are switched off by default, except for Ipopt, to enable a solver that is installed on your system,  
+append the flag `-D$Solvername$=ON`, e.g., `cmake -DGurobi=ON -DCplex=ON ..`.
 
 Note: To build an Xcode project append `-G Xcode` to the command above
 
