@@ -3,7 +3,7 @@
 namespace SQPhotstart {
 
     /** Constructor for an empty matrix with N non-zero entries*/
-    Matrix::Matrix(int EntryNum, int RowNum, int ColNum) :
+    SpMatrix::SpMatrix(int EntryNum, int RowNum, int ColNum) :
             RowIndex_(NULL),
             ColIndex_(NULL),
             MatVal_(NULL),
@@ -11,6 +11,7 @@ namespace SQPhotstart {
             EntryNum_(EntryNum),
             RowNum_(RowNum),
             ColNum_(ColNum) {
+        //do nothing unless any data is to be assigned
         RowIndex_ = new int[EntryNum];
         ColIndex_ = new int[EntryNum];
         MatVal_ = new Number[EntryNum];
@@ -23,20 +24,8 @@ namespace SQPhotstart {
     }
 
     /** Default destructor */
-    Matrix::~Matrix() {
+    SpMatrix::~SpMatrix() {
         freeMemory();
-    }
-
-    /**
-     *@name copy the data and number of nontrivial entries.
-     */
-    bool Matrix::copyMatrix(std::shared_ptr<const Matrix> rhs) {
-        this->RowIndex_ = rhs->RowIndex_;
-        this->ColIndex_ = rhs->ColIndex_;
-        this->MatVal_ = rhs->MatVal_;
-        this->order_ = rhs->order_;
-        this->EntryNum_ = rhs->EntryNum_;
-        return true;
     }
 
 
@@ -48,7 +37,7 @@ namespace SQPhotstart {
 //     * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
 //     *
 //     */
-//    bool Matrix::assignMatrix(SQPhotstart::Index *RowIndex, SQPhotstart::Index *ColIndex,
+//    bool SparseMatrix::assignMatrix(SQPhotstart::Index *RowIndex, SQPhotstart::Index *ColIndex,
 //                              SQPhotstart::Number *MatVal) {
 //        RowIndex_ = RowIndex;
 //        ColIndex_ = ColIndex;
@@ -60,7 +49,7 @@ namespace SQPhotstart {
     /**
      *@name print the sparse matrix in triplet form
      */
-    void Matrix::print() {
+    void SpMatrix::print() {
         std::cout << "Row Column Entry Order" << std::endl;
         for (int i = 0; i < EntryNum_; i++) {
             std::cout << RowIndex_[i] << "    ";
@@ -71,7 +60,7 @@ namespace SQPhotstart {
     }
 
     /** free all memory*/
-    bool Matrix::freeMemory() {
+    bool SpMatrix::freeMemory() {
         delete[] RowIndex_;
         RowIndex_ = NULL;
         delete[] ColIndex_;

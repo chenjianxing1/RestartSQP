@@ -37,7 +37,7 @@ namespace SQPhotstart {
          * overload this method to optimize a QP with the data specified, update the stats by adding the iteration
          * number used to solve this QP to stats.qp_iter
          */
-        virtual bool optimizeQP(shared_ptr<Matrix> H, shared_ptr<Vector> g, shared_ptr<Matrix> A,
+        virtual bool optimizeQP(shared_ptr<SpMatrix> H, shared_ptr<Vector> g, shared_ptr<SpMatrix> A,
                                 shared_ptr<Vector> lbA, shared_ptr<Vector> ubA, shared_ptr<Vector> lb,
                                 shared_ptr<Vector> ub, shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
 
@@ -65,21 +65,13 @@ namespace SQPhotstart {
         virtual bool get_multipliers(double* y_optimal) = 0;
     };
 
+
     /**
      *This is a derived class of QPsolverInterface. It uses qpOASES as the QP solver which favors the hotstart
      * option. It is used as the default QP solver for SQPhostart.
-     *
      */
     class qpOASESInterface : public QPSolverInterface {
-        typedef struct {
-            qpOASES::sparse_int_t* RowInd_ = NULL;
-            qpOASES::sparse_int_t* ColInd_ = NULL;
-            qpOASES::real_t* MatVal_ = NULL;
-            bool isinitialized = false;
-        } qpOASESSparseMat;
     public:
-        /**Default constructor*/
-        qpOASESInterface();
 
         /**
          * @name Constructor which also initializes the qpOASES SQProblem objects
@@ -87,8 +79,8 @@ namespace SQPhotstart {
          * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
          */
 
-        qpOASESInterface(const int nVar_QP,    //number of variables in the QP problem
-                         const int nCon_QP);    //number of constraints in the QP problem
+        qpOASESInterface(int nVar_QP,    //number of variables in the QP problem
+                         int nCon_QP);    //number of constraints in the QP problem
 
         /**Default destructor*/
         virtual ~qpOASESInterface();
@@ -148,10 +140,14 @@ namespace SQPhotstart {
         shared_ptr<qpOASES::SQProblem> _qp;// the qpOASES object used for solving a qp
 
     private:
+
+        /**Default constructor*/
+        qpOASESInterface();
+    private:
         shared_ptr<qpOASES::SymSparseMat> H_;
         shared_ptr<qpOASES::SparseMatrix> A_;
-        qpOASESSparseMat A_tmp_;
-        qpOASESSparseMat H_tmp_;
+        shared_ptr<qpOASESSparseMat> H_tmp_;
+        shared_ptr<qpOASESSparseMat> A_tmp_;
 
         /**
          * This is part of qpOASESMatrixAdapter

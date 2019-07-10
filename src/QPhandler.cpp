@@ -1,5 +1,5 @@
 #include <sqphot/QPhandler.hpp>
-#include <sqphot/SQPTNLP.hpp>
+
 namespace SQPhotstart {
     /**
      * Default constructor
@@ -156,8 +156,8 @@ namespace SQPhotstart {
      *
      * @param hessian 	the Matrix object for Hessian from NLP
      */
-    bool QPhandler::setup_H(shared_ptr<const Matrix> hessian) {
-        H_->copyMatrix(hessian);
+    bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
+        //   H_->copyMatrix(hessian);
         return true;
     }
 
@@ -166,7 +166,7 @@ namespace SQPhotstart {
      *
      * @param jacobian 	the Matrix object for Jacobian from c(x)
      */
-    bool QPhandler::setup_A(shared_ptr<const Matrix> jacobian) {
+    bool QPhandler::setup_A(shared_ptr<const SpMatrix> jacobian) {
         // A_->copyMatrix(jacobian);
         // int nCon = jacobian->RowNum();
         // int nVar = jacobian->ColNum();
@@ -208,15 +208,17 @@ namespace SQPhotstart {
         int numVar_QP;
         int numCon_QP;
 
-         numVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
-         numCon_QP = nlp_info.nCon;
-        // A_ = make_shared<Matrix>(nlp_info.nnz_jac_g, 2);
+        numVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
+        numCon_QP = nlp_info.nCon;
+
+        A_ = make_shared<SpMatrix>(nlp_info.nnz_jac_g, numCon_QP, numVar_QP);
 
         if (qptype == QP) {
-            H_ = make_shared<Matrix>(nlp_info.nnz_h_lag, numVar_QP, numVar_QP);
+            H_ = make_shared<SpMatrix>(nlp_info.nnz_h_lag, numVar_QP, numVar_QP);
         }
+    //FIXME constructor problem????
 
-        qp_interface_ = std::make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
+        //qp_interface_ = make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
         lbA_ = make_shared<Vector>(numCon_QP);
         ubA_ = make_shared<Vector>(numCon_QP);
         lb_ = make_shared<Vector>(numVar_QP);
@@ -225,11 +227,11 @@ namespace SQPhotstart {
         return true;
     }
 
-    bool QPhandler::update_H(shared_ptr<const Matrix> Hessian) {
+    bool QPhandler::update_H(shared_ptr<const SpMatrix> Hessian) {
         return false;
     }
 
-    bool QPhandler::update_A(shared_ptr<const Matrix> Jacobian) {
+    bool QPhandler::update_A(shared_ptr<const SpMatrix> Jacobian) {
         return false;
     }
 

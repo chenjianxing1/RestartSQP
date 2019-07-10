@@ -3,35 +3,22 @@
 namespace SQPhotstart {
 
     /**Default constructor*/
-    qpOASESInterface::qpOASESInterface() {
-    }
+       qpOASESInterface::qpOASESInterface() {
+     }
 
     /**
      * @name Constructor which also initializes the qpOASES SQProblem objects
      * @param nVar_QP the number of variables in QP problem
      * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
      */
-    qpOASESInterface::qpOASESInterface(const int nVar_QP, const int nCon_QP) {
-        //FIXME: the qpOASES does not accept any extra input
-        _qp = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
+    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
+//        //FIXME: the qpOASES does not accept any extra input
+//        _qp = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
 
     }
 
     /**Default destructor*/
-    qpOASESInterface::~qpOASESInterface() {
-        delete[] H_tmp_.RowInd_;
-        H_tmp_.RowInd_ = NULL;
-        delete[] H_tmp_.ColInd_;
-        H_tmp_.ColInd_ = NULL;
-        delete[] H_tmp_.MatVal_;
-        H_tmp_.MatVal_ = NULL;
-        delete[] A_tmp_.RowInd_;
-        A_tmp_.RowInd_ = NULL;
-        delete[] A_tmp_.ColInd_;
-        A_tmp_.ColInd_ = NULL;
-        delete[] A_tmp_.MatVal_;
-        A_tmp_.MatVal_ = NULL;
-    }
+    qpOASESInterface::~qpOASESInterface() {}
 
 /**
  * @name This function solves the QP problem specified in the data, with given options. After the QP

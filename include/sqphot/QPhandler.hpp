@@ -101,12 +101,12 @@ namespace SQPhotstart {
          * @return
          */
 
-        virtual bool setup_H(shared_ptr<const Matrix> hessian);
+        virtual bool setup_H(shared_ptr<const SpMatrix> hessian);
 	
 
 
         /** @name setup the matrix A for the QP subproblems according to the information from current iterate*/
-        virtual bool setup_A(shared_ptr<const Matrix> jacobian);
+        virtual bool setup_A(shared_ptr<const SpMatrix> jacobian);
 
 
         /**
@@ -154,17 +154,17 @@ namespace SQPhotstart {
          */
         virtual bool update_grad(shared_ptr<const Vector> grad);
 
-        /*  @name Update the Matrix H of the QP problems when there is any change to the
+        /*  @name Update the SparseMatrix H of the QP problems when there is any change to the
          *  true function Hessian
          *
          *  */
-        virtual bool update_H(shared_ptr<const Matrix> Hessian);
+        virtual bool update_H(shared_ptr<const SpMatrix> Hessian);
 
         /**
          * @name Update the Matrix H of the QP problems when there is any change to the
          *  Jacobian to the constraints.
          */
-        virtual bool update_A(shared_ptr<const Matrix> Jacobian);
+        virtual bool update_A(shared_ptr<const SpMatrix> Jacobian);
 
 	inline double get_obj(){return qp_obj_;}
     private:
@@ -199,8 +199,8 @@ namespace SQPhotstart {
         shared_ptr<Vector> lb_;     //lower bounds of x
         shared_ptr<Vector> ub_;     //upper bounds of x
         shared_ptr<Vector> g_;
-        shared_ptr<Matrix> H_;
-        shared_ptr<Matrix> A_;
+        shared_ptr<SpMatrix> H_;
+        shared_ptr<SpMatrix> A_;
         shared_ptr<QPSolverInterface> qp_interface_; //an interface to the standard QP solver specified by the user
         double qp_obj_;        // the optimal objectives from QPhandler
     };

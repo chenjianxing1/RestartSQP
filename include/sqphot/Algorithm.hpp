@@ -71,7 +71,7 @@ namespace SQPhotstart {
          * obtains the function information for the first QP, and solve the first QP and LP.
          *
          */
-        virtual bool Presolve();
+        virtual bool initilization();
 
         /**
          *
@@ -197,8 +197,8 @@ namespace SQPhotstart {
         shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
         shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
         shared_ptr<Vector> p_k_; /* search direction at x_k*/
-        shared_ptr<Matrix> hessian_;/* the Matrix object for hessain of f(x)+sum_{i=1}^m lambda_i c_i(x) //TODO: check the sign*/
-        shared_ptr<Matrix> jacobian_;/*the Matrix object for Jacobian from c(x)*/
+        shared_ptr<SpMatrix> hessian_;/* the SparseMatrix object for hessain of f(x)+sum_{i=1}^m lambda_i c_i(x) //TODO: check the sign*/
+        shared_ptr<SpMatrix> jacobian_;/*the SparseMatrix object for Jacobian from c(x)*/
         ConstraintType* cons_type_; /* the constraints type, it can be either bounded, bounded above,bounded below, or unbounded*/
         ConstraintType* bound_cons_type_;/* the variables type, it can be either bounded, bounded above,bounded below, or unbounded*/
         shared_ptr<Options> options;/* the default options used for now. TODO: modify it*/

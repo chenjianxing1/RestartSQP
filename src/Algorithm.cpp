@@ -25,15 +25,15 @@ namespace SQPhotstart {
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    bool Algorithm::Optimize(SmartPtr <Ipopt::TNLP> nlp) {
+    bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         allocate(nlp);
-        Presolve();
+        initilization();
 
         /** Main iteration */
 
         // while (stats->iter < options->iter_max) {
         /* setup the QPs and solve them */
-        //setupQP();
+        //    setupQP();
         //based on the information given by NLP reader; otherwise, it will do nothing
         //myQP->solveQP(stats, options);//solve the SL1QP problems
         //get_search_direction(myQP);//
@@ -99,16 +99,16 @@ namespace SQPhotstart {
      * obtains the function information for the first QP, and solve the first QP and LP.
      *
      */
-    bool Algorithm::Presolve() {
+    bool Algorithm::initilization() {
         nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
         nlp_->Get_starting_point(x_k_, lambda_);
         nlp_->shift_starting_point(x_k_, x_l_, x_u_);
         nlp_->Eval_f(x_k_, obj_value_);
         nlp_->Eval_gradient(x_k_, grad_f_);
         nlp_->Eval_constraints(x_k_, c_k_);
-	nlp_->Get_Structure_Hessian(x_k_, lambda_, hessian_);
+        nlp_->Get_Structure_Hessian(x_k_, lambda_, hessian_);
         nlp_->Eval_Hessian(x_k_, lambda_, hessian_);
-	nlp_->Get_Strucutre_Jacobian(x_k_,jacobian_);
+        nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
 
@@ -117,7 +117,7 @@ namespace SQPhotstart {
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
         log->print_header();
-	log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
+        log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
         return true;
     }
 
@@ -127,7 +127,7 @@ namespace SQPhotstart {
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    bool Algorithm::allocate(SmartPtr <Ipopt::TNLP> nlp) {
+    bool Algorithm::allocate(SmartPtr<Ipopt::TNLP> nlp) {
         nlp_ = make_shared<SQPTNLP>(nlp);
         nVar_ = nlp_->nlp_info_.nVar;
         nCon_ = nlp_->nlp_info_.nCon;
@@ -136,7 +136,7 @@ namespace SQPhotstart {
         x_k_ = make_shared<Vector>(nVar_);
         x_trial_ = make_shared<Vector>(nVar_);
         p_k_ = make_shared<Vector>(nVar_);
-	lambda_ = make_shared<Vector>(nCon_);
+        lambda_ = make_shared<Vector>(nCon_);
         c_k_ = make_shared<Vector>(nCon_);
         c_trial_ = make_shared<Vector>(nCon_);
         x_l_ = make_shared<Vector>(nVar_);
@@ -144,8 +144,8 @@ namespace SQPhotstart {
         c_l_ = make_shared<Vector>(nCon_);
         c_u_ = make_shared<Vector>(nCon_);
         grad_f_ = make_shared<Vector>(nVar_);
-        jacobian_ = make_shared<Matrix>(nlp_->nlp_info_.nnz_jac_g,nCon_,nVar_);
-        hessian_ = make_shared<Matrix>(nlp_->nlp_info_.nnz_h_lag, nVar_,nVar_);
+        jacobian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
+        hessian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_);
 
         options = make_shared<Options>();
         stats = make_shared<Stats>();
@@ -166,48 +166,29 @@ namespace SQPhotstart {
      * This function calculates the infeasibility measure for either tiral point or current iterate
      *
      *@param trial: true if the user are going to evaluate the infeasibility measure of the trial point _x_trial;
-     *		        infea_fun_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1);
-     *		        infea_var_trial = norm(-min(x_trial-bl,0),1)+norm(-max(x_trial-bu,0),1);
-     *		        infea_measure_trial = infea_fun_trial+ infea_var_trial;
+     *		        infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
      *
      * 	            false if the user are going to evaluate the infeasibility measure of the current iterates _x_k
-     *	    		infea_fun = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
-     *  	    		infea_var = norm(-min(x-bl,0),1)+norm(-max(x-bu,0),1);
-     *  		    	infea_measure = infea_fun+infea_var;
+     *	    		infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
     bool Algorithm::infea_cal(bool trial) {
-        Number infea_con = 0.0;
-        Number infea_var = 0.0;
 
         if (trial) {
-            for (int i = 0; i < x_k_->Dim(); i++) {
-                if (x_trial_->getEntryAt(i) < x_l_->getEntryAt(i))
-                    infea_var += (x_l_->getEntryAt(i) - x_trial_->getEntryAt(i));
-                else if (x_trial_->getEntryAt(i) > x_u_->getEntryAt(i))
-                    infea_var += (x_trial_->getEntryAt(i) - x_u_->getEntryAt(i));
-            }
             for (int i = 0; i < c_k_->Dim(); i++) {
                 if (c_trial_->getEntryAt(i) < c_l_->getEntryAt(i))
-                    infea_con += (c_l_->getEntryAt(i) - c_trial_->getEntryAt(i));
+                    infea_measure_trial_ += (c_l_->getEntryAt(i) - c_trial_->getEntryAt(i));
                 else if (c_trial_->getEntryAt(i) > c_u_->getEntryAt(i))
-                    infea_con += (c_trial_->getEntryAt(i) - c_u_->getEntryAt(i));
+                    infea_measure_trial_+= (c_trial_->getEntryAt(i) - c_u_->getEntryAt(i));
             }
-            infea_measure_trial_ = infea_con + infea_var;
         } else {
-            for (int i = 0; i < x_k_->Dim(); i++) {
-                if (x_k_->getEntryAt(i) < x_l_->getEntryAt(i)) infea_var += (x_l_->getEntryAt(i) - x_k_->getEntryAt(i));
-                else if (x_k_->getEntryAt(i) > x_u_->getEntryAt(i))
-                    infea_var += (x_k_->getEntryAt(i) - x_u_->getEntryAt(i));
-            }
             for (int i = 0; i < c_k_->Dim(); i++) {
-                if (c_k_->getEntryAt(i) < c_l_->getEntryAt(i)) infea_con += (c_l_->getEntryAt(i) - c_k_->getEntryAt(i));
+                if (c_k_->getEntryAt(i) < c_l_->getEntryAt(i))
+                    infea_measure_ += (c_l_->getEntryAt(i) - c_k_->getEntryAt(i));
                 else if (c_trial_->getEntryAt(i) > c_u_->getEntryAt(i))
-                    infea_con += (c_k_->getEntryAt(i) - c_u_->getEntryAt(i));
+                    infea_measure_+= (c_k_->getEntryAt(i) - c_u_->getEntryAt(i));
             }
-            infea_measure_ = infea_con + infea_var;
         }
-
         return true;
     }
 
@@ -221,8 +202,8 @@ namespace SQPhotstart {
      * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
     bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
-       // double *tmp_p_k = new double[qpsolver->A_->ColNum()]();
-        double *tmp_p_k = new double[nVar_+2*nCon_];
+        // double *tmp_p_k = new double[qpsolver->A_->ColNum()]();
+        double* tmp_p_k = new double[nVar_ + 2 * nCon_];
         qpsolver->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         delete[] tmp_p_k;
@@ -238,7 +219,7 @@ namespace SQPhotstart {
      * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qpsolver) {
-        double *tmp_lambda = new double[nVar_+3*nCon_];
+        double* tmp_lambda = new double[nVar_ + 3 * nCon_];
         qpsolver->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
         delete[] tmp_lambda;
