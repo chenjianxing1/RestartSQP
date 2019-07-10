@@ -2,17 +2,17 @@ DEPENDENCIES
 -------
 cmake: http://www.cmake.org (Version 3.2 or better)
 
+Ipopt: https://projects.coin-or.org/Ipopt
+
 Included ThirdParty Libraries
 -------
-
-Eigen: https://github.com/eigenteam/eigen-git-mirror
 
 qpOASES: https://projects.coin-or.org/qpOASES/wiki/WikiStart
 
 OPTIONAL
 -------
 
-Ipopt: https://projects.coin-or.org/Ipopt
+Eigen: https://github.com/eigenteam/eigen-git-mirror
 
 Gurobi: http://www.gurobi.com
 
@@ -40,10 +40,10 @@ Note: If Cplex and Gurobi were installed using the standard installer, Cmake sho
 
 * `cd build`
 
-* `cmake -DIpopt=ON -DGurobi=ON -DCplex=ON ..`
+* `cmake ..`
 
 All dependencies are switched off by default, to enable a solver that is installed on your system,  
-append the flag `-D$Solvername$=ON` as shown above.
+append the flag `-D$Solvername$=ON`, e.g., `cmake -DIpopt=ON -DGurobi=ON -DCplex=ON ..`.
 
 Note: To build an Xcode project append `-G Xcode` to the command above
 
