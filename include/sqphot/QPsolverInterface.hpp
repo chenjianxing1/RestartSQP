@@ -73,9 +73,9 @@ namespace SQPhotstart {
 
         virtual  shared_ptr<Vector> &getG() = 0;
 
-        virtual  shared_ptr<SpMatrix> &getH() =0;
-
-        virtual  shared_ptr<SpMatrix> &getA() = 0;
+//        virtual  shared_ptr<SpMatrix> &getH() =0;
+//
+//        virtual  shared_ptr<SpMatrix> &getA() = 0;
 
 
     private:
@@ -99,11 +99,10 @@ namespace SQPhotstart {
 
         /**
          * @name Constructor which also initializes the qpOASES SQProblem objects
-         * @param nVar_QP the number of variables in QP problem
+         * @param nlp_index_info the number of variables in QP problem
          * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
          */
-        qpOASESInterface(int nVar_QP,    //number of variables in the QP problem
-                         int nCon_QP);    //number of constraints in the QP problem
+        qpOASESInterface(Index_info nlp_index_info);    //number of constraints in the QP problem
 
         virtual bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options);
 
@@ -130,15 +129,16 @@ namespace SQPhotstart {
          */
         inline double get_obj_value();
 
-         shared_ptr<SpMatrix> &getH();
-
-         shared_ptr<SpMatrix> &getA();
 
          shared_ptr<Vector> &getLb() ;
 
          shared_ptr<Vector> &getUb() ;
 
-         shared_ptr<Vector> &getLbA();
+        shared_ptr<qpOASESSparseMat> &getH();
+
+        shared_ptr<qpOASESSparseMat> &getA();
+
+        shared_ptr<Vector> &getLbA();
 
          shared_ptr<Vector> &getUbA();
 
@@ -168,15 +168,15 @@ namespace SQPhotstart {
         shared_ptr<Vector> lbA_; //lower bounds of Ax
         shared_ptr<Vector> ubA_; //upper bounds of Ax
         shared_ptr<Vector> g_;
-        shared_ptr<SpMatrix> H_;
-        shared_ptr<SpMatrix> A_;
+        shared_ptr<qpOASESSparseMat> H_;
+        shared_ptr<qpOASESSparseMat> A_;
 
     private:
 
         /** default constructor*/
         qpOASESInterface();
 
-        bool allocate(int nVar_QP, int nCon_QP);
+        bool allocate(Index_info nlp_index_info);
 
         /** Copy Constructor */
         qpOASESInterface(const qpOASESInterface &);
@@ -213,19 +213,7 @@ namespace SQPhotstart {
 //         */
 //        bool delete_repetitive_entry(vector<tuple<int, int, Number, int>> mat) { return false; };
 //
-//        /**
-//         * This is part of qpOASESMatrixAdapter
-//         * @name This is the sorted rule that used to sort data, first based on column index then based on row index
-//         */
-//        static bool
-//        tuple_sort_rule(const tuple<int, int, Number, int> left, const tuple<int, int, Number, int> right) {
-//            if (get<1>(left) < get<1>(right)) return true;
-//            else if (get<1>(left) > get<1>(right)) return false;
-//            else {
-//                if (get<0>(left) < get<0>(right))return true;
-//                else return false;
-//            }
-//        }
+
 
     };
 }//SQPHOTSTART

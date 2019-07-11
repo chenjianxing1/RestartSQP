@@ -150,7 +150,9 @@ namespace SQPhotstart {
      * @param hessian 	the Matrix object for Hessian from NLP
      */
     bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
-        qp_interface_->getH()->QPMatrixAdapter(*hessian);
+        Identity2Info I_info_H;
+        qp_interface_->getH()->setStructure(hessian,I_info_H);
+        qp_interface_->getH()->setMatVal(hessian->MatVal());
         return true;
     }
 
@@ -160,9 +162,16 @@ namespace SQPhotstart {
      * @param jacobian 	the Matrix object for Jacobian from c(x)
      */
     bool QPhandler::setup_A(shared_ptr<const SpMatrix> jacobian) {
-        qp_interface_->getA()->QPMatrixAdapter(*jacobian);
-        qp_interface_->getA()->addIdentityMat(1, nlp_info_.nVar + 1, nlp_info_.nCon, 1.0);
-        qp_interface_->getA()->addIdentityMat(1, nlp_info_.nVar + nlp_info_.nCon + 1, nlp_info_.nCon, -1.0);
+
+        Identity2Info I_info_A;
+        I_info_A.irow1 = 1;
+        I_info_A.irow2 = 1;
+        I_info_A.jcol1 = nlp_info_.nVar+1;
+        I_info_A.jcol2 = nlp_info_.nVar+nlp_info_.nCon+1;
+        I_info_A.size = nlp_info_.nCon;
+        
+        qp_interface_->getA()->setStructure(jacobian,I_info_A);
+        qp_interface_->getA()->setMatVal(jacobian->MatVal());
         return true;
     }
 
@@ -191,19 +200,17 @@ namespace SQPhotstart {
      * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-        int nVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
-        int nCon_QP = nlp_info.nCon;
-        qp_interface_ = make_shared<qpOASESInterface>(nVar_QP, nCon_QP);
+        qp_interface_ = make_shared<qpOASESInterface>(nlp_info);
         return true;
     }
 
     bool QPhandler::update_H(shared_ptr<const SpMatrix> Hessian) {
-        qp_interface_->getH()->updateMatVal(Hessian->MatVal());
+        qp_interface_->getH()->setMatVal(Hessian->MatVal());
         return true;
     }
 
     bool QPhandler::update_A(shared_ptr<const SpMatrix> Jacobian) {
-        qp_interface_->getA()->updateMatVal(Jacobian->MatVal());
+        qp_interface_->getA()->setMatVal(Jacobian->MatVal());
         return true;
     }
 

@@ -195,7 +195,7 @@ namespace SQPhotstart {
         //bounds that can be represented as vectors
         Index_info nlp_info_;
         QPType qptype_;
-        shared_ptr<QPSolverInterface> qp_interface_; //an interface to the standard QP solver specified by the user
+        shared_ptr<qpOASESInterface> qp_interface_; //an interface to the standard QP solver specified by the user
         double qp_obj_;        // the optimal objectives from QPhandler
     };
 

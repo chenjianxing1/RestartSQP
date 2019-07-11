@@ -2,26 +2,29 @@
 
 namespace SQPhotstart {
 
-    bool qpOASESInterface::allocate(int nVar_QP, int nCon_QP) {
+    bool qpOASESInterface::allocate(Index_info nlp_index_info) {
+        int nVar_QP = 2 * nlp_index_info.nCon + nlp_index_info.nVar;
+        int nCon_QP = nlp_index_info.nCon;
         lbA_ = make_shared<Vector>(nCon_QP);
         ubA_ = make_shared<Vector>(nCon_QP);
         lb_ = make_shared<Vector>(nVar_QP);
         ub_ = make_shared<Vector>(nVar_QP);
         g_ = make_shared<Vector>(nVar_QP);
-        A_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
-        H_ = make_shared<qpOASESSparseMat>(nVar_QP, nVar_QP);
+        A_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
+        H_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_h_lag, nVar_QP, nVar_QP);
         qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
         return true;
     }
 
     /**
      * @name Constructor which also initializes the qpOASES SQProblem objects
-     * @param nVar_QP the number of variables in QP problem
+     * @param nlp_index_info the number of variables in QP problem
      * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
      */
-    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
+    qpOASESInterface::qpOASESInterface(Index_info nlp_index_info) {
         //FIXME: the qpOASES does not accept any extra input
-        allocate(nVar_QP,nCon_QP);
+        allocate(nlp_index_info);
+
 
     }
 
@@ -67,13 +70,6 @@ namespace SQPhotstart {
         return (double) (qp_->getObjVal());
     }
 
-    shared_ptr<SpMatrix> &qpOASESInterface::getH() {
-        return H_;
-    }
-
-    shared_ptr<SpMatrix> &qpOASESInterface::getA() {
-        return A_;
-    }
 
     shared_ptr<Vector> &qpOASESInterface::getLb() {
         return lb_;
@@ -94,6 +90,15 @@ namespace SQPhotstart {
     shared_ptr<Vector> &qpOASESInterface::getG() {
         return g_;
     }
+
+    shared_ptr<qpOASESSparseMat> &qpOASESInterface::getH(){
+        return H_;
+    }
+
+    shared_ptr<qpOASESSparseMat> &qpOASESInterface::getA(){
+        return A_;
+    }
+
 //
 ///**
 // * This function transforms the representation form of the sparse matrix in triplet form
