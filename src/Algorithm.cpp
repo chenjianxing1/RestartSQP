@@ -175,6 +175,7 @@ namespace SQPhotstart {
     bool Algorithm::infea_cal(bool trial) {
 
         if (trial) {
+		infea_measure_trial_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
                 if (c_trial_->getValueAt(i) < c_l_->getValueAt(i))
                     infea_measure_trial_ += (c_l_->getValueAt(i) - c_trial_->getValueAt(i));
@@ -182,6 +183,7 @@ namespace SQPhotstart {
                     infea_measure_trial_+= (c_trial_->getValueAt(i) - c_u_->getValueAt(i));
             }
         } else {
+		infea_measure_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
                 if (c_k_->getValueAt(i) < c_l_->getValueAt(i))
                     infea_measure_ += (c_l_->getValueAt(i) - c_k_->getValueAt(i));
