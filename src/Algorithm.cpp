@@ -239,7 +239,7 @@ namespace SQPhotstart {
     bool Algorithm::setupQP() {
 
         if (stats->iter == 0) {
-            myQP->setup_bounds(delta_, x_k_, c_k_, x_l_, x_u_, c_l_, c_u_);
+            myQP->setup_bounds(delta_, x_k_, x_l_, x_u_);
             myQP->setup_g(grad_f_, rho_);
             myQP->setup_H(hessian_);
             myQP->setup_A(jacobian_);
@@ -253,7 +253,8 @@ namespace SQPhotstart {
                 QPinfoFlag_.Update_H = false;
             }
             if (QPinfoFlag_.Update_bounds) {
-                myQP->update_bounds(delta_);
+                myQP->update_bounds(delta_, shared_ptr<const Vector>(), shared_ptr<const Vector>(),
+                                    shared_ptr<const Vector>());
                 QPinfoFlag_.Update_bounds = false;
             }
 

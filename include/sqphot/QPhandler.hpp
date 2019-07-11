@@ -82,10 +82,8 @@ namespace SQPhotstart {
          * @param c_l        the lower bounds for constraints
          * @param c_u        the upper bounds for constraints
          */
-        virtual bool setup_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> c_k,
-                                  shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
-                                  shared_ptr<const Vector> c_l,
-                                  shared_ptr<const Vector> c_u);
+        virtual bool setup_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
+                                  shared_ptr<const Vector> x_u);
 
         /**
          * @name This function sets up the object vector g of the QP problem
@@ -134,7 +132,8 @@ namespace SQPhotstart {
          * @param delta 	 trust region radius
          * @param nVar 		 number of variables in NLP
          */
-        virtual bool update_bounds(double delta); //the trust region radius
+        virtual bool update_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
+                                   shared_ptr<const Vector> x_u); //the trust region radius
 
 
 

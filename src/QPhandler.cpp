@@ -74,13 +74,9 @@ namespace SQPhotstart {
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    bool QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
-                                 shared_ptr<const Vector> c_k,
-                                 shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
-                                 shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u) {
-        int nCon = nlp_info_.nCon;
-        int nVar = nlp_info_.nVar;
-        for (int i = 0; i < nVar; i++) {
+    bool QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
+                                 shared_ptr<const Vector> x_u) {
+        for (int i = 0; i < nlp_info_.nVar; i++) {
             qp_interface_->getLb()->setValueAt(i, std::max(x_l->getValueAt(i) - x_k->getValueAt(i), -delta));
             qp_interface_->getUb()->setValueAt(i, std::min(x_u->getValueAt(i) - x_k->getValueAt(i), delta));
         }
@@ -88,8 +84,8 @@ namespace SQPhotstart {
          * only set the upper bound for the last 2*nCon entries (those are slack variables).
          * The lower bounds are initialized as 0
          */
-        for (int i = 0; i < nCon * 2; i++)
-            qp_interface_->getUb()->setValueAt(nVar + i, INF);
+        for (int i = 0; i < nlp_info_.nCon * 2; i++)
+            qp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
 
         return true;
     }
@@ -104,7 +100,7 @@ namespace SQPhotstart {
      */
     bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
         qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
-        qp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon*2, rho);
+        qp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon * 2, rho);
         return true;
     }
 
@@ -115,9 +111,12 @@ namespace SQPhotstart {
      * @param delta 	 trust region radius	
      * @param nVar 		 number of variables in NLP
      */
-    bool QPhandler::update_bounds(double delta) {
-//        lb_->assign_n(1, nlp_info_.nVar, -delta);
-//        ub_->assign_n(1, nlp_info_.nVar, delta);
+    bool QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
+                                  shared_ptr<const Vector> x_u) {
+        for (int i = 0; i < nlp_info_.nVar; i++) {
+            qp_interface_->getLb()->setValueAt(i, std::max(x_l->getValueAt(i) - x_k->getValueAt(i), -delta));
+            qp_interface_->getUb()->setValueAt(i, std::min(x_u->getValueAt(i) - x_k->getValueAt(i), delta));
+        }
         return true;
     }
 
@@ -129,7 +128,7 @@ namespace SQPhotstart {
      */
 
     bool QPhandler::update_penalty(double rho) {
-//        g_->assign_n(nlp_info_.nVar + 1, g_->Dim() - nlp_info_.nVar, rho);
+        qp_interface_->getG()->assign_n(nlp_info_.nVar + 1, nlp_info_.nCon * 2, rho);
         return true;
     }
 
@@ -140,7 +139,7 @@ namespace SQPhotstart {
      * @param grad		the gradient vector from NLP
      */
     bool QPhandler::update_grad(shared_ptr<const Vector> grad) {
-//        g_->assign(1, grad->Dim(), grad->vector());
+        qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
         return true;
     }
 
@@ -162,8 +161,8 @@ namespace SQPhotstart {
      */
     bool QPhandler::setup_A(shared_ptr<const SpMatrix> jacobian) {
         qp_interface_->getA()->QPMatrixAdapter(*jacobian);
-        qp_interface_->getA()->addIdentityMat(1,nlp_info_.nVar+1,nlp_info_.nCon,1.0);
-        qp_interface_->getA()->addIdentityMat(1,nlp_info_.nVar+nlp_info_.nCon+1,nlp_info_.nCon,-1.0);
+        qp_interface_->getA()->addIdentityMat(1, nlp_info_.nVar + 1, nlp_info_.nCon, 1.0);
+        qp_interface_->getA()->addIdentityMat(1, nlp_info_.nVar + nlp_info_.nCon + 1, nlp_info_.nCon, -1.0);
         return true;
     }
 
@@ -199,11 +198,13 @@ namespace SQPhotstart {
     }
 
     bool QPhandler::update_H(shared_ptr<const SpMatrix> Hessian) {
-        return false;
+        qp_interface_->getH()->updateMatVal(Hessian->MatVal());
+        return true;
     }
 
     bool QPhandler::update_A(shared_ptr<const SpMatrix> Jacobian) {
-        return false;
+        qp_interface_->getA()->updateMatVal(Jacobian->MatVal());
+        return true;
     }
 
 

@@ -63,19 +63,19 @@ namespace SQPhotstart {
         virtual bool get_multipliers(double* y_optimal) = 0;
 
 
-        virtual shared_ptr<Vector> &getLb() = 0;
+        virtual  shared_ptr<Vector> &getLb() = 0;
 
-        virtual shared_ptr<Vector> &getUb() = 0;
+        virtual  shared_ptr<Vector> &getUb() = 0;
 
-        virtual shared_ptr<Vector> &getLbA() = 0;
+        virtual  shared_ptr<Vector> &getLbA() = 0;
 
-        virtual shared_ptr<Vector> &getUbA() = 0;
+        virtual  shared_ptr<Vector> &getUbA()  = 0;
 
-        virtual shared_ptr<Vector> &getG() = 0;
+        virtual  shared_ptr<Vector> &getG() = 0;
 
-        virtual shared_ptr<SpMatrix> &getH() = 0;
+        virtual  shared_ptr<SpMatrix> &getH() =0;
 
-        virtual shared_ptr<SpMatrix> &getA() = 0;
+        virtual  shared_ptr<SpMatrix> &getA() = 0;
 
 
     private:
@@ -130,19 +130,19 @@ namespace SQPhotstart {
          */
         inline double get_obj_value();
 
-        shared_ptr<SpMatrix> &getH();
+         shared_ptr<SpMatrix> &getH();
 
-        shared_ptr<SpMatrix> &getA();
+         shared_ptr<SpMatrix> &getA();
 
-        shared_ptr<Vector> &getLb();
+         shared_ptr<Vector> &getLb() ;
 
-        shared_ptr<Vector> &getUb();
+         shared_ptr<Vector> &getUb() ;
 
-        shared_ptr<Vector> &getLbA();
+         shared_ptr<Vector> &getLbA();
 
-        shared_ptr<Vector> &getUbA();
+         shared_ptr<Vector> &getUbA();
 
-        shared_ptr<Vector> &getG();
+         shared_ptr<Vector> &getG()  ;
 
         /**
          * @name This function transforms the representation form of the sparse matrix in triplet form

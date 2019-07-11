@@ -64,9 +64,11 @@ namespace SQPhotstart {
         /**
          *
          */
-        bool QPMatrixAdapter(const SpMatrix &rhs) { return false; }
+         bool QPMatrixAdapter(const SpMatrix &rhs) { return false; }
 
-        bool addIdentityMat(int irow, int jcol, int size, double scaling_factor) { return false; };
+         bool addIdentityMat(int irow, int jcol, int size, double scaling_factor) { return false; };
+
+         bool updateMatVal(const double* MatVal) { return false; }
 
         /**
          * @name Times a matrix with a vector p, the pointer to the matrix-vector product will be 
@@ -163,7 +165,7 @@ namespace SQPhotstart {
         /**Method that convert automatically convert data in triplet form
          * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
          */
-        //bool QPMatrixAdapter(const SpMatrix &rhs) override { return false; }
+        bool QPMatrixAdapter(const SpMatrix &rhs) { return false; }
 
         //bool addIdentityMat(int irow, int jcol, int size, double scaling_factor) override { return false; }
 
