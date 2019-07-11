@@ -41,7 +41,7 @@ namespace SQPhotstart {
          *
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
-        virtual bool Optimize(SmartPtr <Ipopt::TNLP> nlp);
+        virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
 
         /* Private methods*/
     private:
@@ -154,7 +154,7 @@ namespace SQPhotstart {
          *
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
-        bool allocate(SmartPtr <Ipopt::TNLP> nlp);
+        bool allocate(SmartPtr<Ipopt::TNLP> nlp);
 
         /** Check how the constraints are bounded
          *  If there is only upper bounds for constraints, c(x)<=c_u, then _Constraint_type = BOUNDED_ABOVE

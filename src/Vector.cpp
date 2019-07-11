@@ -150,14 +150,21 @@ namespace SQPhotstart {
         return true;
     }
 
-    Vector Vector::operator+(Vector rhs) {
+    Vector Vector::operator+(const Vector& rhs) {
         assert(this->size_=rhs.size_);
-        Vector added_result = Vector(this->size_);
+        auto added_result = Vector(this->size_);
         for (int i = 0; i < this->size_; i++)
             added_result.setValueAt(i, this->getValueAt(i) + rhs.getValueAt(i));
         return added_result;
     }
 
+    Vector Vector::operator-(const Vector& rhs) {
+        assert(this->size_=rhs.size_);
+        auto added_result = Vector(this->size_);
+        for (int i = 0; i < this->size_; i++)
+            added_result.setValueAt(i, this->getValueAt(i) - rhs.getValueAt(i));
+        return added_result;
+    }
     bool Vector::setValue2Max(Vector* rhs, double compared_const) {
         if(size_==0){
             size_ = rhs->size_;

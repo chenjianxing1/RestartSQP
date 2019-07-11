@@ -39,7 +39,7 @@ namespace SQPhotstart{
     }
 
 
-    Number oneNorm(Number *x, Index n) {
+    Number oneNorm(const Number* x, Index n) {
         Number sum = 0;
         for (int i = 0; i < n; i++) {
             if (x[i] < 0)sum -= x[i];
@@ -48,7 +48,7 @@ namespace SQPhotstart{
         return sum;
     }
     
-    Number infNorm(Number *x, Index n) {
+    Number infNorm(const Number* x, Index n) {
         Number infnorm = 0;
         for (int i = 0; i < n; i++) {
             Number absxk;

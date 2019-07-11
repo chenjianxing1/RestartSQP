@@ -26,25 +26,13 @@ namespace SQPhotstart {
     bool isFinite(Number* x, Index length);
 
     /* Calculate the one norm of a n-dimension vector x*/
-    Number oneNorm(Number* x, Index n);
+    Number oneNorm(const Number* x, Index n);
 
 
     /* Calculate the infinity norm of a n-dimension vector x*/
-    Number infNorm(Number* x, Index n);
+    Number infNorm(const Number* x, Index n);
 
     ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound);
-
-    template<typename T>
-    bool add_twovec(const T* vec1,
-                    const T* vec2,
-                    T* result,
-                    const int dim
-    ) {
-
-        for (int i = 0; i < dim; i++)
-            result[i] = vec1[i] + vec2[i];
-        return true;
-    }
 
     //debug tool print things out
     template<typename T>

@@ -21,7 +21,7 @@ namespace SQPhotstart {
     public:
 
         /** constructor that copies nlp to _nlp as a local data reader*/
-        SQPTNLP(SmartPtr <Ipopt::TNLP> nlp);
+        SQPTNLP(SmartPtr<Ipopt::TNLP> nlp);
 
         /** Default destructor*/
         virtual ~SQPTNLP();
@@ -74,23 +74,26 @@ namespace SQPhotstart {
          * @param Jacobian
          * @return
          */
-        virtual bool Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
+        virtual bool Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
+                                           shared_ptr<SpMatrix> Hessian);
 
         /**
          *@name Evaluate Hessian of Lagragian function at  (x, lambda)
          */
-        virtual bool Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
+        virtual bool
+        Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
 
         /**
          *
          */
-        virtual bool shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u);
+        virtual bool
+        shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u);
 
     public:
         Index_info nlp_info_; // the struct record the number of variables, number of constraints,
         // number of nonzeoro entry of Hessian and that of Jacobian
         // Please check Types.hpp for details
-        SmartPtr <Ipopt::TNLP> nlp_;// a local nlp reader
+        SmartPtr<Ipopt::TNLP> nlp_;// a local nlp reader
 
     private:
         /** Default constructor*/

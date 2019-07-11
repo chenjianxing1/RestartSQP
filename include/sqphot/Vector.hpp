@@ -16,9 +16,10 @@ namespace SQPhotstart {
     class Vector {
     public:
         /** Default Constructor*/
-        Vector():
-        size_(0),
-        values_(NULL){};
+        Vector() :
+                size_(0),
+                values_(NULL) {};
+
         /**
          * Default constructor
          * @name initialize the size of the vector and allocate the memory to the array
@@ -94,6 +95,14 @@ namespace SQPhotstart {
         /** calculate the infinity norm of the member _vector*/
         double getInfNorm() const;
 
+
+        Vector operator+(const Vector &rhs);
+
+        Vector operator-(const Vector &rhs);
+
+        bool setValue2Max(Vector* rhs, double compared_const);
+
+        bool setValue2Min(Vector* rhs, double compared_const);
         /**
          * get the class member
          * */
@@ -110,12 +119,6 @@ namespace SQPhotstart {
         inline const double* values() const { return values_; }
 
 
-        Vector operator+(Vector rhs);
-
-        bool setValue2Max(Vector* rhs, double compared_const);
-
-        bool setValue2Min(Vector* rhs, double compared_const);
-
     private:
 
 //        Vector():
@@ -125,7 +128,6 @@ namespace SQPhotstart {
 //
 //        /** Overloaded Equals Operator */
 //        void operator=(const Vector &);
-
 
         int size_; /* the size of an vector*/
         double* values_;/*the array stored vector information*/
