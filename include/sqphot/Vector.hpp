@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <iostream>
+#include <cassert>
 
 namespace SQPhotstart {
 
@@ -98,11 +99,11 @@ namespace SQPhotstart {
 
         Vector operator+(const Vector &rhs);
 
-        Vector operator-(const Vector &rhs);
+        const Vector operator-(const Vector &rhs);
 
-        bool setValue2Max(Vector* rhs, double compared_const);
+        bool setValue2Max(const Vector rhs, double compared_const);
 
-        bool setValue2Min(Vector* rhs, double compared_const);
+        bool setValue2Min(const Vector &rhs, double compared_const);
         /**
          * get the class member
          * */

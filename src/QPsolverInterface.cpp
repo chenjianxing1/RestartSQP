@@ -8,8 +8,8 @@ namespace SQPhotstart {
         lb_ = make_shared<Vector>(nVar_QP);
         ub_ = make_shared<Vector>(nVar_QP);
         g_ = make_shared<Vector>(nVar_QP);
-        A_tmp_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
-//        H_tmp_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
+        A_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
+        H_ = make_shared<qpOASESSparseMat>(nVar_QP, nVar_QP);
         qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
         return true;
     }
@@ -21,12 +21,12 @@ namespace SQPhotstart {
      */
     qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
         //FIXME: the qpOASES does not accept any extra input
-        allocate(0, 0);
+        allocate(nVar_QP,nCon_QP);
 
     }
 
     /**Default destructor*/
-    qpOASESInterface::~qpOASESInterface() {}
+    qpOASESInterface::~qpOASESInterface() = default;
 
 /**
  * @name This function solves the QP problem specified in the data, with given options. After the QP
@@ -34,9 +34,9 @@ namespace SQPhotstart {
  * in object stats
  */
     bool qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
-//        qpOASESMatrixAdapter(H, H_);
-//        qpOASESMatrixAdapter(A, A_);
-//        H_->createDiagInfo();
+//        qpOASESMatrixAdapter(H, H_qpOASES_);
+//        qpOASESMatrixAdapter(A, A_qpOASES_);
+//        H_qpOASES_->createDiagInfo();
 //
 //        qpOASES::int_t nWSR = options->qp_maxiter;//TODO modify it
 //        if (stats->qp_iter == 0) {//if haven't solve any QP before then initialize the first qp
@@ -44,10 +44,10 @@ namespace SQPhotstart {
 //            if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
 //                qp_options.printLevel = qpOASES::PL_NONE;
 //            qp_->setOptions(qp_options);
-//            qp_->init(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(), nWSR,
+//            qp_->init(H_qpOASES_.get(), g->vector(), A_qpOASES_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(), nWSR,
 //                      0);
 //        } else
-//            qp_->hotstart(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(),
+//            qp_->hotstart(H_qpOASES_.get(), g->vector(), A_qpOASES_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(),
 //                          nWSR, 0);
 //        stats->qp_iter_addValue((int) nWSR);
         return true;
@@ -66,6 +66,34 @@ namespace SQPhotstart {
     double qpOASESInterface::get_obj_value() {
         return (double) (qp_->getObjVal());
     }
+
+    shared_ptr<SpMatrix> &qpOASESInterface::getH() {
+        return H_;
+    }
+
+    shared_ptr<SpMatrix> &qpOASESInterface::getA() {
+        return A_;
+    }
+
+    shared_ptr<Vector> &qpOASESInterface::getLb() {
+        return lb_;
+    }
+
+    shared_ptr<Vector> &qpOASESInterface::getUb() {
+        return ub_;
+    }
+
+    shared_ptr<Vector> &qpOASESInterface::getLbA() {
+        return lbA_;
+    }
+
+    shared_ptr<Vector> &qpOASESInterface::getUbA() {
+        return ubA_;
+    }
+
+    shared_ptr<Vector> &qpOASESInterface::getG() {
+        return g_;
+    }
 //
 ///**
 // * This function transforms the representation form of the sparse matrix in triplet form
@@ -77,7 +105,7 @@ namespace SQPhotstart {
 //    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
 //                                                shared_ptr<qpOASES::SparseMatrix> M_result) {
 //
-//        if (!A_tmp_.isinitialized) {
+//        if (!A_.isinitialized) {
 //            std::vector<std::tuple<int, int, Number, int>> tmp;
 //            for (int i = 0; i < M_in_triplet->EntryNum(); i++) {
 //                tmp.push_back(
@@ -102,7 +130,7 @@ namespace SQPhotstart {
 //                cout<<get<3>(tmp[i])<<endl;
 //            }
 //            initialize_qpOASES_input(tmp, M_result, M_in_triplet->RowNum(), M_in_triplet->ColNum(), true);
-//            A_tmp_.isinitialized = true;
+//            A_.isinitialized = true;
 //            tmp.clear();
 //        } else {
 //            update_qpOASES_input(M_in_triplet, M_result);
@@ -112,7 +140,7 @@ namespace SQPhotstart {
 //
 //    bool qpOASESInterface::qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet,
 //                                                shared_ptr<qpOASES::SymSparseMat> M_result) {
-//        if (!H_tmp_.isinitialized) {
+//        if (!H_.isinitialized) {
 //            std::vector<std::tuple<int, int, Number, int>> tmp;
 //            for (int i = 0; i < M_in_triplet->EntryNum(); i++) {
 //                tmp.push_back(
@@ -134,7 +162,7 @@ namespace SQPhotstart {
 //                cout<<get<3>(tmp[i])<<endl;
 //            }
 //            initialize_qpOASES_input(tmp, M_result, M_in_triplet->RowNum(), M_in_triplet->ColNum(), false);
-//            H_tmp_.isinitialized = true;
+//            H_.isinitialized = true;
 //            tmp.clear();
 //        } else {
 //            update_qpOASES_input(M_in_triplet, M_result);
@@ -159,43 +187,43 @@ namespace SQPhotstart {
 //                                                    shared_ptr<T> results, Index RowNum, Index ColNum,
 //                                                    bool isA) {
 //        if (isA) {
-//            A_tmp_.RowInd_ = new qpOASES::sparse_int_t[(int) input.size()];
-//            A_tmp_.ColInd_ = new qpOASES::sparse_int_t[ColNum + 1];
-//            A_tmp_.MatVal_ = new qpOASES::real_t[(int) input.size()];
+//            A_.RowInd_ = new qpOASES::sparse_int_t[(int) input.size()];
+//            A_.ColInd_ = new qpOASES::sparse_int_t[ColNum + 1];
+//            A_.MatVal_ = new qpOASES::real_t[(int) input.size()];
 //
 //            int j = get<1>(input[0]);
 //            for (int i = 0; i < (int) input.size(); i++) {
-//                A_tmp_.RowInd_[i] = (qpOASES::sparse_int_t) get<0>(input[i]) - 1;
-//                A_tmp_.ColInd_[i] = (qpOASES::real_t) get<2>(input[i]);
-//                if (get<1>(input[i]) == j)A_tmp_.ColInd_[j]++;
+//                A_.RowInd_[i] = (qpOASES::sparse_int_t) get<0>(input[i]) - 1;
+//                A_.ColInd_[i] = (qpOASES::real_t) get<2>(input[i]);
+//                if (get<1>(input[i]) == j)A_.ColInd_[j]++;
 //                else {
-//                    A_tmp_.ColInd_[get<1>(input[i])] = (qpOASES::sparse_int_t) A_tmp_.ColInd_[get<1>(input[i - 1])] + 1;
+//                    A_.ColInd_[get<1>(input[i])] = (qpOASES::sparse_int_t) A_.ColInd_[get<1>(input[i - 1])] + 1;
 //                    j = get<1>(input[i]);
 //                }
 //
 //            }
 //            for (int i = get<1>(input[input.size() - 1]); i <= ColNum; i++) {
-//                A_tmp_.ColInd_[i] = A_tmp_.ColInd_[get<1>(input[input.size() - 1])];
+//                A_.ColInd_[i] = A_.ColInd_[get<1>(input[input.size() - 1])];
 //            }
-//            for(int i =0; i<input.size();i++) cout<<A_tmp_.RowInd_[i]<<"   ";
+//            for(int i =0; i<input.size();i++) cout<<A_.RowInd_[i]<<"   ";
 //            cout<<" "<<endl;
-//            for(int i =0; i<=ColNum;i++) cout<<A_tmp_.ColInd_[i]<<"   ";
+//            for(int i =0; i<=ColNum;i++) cout<<A_.ColInd_[i]<<"   ";
 //            cout<<" "<<endl;
-//            for(int i =0; i<input.size();i++) cout<<A_tmp_.MatVal_at(i)<<"   ";
+//            for(int i =0; i<input.size();i++) cout<<A_.MatVal_at(i)<<"   ";
 //            cout<<" "<<endl;
-//            results = std::make_shared<T>(RowNum, ColNum, A_tmp_.RowInd_, A_tmp_.ColInd_, A_tmp_.MatVal_);
+//            results = std::make_shared<T>(RowNum, ColNum, A_.RowInd_, A_.ColInd_, A_.MatVal_);
 //        } else {
-//            H_tmp_.RowInd_ = new qpOASES::sparse_int_t[(int) input.size()]();
-//            H_tmp_.ColInd_ = new qpOASES::sparse_int_t[ColNum + 1]();
-//            H_tmp_.MatVal_ = new qpOASES::real_t[(int) input.size()]();
+//            H_.RowInd_ = new qpOASES::sparse_int_t[(int) input.size()]();
+//            H_.ColInd_ = new qpOASES::sparse_int_t[ColNum + 1]();
+//            H_.MatVal_ = new qpOASES::real_t[(int) input.size()]();
 //
 //            int j = get<1>(input[0]);
 //            for (int i = 0; i < (int) input.size(); i++) {
-//                H_tmp_.RowInd_[i] = (qpOASES::sparse_int_t) get<0>(input[i]) - 1;
-//                H_tmp_.MatVal_[i] = (qpOASES::real_t) get<2>(input[i]);
-//                if (get<1>(input[i]) == j)H_tmp_.ColInd_[j]++;
+//                H_.RowInd_[i] = (qpOASES::sparse_int_t) get<0>(input[i]) - 1;
+//                H_.MatVal_[i] = (qpOASES::real_t) get<2>(input[i]);
+//                if (get<1>(input[i]) == j)H_.ColInd_[j]++;
 //                else {
-//                    H_tmp_.ColInd_[get<1>(input[i])] = (qpOASES::sparse_int_t) H_tmp_.ColInd_[get<1>(input[i - 1])] + 1;
+//                    H_.ColInd_[get<1>(input[i])] = (qpOASES::sparse_int_t) H_.ColInd_[get<1>(input[i - 1])] + 1;
 //                    j = get<1>(input[i]);
 //                }
 //
@@ -203,12 +231,12 @@ namespace SQPhotstart {
 ////                cout<<"  "<<endl;
 //            }
 //            for (int i = get<1>(input[input.size() - 1]); i <= ColNum; i++) {
-//                H_tmp_.ColInd_[i] = H_tmp_.ColInd_[get<1>(input[input.size() - 1])];
+//                H_.ColInd_[i] = H_.ColInd_[get<1>(input[input.size() - 1])];
 //            }
 ////            for(int i =0; i<input.size();i++) cout<<H_tmp_.RowInd_[i]<<endl;
 ////            for(int i =0; i<=ColNum;i++) cout<<H_tmp_.ColInd_[i]<<endl;
 ////            for(int i =0; i<input.size();i++) cout<<H_tmp_.MatVal_at(i)<<endl;
-//            results = std::make_shared<T>(RowNum, ColNum, H_tmp_.RowInd_, H_tmp_.ColInd_, H_tmp_.MatVal_);
+//            results = std::make_shared<T>(RowNum, ColNum, H_.RowInd_, H_.ColInd_, H_.MatVal_);
 //
 //        }
 //        return true;

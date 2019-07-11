@@ -140,38 +140,40 @@ namespace SQPhotstart {
         }
     }
 
-    bool Vector::setValue2Min(Vector* rhs, double compared_const) {
-        if(size_==0){
-            size_ = rhs->size_;
-            values_ = new double[size_];
-        }
-        for(int i=0; i<size_;i++)
-            setValueAt(i,std::min(rhs->getValueAt(i),compared_const));
+    bool Vector::setValue2Min(const Vector &rhs, double compared_const) {
+//        if(size_==0){
+//            size_ = rhs.size_;
+//            values_ = new double[size_];
+//        }
+//        for(int i=0; i<size_;i++)
+//            setValueAt(i,std::min(rhs->getValueAt(i),compared_const));
         return true;
     }
 
     Vector Vector::operator+(const Vector& rhs) {
-        assert(this->size_=rhs.size_);
+        assert(this->size_==rhs.size_);
         auto added_result = Vector(this->size_);
         for (int i = 0; i < this->size_; i++)
             added_result.setValueAt(i, this->getValueAt(i) + rhs.getValueAt(i));
         return added_result;
     }
 
-    Vector Vector::operator-(const Vector& rhs) {
-        assert(this->size_=rhs.size_);
+    const Vector Vector::operator-(const Vector &rhs) {
+        assert(this->size_==rhs.size_);
         auto added_result = Vector(this->size_);
         for (int i = 0; i < this->size_; i++)
             added_result.setValueAt(i, this->getValueAt(i) - rhs.getValueAt(i));
         return added_result;
     }
-    bool Vector::setValue2Max(Vector* rhs, double compared_const) {
+    bool Vector::setValue2Max(const Vector rhs, double compared_const) {
+        assert(this->size_==rhs.Dim());
+        rhs.print();
         if(size_==0){
-            size_ = rhs->size_;
+            size_ = rhs.size_;
             values_ = new double[size_];
         }
         for(int i=0; i<size_;i++)
-            setValueAt(i,std::max(rhs->getValueAt(i),compared_const));
+            setValueAt(i,std::max(rhs.getValueAt(i),compared_const));
         return true;
     }
 

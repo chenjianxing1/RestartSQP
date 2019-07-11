@@ -35,7 +35,7 @@ namespace SQPhotstart {
     class SpMatrix : public Matrix {
     public:
         /** Default constructor */
-        SpMatrix() {}
+        SpMatrix() {};
 
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
         SpMatrix(int EntryNum, int RowNum, int ColNum);
@@ -61,13 +61,19 @@ namespace SQPhotstart {
          */
         void print();
 
+        /**
+         *
+         */
+        bool QPMatrixAdapter(const SpMatrix &rhs) { return false; }
 
-        /** 
+        bool addIdentityMat(int irow, int jcol, int size, double scaling_factor) { return false; };
+
+        /**
          * @name Times a matrix with a vector p, the pointer to the matrix-vector product will be 
          * stored in the class member of another Vector class object called "result"
          * */
         virtual bool
-        times(double* p,      // the class object that stores the pointer of the vector to be multiplied
+        times(double* p,
               std::shared_ptr<SpMatrix> result  // the class object that will store the pointer of the matrix-vector product
         ) {
             return false;
@@ -140,18 +146,11 @@ namespace SQPhotstart {
  *
  *
  */
-    class qpOASESSparseMat : public Matrix {
+    class qpOASESSparseMat : public SpMatrix {
 
     public:
-
-
         /**Default constructor*/
         qpOASESSparseMat() = default;
-
-        /**constructor from the spMatrix, automatically convert data in triplet form
-         * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
-         */
-        qpOASESSparseMat(const SpMatrix &);
 
 
         qpOASESSparseMat(int RowNum, int ColNum);
@@ -161,8 +160,15 @@ namespace SQPhotstart {
 
         bool updateMatVal(const double* MatVal) { return false; }
 
+        /**Method that convert automatically convert data in triplet form
+         * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
+         */
+        //bool QPMatrixAdapter(const SpMatrix &rhs) override { return false; }
+
+        //bool addIdentityMat(int irow, int jcol, int size, double scaling_factor) override { return false; }
 
         bool updateMatVal(const qpOASES::real_t) { return false; }
+
 
         void print() override;
 

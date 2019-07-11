@@ -62,9 +62,10 @@ namespace SQPhotstart {
     }
 
     /**
-     *
-     * setup the bounds for the QP subproblems according to the information from current iterate
-     * 
+     * Setup the bounds for the QP subproblems according to the information from current iterate
+     * The bound is formulated as
+     *   max(-delta, x_l-x_k)<=p<=min(delta,x_u-x_k)
+     * and  u,v>=0
      * @param delta 	 trust region radius	
      * @param x_k 	 current iterate point
      * @param c_k        current constraint value evaluated at x_k
@@ -77,29 +78,33 @@ namespace SQPhotstart {
                                  shared_ptr<const Vector> c_k,
                                  shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
                                  shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u) {
-//        int nCon = nlp_info_.nCon;
-//        int nVar = nlp_info_.nVar;
-//        lb_->assign_n(1, nVar, -delta);
-//        ub_->assign_n(1, nVar, delta);
-//        ub_->assign_n(nVar + 1, ub_->Dim() - nVar, INF);
-//
-//            lbA_->copy_vector(c_l->vector());
-//            ubA_->copy_vector(c_u->vector());
-//            lbA_->subtract_vector(c_k->vector());
-//            ubA_->subtract_vector(c_k->vector());
+        int nCon = nlp_info_.nCon;
+        int nVar = nlp_info_.nVar;
+        for (int i = 0; i < nVar; i++) {
+            qp_interface_->getLb()->setValueAt(i, std::max(x_l->getValueAt(i) - x_k->getValueAt(i), -delta));
+            qp_interface_->getUb()->setValueAt(i, std::min(x_u->getValueAt(i) - x_k->getValueAt(i), delta));
+        }
+        /**
+         * only set the upper bound for the last 2*nCon entries (those are slack variables).
+         * The lower bounds are initialized as 0
+         */
+        for (int i = 0; i < nCon * 2; i++)
+            qp_interface_->getUb()->setValueAt(nVar + i, INF);
+
         return true;
     }
 
 
     /**
-     * This function sets up the object vector g of the QP problem 
-     *
+     * This function sets up the object vector g of the QP problem
+     * The (2*nCon+nVar) vector g_^T in QP problem will be the same as
+     * [grad_f^T, rho* e^T], where the unit vector is of length (2*nCon).
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
     bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
-//        g_->assign(1, grad->Dim(), grad->vector());
-//        g_->assign_n(grad->Dim() + 1, g_->Dim() - grad->Dim(), rho);
+        qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
+        qp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon*2, rho);
         return true;
     }
 
@@ -146,27 +151,19 @@ namespace SQPhotstart {
      * @param hessian 	the Matrix object for Hessian from NLP
      */
     bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
-
-        //   H_->copyMatrix(hessian);
+        qp_interface_->getH()->QPMatrixAdapter(*hessian);
         return true;
     }
 
     /**
      * This function sets up the matrix A in the QP subproblem
-     *
+     * The matrix A in QP problem will be concatenate as [J I -I]
      * @param jacobian 	the Matrix object for Jacobian from c(x)
      */
     bool QPhandler::setup_A(shared_ptr<const SpMatrix> jacobian) {
-        // A_->copyMatrix(jacobian);
-        // int nCon = jacobian->RowNum();
-        // int nVar = jacobian->ColNum();
-        //// FIXME: assign dimension in constructor
-        ////  A_->assign_dimension(nCon, nVar + 2 * nCon);
-        // if (A_->current_I_num() != A_->num_I()) {
-        //     A_->add_I(1, nVar + 1, nCon, true);
-        //     A_->add_I(1, nVar + nCon + 1, nCon, false);
-        // }
-
+        qp_interface_->getA()->QPMatrixAdapter(*jacobian);
+        qp_interface_->getA()->addIdentityMat(1,nlp_info_.nVar+1,nlp_info_.nCon,1.0);
+        qp_interface_->getA()->addIdentityMat(1,nlp_info_.nVar+nlp_info_.nCon+1,nlp_info_.nCon,-1.0);
         return true;
     }
 
@@ -176,7 +173,7 @@ namespace SQPhotstart {
      * @param stats	the static used to record iterations numbers
      */
     bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options) {
-//        qp_interface_->optimizeQP(H_, g_, A_, lbA_, ubA_, lb_, ub_, stats, options);
+//        qp_interface_->optimizeQP(H_qpOASES_, g_, A_qpOASES_, lbA_, ubA_, lb_, ub_, stats, options);
         qp_obj_ = qp_interface_->get_obj_value();
         return true;
     }
@@ -195,12 +192,9 @@ namespace SQPhotstart {
      * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-
         int nVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
         int nCon_QP = nlp_info.nCon;
-
         qp_interface_ = make_shared<qpOASESInterface>(nVar_QP, nCon_QP);
-
         return true;
     }
 

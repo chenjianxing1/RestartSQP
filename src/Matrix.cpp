@@ -158,9 +158,6 @@ namespace SQPhotstart {
 
     qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
 
-    qpOASESSparseMat::qpOASESSparseMat(const SpMatrix &) {
-
-    }
 
     qpOASESSparseMat::qpOASESSparseMat(int RowNum, int ColNum) :
             RowIndex_(NULL),

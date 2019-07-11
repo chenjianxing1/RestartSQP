@@ -33,7 +33,7 @@ namespace SQPhotstart {
 
         // while (stats->iter < options->iter_max) {
         /* setup the QPs and solve them */
-//            setupQP();
+            setupQP();
         //based on the information given by NLP reader; otherwise, it will do nothing
         //myQP->solveQP(stats, options);//solve the SL1QP problems
         //get_search_direction(myQP);//
@@ -175,20 +175,20 @@ namespace SQPhotstart {
     bool Algorithm::infea_cal(bool trial) {
 
         if (trial) {
-		infea_measure_trial_ = 0;
+            infea_measure_trial_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
                 if (c_trial_->getValueAt(i) < c_l_->getValueAt(i))
                     infea_measure_trial_ += (c_l_->getValueAt(i) - c_trial_->getValueAt(i));
                 else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
-                    infea_measure_trial_+= (c_trial_->getValueAt(i) - c_u_->getValueAt(i));
+                    infea_measure_trial_ += (c_trial_->getValueAt(i) - c_u_->getValueAt(i));
             }
         } else {
-		infea_measure_ = 0;
+            infea_measure_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
                 if (c_k_->getValueAt(i) < c_l_->getValueAt(i))
                     infea_measure_ += (c_l_->getValueAt(i) - c_k_->getValueAt(i));
                 else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
-                    infea_measure_+= (c_k_->getValueAt(i) - c_u_->getValueAt(i));
+                    infea_measure_ += (c_k_->getValueAt(i) - c_u_->getValueAt(i));
             }
         }
         return true;
@@ -204,7 +204,7 @@ namespace SQPhotstart {
      * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
      */
     bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
-        // double *tmp_p_k = new double[qpsolver->A_->ColNum()]();
+        // double *tmp_p_k = new double[qpsolver->A_qpOASES_->ColNum()]();
         double* tmp_p_k = new double[nVar_ + 2 * nCon_];
         qpsolver->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
