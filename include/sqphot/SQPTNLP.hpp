@@ -43,13 +43,13 @@ namespace SQPhotstart {
         /**
          *@name Evaluate the objective value
          */
-        virtual bool Eval_f(shared_ptr<Vector> x, Number &obj_value);
+        virtual bool Eval_f(shared_ptr<const Vector> x, Number &obj_value);
 
         /**
          * @name Evaluate the constraints at point x
          *
          */
-        virtual bool Eval_constraints(shared_ptr<Vector> x, shared_ptr<Vector> constraints);
+        virtual bool Eval_constraints(shared_ptr<const Vector> x, shared_ptr<Vector> constraints);
 
         /**
          *@name Evaluate gradient at point x
@@ -60,12 +60,12 @@ namespace SQPhotstart {
          * @name Get the matrix structure of the Jacobian
          * Always call this before the first time using @Eval_Jacobian
          */
-        virtual bool Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<SpMatrix> Jacobian);
+        virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian);
 
         /**
          *@name Evaluate Jacobian at point x
          */
-        virtual bool Eval_Jacobian(shared_ptr<Vector> x, shared_ptr<SpMatrix> Jacobian);
+        virtual bool Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian);
 
 
         /**
@@ -74,17 +74,17 @@ namespace SQPhotstart {
          * @param Jacobian
          * @return
          */
-        virtual bool Get_Structure_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<SpMatrix> Hessian);
+        virtual bool Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
 
         /**
          *@name Evaluate Hessian of Lagragian function at  (x, lambda)
          */
-        virtual bool Eval_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<SpMatrix> Hessian);
+        virtual bool Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
 
         /**
          *
          */
-        virtual bool shift_starting_point(shared_ptr<Vector> x, shared_ptr<Vector> x_l, shared_ptr<Vector> x_u);
+        virtual bool shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u);
 
     public:
         Index_info nlp_info_; // the struct record the number of variables, number of constraints,

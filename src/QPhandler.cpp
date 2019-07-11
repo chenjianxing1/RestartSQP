@@ -57,6 +57,7 @@ namespace SQPhotstart {
         allocate(nlp_info, qptype);
         nlp_info_ = nlp_info;
         qptype_ = qptype;
+
         return true;
     }
 
@@ -76,28 +77,16 @@ namespace SQPhotstart {
                                  shared_ptr<const Vector> c_k,
                                  shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u,
                                  shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u) {
-        int nCon = nlp_info_.nCon;
-        int nVar = nlp_info_.nVar;
-        lb_->assign_n(1, nVar, -delta);
-        ub_->assign_n(1, nVar, delta);
-        ub_->assign_n(nVar + 1, ub_->Dim() - nVar, INF);
-
-
-        if (lbA_->Dim() == nCon) {
-            lbA_->copy_vector(c_l->vector());
-            ubA_->copy_vector(c_u->vector());
-            lbA_->subtract_vector(c_k->vector());
-            ubA_->subtract_vector(c_k->vector());
-        } else {
-            lbA_->assign(1, nCon, c_l->vector());
-            lbA_->subtract_subvector(1, nCon, c_k->vector());
-            lbA_->assign(nCon + 1, nVar, x_l->vector());
-            lbA_->subtract_subvector(nCon + 1, nVar, x_k->vector());
-            ubA_->assign(1, nCon, c_l->vector());
-            ubA_->subtract_subvector(1, nCon, c_k->vector());
-            ubA_->assign(nCon + 1, nVar, x_u->vector());
-            ubA_->subtract_subvector(nCon + 1, nVar, x_k->vector());
-        }
+//        int nCon = nlp_info_.nCon;
+//        int nVar = nlp_info_.nVar;
+//        lb_->assign_n(1, nVar, -delta);
+//        ub_->assign_n(1, nVar, delta);
+//        ub_->assign_n(nVar + 1, ub_->Dim() - nVar, INF);
+//
+//            lbA_->copy_vector(c_l->vector());
+//            ubA_->copy_vector(c_u->vector());
+//            lbA_->subtract_vector(c_k->vector());
+//            ubA_->subtract_vector(c_k->vector());
         return true;
     }
 
@@ -109,8 +98,8 @@ namespace SQPhotstart {
      * @param rho  	Penalty Parameter
      */
     bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
-        g_->assign(1, grad->Dim(), grad->vector());
-        g_->assign_n(grad->Dim() + 1, g_->Dim() - grad->Dim(), rho);
+//        g_->assign(1, grad->Dim(), grad->vector());
+//        g_->assign_n(grad->Dim() + 1, g_->Dim() - grad->Dim(), rho);
         return true;
     }
 
@@ -122,8 +111,8 @@ namespace SQPhotstart {
      * @param nVar 		 number of variables in NLP
      */
     bool QPhandler::update_bounds(double delta) {
-        lb_->assign_n(1, nlp_info_.nVar, -delta);
-        ub_->assign_n(1, nlp_info_.nVar, delta);
+//        lb_->assign_n(1, nlp_info_.nVar, -delta);
+//        ub_->assign_n(1, nlp_info_.nVar, delta);
         return true;
     }
 
@@ -135,7 +124,7 @@ namespace SQPhotstart {
      */
 
     bool QPhandler::update_penalty(double rho) {
-        g_->assign_n(nlp_info_.nVar + 1, g_->Dim() - nlp_info_.nVar, rho);
+//        g_->assign_n(nlp_info_.nVar + 1, g_->Dim() - nlp_info_.nVar, rho);
         return true;
     }
 
@@ -146,7 +135,7 @@ namespace SQPhotstart {
      * @param grad		the gradient vector from NLP
      */
     bool QPhandler::update_grad(shared_ptr<const Vector> grad) {
-        g_->assign(1, grad->Dim(), grad->vector());
+//        g_->assign(1, grad->Dim(), grad->vector());
         return true;
     }
 
@@ -187,7 +176,7 @@ namespace SQPhotstart {
      * @param stats	the static used to record iterations numbers
      */
     bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options) {
-        qp_interface_->optimizeQP(H_, g_, A_, lbA_, ubA_, lb_, ub_, stats, options);
+//        qp_interface_->optimizeQP(H_, g_, A_, lbA_, ubA_, lb_, ub_, stats, options);
         qp_obj_ = qp_interface_->get_obj_value();
         return true;
     }
@@ -206,25 +195,12 @@ namespace SQPhotstart {
      * 		it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-        int numVar_QP;
-        int numCon_QP;
 
-        numVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
-        numCon_QP = nlp_info.nCon;
+        int nVar_QP = nlp_info.nVar + 2 * nlp_info.nCon;
+        int nCon_QP = nlp_info.nCon;
 
-        A_ = make_shared<SpMatrix>(nlp_info.nnz_jac_g, numCon_QP, numVar_QP);
+        qp_interface_ = make_shared<qpOASESInterface>(nVar_QP, nCon_QP);
 
-        if (qptype == QP) {
-            H_ = make_shared<SpMatrix>(nlp_info.nnz_h_lag, numVar_QP, numVar_QP);
-        }
-        //FIXME constructor problem????
-
-        qp_interface_ = make_shared<qpOASESInterface>(numVar_QP, numCon_QP);
-        lbA_ = make_shared<Vector>(numCon_QP);
-        ubA_ = make_shared<Vector>(numCon_QP);
-        lb_ = make_shared<Vector>(numVar_QP);
-        ub_ = make_shared<Vector>(numVar_QP);
-        g_ = make_shared<Vector>(numVar_QP);
         return true;
     }
 

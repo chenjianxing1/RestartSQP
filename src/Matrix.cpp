@@ -72,6 +72,16 @@ namespace SQPhotstart {
         return true;
     }
 
+    bool SpMatrix::get_MatVal_at(int location, int value_to_assign) {
+        MatVal_[location] = value_to_assign;
+        return true;
+    }
+
+    bool SpMatrix::get_order(int location, int order_to_assign) {
+        order_[location] = order_to_assign;
+        return true;
+    }
+
 
     /** MATRIX WITH IDENTITY*/
 
@@ -143,5 +153,23 @@ namespace SQPhotstart {
 //        sign_I_ = NULL;
 //        return true;
 //    }
+
+    void qpOASESSparseMat::print() {}
+
+    qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
+
+    qpOASESSparseMat::qpOASESSparseMat(const SpMatrix &) {
+
+    }
+
+    qpOASESSparseMat::qpOASESSparseMat(int RowNum, int ColNum) :
+            RowIndex_(NULL),
+            ColIndex_(NULL),
+            MatVal_(NULL),
+            order_(NULL),
+            isinitialized(false),
+            RowNum_(RowNum),
+            ColNum_(ColNum) {
+    }
 }
 

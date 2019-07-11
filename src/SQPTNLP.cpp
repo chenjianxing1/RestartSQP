@@ -40,7 +40,7 @@ namespace SQPhotstart {
     /**
      *@name Evaluate the objective value
      */
-    bool SQPTNLP::Eval_f(shared_ptr<Vector> x, Number& obj_value) {
+    bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, Number &obj_value) {
         nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
         return true;
     }
@@ -49,7 +49,7 @@ namespace SQPhotstart {
      * @name Evaluate the constraints at point x
      *
      */
-    bool SQPTNLP::Eval_constraints(shared_ptr<Vector> x, shared_ptr<Vector> constraints) {
+    bool SQPTNLP::Eval_constraints(shared_ptr<const Vector> x, shared_ptr<Vector> constraints) {
         nlp_->eval_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, constraints->values());
 	return true;
     }
@@ -66,7 +66,7 @@ namespace SQPhotstart {
      *@name Evaluate Jacobian at point x
      */
 
-    bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<Vector> x, shared_ptr<SpMatrix> Jacobian){
+    bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian){
 	nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), NULL);
     return true;
@@ -78,7 +78,7 @@ namespace SQPhotstart {
      *@param x
      *@param Jacobian
      */
-    bool SQPTNLP::Eval_Jacobian(shared_ptr<Vector> x, shared_ptr<SpMatrix> Jacobian) {
+    bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian) {
        nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), Jacobian->MatVal());
         return true;
@@ -91,7 +91,7 @@ namespace SQPhotstart {
 	 * @param Hessian
          * @return
          */
-    bool SQPTNLP::Get_Structure_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<SpMatrix> Hessian){
+    bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian){
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);	
 	return true;
@@ -102,7 +102,7 @@ namespace SQPhotstart {
     /**
      *@name Evaluate Hessian of Lagragian function at  (x, lambda)
      */
-    bool SQPTNLP::Eval_Hessian(shared_ptr<Vector> x, shared_ptr<Vector> lambda, shared_ptr<SpMatrix> Hessian) {
+    bool SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian) {
 	    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), Hessian->MatVal());
         return true;
@@ -114,13 +114,13 @@ namespace SQPhotstart {
      * @param x_l lower bound constraints
      * @param x_u upper bound constraints
      */
-    bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<Vector> x_l, shared_ptr<Vector> x_u) {
+    bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u) {
         for (int i = 0; i < x->Dim(); i++) {
-            assert(x_l->getEntryAt(i) <= x_u->getEntryAt(i));
-            if (x_l->getEntryAt(i) > x->getEntryAt(i)) {
-                x->assignValueAt(i, x_l->getEntryAt(i));
-            } else if (x->getEntryAt(i) > x_u->getEntryAt(i)) {
-		    x->assignValueAt(i, x_u->getEntryAt(i));
+            assert(x_l->getValueAt(i) <= x_u->getValueAt(i));
+            if (x_l->getValueAt(i) > x->getValueAt(i)) {
+                x->setValueAt(i, x_l->getValueAt(i));
+            } else if (x->getValueAt(i) > x_u->getValueAt(i)) {
+                x->setValueAt(i, x_u->getValueAt(i));
             }
         }
         return true;

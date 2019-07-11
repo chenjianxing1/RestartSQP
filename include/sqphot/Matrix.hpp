@@ -21,7 +21,7 @@ namespace SQPhotstart {
         /** Default destructor*/
         virtual ~Matrix() = default;
 
-        virtual void print()=0;
+        virtual void print() = 0;
     };
 
 
@@ -32,10 +32,11 @@ namespace SQPhotstart {
      * allocate data to the class member, and perform a matrix vector multiplication.
      *
      */
-    class SpMatrix: public Matrix{
+    class SpMatrix : public Matrix {
     public:
         /** Default constructor */
-        SpMatrix(){}
+        SpMatrix() {}
+
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
         SpMatrix(int EntryNum, int RowNum, int ColNum);
 
@@ -51,7 +52,6 @@ namespace SQPhotstart {
          *
          */
 
-
         bool getStructure(int* RowIndex, int* ColIndex);
 
         bool assignMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
@@ -59,7 +59,7 @@ namespace SQPhotstart {
         /**
          *@name print the sparse matrix in triplet form 
          */
-         void print();
+        void print();
 
 
         /** 
@@ -73,9 +73,9 @@ namespace SQPhotstart {
             return false;
         }
 
-        double onenorm(){ return  0;};
+        double onenorm() { return 0; };
 
-        double infnorm(){return 0;};
+        double infnorm() { return 0; };
 
         /**Extract Matrix info*/
         inline int ColNum() { return ColNum_; }
@@ -108,15 +108,9 @@ namespace SQPhotstart {
 
         inline int order_at(int i) { return order_[i]; }
 
-        inline bool get_order(int location, int order_to_assign) {
-            order_[location] = order_to_assign;
-            return true;
-        }
+        inline bool get_order(int location, int order_to_assign);
 
-        inline bool get_MatVal_at(int location, int value_to_assign) {
-            MatVal_[location] = value_to_assign;
-            return true;
-        }
+        inline bool get_MatVal_at(int location, int value_to_assign);
 
 
         /** Private Method */
@@ -146,22 +140,31 @@ namespace SQPhotstart {
  *
  *
  */
-    class qpOASESSparseMat: public Matrix{
-        /**Default constructor*/
-        qpOASESSparseMat(){}
+    class qpOASESSparseMat : public Matrix {
 
-        ~qpOASESSparseMat(){}
+    public:
+
+
+        /**Default constructor*/
+        qpOASESSparseMat() = default;
 
         /**constructor from the spMatrix, automatically convert data in triplet form
          * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
          */
-        qpOASESSparseMat(const SpMatrix&);
+        qpOASESSparseMat(const SpMatrix &);
 
-        bool updateMatVal(const double* MatVal){ return  false;}
 
-        bool updateMatVal(const qpOASES::real_t){ return false;}
+        qpOASESSparseMat(int RowNum, int ColNum);
 
-        void print();
+
+        ~qpOASESSparseMat();
+
+        bool updateMatVal(const double* MatVal) { return false; }
+
+
+        bool updateMatVal(const qpOASES::real_t) { return false; }
+
+        void print() override;
 
         inline const qpOASES::sparse_int_t* RowIndex() const { return RowIndex_; }
 
@@ -173,8 +176,10 @@ namespace SQPhotstart {
 
         /**Private methods*/
     private:
+
+
         /** free all memory*/
-        bool freeMemory();
+        bool freeMemory() { return false; }
 
         /** Copy Constructor */
         qpOASESSparseMat(const qpOASESSparseMat &);
@@ -187,8 +192,10 @@ namespace SQPhotstart {
         qpOASES::sparse_int_t* RowIndex_;
         qpOASES::sparse_int_t* ColIndex_;
         qpOASES::real_t* MatVal_;
+        int RowNum_;
+        int ColNum_;
         int* order_;
-        bool isinitialized = false;
+        bool isinitialized;
 
     };
 

@@ -33,7 +33,7 @@ namespace SQPhotstart {
 
         // while (stats->iter < options->iter_max) {
         /* setup the QPs and solve them */
-            setupQP();
+//            setupQP();
         //based on the information given by NLP reader; otherwise, it will do nothing
         //myQP->solveQP(stats, options);//solve the SL1QP problems
         //get_search_direction(myQP);//
@@ -176,17 +176,17 @@ namespace SQPhotstart {
 
         if (trial) {
             for (int i = 0; i < c_k_->Dim(); i++) {
-                if (c_trial_->getEntryAt(i) < c_l_->getEntryAt(i))
-                    infea_measure_trial_ += (c_l_->getEntryAt(i) - c_trial_->getEntryAt(i));
-                else if (c_trial_->getEntryAt(i) > c_u_->getEntryAt(i))
-                    infea_measure_trial_+= (c_trial_->getEntryAt(i) - c_u_->getEntryAt(i));
+                if (c_trial_->getValueAt(i) < c_l_->getValueAt(i))
+                    infea_measure_trial_ += (c_l_->getValueAt(i) - c_trial_->getValueAt(i));
+                else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
+                    infea_measure_trial_+= (c_trial_->getValueAt(i) - c_u_->getValueAt(i));
             }
         } else {
             for (int i = 0; i < c_k_->Dim(); i++) {
-                if (c_k_->getEntryAt(i) < c_l_->getEntryAt(i))
-                    infea_measure_ += (c_l_->getEntryAt(i) - c_k_->getEntryAt(i));
-                else if (c_trial_->getEntryAt(i) > c_u_->getEntryAt(i))
-                    infea_measure_+= (c_k_->getEntryAt(i) - c_u_->getEntryAt(i));
+                if (c_k_->getValueAt(i) < c_l_->getValueAt(i))
+                    infea_measure_ += (c_l_->getValueAt(i) - c_k_->getValueAt(i));
+                else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
+                    infea_measure_+= (c_k_->getValueAt(i) - c_u_->getValueAt(i));
             }
         }
         return true;
@@ -296,8 +296,8 @@ namespace SQPhotstart {
             //copy information already calculated from the trial point
             infea_measure_ = infea_measure_trial_;
             obj_value_ = obj_value_trial_;
-            x_k_->copy_vector(x_trial_->vector());
-            c_k_->copy_vector(c_trial_->vector());
+//            x_k_->copy_vector(x_trial_->vector());
+//            c_k_->copy_vector(c_trial_->vector());
             //update function information by reading from nlp_ object
             get_multipliers(myQP);
             nlp_->Eval_gradient(x_k_, grad_f_);
@@ -358,10 +358,10 @@ namespace SQPhotstart {
  */
     bool Algorithm::ClassifyConstraintType() {
         for (int i = 0; i < nCon_; i++) {
-            cons_type_[i] = classify_single_constraint(x_l_->getEntryAt(i), x_u_->getEntryAt(i));
+            cons_type_[i] = classify_single_constraint(x_l_->getValueAt(i), x_u_->getValueAt(i));
         }
         for (int i = 0; i < nVar_; i++) {
-            bound_cons_type_[i] = classify_single_constraint(x_l_->getEntryAt(i), x_u_->getEntryAt(i));
+            bound_cons_type_[i] = classify_single_constraint(x_l_->getValueAt(i), x_u_->getValueAt(i));
         }
         return true;
     }

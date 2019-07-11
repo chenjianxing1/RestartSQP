@@ -43,9 +43,6 @@ namespace SQPhotstart {
          */
         virtual bool Optimize(SmartPtr <Ipopt::TNLP> nlp);
 
-
-
-
         /* Private methods*/
     private:
 

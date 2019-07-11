@@ -15,6 +15,10 @@ namespace SQPhotstart {
 
     class Vector {
     public:
+        /** Default Constructor*/
+        Vector():
+        size_(0),
+        values_(NULL){};
         /**
          * Default constructor
          * @name initialize the size of the vector and allocate the memory to the array
@@ -35,7 +39,7 @@ namespace SQPhotstart {
          * */
         void assign(int Location, int subvector_size, const double* subvector);
 
-        inline void assignValueAt(int location, double value) {
+        inline void setValueAt(int location, double value) {
             values_[location] = value;
         }
 
@@ -79,42 +83,49 @@ namespace SQPhotstart {
          * copy a subvector from member_vector from (Location) to (Location+subvector_size) 
          * to the pointer (results)
          */
-        void get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs)const;
+        void get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs) const;
 
         /** set all entries to be 0*/
         void set_zeros();
 
         /** calculate one norm of the member _vector*/
-        double getOneNorm()const;
+        double getOneNorm() const;
 
         /** calculate the infinity norm of the member _vector*/
-        double getInfNorm()const;
+        double getInfNorm() const;
 
         /**
          * get the class member
          * */
 
         /**get the single entry at specific location*/
-        inline double getEntryAt(int location) { return values_[location]; }
+        inline double getValueAt(int location) const { return values_[location]; }
 
         inline int Dim() { return size_; }
+
         inline int Dim() const { return size_; }
+
         inline double* values() { return values_; }
 
         inline const double* values() const { return values_; }
 
-        inline const double* vector() const { return values_; }
+
+        Vector operator+(Vector rhs);
+
+        bool setValue2Max(Vector* rhs, double compared_const);
+
+        bool setValue2Min(Vector* rhs, double compared_const);
 
     private:
 
-        /** Default Constructor*/
-        Vector();
+//        Vector():
 
-        /** Copy Constructor */
-        Vector(const Vector &);
+//        /** Copy Constructor */
+//        Vector(const Vector &);
+//
+//        /** Overloaded Equals Operator */
+//        void operator=(const Vector &);
 
-        /** Overloaded Equals Operator */
-        void operator=(const Vector &);
 
         int size_; /* the size of an vector*/
         double* values_;/*the array stored vector information*/

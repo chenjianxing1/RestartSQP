@@ -28,6 +28,7 @@ namespace SQPhotstart {
     /* Calculate the one norm of a n-dimension vector x*/
     Number oneNorm(Number* x, Index n);
 
+
     /* Calculate the infinity norm of a n-dimension vector x*/
     Number infNorm(Number* x, Index n);
 

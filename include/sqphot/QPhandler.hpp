@@ -196,13 +196,6 @@ namespace SQPhotstart {
         //bounds that can be represented as vectors
         Index_info nlp_info_;
         QPType qptype_;
-        shared_ptr<Vector> lbA_;    // lower bounds of Ax
-        shared_ptr<Vector> ubA_;    // upper bounds of Ax
-        shared_ptr<Vector> lb_;     //lower bounds of x
-        shared_ptr<Vector> ub_;     //upper bounds of x
-        shared_ptr<Vector> g_;
-        shared_ptr<SpMatrix> H_;
-        shared_ptr<SpMatrix> A_;
         shared_ptr<QPSolverInterface> qp_interface_; //an interface to the standard QP solver specified by the user
         double qp_obj_;        // the optimal objectives from QPhandler
     };

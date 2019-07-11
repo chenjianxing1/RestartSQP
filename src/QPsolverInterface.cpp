@@ -2,32 +2,38 @@
 
 namespace SQPhotstart {
 
-//    /**Default constructor*/
-//       qpOASESInterface::qpOASESInterface() {
-//     }
-//
-//    /**
-//     * @name Constructor which also initializes the qpOASES SQProblem objects
-//     * @param nVar_QP the number of variables in QP problem
-//     * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
-//     */
-//    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
-////        //FIXME: the qpOASES does not accept any extra input
-//        _qp = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
-//
-//    }
-//
-//    /**Default destructor*/
-//    qpOASESInterface::~qpOASESInterface() {}
-//
-///**
-// * @name This function solves the QP problem specified in the data, with given options. After the QP
-// * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
-// * in object stats
-// */
-    bool qpOASESInterface::optimizeQP(shared_ptr<SpMatrix> H, shared_ptr<Vector> g, shared_ptr<SpMatrix> A,
-                                      shared_ptr<Vector> lbA, shared_ptr<Vector> ubA, shared_ptr<Vector> lb,
-                                      shared_ptr<Vector> ub, shared_ptr<Stats> stats, shared_ptr<Options> options) {
+    bool qpOASESInterface::allocate(int nVar_QP, int nCon_QP) {
+        lbA_ = make_shared<Vector>(nCon_QP);
+        ubA_ = make_shared<Vector>(nCon_QP);
+        lb_ = make_shared<Vector>(nVar_QP);
+        ub_ = make_shared<Vector>(nVar_QP);
+        g_ = make_shared<Vector>(nVar_QP);
+        A_tmp_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
+//        H_tmp_ = make_shared<qpOASESSparseMat>(nCon_QP, nVar_QP);
+        qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
+        return true;
+    }
+
+    /**
+     * @name Constructor which also initializes the qpOASES SQProblem objects
+     * @param nVar_QP the number of variables in QP problem
+     * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
+     */
+    qpOASESInterface::qpOASESInterface(int nVar_QP, int nCon_QP) {
+        //FIXME: the qpOASES does not accept any extra input
+        allocate(0, 0);
+
+    }
+
+    /**Default destructor*/
+    qpOASESInterface::~qpOASESInterface() {}
+
+/**
+ * @name This function solves the QP problem specified in the data, with given options. After the QP
+ * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
+ * in object stats
+ */
+    bool qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
 //        qpOASESMatrixAdapter(H, H_);
 //        qpOASESMatrixAdapter(A, A_);
 //        H_->createDiagInfo();
@@ -37,14 +43,28 @@ namespace SQPhotstart {
 //            qpOASES::Options qp_options;
 //            if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
 //                qp_options.printLevel = qpOASES::PL_NONE;
-//            _qp->setOptions(qp_options);
-//            _qp->init(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(), nWSR,
+//            qp_->setOptions(qp_options);
+//            qp_->init(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(), nWSR,
 //                      0);
 //        } else
-//            _qp->hotstart(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(),
+//            qp_->hotstart(H_.get(), g->vector(), A_.get(), lb->vector(), ub->vector(), lbA->vector(), ubA->vector(),
 //                          nWSR, 0);
 //        stats->qp_iter_addValue((int) nWSR);
         return true;
+    }
+
+    bool qpOASESInterface::get_multipliers(double* y_k) {
+        qp_->getDualSolution(y_k);
+        return true;
+    }
+
+    bool qpOASESInterface::get_optimal_solution(double* p_k) {
+        qp_->getPrimalSolution(p_k);
+        return true;
+    }
+
+    double qpOASESInterface::get_obj_value() {
+        return (double) (qp_->getObjVal());
     }
 //
 ///**
