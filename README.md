@@ -62,3 +62,5 @@ This will build the solver library and the tests under `SQPhotstart/test`.
 
 The corresponding binaries will then appear under `SQPhotstart/bin/Release`.
 
+
+###### Logo credits: <div>Icons made by <a href="https://www.freepik.com/?__hstc=57440181.4a6c3f6caafe83440921e359e8f146ff.1562721776119.1562764946690.1562881160669.3&__hssc=57440181.4.1562881160669&__hsfp=3697938389" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/"                 title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"                 title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
