@@ -206,9 +206,23 @@ namespace SQPhotstart {
         
         std::sort(sorted_index_info.begin(),sorted_index_info.end(), tuple_sort_rule);
         //copy the order information back
+        
         for (int i = 0; i <EntryNum_; i++) {
-            RowIndex_[i] = std::get<1>(sorted_index_info[i]);
+            RowIndex_[i] = std::get<0>(sorted_index_info[i])-1;
             order_[i] = std::get<2>(sorted_index_info[i]);
+            if(std::get<1>(sorted_index_info[i])<std::get<1>(sorted_index_info[i+1])){
+                ColIndex_[std::get<1>(sorted_index_info[i+1])] = i+1;
+            }
+            
+            int j = ColNum_-1;
+            while(j>=0 && ColIndex_[j] ==0){
+                ColIndex_[j] = EntryNum_;
+                if(ColIndex_[j-1] ==EntryNum_)
+                    break;
+                else
+                    j--;
+                
+            }
         }
         
         isinitialized = true;
