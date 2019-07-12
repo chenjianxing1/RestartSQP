@@ -116,7 +116,7 @@ namespace SQPhotstart {
     //     * @param col_index the starting column index of the identity matrix
     //     * @param size      the size of the identity matrix
     //     * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
-    //     * 		     will record 1; otherwise, it will record -1
+    //     *                 will record 1; otherwise, it will record -1
     //     */
     //    bool MatrixWithIdentity::add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index,
     //                                   const SQPhotstart::Index size, bool isPositive) {
@@ -194,24 +194,32 @@ namespace SQPhotstart {
     bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpMatrix> rhs,
                                         Identity2Info I_info){
         assert(isinitialized==false);
-        
+        int counter = 0;
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         if(I_info.irow1!=0){
             for(int i = 0; i<2; i++){
-                
+                for (int j=0; j<I_info.size;j++){
+                    sorted_index_info.push_back(std::make_tuple(I_info.irow1+j,I_info.jcol1+j,counter));
+                    sorted_index_info.push_back(std::make_tuple(I_info.irow2+j,I_info.jcol2+j,counter+1));
+                    counter +=2;
+                }
             }
         }
         
-        for (int i = 0; i < EntryNum_; i++)  sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],rhs->ColIndex()[i],i));
-        
+        for (int i = 0; i < rhs->EntryNum(); i++){
+            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],rhs->ColIndex()[i],counter));
+            counter++;
+        }
         std::sort(sorted_index_info.begin(),sorted_index_info.end(), tuple_sort_rule);
         //copy the order information back
         
         for (int i = 0; i <EntryNum_; i++) {
             RowIndex_[i] = std::get<0>(sorted_index_info[i])-1;
             order_[i] = std::get<2>(sorted_index_info[i]);
-            if(std::get<1>(sorted_index_info[i])<std::get<1>(sorted_index_info[i+1])){
-                ColIndex_[std::get<1>(sorted_index_info[i+1])] = i+1;
+            if(i<EntryNum_-1){
+                if(std::get<1>(sorted_index_info[i])<std::get<1>(sorted_index_info[i+1])){
+                    ColIndex_[std::get<1>(sorted_index_info[i+1])] = i+1;
+                }
             }
             
             int j = ColNum_-1;
@@ -242,8 +250,17 @@ namespace SQPhotstart {
     }
     
     
+    bool qpOASESSparseMat::freeMemory(){
+        delete[] ColIndex_;
+        ColIndex_=NULL;
+        delete[] RowIndex_;
+        RowIndex_=NULL;
+        delete[] MatVal_;
+        MatVal_ =NULL;
+        delete[] order_;
+        order_ = NULL;
+        return true;
+    }
     
     
 }
-
-

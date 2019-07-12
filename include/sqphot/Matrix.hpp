@@ -116,6 +116,8 @@ namespace SQPhotstart {
         
         inline int EntryNum() { return EntryNum_; }
         
+        inline int EntryNum() const { return EntryNum_; }
+        
         inline int* RowIndex() { return RowIndex_; }
         
         inline int* ColIndex() { return ColIndex_; }
@@ -213,7 +215,7 @@ namespace SQPhotstart {
         
         
         /** free all memory*/
-        bool freeMemory() { return true; }
+        bool freeMemory();
         
         /** Copy Constructor */
         qpOASESSparseMat(const qpOASESSparseMat &);
@@ -276,7 +278,7 @@ namespace SQPhotstart {
     //        * @param col_index the starting column index of the identity matrix
     //        * @param size      the size of the identity matrix
     //        * @param isPositive is the entry positive or negative? If isPositive==true, then the sign_I
-    //        * 		     will record 1; otherwise, it will record -1
+    //        *                      will record 1; otherwise, it will record -1
     //        */
     //       virtual bool
     //       add_I(const SQPhotstart::Index row_index, const SQPhotstart::Index col_index, const SQPhotstart::Index size,
