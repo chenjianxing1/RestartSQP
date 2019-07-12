@@ -12,7 +12,7 @@
 
 using namespace std;
 namespace SQPhotstart {
-
+    
     /**
      * Base class for all standard QP solvers that use standard triplet matrix form and dense vectors.
      *
@@ -23,14 +23,14 @@ namespace SQPhotstart {
      *              lb<=x<=ub
      */
     class QPSolverInterface {
-
+        
     public:
         /** Default constructor*/
         QPSolverInterface() {}
-
+        
         /** Default destructor*/
         virtual ~QPSolverInterface() {}
-
+        
         /**
          * @name Solve a regular QP with given data and options.
          *
@@ -38,128 +38,117 @@ namespace SQPhotstart {
          * number used to solve this QP to stats.qp_iter
          */
         virtual bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
-
-
+        
+        
         /**
          * @name copy the optimal solution of the QP to the input pointer
          *
          * @param x_optimal a pointer to an empty array with allocated memory euqal to sizeof(double)*number_variables
          */
         virtual bool get_optimal_solution(double* x_optimal) = 0;
-
+        
         /**
          *@name get the objective value from the QP solvers
          *
          * @return the objective function value of the QP problem
          */
         virtual double get_obj_value() = 0;
-
-
+        
+        
         /**
          * @name copy the multipliers of the QP to the input pointer
          *
          * @param y_k   a pointer to an array with allocated memory
          */
         virtual bool get_multipliers(double* y_optimal) = 0;
-
-
+        
+        
         virtual  shared_ptr<Vector> &getLb() = 0;
-
+        
         virtual  shared_ptr<Vector> &getUb() = 0;
-
+        
         virtual  shared_ptr<Vector> &getLbA() = 0;
-
+        
         virtual  shared_ptr<Vector> &getUbA()  = 0;
-
+        
         virtual  shared_ptr<Vector> &getG() = 0;
-
-//        virtual  shared_ptr<SpMatrix> &getH() =0;
-//
-//        virtual  shared_ptr<SpMatrix> &getA() = 0;
-
-
+        
+        //        virtual  shared_ptr<SpMatrix> &getH() =0;
+        //
+        //        virtual  shared_ptr<SpMatrix> &getA() = 0;
+        
+        
     private:
-
+        
         /** Copy Constructor */
         QPSolverInterface(const QPSolverInterface &);
-
+        
         /** Overloaded Equals Operator */
         void operator=(const QPSolverInterface &);
     };
-
-
+    
+    
     /**
      *This is a derived class of QPsolverInterface. It uses qpOASES as the QP solver which favors the hotstart
      * option. It is used as the default QP solver for SQPhostart.
      */
     class qpOASESInterface : public QPSolverInterface {
     public:
-
+        
         virtual ~qpOASESInterface();
-
+        
         /**
          * @name Constructor which also initializes the qpOASES SQProblem objects
          * @param nlp_index_info the number of variables in QP problem
          * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
          */
-        qpOASESInterface(Index_info nlp_index_info);    //number of constraints in the QP problem
-
+        qpOASESInterface(Index_info nlp_index_info, QPType qptype);    //number of constraints in the QP problem
+        
         virtual bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options);
-
+        
         /**
          * @name copy the optimal solution of the QP to the input pointer
          *
          * @param x_optimal a pointer to an empty array with allocated memory equals to sizeof(double)*number_variables
          *
          */
-
+        
         inline bool get_optimal_solution(double* p_k);
-
+        
         /**
          * @name copy the multipliers of the QP to the input pointer
          *
          * @param y_k   a pointer to an array with allocated memory equals to sizeof(double)*(num_variable+num_constraint)
          */
         inline bool get_multipliers(double* y_k);
-
+        
         /**
          *@name get the objective value from the QP solvers
          *
          * @return the objective function value of the QP problem
          */
         inline double get_obj_value();
-
-
-         shared_ptr<Vector> &getLb() ;
-
-         shared_ptr<Vector> &getUb() ;
-
+        
+        
+        shared_ptr<Vector> &getLb() ;
+        
+        shared_ptr<Vector> &getUb() ;
+        
         shared_ptr<qpOASESSparseMat> &getH();
-
+        
         shared_ptr<qpOASESSparseMat> &getA();
-
+        
         shared_ptr<Vector> &getLbA();
-
-         shared_ptr<Vector> &getUbA();
-
-         shared_ptr<Vector> &getG()  ;
-
-        /**
-         * @name This function transforms the representation form of the sparse matrix in triplet form
-         * to adapt the format required by the qpOASES(Harwell-Boeing Sparse Matrix)
-         *
-         * @param M_in_triplet Matrix objects contains data in triplet form
-         * @param M_result     Matrix object prepared as the input for qpOASES
-         */
-//        virtual bool
-//        qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet, shared_ptr<qpOASES::SparseMatrix> M_result){ return false;};
-//
-//        virtual bool qpOASESMatrixAdapter(shared_ptr<Matrix> M_in_triplet, shared_ptr<qpOASES::SymSparseMat> M_result){ return false;};
-
+        
+        shared_ptr<Vector> &getUbA();
+        
+        shared_ptr<Vector> &getG()  ;
+        
+        
     public:
         shared_ptr<qpOASES::SQProblem> qp_;// the qpOASES object used for solving a qp
-
-
+        
+        
     private:
         shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;
         shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;
@@ -170,52 +159,22 @@ namespace SQPhotstart {
         shared_ptr<Vector> g_;
         shared_ptr<qpOASESSparseMat> H_;
         shared_ptr<qpOASESSparseMat> A_;
-
+        
     private:
-
+        
         /** default constructor*/
         qpOASESInterface();
-
-        bool allocate(Index_info nlp_index_info);
-
+        
+        bool allocate(Index_info nlp_index_info, QPType qptype);
+        
         /** Copy Constructor */
         qpOASESInterface(const qpOASESInterface &);
-
+        
         /** Overloaded Equals Operator */
         void operator=(const qpOASESInterface &);
-
-//
-//        /**
-//         * This is part of qpOASESMatrixAdapter
-//         *@name process the input data. Transform sorted data in tuple form to the format required by qpOASES QProblem class.
-//         * It will initialize the matrix object required by the qpOASES
-//         *
-//         * @tparam T either be SparseMatrix or SymSparseMat
-//         * @param input The input data in tuple form, it is the form used to store data in Matrix class
-//         * @param results The Matrix to be initialize
-//         * @param RowNum The number of rows of the matrix
-//         * @param ColNum The number of columns of the matrix
-//         */
-//        template<typename T>
-//        bool initialize_qpOASES_input(vector<tuple<int, int, Number, int>> input,
-//                                      shared_ptr<T> results, Index RowNum, Index ColNum, bool isA);
-//
-//        template<typename T>
-//        bool update_qpOASES_input(shared_ptr<Matrix> input, shared_ptr<T> results) { return false; };
-//
-//
-//        /**
-//         *This is part of qpOASESMatrixAdapter
-//         * @name it will process the input Matrix data in tuple form by detecting if there is any repeated entry.
-//         * If there are any, it will add the MatVal with the same row index and column index together and keep only one
-//         * in the vector of tuples
-//         * @param mat the data in the Matrix object
-//         */
-//        bool delete_repetitive_entry(vector<tuple<int, int, Number, int>> mat) { return false; };
-//
-
-
+        
     };
 }//SQPHOTSTART
 #endif
+
 

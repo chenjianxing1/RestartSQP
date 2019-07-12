@@ -193,6 +193,8 @@ namespace SQPhotstart {
 
     private:
         //bounds that can be represented as vectors
+         Identity2Info I_info_A;
+            Identity2Info I_info_H;
         Index_info nlp_info_;
         QPType qptype_;
         shared_ptr<qpOASESInterface> qp_interface_; //an interface to the standard QP solver specified by the user

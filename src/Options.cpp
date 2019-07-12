@@ -1,15 +1,14 @@
-
 #include <sqphot/Options.hpp>
 namespace SQPhotstart{
-    
+
     Options::Options(){
         setToDefault();
     }
-    
+
     Options::~Options(){
     }
-    
-    
+
+
     int Options::setToDefault()
     {
         iter_max = 10;
@@ -39,6 +38,7 @@ namespace SQPhotstart{
         eps2 = 1.0e-6;
         EnablePertubation = false;
         return 0;
-        
+
     }
 }
+

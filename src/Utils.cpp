@@ -58,5 +58,5 @@ namespace SQPhotstart{
         }
         return infnorm;
     }
-
+ 
 }

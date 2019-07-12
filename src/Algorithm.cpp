@@ -35,7 +35,7 @@ namespace SQPhotstart {
         /* setup the QPs and solve them */
             setupQP();
         //based on the information given by NLP reader; otherwise, it will do nothing
-        //myQP->solveQP(stats, options);//solve the SL1QP problems
+        myQP->solveQP(stats, options);//solve the SL1QP problems
         //get_search_direction(myQP);//
         //norm_p_k_ = p_k_->getInfNorm(); //calculate the infinity norm of the search direction
 
