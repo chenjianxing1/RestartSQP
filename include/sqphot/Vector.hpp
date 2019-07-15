@@ -106,10 +106,7 @@ namespace SQPhotstart {
         bool setValue2Min(const Vector &rhs, double compared_const);
         /**
          * get the class member
-         * */
-
-        /**get the single entry at specific location*/
-        inline double getValueAt(int location) const { return values_[location]; }
+         */
 
         inline int Dim() { return size_; }
 
@@ -119,6 +116,10 @@ namespace SQPhotstart {
 
         inline const double* values() const { return values_; }
 
+        void operator = (const Vector& rhs){
+            size_ = rhs.size_;
+            values_ = rhs.values_;
+        }
 
     private:
 

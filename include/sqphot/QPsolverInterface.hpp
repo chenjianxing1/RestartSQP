@@ -159,6 +159,7 @@ namespace SQPhotstart {
         shared_ptr<Vector> g_;
         shared_ptr<qpOASESSparseMat> H_;
         shared_ptr<qpOASESSparseMat> A_;
+        bool firstQPsolved = false;
         
     private:
         

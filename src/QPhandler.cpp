@@ -77,8 +77,8 @@ namespace SQPhotstart {
     bool QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
                                  shared_ptr<const Vector> x_u) {
         for (int i = 0; i < nlp_info_.nVar; i++) {
-            qp_interface_->getLb()->setValueAt(i, std::max(x_l->getValueAt(i) - x_k->getValueAt(i), -delta));
-            qp_interface_->getUb()->setValueAt(i, std::min(x_u->getValueAt(i) - x_k->getValueAt(i), delta));
+            qp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
+            qp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
         }
         /**
          * only set the upper bound for the last 2*nCon entries (those are slack variables).
@@ -114,8 +114,8 @@ namespace SQPhotstart {
     bool QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_l,
                                   shared_ptr<const Vector> x_u) {
         for (int i = 0; i < nlp_info_.nVar; i++) {
-            qp_interface_->getLb()->setValueAt(i, std::max(x_l->getValueAt(i) - x_k->getValueAt(i), -delta));
-            qp_interface_->getUb()->setValueAt(i, std::min(x_u->getValueAt(i) - x_k->getValueAt(i), delta));
+            qp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
+            qp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
         }
         return true;
     }

@@ -116,11 +116,11 @@ namespace SQPhotstart {
      */
     bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u) {
         for (int i = 0; i < x->Dim(); i++) {
-            assert(x_l->getValueAt(i) <= x_u->getValueAt(i));
-            if (x_l->getValueAt(i) > x->getValueAt(i)) {
-                x->setValueAt(i, x_l->getValueAt(i));
-            } else if (x->getValueAt(i) > x_u->getValueAt(i)) {
-                x->setValueAt(i, x_u->getValueAt(i));
+            assert(x_l->values()[i] <= x_u->values()[i]);
+            if (x_l->values()[i] > x->values()[i]) {
+                x->setValueAt(i, x_l->values()[i]);
+            } else if (x->values()[i] > x_u->values()[i]) {
+                x->setValueAt(i, x_u->values()[i]);
             }
         }
         return true;

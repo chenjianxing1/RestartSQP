@@ -14,11 +14,11 @@ namespace SQPhotstart {
         values_ = new double[size_]();
     }
     
-    /** 
+    /**
      * constructor that initializes the size of the vector
      * and initializes @vector_ to be @vector_value
      */
-
+    
     Vector::Vector(int vector_size, const double *vector_value)
     :
     size_(vector_size),
@@ -34,7 +34,7 @@ namespace SQPhotstart {
         values_ = NULL;
     }
     
-
+    
     /** assign a sub-vector into the class member vector
      * without shifting elements' positions*/
     void Vector::assign(int Location, int subvector_size, const double *subvector) {
@@ -50,7 +50,7 @@ namespace SQPhotstart {
         for (int i = 0; i < subvector_size; i++) {
             values_[Location + i - 1] = scaling_factor;
         }
-    }	
+    }
     
     /** print the vector*/
     void Vector::print() const {
@@ -84,7 +84,7 @@ namespace SQPhotstart {
         }
     }
     
-    /** subtract a vector @rhs from the class member @_vector*/ 
+    /** subtract a vector @rhs from the class member @_vector*/
     void Vector::subtract_vector(const double *rhs) {
         for (int i = 0; i < size_; i++) {
             values_[i] -= rhs[i];
@@ -92,7 +92,7 @@ namespace SQPhotstart {
     }
     
     
-    /** 
+    /**
      * subtract  a subvector with length @subvec_size from the class member @_vector
      * from the location @iloc
      *
@@ -139,32 +139,33 @@ namespace SQPhotstart {
             values_[i] = 0;
         }
     }
-
+    
     bool Vector::setValue2Min(const Vector &rhs, double compared_const) {
-//        if(size_==0){
-//            size_ = rhs.size_;
-//            values_ = new double[size_];
-//        }
-//        for(int i=0; i<size_;i++)
-//            setValueAt(i,std::min(rhs->getValueAt(i),compared_const));
+        //        if(size_==0){
+        //            size_ = rhs.size_;
+        //            values_ = new double[size_];
+        //        }
+        //        for(int i=0; i<size_;i++)
+        //            setValueAt(i,std::min(rhs->values()[i],compared_const));
         return true;
     }
-
+    
     Vector Vector::operator+(const Vector& rhs) {
         assert(this->size_==rhs.size_);
         auto added_result = Vector(this->size_);
         for (int i = 0; i < this->size_; i++)
-            added_result.setValueAt(i, this->getValueAt(i) + rhs.getValueAt(i));
+            added_result.setValueAt(i, this->values()[i] + rhs.values()[i]);
         return added_result;
     }
-
+    
     const Vector Vector::operator-(const Vector &rhs) {
         assert(this->size_==rhs.size_);
         auto added_result = Vector(this->size_);
         for (int i = 0; i < this->size_; i++)
-            added_result.setValueAt(i, this->getValueAt(i) - rhs.getValueAt(i));
+            added_result.setValueAt(i, this->values()[i] - rhs.values()[i]);
         return added_result;
     }
+    
     bool Vector::setValue2Max(const Vector rhs, double compared_const) {
         assert(this->size_==rhs.Dim());
         rhs.print();
@@ -173,10 +174,10 @@ namespace SQPhotstart {
             values_ = new double[size_];
         }
         for(int i=0; i<size_;i++)
-            setValueAt(i,std::max(rhs.getValueAt(i),compared_const));
+            setValueAt(i,std::max(rhs.values()[i],compared_const));
         return true;
     }
-
-
+    
+    
 }
 

@@ -144,9 +144,9 @@ namespace SQPhotstart {
         
         inline int order_at(int i) { return order_[i]; }
         
-        inline bool get_order(int location, int order_to_assign);
+        inline bool setOrderAt(int location, int order_to_assign);
         
-        inline bool get_MatVal_at(int location, int value_to_assign);
+        inline bool setMatValAt(int location, int value_to_assign);
         
         
         /** Private Method */
@@ -187,15 +187,14 @@ namespace SQPhotstart {
         
         virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
         
-        /**Method that convert automatically convert data in triplet form
+        /**
+         * Method that convert automatically convert data in triplet form
          * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
-         *@param rhs
+         *@param rhs the matrix object stored in triplet form
          *@param numI number of Identity matrix
          */
         virtual bool setStructure(std::shared_ptr<const SpMatrix> rhs, Identity2Info I_info);
-        
-        virtual bool addIdentityMat(int irow, int jcol, int size, double scaling_factor);
-        
+
         bool updateMatVal(const qpOASES::real_t) { return false; }
         
         

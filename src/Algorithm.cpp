@@ -1,14 +1,14 @@
 #include <sqphot/Algorithm.hpp>
-
+#include <sqphot/Utils.hpp>
 namespace SQPhotstart {
-
+    
     /**
      * Default Constructor
      */
     Algorithm::Algorithm() {
         cout << "ALG created" << endl;
     }
-
+    
     /**
      * Default Destructor
      */
@@ -19,72 +19,88 @@ namespace SQPhotstart {
         bound_cons_type_ = NULL;
         cout << "ALG destroyed" << endl;
     }
-
+    
     /**
      * This is the main function to optimize the NLP given as the input
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
     bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
-        allocate(nlp);
+        allocate(nlp); //allocate memory to class members
         initilization();
-
+        
         /** Main iteration */
-
-        // while (stats->iter < options->iter_max) {
-        /* setup the QPs and solve them */
+        
+        while (stats->iter < options->iter_max) {
+            //setup the QPs problems
             setupQP();
-        //based on the information given by NLP reader; otherwise, it will do nothing
-        myQP->solveQP(stats, options);//solve the SL1QP problems
-        //get_search_direction(myQP);//
-        //norm_p_k_ = p_k_->getInfNorm(); //calculate the infinity norm of the search direction
-
-        /* Update the penalty parameter if necessary*/
-        //penalty_update();
-        //
-        //     /* Calculate the the trial points, x_trial = x_k+p_k, */
-        //     x_trial_->copy_vector(x_k_->vector());
-        //     x_trial_->add_vector(p_k_->vector());
-        //
-        //     /** Calculate f_trial, c_trial and infea_measure_trial for the trial points x_trial*/
-        //     nlp_->Eval_f(x_trial_, obj_value_trial_);
-        //     nlp_->Eval_constraints(x_trial_, c_trial_);
-        //
-        //     infea_cal(true);
-        //     ratio_test();
-        //
-        //     /* Calculate the second-order-correction steps*/
-        //     second_order_correction();
-        //
-        //     /* Update the radius and the QP bounds if the radius has been changed*/
-        //     radius_update();
-        //
-        //     stats->iter_addone();
-        //
-        //     /* output some information to the console, TODO: change it*/
-        //     if (stats->iter % 10 == 0)log->print_header();
-        //     if (options->printLevel > 0)
-        //         log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_, delta_, rho_);
-        //
-        //     /**check if the current iterates is optimal and decide to exit the loop or not*/
-        //     termination_check();
-        //     if (exitflag_ != UNKNOWN) {
-        //         break;
-        //     }
-        // }
-        // /** print the final summary message to the console*/
-        // log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_, infea_measure_, exitflag_);
+            //based on the information given by NLP reader;
+            //otherwise, it will do nothing
+            myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+            
+            //get the search direction from the solution of the QPsubproblem
+            get_search_direction(myQP);
+            
+            //calculate the infinity norm of the search direction
+            
+            p_k_->print();
+            norm_p_k_ = p_k_->getInfNorm();
+            
+            //Update the penalty parameter if necessary
+            penalty_update();
+            
+            // Calculate the the trial points, x_trial = x_k+p_k
+            x_trial_->copy_vector(x_k_->values());
+            x_trial_->add_vector(p_k_->values());
+            
+            // Calculate f_trial, c_trial and infea_measure_trial for the trial
+            // points x_trial
+            nlp_->Eval_f(x_trial_, obj_value_trial_);
+            nlp_->Eval_constraints(x_trial_, c_trial_);
+            
+            infea_cal(true);
+            ratio_test();
+            
+            // Calculate the second-order-correction steps
+            second_order_correction();
+            
+            // Update the radius and the QP bounds if the radius has been changed
+            
+            stats->iter_addone();
+            
+            /* output some information to the console, TODO: change it*/
+            if (stats->iter % 10 == 0)log->print_header();
+            if (options->printLevel > 0)
+                log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_, delta_, rho_);
+            
+            radius_update();
+            
+            
+            //check if the current iterates is optimal and decide to
+            //exit the loop or not
+            termination_check();
+            if (exitflag_ != UNKNOWN) {
+                break;
+            }
+        }
+        // print the final summary message to the console
+        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_, infea_measure_, exitflag_);
         return true;
     }
-
+    
     /**
      *
-     *This is the function that checks if the current point is optimal, and decides if to exit the loop or not
+     * This is the function that checks if the current
+     * point is optimal, and decides if to exit the loop
+     * or not
      *
      *@return
-     * 	 if it decides the function is optimal, the class member _exitflag = OPTIMAL
-     * 	 if it decides that there is an error during the function run or the function cannot be solved, it will assign _exitflag the
-     * 	 	corresponding code according to the error type.
+     * 	 if it decides the function is optimal, the class
+     * 	 member _exitflag = OPTIMAL
+     * 	 if it decides that there is an error during the
+     * 	 function run or the function cannot be solved, it
+     * 	 will assign _exitflag the corresponding code
+     * 	 according to the error type.
      */
     bool Algorithm::termination_check() {
         if (norm_p_k_ < options->tol) {
@@ -92,16 +108,20 @@ namespace SQPhotstart {
         }
         return true;
     }
-
-
+    
+    
     /**
-     * This function initializes the objects required by the SQP Algorithm, copies some parameters required by the algorithm,
-     * obtains the function information for the first QP, and solve the first QP and LP.
+     * This function initializes the objects required by
+     * the SQP Algorithm, copies some parameters required
+     * by the algorithm,
+     * obtains the function information for the first QP,
+     * and solve the first QP and LP.
      *
      */
     bool Algorithm::initilization() {
         nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
         nlp_->Get_starting_point(x_k_, lambda_);
+        //shift starting point to satisfy the bound constraint
         nlp_->shift_starting_point(x_k_, x_l_, x_u_);
         nlp_->Eval_f(x_k_, obj_value_);
         nlp_->Eval_gradient(x_k_, grad_f_);
@@ -111,21 +131,25 @@ namespace SQPhotstart {
         nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
-
+        
         infea_cal(false);
-        /**set up the QP objects*/
+        // initializes QP objects*/
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
         log->print_header();
         log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
         return true;
     }
-
+    
     /**
-     * This function initializes all the shared pointer which will be used in the Algorithm::Optimize, and it copies all parameters
-     * that might be changed during the run of the function Algorithm::Optimize
+     * This function initializes all the shared pointer
+     * which will be used in the Algorithm::Optimize, and
+     * it copies all parameters
+     * that might be changed during the run of the
+     * function Algorithm::Optimize
      *
-     * @param nlp: the nlp reader that read data of the function to be minimized;
+     * @param nlp: the nlp reader that read data of the
+     * function to be minimized;
      */
     bool Algorithm::allocate(SmartPtr<Ipopt::TNLP> nlp) {
         nlp_ = make_shared<SQPTNLP>(nlp);
@@ -146,98 +170,114 @@ namespace SQPhotstart {
         grad_f_ = make_shared<Vector>(nVar_);
         jacobian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
         hessian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_);
-
+        
         options = make_shared<Options>();
         stats = make_shared<Stats>();
         log = make_shared<Log>();
         myQP = make_shared<QPhandler>();
         myLP = make_shared<QPhandler>();
-
+        
         delta_ = options->delta;
         rho_ = options->rho;
-
-
+        
+        
         return true;
     }
-
-
+    
+    
     /**
+     * This function calculates the infeasibility measure
+     * for either trial point or current iterate x_k
      *
-     * This function calculates the infeasibility measure for either tiral point or current iterate
+     *@param trial: true if the user are going to evaluate
+     *the infeasibility measure of the trial point _x_trial;
+     *	infea_measure_trial = norm(-max(c_trial-cu,0),1)
+     *			      +norm(-min(c_trial-cl,0),1)
      *
-     *@param trial: true if the user are going to evaluate the infeasibility measure of the trial point _x_trial;
-     *		        infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
-     *
-     * 	            false if the user are going to evaluate the infeasibility measure of the current iterates _x_k
-     *	    		infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
+     * 	            false if the user are going to evaluate
+     *the infeasibility measure of the current iterates _x_k
+     *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
     bool Algorithm::infea_cal(bool trial) {
-
+        
         if (trial) {
             infea_measure_trial_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
-                if (c_trial_->getValueAt(i) < c_l_->getValueAt(i))
-                    infea_measure_trial_ += (c_l_->getValueAt(i) - c_trial_->getValueAt(i));
-                else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
-                    infea_measure_trial_ += (c_trial_->getValueAt(i) - c_u_->getValueAt(i));
+                if (c_trial_->values()[i] < c_l_->values()[i])
+                    infea_measure_trial_ += (c_l_->values()[i] - c_trial_->values()[i]);
+                else if (c_trial_->values()[i] > c_u_->values()[i])
+                    infea_measure_trial_ += (c_trial_->values()[i] - c_u_->values()[i]);
             }
         } else {
             infea_measure_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
-                if (c_k_->getValueAt(i) < c_l_->getValueAt(i))
-                    infea_measure_ += (c_l_->getValueAt(i) - c_k_->getValueAt(i));
-                else if (c_trial_->getValueAt(i) > c_u_->getValueAt(i))
-                    infea_measure_ += (c_k_->getValueAt(i) - c_u_->getValueAt(i));
+                if (c_k_->values()[i] < c_l_->values()[i])
+                    infea_measure_ += (c_l_->values()[i] - c_k_->values()[i]);
+                else if (c_trial_->values()[i] > c_u_->values()[i])
+                    infea_measure_ += (c_k_->values()[i] - c_u_->values()[i]);
             }
         }
         return true;
     }
-
-
+    
+    
     /**
-     * This function extracts the search direction for NLP from the QP subproblem solved and copies it to the class member _p_k
+     * This function extracts the search direction for NLP
+     * from the QP subproblem solved and copies it to the
+     * class member _p_k
      *
-     * It will truncate the optimal solution of QP into two parts, the first half (with length equal to the number of variables)
-     *to be the search direction.
+     * It will truncate the optimal solution of QP into two
+     * parts, the first half (with length equal to the number
+     * of variables) to be the search direction.
      *
-     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+     * @param qpsolver the QPsolver class object used for
+     * solving a QP subproblem with specified QP informations
      */
     bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
-        // double *tmp_p_k = new double[qpsolver->A_qpOASES_->ColNum()]();
+        
         double* tmp_p_k = new double[nVar_ + 2 * nCon_];
         qpsolver->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         delete[] tmp_p_k;
         return true;
     }
-
+    
+    
     /**
-     * This function extracts the the Lagragian multipliers for constraints in NLP and copies it to the class member _lambda
+     * This function extracts the Lagragian multipliers for
+     * constraints in NLP and copies it to the class member _lambda
      *
-     *   Note that the QP subproblem will return a multiplier for the constraints and the bound in a single vector, so we only take
-     *   the first #constraints number of elements as an approximation of multipliers for the nlp problem
+     * Note that the QP subproblem will return a
+     * multiplier for the constraints and the bound in a
+     * single vector, so we only take the first #
+     * constraints number of elements as an approximation
+     * of multipliers for the nlp problem
      *
-     * @param qpsolver the QPsolver class object used for solving a QP subproblem with specified QP informations
+     * @param qphandler: the QPhandler class object used
+     * for solving a QP subproblem with specified QP
+     * information
      */
-    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qpsolver) {
+    bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_];
-        qpsolver->GetMultipliers(tmp_lambda);
+        qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
         delete[] tmp_lambda;
         return true;
     }
-
+    
     /**
-    * This function will set up the data for the QP subproblem if reset = true
+     * This function will set up the data for the QP
+     * subproblem if reset = true
      *
      * @param reset
-     * 		if reset = true; the data in the QP subproblem will be reset.
+     * 		if reset = true; the data in the QP subproblem
+     * 		will be reset.
      *
      */
-
+    
     bool Algorithm::setupQP() {
-
+        
         if (stats->iter == 0) {
             myQP->setup_bounds(delta_, x_k_, x_l_, x_u_);
             myQP->setup_g(grad_f_, rho_);
@@ -253,11 +293,10 @@ namespace SQPhotstart {
                 QPinfoFlag_.Update_H = false;
             }
             if (QPinfoFlag_.Update_bounds) {
-                myQP->update_bounds(delta_, shared_ptr<const Vector>(), shared_ptr<const Vector>(),
-                                    shared_ptr<const Vector>());
+                myQP->update_bounds(delta_, x_k_, x_l_, x_u_);
                 QPinfoFlag_.Update_bounds = false;
             }
-
+            
             if (QPinfoFlag_.Update_penalty) {
                 myQP->update_penalty(rho_);
                 QPinfoFlag_.Update_penalty = false;
@@ -269,38 +308,50 @@ namespace SQPhotstart {
         }
         return true;
     }
-
+    
     /**
      *
-     * This function performs the ratio test to determine if we should accept the trial point
+     * This function performs the ratio test to determine
+     * if we should accept the trial point
      *
-     * The ratio is calculated by (P_1(x_k;\rho)-P_1(x_trial;\rho))/(q_k(0;\rho)-q_k(p_k;rho),
+     * The ratio is calculated by
+     * (P_1(x_k;\rho)-P_1( x_trial;\rho))/(q_k(0;\rho)-q_k(p_k;rho),
      *
      * where
      * 	P_1(x,rho) = f(x) + rho* infeasibility_measure
      * is the l_1 merit function and
-     * 	q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p +rho* infeasibility_measure_model
+     * 	q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p+
+     * 		      rho* infeasibility_measure_model
      * is the quadratic model at x_k.
      *
-     * Tne trial point  will be accepted if the ratio >= eta_s. If it is accepted, the function will also updates the gradient, Jacobian
-     * 	information by reading from _nlp object. _update will be set to true, so the SOC direction will not be calculated. _reset_qp is
-     * 	set to true, meaning that the data in the QP subproblem need to be reset.
-     * Otherwise, there is no change except that _update will be set to false, the SOC direction will be calculated.
+     * The trial point  will be accepted if the ratio >= eta_s.
+     * If it is accepted, the function will also updates
+     * the gradient, Jacobian information by reading from _nlp object.
+     * _update will be set to true, so the SOC direction will not be
+     * calculated. _reset_qp is set to true, meaning that the data
+     * in the QP subproblem need to be reset.
+     * Otherwise, there is no change except that _update
+     * will be set to false, the SOC direction will be
+     * calculated.
      *
      */
     bool Algorithm::ratio_test() {
+        using namespace std;
         Number P1x = obj_value_ + rho_ * infea_measure_;
         Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
-
         actual_reduction_ = P1x - P1_x_trial;
+        cout<<"actual reduction is"<<actual_reduction_<<endl;
+        
         pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
+        
+        cout<<"pred reduction is"<<pred_reduction_<<endl;
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
             //succesfully update
             //copy information already calculated from the trial point
             infea_measure_ = infea_measure_trial_;
             obj_value_ = obj_value_trial_;
-//            x_k_->copy_vector(x_trial_->vector());
-//            c_k_->copy_vector(c_trial_->vector());
+            x_k_->copy_vector(x_trial_->values());
+            c_k_->copy_vector(c_trial_->values());
             //update function information by reading from nlp_ object
             get_multipliers(myQP);
             nlp_->Eval_gradient(x_k_, grad_f_);
@@ -315,58 +366,69 @@ namespace SQPhotstart {
         }
         return true;
     }
-
+    
     /**
      *
-     * This function update the trust-region radius when the ratio calculated by the ratio test is smaller than eta_c or bigger than
-     * 	eta_e and the search_direction hits the trust-region bounds.
+     * This function update the trust-region radius when
+     * the ratio calculated by the ratio test is smaller
+     * than eta_c or bigger than eta_e and the
+     * search_direction hits the trust-region bounds.
      *
-     * If ratio<eta_c, the trust region radius will decrease by the parameter gamma_c, to be gamma_c*_delta
-     * If ratio_test> eta_e and _delta = _norm_p_k, the trust-region radius will be increased by the parameter gamma_c.
+     * If ratio<eta_c, the trust region radius will
+     * decrease by the parameter gamma_c, to be
+     * gamma_c* _delta
+     * If ratio_test> eta_e and _delta = _norm_p_k, the
+     * trust-region radius will be increased by the
+     * parameter gamma_c.
      *
-     * In either of these two cases, and if the trial point does not pass the ratio_test (the x_trial hasn't been accepted), only the
-     * trust region parameter of the QP bounds will be update, and the _reset_qp will be set to false.
+     * In either of these two cases, and if the trial
+     * point does not pass the ratio_test (the x_trial
+     * hasn't been accepted), only the trust region
+     * parameter of the QP bounds will be update, and the
+     * _reset_qp will be set to false.
      *
      */
-
+    
     bool Algorithm::radius_update() {
         if (actual_reduction_ < options->eta_c * pred_reduction_) {
             delta_ = options->gamma_c * delta_;
+            QPinfoFlag_.Update_bounds = true;
             //decrease the trust region radius. gamma_c is the parameter in options object
         } else {
             if (actual_reduction_ > options->
-                    eta_e * pred_reduction_
+                eta_e * pred_reduction_
                 && options->tol > (delta_ - norm_p_k_)) {
                 delta_ = std::min(options->gamma_e * delta_, options->delta_max);
+                QPinfoFlag_.Update_bounds = true;
             }
         }
         return true;
     }
-
-/**
- *
- * This function checks how the constraints specified by the nlp readers are bounded
- * TODO: fix comments
- * If there is only upper bounds for constraints, c(x)<=c_u, then _Constraint_type = BOUNDED_ABOVE
- * If there is only lower bounds for constraints, c(x)>=c_l, then _Constraint_type = BOUNDED_BELOW
- * If there are both upper bounds and lower bounds, c_l<=c(x)<=c_u, then _Constraint_type = BOUNDED,
- * If there is no constraints on all of c_i(x), then _Constraint_type = UNBOUNDED;
- *
- * It is similar for variables:
- * If there is only upper bounds for variables, x<=x_u, then _Variable_type = BOUNDED_ABOVE
- * If there is only lower bounds for variables, x>=x_l, then _Variable_type = BOUNDED_BELOW
- * If there are both upper bounds and lower bounds, x_l<=x<=x_u, then _Variable_type = BOUNDED,
- * If there is no bounds on all of c_i(x), then _Variable_type = UNBOUNDED.
- *
- */
+    
+    /**
+     *
+     * This function checks how each constraint specified by
+     * the nlp readers are bounded
+     * If there is only upper bounds for a constraint, c_i(x)<=c^i_u,
+     * then _Constraint_type = BOUNDED_ABOVE
+     * If there is only lower bounds for a constraint, c_i(x)>=c^i_l,
+     * then _Constraint_type = BOUNDED_BELOW
+     * If there are both upper bounds and lower bounds,
+     * c^i_l<=c_i(x)<=c^i_u, and c^i_l<c^i_u
+     * then _Constraint_type = BOUNDED,
+     * If there is no constraints on all of c_i(x), then
+     * _Constraint_type = UNBOUNDED;
+     *
+     *
+     */
     bool Algorithm::ClassifyConstraintType() {
         for (int i = 0; i < nCon_; i++) {
-            cons_type_[i] = classify_single_constraint(x_l_->getValueAt(i), x_u_->getValueAt(i));
+            cons_type_[i] = classify_single_constraint(x_l_->values()[i], x_u_->values()[i]);
         }
         for (int i = 0; i < nVar_; i++) {
-            bound_cons_type_[i] = classify_single_constraint(x_l_->getValueAt(i), x_u_->getValueAt(i));
+            bound_cons_type_[i] = classify_single_constraint(x_l_->values()[i], x_u_->values()[i]);
         }
         return true;
     }
-
+    
 }//END_NAMESPACE_SQPHOTSTART

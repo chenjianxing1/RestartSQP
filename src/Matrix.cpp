@@ -2,7 +2,8 @@
 
 namespace SQPhotstart {
     
-    /** Constructor for an empty matrix with N non-zero entries*/
+    /** Constructor for an empty matrix with N non-zero 
+     * entries*/
     SpMatrix::SpMatrix(int nnz, int RowNum, int ColNum) :
     RowIndex_(NULL),
     ColIndex_(NULL),
@@ -72,12 +73,14 @@ namespace SQPhotstart {
         return true;
     }
     
-    bool SpMatrix::get_MatVal_at(int location, int value_to_assign) {
+    //TODO: change the function name: set/.
+    bool SpMatrix::setMatValAt(int location, int value_to_assign) {
         MatVal_[location] = value_to_assign;
         return true;
     }
+   
     
-    bool SpMatrix::get_order(int location, int order_to_assign) {
+    bool SpMatrix::setOrderAt(int location, int order_to_assign) {
         order_[location] = order_to_assign;
         return true;
     }
@@ -115,16 +118,16 @@ namespace SQPhotstart {
     }
     
     /**
-     *
+     *Default destructor
      */
     qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
     
     /**
      *
      *
-     * @param nnz
-     * @param RowNum
-     * @param ColNum
+     * @param: nnz number of nonzero entry
+     * @param RowNum: number of rows of a matrix 
+     * @param ColNum: number of columns of a matrix 
      */
     qpOASESSparseMat::qpOASESSparseMat(int nnz, int RowNum, int ColNum) :
     RowIndex_(NULL),
@@ -143,7 +146,13 @@ namespace SQPhotstart {
             order_[i] = i;
         
     }
-    
+    /**
+     * 
+     *
+     * @param rhs
+     * @param I_info
+     *
+     */
     bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpMatrix> rhs,
                                         Identity2Info I_info){
         assert(isinitialized==false);
@@ -194,7 +203,9 @@ namespace SQPhotstart {
         return true;
     }
     
-    
+   /**
+    *
+    */
     bool qpOASESSparseMat::setMatVal(const double *MatVal, Identity2Info I_info){
         //adding the value to the matrix
         if(isinitialized == false){
@@ -206,20 +217,17 @@ namespace SQPhotstart {
             isinitialized = true;
         }
         
-        //assign each matrix entry to the corresponding position after
-        //permutaion
+        //assign each matrix entry to the corresponding 
+	//position after permutation
         for(int i=0; i<EntryNum_-2*I_info.size; i++){
             MatVal_[order()[i]] = MatVal[i];
         }
         return true;
     }
     
-    bool qpOASESSparseMat::addIdentityMat(int irow, int jcol, int size, double scaling_factor){
-        
-        return true;
-    }
-    
-    
+    /**
+     * Free all memory allocated
+     */
     bool qpOASESSparseMat::freeMemory(){
         delete[] ColIndex_;
         ColIndex_=NULL;

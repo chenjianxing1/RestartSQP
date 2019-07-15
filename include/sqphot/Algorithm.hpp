@@ -152,7 +152,7 @@ namespace SQPhotstart {
          * This function initializes all the shared pointer which will be used in the Algorithm::Optimize, and it copies all parameters
          * that might be changed during the run of the function Algorithm::Optimize
          *
-         * @param nlp: the nlp reader that read data of the function to be minimized;
+         * @param nlp: the nlp reader that reQpad data of the function to be minimized;
          */
         bool allocate(SmartPtr<Ipopt::TNLP> nlp);
 
