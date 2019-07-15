@@ -1,24 +1,42 @@
 language: cpp
-#sudo: required
+sudo: required
 compiler:
-        #- gcc
-- cmake
+- gcc
 os:
-        #- linux
-- osx
+- linux
 addons:
-        #  apt:
-        #    sources:
-        #    - ubuntu-toolchain-r-test
-        #    packages:
-        #    - gcc-4
-        #    - g++-4
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-6
+    - g++-6
 before_install:
-- mkdir build && cd build && cmake -DIpopt=ON .. 
+- export CC=/usr/bin/gcc-6
+- export CXX=/usr/bin/g++-6
+- sudo apt-get clean
+- sudo rm -rf /var/lib/apt/lists/*
+- sudo apt-get update 
+- sudo apt-get install build-essential gfortran pkg-config liblapack-dev libblas-dev
+- wget --tries=40 --retry-connrefused --waitretry=1 --no-check-certificate https://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.12.tgz
+- tar xvzf Ipopt-3.12.12.tgz
+- mkdir third_party
+- mv Ipopt-3.12.12 ./third_party/CoinIpopt
+- cd ./third_party/CoinIpopt
+- cd ThirdParty/Mumps
+- "./get.Mumps"
+- cd ../..
+- mkdir build
+- cd build
+- "../configure"
+- make -j5
+- sudo make install
+- ls include/coin
+- export IPOPT_ROOT_DIR=`pwd`
+- echo $IPOPT_ROOT_DIR
+  #- ls lib
+- cd ../../../
+- mkdir build && cd build && cmake -DIpopt=ON ..
 script:
-- make
+- make -j5
 - ../bin/Release/simple_test
-  #- cd ../
-  #- ./get_code_cov.sh
-  #after_success: 
-  #- bash <(curl -s https://codecov.io/bash) -t 7a0a32a0-cc52-4460-9ec6-c4950095b532
