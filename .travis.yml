@@ -1,0 +1,24 @@
+language: cpp
+#sudo: required
+compiler:
+        #- gcc
+- cmake
+os:
+        #- linux
+- osx
+addons:
+        #  apt:
+        #    sources:
+        #    - ubuntu-toolchain-r-test
+        #    packages:
+        #    - gcc-4
+        #    - g++-4
+before_install:
+- mkdir build && cd build && cmake -DIpopt=ON .. 
+script:
+- make
+- ../bin/Release/simple_test
+  #- cd ../
+  #- ./get_code_cov.sh
+  #after_success: 
+  #- bash <(curl -s https://codecov.io/bash) -t 7a0a32a0-cc52-4460-9ec6-c4950095b532
