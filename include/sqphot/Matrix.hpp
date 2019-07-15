@@ -72,7 +72,7 @@ namespace SQPhotstart {
          *
          */
         
-        bool assignMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
+        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
         
         /**
          *@name print the sparse matrix in triplet form
@@ -85,12 +85,9 @@ namespace SQPhotstart {
          * @name Times a matrix with a vector p, the pointer to the matrix-vector product will be
          * stored in the class member of another Vector class object called "result"
          * */
-        virtual bool
-        times(double* p,
-              std::shared_ptr<SpMatrix> result  // the class object that will store the pointer of the matrix-vector product
-        ) {
-            return false;
-        }
+        virtual bool times(double* p,
+                           std::shared_ptr<Vector> result  // the class object that will store the pointer of the matrix-vector product
+        );
         
         
         

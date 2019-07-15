@@ -8,6 +8,7 @@
 #include <qpOASES.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>
+//#include <sqphot/SQPDebug.hpp>
 
 
 using namespace std;

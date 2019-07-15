@@ -42,8 +42,6 @@ namespace SQPhotstart {
             get_search_direction(myQP);
             
             //calculate the infinity norm of the search direction
-            
-            p_k_->print();
             norm_p_k_ = p_k_->getInfNorm();
             
             //Update the penalty parameter if necessary
@@ -59,6 +57,10 @@ namespace SQPhotstart {
             nlp_->Eval_constraints(x_trial_, c_trial_);
             
             infea_cal(true);
+//
+//            std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
+//            std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
+//
             ratio_test();
             
             // Calculate the second-order-correction steps
@@ -262,6 +264,8 @@ namespace SQPhotstart {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_];
         qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
+
+//        lambda_->print();
         delete[] tmp_lambda;
         return true;
     }
@@ -279,7 +283,8 @@ namespace SQPhotstart {
     bool Algorithm::setupQP() {
         
         if (stats->iter == 0) {
-            myQP->setup_bounds(delta_, x_k_, x_l_, x_u_);
+	        myQP->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_,c_u_);
+            
             myQP->setup_g(grad_f_, rho_);
             myQP->setup_H(hessian_);
             myQP->setup_A(jacobian_);
@@ -293,7 +298,7 @@ namespace SQPhotstart {
                 QPinfoFlag_.Update_H = false;
             }
             if (QPinfoFlag_.Update_bounds) {
-                myQP->update_bounds(delta_, x_k_, x_l_, x_u_);
+                myQP->update_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_,c_u_);
                 QPinfoFlag_.Update_bounds = false;
             }
             
@@ -340,11 +345,11 @@ namespace SQPhotstart {
         Number P1x = obj_value_ + rho_ * infea_measure_;
         Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
         actual_reduction_ = P1x - P1_x_trial;
-        cout<<"actual reduction is"<<actual_reduction_<<endl;
+//        cout<<"actual reduction is"<<actual_reduction_<<endl;
         
         pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
         
-        cout<<"pred reduction is"<<pred_reduction_<<endl;
+//        cout<<"pred reduction is"<<pred_reduction_<<endl;
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
             //succesfully update
             //copy information already calculated from the trial point

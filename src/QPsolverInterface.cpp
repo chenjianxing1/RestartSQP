@@ -39,6 +39,7 @@ namespace SQPhotstart {
         H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(), H_->ColNum(),H_->RowIndex(), H_->ColIndex(), H_->MatVal());
         A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum(),A_->RowIndex(), A_->ColIndex(), A_->MatVal());
         H_qpOASES_->createDiagInfo();
+        
         qpOASES::int_t nWSR = options->qp_maxiter;//TODO modify it
         if (firstQPsolved==false) {//if haven't solve any QP before then initialize the first qp
             qpOASES::Options qp_options;
