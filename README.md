@@ -1,8 +1,10 @@
+[![Build Status](https://travis-ci.org/lanl-ansi/SQPhotstart.svg?branch=master)](https://travis-ci.org/lanl-ansi/SQPhotstart/)
 <p align="center">
 <img src="media/fire.png" width="150">
 <H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
 </p>
-<p align="center"> for Constrained Nonlinear Optimization </p>
+<p align="center"> for Constrained Nonlinear Optimization </p>:wq
+
 
 DEPENDENCIES
 -------
