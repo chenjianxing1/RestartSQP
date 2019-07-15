@@ -3,8 +3,7 @@
 <img src="media/fire.png" width="150">
 <H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
 </p>
-<p align="center"> for Constrained Nonlinear Optimization </p>:wq
-
+<p align="center"> for Constrained Nonlinear Optimization </p>
 
 DEPENDENCIES
 -------
