@@ -13,6 +13,7 @@
 #include <iterator>
 #include <string>
 #include <algorithm>
+
 #include <sqphot/Types.hpp>
 
 using namespace std;
@@ -33,6 +34,8 @@ namespace SQPhotstart {
     Number infNorm(const Number* x, Index n);
 
     ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound);
+    
+    
 
     //debug tool print things out
     template<typename T>

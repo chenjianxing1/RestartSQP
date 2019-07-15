@@ -11,7 +11,7 @@ namespace SQPhotstart{
 
     int Options::setToDefault()
     {
-        iter_max = 100;
+        iter_max = 10;
         printLevel = 2;
         qpPrintLevel = 0;       //does not print anything
         second_order_correction = true;
@@ -20,7 +20,7 @@ namespace SQPhotstart{
         eta_e = 0.75;
         gamma_c = 0.5;
         gamma_e = 2;
-        delta = 10;
+        delta = 1;
         delta_max =1.0e8;
         opt_tol = 1.0e-5;
         opt_compl_tol = 1.0e-6;
