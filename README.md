@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/lanl-ansi/SQPhotstart.svg?branch=master)](https://travis-ci.org/lanl-ansi/SQPhotstart/)
+[![Code Coverage](https://codecov.io/gh/lanl-ansi/SQPhotstart/branch/master/graphs/badge.svg)](https://codecov.io/gh/lanl-ansi/SQPhotstart)
 <p align="center">
 <img src="media/fire.png" width="150">
 <H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
