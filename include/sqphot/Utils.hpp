@@ -1,5 +1,8 @@
-/*
+/* Copyright (C) 2019
+ * All Rights Reserved.
  *
+ * Authors: Xinyi Luo
+ * Date:2019-06
  */
 #ifndef SQPHOTSTART_UTILS_HPP_
 #define SQPHOTSTART_UTILS_HPP_
@@ -20,23 +23,23 @@ using namespace std;
 namespace SQPhotstart {
     /*Print a matrix with given size*/
     void print_matrix(Number* M, Index length, Index width);
-
+    
     const Number INF = 1.0e19;
-
+    
     /* check if x is finite*/
     bool isFinite(Number* x, Index length);
-
+    
     /* Calculate the one norm of a n-dimension vector x*/
     Number oneNorm(const Number* x, Index n);
-
-
+    
+    
     /* Calculate the infinity norm of a n-dimension vector x*/
     Number infNorm(const Number* x, Index n);
-
+    
     ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound);
     
     
-
+    
     //debug tool print things out
     template<typename T>
     inline void print_(char* name, T* vec, Index length) {
@@ -46,7 +49,7 @@ namespace SQPhotstart {
         }
         printf("end of %s\n", name);
     }
-
-
+    
+    
 } // namespace SQPhotstart
 #endif

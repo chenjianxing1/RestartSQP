@@ -1,9 +1,9 @@
-//
-//  SQPDebug.hpp
-//  sqphotstart
-//
-//  Created by Xinyi Luo  on 7/15/19.
-//
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-07
+*/
 
 #include <iostream>
 #ifndef __SQPDEBUG_HPP__

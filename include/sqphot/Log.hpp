@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-06
+*/
 //This is a simple log file for output temporarily
 #ifndef SQPHOTSTART_LOG_HPP
 #define SQPHOTSTART_LOG_HPP
@@ -16,6 +22,8 @@ namespace SQPhotstart{
             printf("%6s %23s %9s %9s %9s %9s\n","iter", "f", "||p_k||","||c_k||", "Delta","rho");
             printf("=====================================================================================\n");
         }
+
+
 
         void print_main_iter(int iter,
                              double obj_value,

@@ -1,12 +1,19 @@
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #include <sqphot/QPhandler.hpp>
 #include "sqphot/Utils.hpp"
+
 namespace SQPhotstart {
     /**
      * Default constructor
      *
      */
     QPhandler::QPhandler() {
-	    //message for debugging purpose
+        //message for debugging purpose
         std::cout << "QP is created" << std::endl;
     }
     
@@ -26,7 +33,7 @@ namespace SQPhotstart {
     bool QPhandler::GetOptimalSolution(double* p_k) {
         qp_interface_->get_optimal_solution(p_k);
         
-//        print_("p_k", p_k,nlp_info_.nVar+2*nlp_info_.nCon);
+        //        print_("p_k", p_k,nlp_info_.nVar+2*nlp_info_.nCon);
         return true;
     }
     
@@ -86,12 +93,12 @@ namespace SQPhotstart {
                                  shared_ptr<const Vector> c_l,
                                  shared_ptr<const Vector> c_u) {
         
-    	for(int i = 0 ; i<nlp_info_.nCon; i++){
-    		qp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
-		    qp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
-    	}
-
-	    for (int i = 0; i < nlp_info_.nVar; i++) {
+        for(int i = 0 ; i<nlp_info_.nCon; i++){
+            qp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
+            qp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
+        }
+        
+        for (int i = 0; i < nlp_info_.nVar; i++) {
             qp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
             qp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
         }
@@ -102,15 +109,15 @@ namespace SQPhotstart {
         for (int i = 0; i < nlp_info_.nCon * 2; i++)
             qp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
         
-//        if(DEBUG){
-//            std::cout<<"the value of lb is"<<endl;
-//        qp_interface_->getLb()->print();
-//            divider();
-//                        std::cout<<"the value of ub is"<<endl;
-//        qp_interface_->getUb()->print();
-//            divider();
-//        }
-//
+        //        if(DEBUG){
+        //            std::cout<<"the value of lb is"<<endl;
+        //        qp_interface_->getLb()->print();
+        //            divider();
+        //                        std::cout<<"the value of ub is"<<endl;
+        //        qp_interface_->getUb()->print();
+        //            divider();
+        //        }
+        //
         return true;
     }
     
@@ -125,9 +132,9 @@ namespace SQPhotstart {
     bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
         qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
         qp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon * 2, rho);
-//        std::cout<<"--------------------------"<<std::endl;
-//        qp_interface_->getG()->print();
-//        std::cout<<"--------------------------"<<std::endl;
+        //        std::cout<<"--------------------------"<<std::endl;
+        //        qp_interface_->getG()->print();
+        //        std::cout<<"--------------------------"<<std::endl;
         return true;
     }
     
@@ -144,11 +151,11 @@ namespace SQPhotstart {
                                   shared_ptr<const Vector> c_k,
                                   shared_ptr<const Vector> c_l,
                                   shared_ptr<const Vector> c_u) {
-	    for(int i = 0 ; i<nlp_info_.nCon; i++){
-		    qp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
-		    qp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
-	    }
-	    for (int i = 0; i < nlp_info_.nVar; i++) {
+        for(int i = 0 ; i<nlp_info_.nCon; i++){
+            qp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
+            qp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
+        }
+        for (int i = 0; i < nlp_info_.nVar; i++) {
             qp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
             qp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
         }
@@ -175,38 +182,38 @@ namespace SQPhotstart {
      */
     bool QPhandler::update_grad(shared_ptr<const Vector> grad) {
         qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
-//        std::cout<<"--------------------------"<<std::endl;
-//        qp_interface_->getG()->print();
-//        std::cout<<"--------------------------"<<std::endl;
+        //        std::cout<<"--------------------------"<<std::endl;
+        //        qp_interface_->getG()->print();
+        //        std::cout<<"--------------------------"<<std::endl;
         return true;
     }
     
-       
-   /**
-    * Set up the H for the first time in the QP 
-    * problem.
-    * It will be concatenated as [H_k 0]
-    *          		         [0   0]
-    * where H_k is the Lagragian hessian evaluated at x_k 
-    * and lambda_k.
-    *
-    * This method should only be called for once. 
-    *
-    * @param hessian the Lagragian hessian evaluated 
-    * at x_k and lambda_k from nlp readers.
-    * @return
-    */
+    
+    /**
+     * Set up the H for the first time in the QP
+     * problem.
+     * It will be concatenated as [H_k 0]
+     *          		         [0   0]
+     * where H_k is the Lagragian hessian evaluated at x_k
+     * and lambda_k.
+     *
+     * This method should only be called for once.
+     *
+     * @param hessian the Lagragian hessian evaluated
+     * at x_k and lambda_k from nlp readers.
+     * @return
+     */
     bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
         
         qp_interface_->getH()->setStructure(hessian,I_info_H);
         qp_interface_->getH()->setMatVal(hessian->MatVal(),I_info_H);
         
-//        if(DEBUG){
-//
-//            std::cout<<"H is"<<std::endl;
-//            qp_interface_->getH()->print();
-//                        divider();
-//        }
+        //        if(DEBUG){
+        //
+        //            std::cout<<"H is"<<std::endl;
+        //            qp_interface_->getH()->print();
+        //                        divider();
+        //        }
         return true;
     }
     
@@ -227,12 +234,12 @@ namespace SQPhotstart {
         qp_interface_->getA()->setStructure(jacobian,I_info_A);
         qp_interface_->getA()->setMatVal(jacobian->MatVal(),I_info_A);
         
-//        if(DEBUG){
-//
-//            std::cout<<"A is"<<std::endl;
-//        qp_interface_->getA()->print();
-//                        divider();
-//        }
+        //        if(DEBUG){
+        //
+        //            std::cout<<"A is"<<std::endl;
+        //        qp_interface_->getA()->print();
+        //                        divider();
+        //        }
         return true;
     }
     
@@ -249,21 +256,21 @@ namespace SQPhotstart {
     
     
     /**
-     * This function initializes all class members which 
+     * This function initializes all class members which
      * will be used in _qp_interface
      *
      * @param nlp_info
      *          it contains the information about number
      *          of variables, number of constraints, number of
-     *          elements in the Hessian and that of 
-     *          Jacobian. The definition of Index_info is 
+     *          elements in the Hessian and that of
+     *          Jacobian. The definition of Index_info is
      *          in Types.hpp
      * @param Variable_type
-     *          it specifies how the variables are bounded. 
+     *          it specifies how the variables are bounded.
      *          Please check @ClassifyConstraintType in Algorithm.hpp
      *          for more details
      * @param qptype
-     *          it specifies which type of QP is going to 
+     *          it specifies which type of QP is going to
      *          be solved. It can be either LP, or QP, or SOC
      */
     bool QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {

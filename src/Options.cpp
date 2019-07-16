@@ -1,14 +1,21 @@
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #include <sqphot/Options.hpp>
-namespace SQPhotstart{
 
+namespace SQPhotstart{
+    
     Options::Options(){
         setToDefault();
     }
-
+    
     Options::~Options(){
     }
-
-
+    
+    
     int Options::setToDefault()
     {
         iter_max = 10;
@@ -38,7 +45,7 @@ namespace SQPhotstart{
         eps2 = 1.0e-6;
         EnablePertubation = false;
         return 0;
-
+        
     }
 }
 

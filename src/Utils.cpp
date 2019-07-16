@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-05
+*/
 #include <sqphot/Utils.hpp>
 namespace SQPhotstart{
 

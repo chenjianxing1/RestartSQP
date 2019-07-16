@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-05
+*/
 #ifndef SQPHOTSTART_OPTIONS_HPP
 #define SQPHOTSTART_OPTIONS_HPP
 

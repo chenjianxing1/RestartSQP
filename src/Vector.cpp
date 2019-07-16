@@ -1,4 +1,11 @@
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #include <sqphot/Vector.hpp>
+
 
 namespace SQPhotstart {
     /**
@@ -58,15 +65,15 @@ namespace SQPhotstart {
     }
     
     /* add all the element in the array by a number*/
-    void Vector::add_number(double increase_amount) {
+    void Vector::addNumber(double increase_amount) {
         for (int i = 0; i < size_; i++) {
             values_[i] += increase_amount;
         }
     }
     
     /* add the element in a specific location by a number*/
-    void Vector::add_number(int Location, double increase_amount) {
-        values_[Location - 1] += increase_amount;
+    void Vector::addNumberAt(int Location, double increase_amount) {
+        values_[Location] += increase_amount;
     }
     
     /* add all elements from the initial location to
@@ -139,7 +146,12 @@ namespace SQPhotstart {
             values_[i] = 0;
         }
     }
-    
+    /**
+     * @brief
+     * @param rhs
+     * @param compared_const
+     * @return
+     */
     bool Vector::setValue2Min(const Vector &rhs, double compared_const) {
         //        if(size_==0){
         //            size_ = rhs.size_;
@@ -166,6 +178,15 @@ namespace SQPhotstart {
         return added_result;
     }
     
+    /**
+     * @brief set each entry of values_ to be the max of the same entry of rhs and a
+     * constant number.
+     *
+     * For example, values_[i] = max(rhs.values[i],compared_const).
+     *
+     * @param rhs the vector to be compared with the constant
+     * @param compared_const the constant to be compared with each entry of the vector
+     */
     bool Vector::setValue2Max(const Vector rhs, double compared_const) {
         assert(this->size_==rhs.Dim());
         rhs.print();

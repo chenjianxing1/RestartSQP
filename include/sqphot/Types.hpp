@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-06
+*/
 #ifndef SQPHOTSTART_TYPES_HPP
 #define SQPHOTSTART_TYPES_HPP
 
@@ -56,10 +62,5 @@ namespace SQPhotstart {
         bool Update_bounds = true;
     } UpdateFlags;
 
-//    typedef struct{
-//        Index* tmpRow = 0;
-//        Index* tmpCol = 0;
-//        Number* tmpEntry = 0;
-//    }tmpMatrixData;
 }
 #endif /* SQPHOTSTART_TYPES_HPP*/

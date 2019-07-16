@@ -1,14 +1,14 @@
 #include <sqphot/Matrix.hpp>
 
 namespace SQPhotstart {
-
-    /** Constructor for an empty matrix with N non-zero 
+    
+    /** Constructor for an empty matrix with N non-zero
      * entries*/
     SpMatrix::SpMatrix(int nnz, int RowNum, int ColNum) :
-            RowIndex_(NULL),
-            ColIndex_(NULL),
-            MatVal_(NULL),
-            order_(NULL) {
+    RowIndex_(NULL),
+    ColIndex_(NULL),
+    MatVal_(NULL),
+    order_(NULL) {
         EntryNum_ = nnz;
         RowNum_ = RowNum;
         ColNum_ = ColNum;
@@ -21,15 +21,15 @@ namespace SQPhotstart {
         for (int i = 0; i < nnz; i++) {
             order_[i] = i;
         }
-
+        
     }
-
+    
     /** Default destructor */
     SpMatrix::~SpMatrix() {
         freeMemory();
     }
-
-
+    
+    
     //    /**
     //     * @name allocate the data to the class members
     //     *
@@ -46,7 +46,7 @@ namespace SQPhotstart {
     //
     //        return true;
     //    }
-
+    
     /**
      *@name print the sparse matrix in triplet form
      */
@@ -59,7 +59,7 @@ namespace SQPhotstart {
             std::cout << order_[i] << std::endl;
         }
     }
-
+    
     /** free all memory*/
     bool SpMatrix::freeMemory() {
         delete[] RowIndex_;
@@ -72,20 +72,20 @@ namespace SQPhotstart {
         order_ = NULL;
         return true;
     }
-
+    
     //TODO: change the function name: set/.
     bool SpMatrix::setMatValAt(int location, int value_to_assign) {
         MatVal_[location] = value_to_assign;
         return true;
     }
-
-
+    
+    
     bool SpMatrix::setOrderAt(int location, int order_to_assign) {
         order_[location] = order_to_assign;
         return true;
     }
-
-
+    
+    
     /**
      * qpOASESSparseMatrix
      */
@@ -93,46 +93,46 @@ namespace SQPhotstart {
         std::cout << "ColIndex: ";
         for (int i = 0; i < ColNum_ + 1; i++)
             std::cout << ColIndex()[i] << " ";
-
+        
         std::cout << " " << std::endl;
-
+        
         std::cout << "RowIndex: ";
-
+        
         for (int i = 0; i < EntryNum_; i++)
             std::cout << RowIndex()[i] << " ";
         std::cout << " " << std::endl;
-
+        
         std::cout << "MatVal:   ";
-
+        
         for (int i = 0; i < EntryNum_; i++)
             std::cout << MatVal()[i] << " ";
         std::cout << " " << std::endl;
-
+        
         std::cout << "order:    ";
         for (int i = 0; i < EntryNum_; i++)
             std::cout << order()[i] << " ";
         std::cout << " " << std::endl;
-
-
+        
+        
     }
-
+    
     /**
      *Default destructor
      */
     qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
-
+    
     /**
      *
      *
      * @param: nnz number of nonzero entry
-     * @param RowNum: number of rows of a matrix 
-     * @param ColNum: number of columns of a matrix 
+     * @param RowNum: number of rows of a matrix
+     * @param ColNum: number of columns of a matrix
      */
     qpOASESSparseMat::qpOASESSparseMat(int nnz, int RowNum, int ColNum) :
-            RowIndex_(NULL),
-            ColIndex_(NULL),
-            MatVal_(NULL),
-            order_(NULL) {
+    RowIndex_(NULL),
+    ColIndex_(NULL),
+    MatVal_(NULL),
+    order_(NULL) {
         isinitialized = false;
         EntryNum_ = nnz;
         RowNum_ = RowNum;
@@ -143,27 +143,32 @@ namespace SQPhotstart {
         order_ = new int[nnz]();
         for (int i = 0; i < nnz; i++)
             order_[i] = i;
-
+        
     }
-
+    
     /**
-     * 
+     * @brief setup the structure of the sparse matrix for solver qpOASES(should
+     * be called only for once).
      *
-     * @param rhs
-     * @param I_info
+     * This method will convert the strucutre information from the triplet form from a
+     * SpMatrix object to the format required by the QPsolver qpOASES.
+     *
+     * @param rhs a SpMatrix object whose content will be copied to the class members
+     * (in a different sparse matrix representations)
+     * @param I_info the information of 2 identity sub matrices.
      *
      */
     bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpMatrix> rhs,
                                         Identity2Info I_info) {
         assert(isinitialized == false);
-
+        
         int counter = 0; // the counter for recording the index location
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         for (int i = 0; i < rhs->EntryNum(); i++) {
             sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i], rhs->ColIndex()[i], counter));
             counter++;
         }
-
+        
         // adding 2 identity matrix to the tuple array.
         if (I_info.irow1 != 0) {
             for (int j = 0; j < I_info.size; j++) {
@@ -171,14 +176,14 @@ namespace SQPhotstart {
                 sorted_index_info.push_back(std::make_tuple(I_info.irow2 + j, I_info.jcol2 + j, counter + 1));
                 counter += 2;
             }
-
+            
         }
-
+        
         assert(counter == EntryNum_);
-
+        
         std::sort(sorted_index_info.begin(), sorted_index_info.end(), tuple_sort_rule);
         //copy the order information back
-
+        
         for (int i = 0; i < EntryNum_; i++) {
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
             order_[i] = std::get<2>(sorted_index_info[i]);
@@ -187,7 +192,7 @@ namespace SQPhotstart {
                     ColIndex_[std::get<1>(sorted_index_info[i])] = i + 1;
                 }
             }
-
+            
             int j = ColNum_;
             while (j >= 0 && ColIndex_[j] == 0) {
                 ColIndex_[j] = EntryNum_;
@@ -195,16 +200,18 @@ namespace SQPhotstart {
                     break;
                 else
                     j--;
-
+                
             }
         }
-
+        
         sorted_index_info.clear();
         return true;
     }
-
     /**
-     *
+     * @brief set the Matrix values to the matrix, convert from triplet format to
+     * Harwell-Boeing Matrix format.
+     * @param MatVal entry values(orders are not yet under permutation)
+     * @param I_info the 2 identity matrices information
      */
     bool qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
         //adding the value to the matrix
@@ -213,18 +220,18 @@ namespace SQPhotstart {
                 MatVal_[order()[EntryNum_ - i - 1]] = -1;
                 MatVal_[order()[EntryNum_ - i - I_info.size - 1]] = 1;
             }
-
+            
             isinitialized = true;
         }
-
-        //assign each matrix entry to the corresponding 
+        
+        //assign each matrix entry to the corresponding
         //position after permutation
         for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
             MatVal_[order()[i]] = MatVal[i];
         }
         return true;
     }
-
+    
     /**
      * Free all memory allocated
      */
@@ -239,20 +246,36 @@ namespace SQPhotstart {
         order_ = NULL;
         return true;
     }
-
+    
     /**
-    *
-    * @param p
-    * @param result
-    * @return
-    */
-
-    bool SpMatrix::times(double* p,
+     * @brief Times a matrix with a vector p, the pointer to the matrix-vector
+     * product  will be stored in the class member of another Vector class object
+     * called "result"
+     */
+    
+    bool SpMatrix::times(std::shared_ptr<const Vector> p,
                          std::shared_ptr<Vector> result) {
-
+        assert(ColNum_==p->Dim());
+        result->set_zeros(); //set all entries to be 0
+        for(int i = 0; i<EntryNum_; i++){
+            result->addNumberAt(RowIndex_[i], MatVal_[ColIndex_[i]] * p->values()
+                                [RowIndex_[i]]);
+        }
         return true;
     }
-
-
+    
+    
+    double SpMatrix::infnorm() {
+        double InfNorm = 0;
+        //FIXME: finish it!
+        
+        return InfNorm;
+    }
+    
+    
+    double SpMatrix::onenorm(){
+        double OneNorm = 0;
+        return OneNorm;
+    }
 }//END_OF_NAMESPACE
 

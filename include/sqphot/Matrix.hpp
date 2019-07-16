@@ -1,4 +1,9 @@
-
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #ifndef SQPHOTSTART_MATRIX_HPP_
 #define SQPHOTSTART_MATRIX_HPP_
 
@@ -13,7 +18,7 @@
 
 
 namespace SQPhotstart {
-    //TODO: have a virtual base class for SparseMatrix, DenseMatrix,....
+    
     class Matrix {
         
     public:
@@ -64,7 +69,7 @@ namespace SQPhotstart {
         virtual ~SpMatrix();
         
         /**
-         * @name allocate the data to the class members
+         * @brief allocate the data to the class members
          *
          * @param RowIndex the row index of a entry in a matrix, starting from 1
          * @param ColIndex the column index of a entry in a matrix, starting from 1
@@ -75,38 +80,34 @@ namespace SQPhotstart {
         bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
         
         /**
-         *@name print the sparse matrix in triplet form
+         *@brief print the sparse matrix in triplet form
          */
         void print();
         
         
         
         /**
-         * @name Times a matrix with a vector p, the pointer to the matrix-vector product will be
-         * stored in the class member of another Vector class object called "result"
+         * @brief Times a matrix with a vector p, the pointer to the matrix-vector
+         * product  will be stored in the class member of another Vector class object
+         * called "result"
          * */
-        virtual bool times(double* p,
-                           std::shared_ptr<Vector> result  // the class object that will store the pointer of the matrix-vector product
-        );
+        virtual bool times(std::shared_ptr<const Vector> p,
+                           std::shared_ptr<Vector> result);
         
         
+        /**
+         * @brief calculate the one norm of the matrix
+         *
+         * @return the calculated one-norm
+         */
+        double onenorm();
         
-        //        virtual bool getStructure(shared_ptr<const SpMatrix> rhs){
-        //            getStructure_sub(rhs);
-        //            return true;};
-        //
-        //        virtual bool addIdentityMat(int irow, int jcol, int size, double scaling_factor){
-        //            addIdentityMat_sub(irow,jcol,size,scaling_factor);
-        //        };
-        //
-        //        virtual bool setMatVal(const double* MatVal){
-        //            getMatVal_sub(MatVal);
-        //            return true;
-        //        };
-        
-        double onenorm() { return 0; };
-        
-        double infnorm() { return 0; };
+        /**
+         * @brief calculate the infinity norm of the matrix
+         *
+         * @return the calculated inf-norm
+         */
+        double infnorm();;
         
         /**Extract Matrix info*/
         inline int ColNum() { return ColNum_; }
@@ -133,14 +134,6 @@ namespace SQPhotstart {
         
         inline const int* order() const { return order_; }
         
-        inline int RowIndex_at(int i) { return RowIndex_[i]; }
-        
-        inline int ColIndex_at(int i) { return ColIndex_[i]; }
-        
-        inline double MatVal_at(int i) { return MatVal_[i]; }
-        
-        inline int order_at(int i) { return order_[i]; }
-        
         inline bool setOrderAt(int location, int order_to_assign);
         
         inline bool setMatValAt(int location, int value_to_assign);
@@ -161,13 +154,13 @@ namespace SQPhotstart {
         
         
     private:
-        double* MatVal_;  // the entry data of a matrix
-        int* order_;    // the corresponding original position of a matrix entry
-        int* RowIndex_;// the row number of a matrix entry
-        int* ColIndex_;// the column number of a matrix entry
-        int ColNum_;    // the number columns of a matrix
-        int RowNum_;    // the number of rows of a matrix
-        int EntryNum_;  // number of non-zero entries in  matrix
+        double* MatVal_;  /**< the entry data of a matrix */
+        int* order_;    /**< the corresponding original position of a matrix entry */
+        int* RowIndex_;/**< the row number of a matrix entry */
+        int* ColIndex_;/**< the column number of a matrix entry */
+        int ColNum_;    /**< the number columns of a matrix */
+        int RowNum_;    /**< the number of rows of a matrix */
+        int EntryNum_;  /**< number of non-zero entries in  matrix */
     };
     
     /**
@@ -177,27 +170,49 @@ namespace SQPhotstart {
     class qpOASESSparseMat : public SpMatrix {
         
     public:
-        
+        /**
+         * @brief A constructor
+         * @param nnz the number of nonzero entries
+         * @param RowNum the number of rows
+         * @param ColNum the number of columns
+         */
         qpOASESSparseMat(int nnz, int RowNum, int ColNum);
         
-        ~qpOASESSparseMat();
+        /**
+         * @brief Default destructor
+         */
+        ~qpOASESSparseMat() override;
         
+        /**
+         * @brief set the Matrix values to the matrix, convert from triplet format to
+         * Harwell-Boeing Matrix format.
+         * @param MatVal entry values(orders are not yet under permutation)
+         * @param I_info the 2 identity matrices information
+         */
         virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
         
         /**
-         * Method that convert automatically convert data in triplet form
-         * (stored in spMatrix) to Harwell-Boeing Sparse Matrix
-         *@param rhs the matrix object stored in triplet form
-         *@param numI number of Identity matrix
+         * @brief setup the structure of the sparse matrix for solver qpOASES(should
+         * be called only for once).
+         *
+         * This method will convert the strucutre information from the triplet form from a
+         * SpMatrix object to the format required by the QPsolver qpOASES.
+         *
+         * @param rhs a SpMatrix object whose content will be copied to the class members
+         * (in a different sparse matrix representations)
+         * @param I_info the information of 2 identity sub matrices.
+         *
          */
         virtual bool setStructure(std::shared_ptr<const SpMatrix> rhs, Identity2Info I_info);
-
-        bool updateMatVal(const qpOASES::real_t) { return false; }
         
+        bool updateMatVal(const double* MatVal) { return false; }
         
+        /**
+         * @brief
+         */
         void print() override;
         
-
+        /** Extract class member information*/
         inline int EntryNum() { return EntryNum_; }
         
         inline int EntryNum() const { return EntryNum_; }
@@ -232,7 +247,8 @@ namespace SQPhotstart {
         
         /**
          * This is part of qpOASESMatrixAdapter
-         * @name This is the sorted rule that used to sort data, first based on column index then based on row index
+         * @brief This is the sorted rule that used to sort data, first based on column
+         * index then based on row index
          */
         static bool
         tuple_sort_rule(const std::tuple<int, int, int> left, const std::tuple<int, int, int> right) {
@@ -252,7 +268,6 @@ namespace SQPhotstart {
         int* order_;
         int RowNum_;
         int ColNum_;
-        
         int EntryNum_;
         bool isinitialized;
         

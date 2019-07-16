@@ -57,6 +57,7 @@ namespace SQPhotstart {
         return true;
     }
     
+    
     bool qpOASESInterface::get_multipliers(double* y_k) {
         qp_->getDualSolution(y_k);
         return true;

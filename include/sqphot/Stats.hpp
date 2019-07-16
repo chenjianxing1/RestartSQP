@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-05
+*/
 #ifndef SQPHOTSTART_STATS_HPP
 #define SQPHOTSTART_STATS_HPP
 namespace SQPhotstart {

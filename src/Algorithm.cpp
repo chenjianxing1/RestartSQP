@@ -1,5 +1,12 @@
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 #include <sqphot/Algorithm.hpp>
 #include <sqphot/Utils.hpp>
+
 namespace SQPhotstart {
     
     /**
@@ -21,7 +28,7 @@ namespace SQPhotstart {
     }
     
     /**
-     * This is the main function to optimize the NLP given as the input
+     * @brief This is the main function to optimize the NLP given as the input
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
@@ -34,8 +41,7 @@ namespace SQPhotstart {
         while (stats->iter < options->iter_max) {
             //setup the QPs problems
             setupQP();
-            //based on the information given by NLP reader;
-            //otherwise, it will do nothing
+            //based on the information given by NLP reader otherwise, it will do nothing
             myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
             
             //get the search direction from the solution of the QPsubproblem
@@ -51,16 +57,16 @@ namespace SQPhotstart {
             x_trial_->copy_vector(x_k_->values());
             x_trial_->add_vector(p_k_->values());
             
-            // Calculate f_trial, c_trial and infea_measure_trial for the trial
-            // points x_trial
+            // Calculate f_trial, c_trial and infea_measure_trial for the trial points
+            // x_trial
             nlp_->Eval_f(x_trial_, obj_value_trial_);
             nlp_->Eval_constraints(x_trial_, c_trial_);
             
             infea_cal(true);
-//
-//            std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
-//            std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
-//
+            
+            //            std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
+            //            std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
+            
             ratio_test();
             
             // Calculate the second-order-correction steps
@@ -73,7 +79,8 @@ namespace SQPhotstart {
             /* output some information to the console, TODO: change it*/
             if (stats->iter % 10 == 0)log->print_header();
             if (options->printLevel > 0)
-                log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_, delta_, rho_);
+                log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
+                                     delta_, rho_);
             
             radius_update();
             
@@ -86,7 +93,8 @@ namespace SQPhotstart {
             }
         }
         // print the final summary message to the console
-        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_, infea_measure_, exitflag_);
+        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_,
+                         infea_measure_, exitflag_);
         return true;
     }
     
@@ -134,7 +142,7 @@ namespace SQPhotstart {
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
         
-        infea_cal(false);
+        infea_cal(false); //calculate the infeasibility measure for x_k
         // initializes QP objects*/
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
@@ -144,14 +152,12 @@ namespace SQPhotstart {
     }
     
     /**
-     * This function initializes all the shared pointer
-     * which will be used in the Algorithm::Optimize, and
-     * it copies all parameters
-     * that might be changed during the run of the
-     * function Algorithm::Optimize
+     * @brief alloocate memory for class members.
+     * This function initializes all the shared pointer which will be used in the 
+     * Algorithm::Optimize, and it copies all parameters that might be changed during 
+     * the run of the function Algorithm::Optimize.
      *
-     * @param nlp: the nlp reader that read data of the
-     * function to be minimized;
+     * @param nlp: the nlp reader that read data of the function to be minimized;
      */
     bool Algorithm::allocate(SmartPtr<Ipopt::TNLP> nlp) {
         nlp_ = make_shared<SQPTNLP>(nlp);
@@ -188,16 +194,15 @@ namespace SQPhotstart {
     
     
     /**
-     * This function calculates the infeasibility measure
-     * for either trial point or current iterate x_k
+     * @brief This function calculates the infeasibility measure for either trial point
+     * or current iterate x_k
      *
-     *@param trial: true if the user are going to evaluate
-     *the infeasibility measure of the trial point _x_trial;
-     *	infea_measure_trial = norm(-max(c_trial-cu,0),1)
-     *			      +norm(-min(c_trial-cl,0),1)
+     *@param trial: true if the user are going to evaluate the infeasibility measure of
+     * the trial point _x_trial;
+     *	infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
      *
-     * 	            false if the user are going to evaluate
-     *the infeasibility measure of the current iterates _x_k
+     * 	            false if the user are going to evaluate the infeasibility measure
+     * 	            of the current iterates _x_k
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
@@ -225,21 +230,19 @@ namespace SQPhotstart {
     
     
     /**
-     * This function extracts the search direction for NLP
-     * from the QP subproblem solved and copies it to the
-     * class member _p_k
+     * @brief This function extracts the search direction for NLP from the QP subproblem
+     * solved, and copies it to the class member _p_k
      *
-     * It will truncate the optimal solution of QP into two
-     * parts, the first half (with length equal to the number
-     * of variables) to be the search direction.
+     * It will truncate the optimal solution of QP into two parts, the first half (with
+     * length equal to the number of variables) to be the search direction.
      *
-     * @param qpsolver the QPsolver class object used for
-     * solving a QP subproblem with specified QP informations
+     * @param qphandler the QPhandler class object used for solving a QP subproblem with
+     * specified QP information
      */
-    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qpsolver) {
+    bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qphandler) {
         
         double* tmp_p_k = new double[nVar_ + 2 * nCon_];
-        qpsolver->GetOptimalSolution(tmp_p_k);
+        qphandler->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         delete[] tmp_p_k;
         return true;
@@ -264,8 +267,8 @@ namespace SQPhotstart {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_];
         qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
-
-//        lambda_->print();
+        
+        //        lambda_->print();
         delete[] tmp_lambda;
         return true;
     }
@@ -283,7 +286,7 @@ namespace SQPhotstart {
     bool Algorithm::setupQP() {
         
         if (stats->iter == 0) {
-	        myQP->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_,c_u_);
+            myQP->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
             
             myQP->setup_g(grad_f_, rho_);
             myQP->setup_H(hessian_);
@@ -298,7 +301,7 @@ namespace SQPhotstart {
                 QPinfoFlag_.Update_H = false;
             }
             if (QPinfoFlag_.Update_bounds) {
-                myQP->update_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_,c_u_);
+                myQP->update_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
                 QPinfoFlag_.Update_bounds = false;
             }
             
@@ -345,11 +348,11 @@ namespace SQPhotstart {
         Number P1x = obj_value_ + rho_ * infea_measure_;
         Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
         actual_reduction_ = P1x - P1_x_trial;
-//        cout<<"actual reduction is"<<actual_reduction_<<endl;
+        //        cout<<"actual reduction is"<<actual_reduction_<<endl;
         
         pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
         
-//        cout<<"pred reduction is"<<pred_reduction_<<endl;
+        //        cout<<"pred reduction is"<<pred_reduction_<<endl;
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
             //succesfully update
             //copy information already calculated from the trial point
@@ -373,25 +376,18 @@ namespace SQPhotstart {
     }
     
     /**
-     *
-     * This function update the trust-region radius when
-     * the ratio calculated by the ratio test is smaller
-     * than eta_c or bigger than eta_e and the
-     * search_direction hits the trust-region bounds.
-     *
-     * If ratio<eta_c, the trust region radius will
-     * decrease by the parameter gamma_c, to be
-     * gamma_c* _delta
-     * If ratio_test> eta_e and _delta = _norm_p_k, the
-     * trust-region radius will be increased by the
-     * parameter gamma_c.
-     *
-     * In either of these two cases, and if the trial
-     * point does not pass the ratio_test (the x_trial
-     * hasn't been accepted), only the trust region
-     * parameter of the QP bounds will be update, and the
-     * _reset_qp will be set to false.
-     *
+     * @brief Update the trust region radius.
+     * 
+     * This function update the trust-region radius when the ratio calculated by the 
+     * ratio test is smaller than eta_c or bigger than eta_e and the search_direction 
+     * hits the trust-region bounds. 
+     * If ratio<eta_c, the trust region radius will decrease by the parameter 
+     * gamma_c, to be gamma_c* delta_
+     * If ratio_test> eta_e and delta_= norm_p_k_ the trust-region radius will be 
+     * increased by the parameter gamma_c.
+     * 
+     * If trust region radius has changed, the corresponding flags will be set to be
+     * true;
      */
     
     bool Algorithm::radius_update() {
@@ -412,26 +408,29 @@ namespace SQPhotstart {
     
     /**
      *
-     * This function checks how each constraint specified by
-     * the nlp readers are bounded
-     * If there is only upper bounds for a constraint, c_i(x)<=c^i_u,
-     * then _Constraint_type = BOUNDED_ABOVE
-     * If there is only lower bounds for a constraint, c_i(x)>=c^i_l,
-     * then _Constraint_type = BOUNDED_BELOW
-     * If there are both upper bounds and lower bounds,
-     * c^i_l<=c_i(x)<=c^i_u, and c^i_l<c^i_u
-     * then _Constraint_type = BOUNDED,
-     * If there is no constraints on all of c_i(x), then
-     * _Constraint_type = UNBOUNDED;
-     *
-     *
+     * @brief This function checks how each constraint specified by the nlp readers are
+     * bounded.
+     * If there is only upper bounds for a constraint, c_i(x)<=c^i_u, then 
+     * cons_type_[i]= BOUNDED_ABOVE
+     * If there is only lower bounds for a constraint, c_i(x)>=c^i_l, then 
+     * cons_type_[i]= BOUNDED_BELOW
+     * If there are both upper bounds and lower bounds, c^i_l<=c_i(x)<=c^i_u, and 
+     * c^i_l<c^i_u then cons_type_[i]= BOUNDED,
+     * If there is no constraints on all 
+     * of c_i(x), then cons_type_[i]= UNBOUNDED;
+     * 
+     * The same rules are also applied to the bound-constraints.
      */
+    
+    
     bool Algorithm::ClassifyConstraintType() {
         for (int i = 0; i < nCon_; i++) {
-            cons_type_[i] = classify_single_constraint(x_l_->values()[i], x_u_->values()[i]);
+            cons_type_[i] = classify_single_constraint(x_l_->values()[i],
+                                                       x_u_->values()[i]);
         }
         for (int i = 0; i < nVar_; i++) {
-            bound_cons_type_[i] = classify_single_constraint(x_l_->values()[i], x_u_->values()[i]);
+            bound_cons_type_[i] = classify_single_constraint(x_l_->values()[i],
+                                                             x_u_->values()[i]);
         }
         return true;
     }
