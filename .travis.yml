@@ -40,3 +40,8 @@ before_install:
 script:
 - make -j5
 - ../bin/Release/simple_test
+- ce ../
+- ./get_code_cov.sh
+
+after_success:
+- bash <(curl -s https://codecov.io/bash) -t ec5f6253-3c2f-4e2f-be8e-bf208702ad71
