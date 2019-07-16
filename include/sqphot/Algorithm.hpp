@@ -8,6 +8,7 @@
 #define SQPHOTSTART_ALG_HPP_
 
 #include <coin/IpTNLP.hpp>
+#include <coin/IpRegOptions.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Options.hpp>
@@ -16,6 +17,7 @@
 #include <sqphot/Log.hpp>
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Vector.hpp>
+
 #include <sqphot/Matrix.hpp>
 
 
@@ -48,17 +50,29 @@ namespace SQPhotstart {
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
         virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
-        
+
+        bool setOptions(const std::string& name, double value){ return false;};
+
+        bool setOptions(const std::string& name, int value){ return false;};
+
+        bool setOptions(const std::string& name, bool value){ return false;};
         /* Private methods*/
     private:
-        
+
         /** Copy Constructor */
         Algorithm(const Algorithm &);
         
         /** Overloaded Equals Operator */
         void operator=(const Algorithm &);
-        
-        /** This is the function that checks if the current point is optimal, and
+
+        /**
+         * @brief
+         * @return
+         */
+        bool setDefaultOption();
+
+        /**
+         * @brief This is the function that checks if the current point is optimal, and
          * decides if to exit the loop or not
          * *@return if it decides the function is optimal, the class member _exitflag =
          * OPTIMAL
@@ -69,9 +83,9 @@ namespace SQPhotstart {
         virtual bool termination_check();
         
         /**
-         *  This function initializes the objects required by the SQP Algorithm, copies
-         *  some parameters required by the algorithm, obtains the function information
-         *  for the first QP, and solve the first QP and LP.
+         *  @brief This function initializes the objects required by the SQP Algorithm,
+         *  copies some parameters required by the algorithm, obtains the function
+         *  information for the first QP.
          *
          */
         virtual bool initilization();
@@ -92,10 +106,25 @@ namespace SQPhotstart {
          */
         
         virtual bool infea_cal(bool trial);
-        
+
+
         virtual bool second_order_correction() { return false; };
-        
-        /** Perform the ratio test to determine if we should accept the trial point*/
+
+    /**
+    *
+    * @brief This function performs the ratio test to determine if we should accept
+    * the trial point
+    *
+    * The ratio is calculated by
+    * (P_1(x_k;\rho)-P_1( x_trial;\rho))/(q_k(0;\rho)-q_k(p_k;rho), where
+    * P_1(x,rho) = f(x) + rho* infeasibility_measure is the l_1 merit function and
+    * q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p+rho* infeasibility_measure_model is the
+    * quadratic model at x_k.
+    * The trial point  will be accepted if the ratio >= eta_s.
+    * If it is accepted, the function will also updates the gradient, Jacobian
+    * information by reading from nlp_ object. The corresponding flags of class member
+    * QPinfoFlag_ will set to be true.
+    */
         virtual bool ratio_test();
         
         
@@ -116,11 +145,9 @@ namespace SQPhotstart {
         virtual bool radius_update();
         
         /**
-         * Update the penalty parameter
+         * @brief Update the penalty parameter
          */
-        virtual bool penalty_update() {
-            return false;
-        };
+        virtual bool penalty_update(shared_ptr<Options> options);;
         
         /**
          * @brief This function extracts the search direction for NLP from the QP subproblem
@@ -133,14 +160,14 @@ namespace SQPhotstart {
          * specified QP information
          */
         bool get_search_direction(shared_ptr<QPhandler> qphandler);
-        
-        
+
+
         /**
-         * This function will set up the data for the QP subproblem if reset = true
+         * @brief This function will set up the data for the QP subproblem
          *
-         * @param reset
-         * 		if reset = true; the data in the QP subproblem will be reset.
-         *
+         * It will initialize all the data at once at the beginning of the Algorithm. After
+         * that, the data in the QP problem will be updated according to the class
+         * member QPinfoFlag_
          */
         
         bool setupQP();
@@ -220,6 +247,9 @@ namespace SQPhotstart {
                                           * bounded, bounded above,bounded below, or
                                           * unbounded*/
         shared_ptr<Options> options;/**< the default options used for now. */
+        shared_ptr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
+ *                                                        it will replace options in
+ *                                                        the future*/
         shared_ptr<Stats> stats;
         shared_ptr<QPhandler> myQP;
         shared_ptr<QPhandler> myLP;

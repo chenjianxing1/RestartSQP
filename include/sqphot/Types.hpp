@@ -55,11 +55,11 @@ namespace SQPhotstart {
 
 
     typedef struct {
-        bool Update_A = true;
-        bool Update_H = true;
-        bool Update_penalty = true;
-        bool Update_grad = true;
-        bool Update_bounds = true;
+        bool Update_A = false;
+        bool Update_H = false;
+        bool Update_penalty = false;
+        bool Update_grad = false;
+        bool Update_bounds = false;
     } UpdateFlags;
 
 }

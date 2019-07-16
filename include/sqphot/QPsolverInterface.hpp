@@ -20,7 +20,8 @@ using namespace std;
 namespace SQPhotstart {
     
     /**
-     * Base class for all standard QP solvers that use standard triplet matrix form and dense vectors.
+     * @brief Base class for all standard QP solvers that use standard triplet matrix
+     * form and dense vectors.
      *
      * It can optimize QP problem in the following format
      *
@@ -33,7 +34,8 @@ namespace SQPhotstart {
     public:
         /** Default constructor*/
         QPSolverInterface() {}
-        
+
+
         /** Default destructor*/
         virtual ~QPSolverInterface() {}
         
@@ -44,8 +46,8 @@ namespace SQPhotstart {
          * stats by adding the iteration number used to solve this QP to stats.qp_iter
          */
         virtual bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
-        
-        
+
+
         /**
          * @brief copy the optimal solution of the QP to the input pointer
          *
@@ -69,7 +71,10 @@ namespace SQPhotstart {
          */
         virtual bool get_multipliers(double* y_optimal) = 0;
         
-        
+
+        /**
+         * Return private class members info
+         */
         virtual shared_ptr<Vector> &getLb() = 0;
         
         virtual shared_ptr<Vector> &getUb() = 0;
@@ -92,9 +97,9 @@ namespace SQPhotstart {
     
     
     /**
-     *This is a derived class of QPsolverInterface. It uses qpOASES as the QP solver
-     * which favors the hotstart option. It is used as the default QP solver for
-     * SQPhostart.
+     * @brief This is a derived class of QPsolverInterface.
+     * It uses qpOASES as the QP solver  which features the hotstart option. It is used
+     * as the default QP solver for SQPhostart.
      */
     class qpOASESInterface : public QPSolverInterface {
     public:
@@ -103,8 +108,8 @@ namespace SQPhotstart {
         
         /**
          * @brief Constructor which also initializes the qpOASES SQProblem objects
-         * @param nlp_index_info the number of variables in QP problem
-         * @param nCon_QP the number of constraints in QP problem (the number of rows of A)
+         * @param nlp_index_info the struct that stores simple nlp dimension info
+         * @param qptype  is the problem to be solved QP or LP or SOC?
          */
         qpOASESInterface(Index_info nlp_index_info,
                          QPType qptype);    //number of constraints in the QP problem
@@ -136,7 +141,7 @@ namespace SQPhotstart {
          */
         inline double get_obj_value();
         
-        
+        //@{
         shared_ptr<Vector> &getLb();
         
         shared_ptr<Vector> &getUb();
@@ -150,29 +155,44 @@ namespace SQPhotstart {
         shared_ptr<Vector> &getUbA();
         
         shared_ptr<Vector> &getG();
-        
+        //@}
         
     public:
         shared_ptr<qpOASES::SQProblem> qp_;// the qpOASES object used for solving a qp
         
         
     private:
-        shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;
-        shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;
+        shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
+                                                       * taken in, it only contains the
+                                                       * pointers to array stored in
+                                                       * the class members of H_*/
+
+        shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
+                                                       * taken in, it only contains the
+                                                       * pointers to array stored in
+                                                       * the class members of A_*/
         shared_ptr<Vector> lb_;  /**< lower bounds of x */
         shared_ptr<Vector> ub_;  /**< upper bounds of x */
         shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
         shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
         shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
-        shared_ptr<qpOASESSparseMat> H_;
-        shared_ptr<qpOASESSparseMat> A_;
-        bool firstQPsolved = false;
+        shared_ptr<qpOASESSparseMat> H_;/**< the Matrix object stores the QP data H in
+                                          * Harwell-Boeing Sparse Matrix format*/
+        shared_ptr<qpOASESSparseMat> A_;/**< the Matrix object stores the QP data A in
+                                          * Harwell-Boeing Sparse Matrix format*/
+        bool firstQPsolved = false; /**< if the first QP has been solved? */
         
     private:
         
         /** default constructor*/
         qpOASESInterface();
-        
+
+        /**
+         * @brief Allocate memory for the class members
+         * @param nlp_index_info  the struct that stores simple nlp dimension info
+         * @param qptype is the problem to be solved QP or LP or SOC?
+         * @return
+         */
         bool allocate(Index_info nlp_index_info, QPType qptype);
         
         /** Copy Constructor */
