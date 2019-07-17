@@ -66,12 +66,12 @@ namespace SQPhotstart {
          * @brief Get the matrix structure of the Jacobian
          * Always call this before the first time using @Eval_Jacobian
          */
-        virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian);
+        virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
         
         /**
          *@brief Evaluate Jacobian at point x
          */
-        virtual bool Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian);
+        virtual bool Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
         
         
         /**
@@ -81,13 +81,13 @@ namespace SQPhotstart {
          * @return
          */
         virtual bool Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
-                                           shared_ptr<SpMatrix> Hessian);
+                                           shared_ptr<SpTripletMat> Hessian);
         
         /**
          *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
          */
         virtual bool
-        Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian);
+        Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpTripletMat> Hessian);
         
         /**
          * @brief

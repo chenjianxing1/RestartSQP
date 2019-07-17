@@ -73,7 +73,7 @@ namespace SQPhotstart {
      *@name Evaluate Jacobian at point x
      */
 
-    bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian){
+    bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian){
 	nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), NULL);
     return true;
@@ -85,7 +85,7 @@ namespace SQPhotstart {
      *@param x
      *@param Jacobian
      */
-    bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpMatrix> Jacobian) {
+    bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian) {
        nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                          Jacobian->RowIndex(), Jacobian->ColIndex(), Jacobian->MatVal());
         return true;
@@ -98,7 +98,7 @@ namespace SQPhotstart {
 	 * @param Hessian
          * @return
          */
-    bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian){
+    bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpTripletMat> Hessian){
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);	
 	return true;
@@ -109,7 +109,7 @@ namespace SQPhotstart {
     /**
      *@name Evaluate Hessian of Lagragian function at  (x, lambda)
      */
-    bool SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpMatrix> Hessian) {
+    bool SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpTripletMat> Hessian) {
 	    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar, lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), Hessian->MatVal());
         return true;

@@ -126,11 +126,11 @@ namespace SQPhotstart {
          * @return
          */
         
-        virtual bool setup_H(shared_ptr<const SpMatrix> hessian);
+        virtual bool setup_H(shared_ptr<const SpTripletMat> hessian);
         
         /** @brief setup the matrix A for the QP subproblems according to the
          * information from current iterate*/
-        virtual bool setup_A(shared_ptr<const SpMatrix> jacobian);
+        virtual bool setup_A(shared_ptr<const SpTripletMat> jacobian);
         
         
         /**
@@ -199,13 +199,13 @@ namespace SQPhotstart {
          *  true function Hessian
          *
          *  */
-        virtual bool update_H(shared_ptr<const SpMatrix> Hessian);
+        virtual bool update_H(shared_ptr<const SpTripletMat> Hessian);
         
         /**
          * @brief Update the Matrix H of the QP problems
          * when there is any change to the Jacobian to the constraints.
          */
-        virtual bool update_A(shared_ptr<const SpMatrix> Jacobian);
+        virtual bool update_A(shared_ptr<const SpTripletMat> Jacobian);
         
         /**
          * Get the QP objective value from the solution of

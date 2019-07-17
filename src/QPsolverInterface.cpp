@@ -42,27 +42,63 @@ namespace SQPhotstart {
      * in object stats
      */
     bool qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
-        H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(), H_->ColNum(),H_->RowIndex(), H_->ColIndex(), H_->MatVal());
-        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum(),A_->RowIndex(), A_->ColIndex(), A_->MatVal());
+        H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(), H_->ColNum()
+                , H_->RowIndex(), H_->ColIndex(), H_->MatVal());
+        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum()
+                , A_->RowIndex(), A_->ColIndex(), A_->MatVal());
         H_qpOASES_->createDiagInfo();
 
         qpOASES::int_t nWSR = options->qp_maxiter;//TODO modify it
-        if (firstQPsolved==false) {//if haven't solve any QP before then initialize the first qp
+        if (!firstQPsolved) {//if haven't solve any QP before then initialize the
+                                   //  first qp
             qpOASES::Options qp_options;
             if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
                 qp_options.printLevel = qpOASES::PL_NONE;
             qp_->setOptions(qp_options);
-            qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(), ub_->values(),
-                      lbA_->values(), ubA_->values(), nWSR, 0);
+            qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),  lb_->values(),
+                    ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
             if(qp_->isSolved())
                 firstQPsolved = true;
         } else
-            qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(), ub_->values(),
-                          lbA_->values(), ubA_->values(), nWSR, 0);
+            qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                    lb_->values(), ub_->values(),lbA_->values(), ubA_->values(), nWSR, 0);
         stats->qp_iter_addValue((int) nWSR);
         return true;
     }
 
+    /**
+     * @brief
+     *
+     * @param stats
+     * @param options
+     * @return
+     */
+    bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
+    options) {
+
+        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum()
+                , A_->RowIndex(), A_->ColIndex(), A_->MatVal());
+
+        qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+
+        if (!firstQPsolved) {//if haven't solve any QP before then initialize the
+            //  first qp
+            qpOASES::Options qp_options;
+            if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
+                qp_options.printLevel = qpOASES::PL_NONE;
+            qp_->setOptions(qp_options);
+            qp_->init(0, g_->values(), A_qpOASES_.get(),  lb_->values(),
+                      ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
+            if(qp_->isSolved())
+                firstQPsolved = true;
+        } else
+            qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
+                    lb_->values(), ub_->values(),lbA_->values(), ubA_->values(), nWSR, 0);
+        stats->qp_iter_addValue((int) nWSR);
+        
+        return true;
+
+    }
     /**
     * @brief copy the multipliers of the QP to the input pointer
     *
@@ -86,6 +122,9 @@ namespace SQPhotstart {
         return true;
     }
 
+
+
+
     /**
      *@brief get the objective value from the QP solvers
      *
@@ -97,6 +136,8 @@ namespace SQPhotstart {
     }
 
 
+    /** Extract private member information*/
+    //@{
     shared_ptr<Vector> &qpOASESInterface::getLb() {
         return lb_;
     }
@@ -124,6 +165,8 @@ namespace SQPhotstart {
     shared_ptr<qpOASESSparseMat> &qpOASESInterface::getA(){
         return A_;
     }
+    //@}
+
 
 }//SQPHOTSTART
 

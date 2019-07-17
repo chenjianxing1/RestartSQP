@@ -29,6 +29,7 @@ namespace SQPhotstart {
         virtual ~Matrix() = default;
         
         virtual void print() = 0;
+
     };
     
     class qpOASESSparseMat;
@@ -51,11 +52,11 @@ namespace SQPhotstart {
      *
      */
     
-    class SpMatrix : public Matrix {
+    class SpTripletMat : public Matrix {
     public:
         
         /** Default constructor */
-        SpMatrix():
+        SpTripletMat():
         RowIndex_(NULL),
         ColIndex_(NULL),
         MatVal_(NULL),
@@ -63,10 +64,10 @@ namespace SQPhotstart {
         {};
         
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
-        SpMatrix(int nnz, int RowNum, int ColNum);
+        SpTripletMat(int nnz, int RowNum, int ColNum);
         
         /** Default destructor */
-        virtual ~SpMatrix();
+        virtual ~SpTripletMat();
         
         /**
          * @brief allocate the data to the class members
@@ -146,10 +147,10 @@ namespace SQPhotstart {
         bool freeMemory();
         
         /** Copy Constructor */
-        SpMatrix(const SpMatrix &);
+        SpTripletMat(const SpTripletMat &);
         
         /** Overloaded Equals Operator */
-        void operator=(const SpMatrix &);
+        void operator=(const SpTripletMat &);
         /** Private Class Members*/
         
         
@@ -167,7 +168,7 @@ namespace SQPhotstart {
      *
      *
      */
-    class qpOASESSparseMat : public SpMatrix {
+    class qpOASESSparseMat : public Matrix{
         
     public:
         /**
@@ -203,7 +204,7 @@ namespace SQPhotstart {
          * @param I_info the information of 2 identity sub matrices.
          *
          */
-        virtual bool setStructure(std::shared_ptr<const SpMatrix> rhs, Identity2Info I_info);
+        virtual bool setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
         
         bool updateMatVal(const double* MatVal) { return false; }
         

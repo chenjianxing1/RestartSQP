@@ -38,12 +38,16 @@ namespace SQPhotstart {
      */
     class Algorithm {
     public:
+        /** @name constructor/destructor*/
+        //@{
         /** Default Constructor*/
         Algorithm();
         
         /** Default Destructor*/
         virtual ~Algorithm();
-        
+
+        //@}
+
         /**
          * This is the main method to optimize the NLP given as the input
          *
@@ -51,11 +55,14 @@ namespace SQPhotstart {
          */
         virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
 
+        /** @name Set the corresponding option to the user-defined value */
+        //@{
         bool setOptions(const std::string& name, double value){ return false;};
 
         bool setOptions(const std::string& name, int value){ return false;};
 
         bool setOptions(const std::string& name, bool value){ return false;};
+        //@}
         /* Private methods*/
     private:
 
@@ -66,8 +73,7 @@ namespace SQPhotstart {
         void operator=(const Algorithm &);
 
         /**
-         * @brief
-         * @return
+         * @brief set the default option values
          */
         bool setDefaultOption();
 
@@ -95,7 +101,8 @@ namespace SQPhotstart {
          * point or
          * current iterate x_k
          *
-         *@param trial: true if the user are going to evaluate the infeasibility measure of
+         * @param trial: true if the user are going to evaluate the infeasibility
+         * measure of
          * the trial point _x_trial;
          *	infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
          *
@@ -107,24 +114,31 @@ namespace SQPhotstart {
         
         virtual bool infea_cal(bool trial);
 
+        /**
+         * @brief calculate the second order correction step and decide if accept the
+         * calculated step or not.
+         * It will be calculated only if the second_order_correction in options is set
+         * to be true.
+         *
+         */
 
         virtual bool second_order_correction() { return false; };
 
-    /**
-    *
-    * @brief This function performs the ratio test to determine if we should accept
-    * the trial point
-    *
-    * The ratio is calculated by
-    * (P_1(x_k;\rho)-P_1( x_trial;\rho))/(q_k(0;\rho)-q_k(p_k;rho), where
-    * P_1(x,rho) = f(x) + rho* infeasibility_measure is the l_1 merit function and
-    * q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p+rho* infeasibility_measure_model is the
-    * quadratic model at x_k.
-    * The trial point  will be accepted if the ratio >= eta_s.
-    * If it is accepted, the function will also updates the gradient, Jacobian
-    * information by reading from nlp_ object. The corresponding flags of class member
-    * QPinfoFlag_ will set to be true.
-    */
+        /**
+         *
+         * @brief This function performs the ratio test to determine if we should accept
+         * the trial point
+         *
+         * The ratio is calculated by
+         * (P_1(x_k;\rho)-P_1( x_trial;\rho))/(q_k(0;\rho)-q_k(p_k;rho), where
+         * P_1(x,rho) = f(x) + rho* infeasibility_measure is the l_1 merit function and
+         * q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p+rho* infeasibility_measure_model is
+         * the quadratic model at x_k.
+         * The trial point  will be accepted if the ratio >= eta_s.
+         * If it is accepted, the function will also updates the gradient, Jacobian
+         * information by reading from nlp_ object. The corresponding flags of class
+         * member QPinfoFlag_ will set to be true.
+         */
         virtual bool ratio_test();
         
         
@@ -147,7 +161,7 @@ namespace SQPhotstart {
         /**
          * @brief Update the penalty parameter
          */
-        virtual bool penalty_update(shared_ptr<Options> options);;
+        virtual bool penalty_update();;
         
         /**
          * @brief This function extracts the search direction for NLP from the QP subproblem
@@ -180,7 +194,7 @@ namespace SQPhotstart {
          *   and the bound in a single vector, so we only take the first #constraints
          *   number of elements as an approximation of multipliers for the nlp problem
          *
-         * @param qphandler the QPsolver class object used for solving a QP subproblem
+         * @param qphandler the QPhandler class object used for solving a QP subproblem
          * with specified QP information
          */
         
@@ -221,6 +235,7 @@ namespace SQPhotstart {
         shared_ptr<Vector> lambda_;/**< multiplier for constraints evaluated at x_k*/
         shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
         Number infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
+        Number infea_measure_model; /**< the one norm of all slack variables in the QP */
         Number obj_value_;/**<the objective corresponding to the x_k*/
         shared_ptr<Vector> x_k_; /**< current iterate point*/
         shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
@@ -237,9 +252,9 @@ namespace SQPhotstart {
         shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
         shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
         shared_ptr<Vector> p_k_; /* search direction at x_k*/
-        shared_ptr<SpMatrix> hessian_;/**< the SparseMatrix object for hessain of
+        shared_ptr<SpTripletMat> hessian_;/**< the SparseMatrix object for hessain of
                                        * f(x)-sum_{i=1}^m lambda_i c_i(x)*/
-        shared_ptr<SpMatrix> jacobian_;/** <the SparseMatrix object for Jacobian from
+        shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian from
                                         * c(x)*/
         ConstraintType* cons_type_; /**<the constraints type, it can be either bounded,
                                      * bounded above,bounded below, or unbounded*/

@@ -203,7 +203,7 @@ namespace SQPhotstart {
      * at x_k and lambda_k from nlp readers.
      * @return
      */
-    bool QPhandler::setup_H(shared_ptr<const SpMatrix> hessian) {
+    bool QPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
         
         qp_interface_->getH()->setStructure(hessian,I_info_H);
         qp_interface_->getH()->setMatVal(hessian->MatVal(),I_info_H);
@@ -222,7 +222,7 @@ namespace SQPhotstart {
      * The matrix A in QP problem will be concatenate as [J I -I]
      * @param jacobian  the Matrix object for Jacobian from c(x)
      */
-    bool QPhandler::setup_A(shared_ptr<const SpMatrix> jacobian) {
+    bool QPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
         
         
         I_info_A.irow1 = 1;
@@ -278,12 +278,12 @@ namespace SQPhotstart {
         return true;
     }
     
-    bool QPhandler::update_H(shared_ptr<const SpMatrix> Hessian) {
+    bool QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
         qp_interface_->getH()->setMatVal(Hessian->MatVal(),I_info_H);
         return true;
     }
     
-    bool QPhandler::update_A(shared_ptr<const SpMatrix> Jacobian) {
+    bool QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
         qp_interface_->getA()->setMatVal(Jacobian->MatVal(),I_info_A);
         return true;
     }

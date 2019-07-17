@@ -57,7 +57,7 @@ namespace SQPhotstart {
             norm_p_k_ = p_k_->getInfNorm();
             
             //Update the penalty parameter if necessary
-            penalty_update(nullptr);
+            penalty_update();
             
             // Calculate the the trial points, x_trial = x_k+p_k
             x_trial_->copy_vector(x_k_->values());
@@ -175,8 +175,8 @@ namespace SQPhotstart {
         c_l_ = make_shared<Vector>(nCon_);
         c_u_ = make_shared<Vector>(nCon_);
         grad_f_ = make_shared<Vector>(nVar_);
-        jacobian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
-        hessian_ = make_shared<SpMatrix>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_);
+        jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
+        hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_);
         
         options = make_shared<Options>();
         stats = make_shared<Stats>();
@@ -243,6 +243,9 @@ namespace SQPhotstart {
         double* tmp_p_k = new double[nVar_ + 2 * nCon_];
         qphandler->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
+        if(options->penalty_update)
+            infea_measure_model = oneNorm(tmp_p_k+nVar_,2*nCon_);
+        //FIXME:calculate somewhere else?
         delete[] tmp_p_k;
         return true;
     }
@@ -424,9 +427,13 @@ namespace SQPhotstart {
      * @param options
      * @return
      */
-    bool Algorithm::penalty_update(shared_ptr<Options> options) {
+    bool Algorithm::penalty_update() {
+        if(options->penalty_update) {
+            if (infea_measure_model>=options->penalty_update_tol){
 
 
+            }
+        }
         return true;
     }
 
@@ -457,6 +464,7 @@ namespace SQPhotstart {
         roptions->SetRegisteringCategory("Penalty Update");
         roptions->AddNumberOption("eps1","penalty update parameter", 0.3,"");
         roptions->AddNumberOption("eps2","penalty update parameter", 1.0e-6,"");
+        roptions->AddNumberOption("print_level", "print level for penalty update", 0);
 
         roptions->SetRegisteringCategory("Optimality Test");
 
@@ -466,6 +474,23 @@ namespace SQPhotstart {
         roptions->AddNumberOption("opt_prim_fea_tol"," ",1.0e-5);
         roptions->AddNumberOption("opt_second_tol"," ",1.0e-8);
 
+        roptions->SetRegisteringCategory("General");
+        roptions->AddNumberOption("iter_max", "maximum number of iteration for the "
+                                              "algorithm", 10);
+        roptions->AddNumberOption("print_level", "print level for main algorithm", 2);
+        roptions->AddStringOption2(
+                "second_order_correction",
+                "Tells the algorithm to calculate the second-order correction step "
+                "during the main iteration"
+                "yes",
+                "no", "not calculate the soc steps",
+                "yes", "will calculate the soc steps",
+                "");
+
+        roptions->SetRegisteringCategory("QPsolver");
+        roptions->AddNumberOption("iter_max", "maximum number of iteration for the "
+                                              "QP solver in solving each QP", 10);
+        roptions->AddNumberOption("print_level", "print level for QP solver", 0);
 
         return true;
     }

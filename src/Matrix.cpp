@@ -4,7 +4,7 @@ namespace SQPhotstart {
 
     /** Constructor for an empty matrix with N non-zero
      * entries*/
-    SpMatrix::SpMatrix(int nnz, int RowNum, int ColNum) :
+    SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum) :
             RowIndex_(NULL),
             ColIndex_(NULL),
             MatVal_(NULL),
@@ -25,7 +25,7 @@ namespace SQPhotstart {
     }
 
     /** Default destructor */
-    SpMatrix::~SpMatrix() {
+    SpTripletMat::~SpTripletMat() {
         freeMemory();
     }
 
@@ -50,7 +50,7 @@ namespace SQPhotstart {
     /**
      *@name print the sparse matrix in triplet form
      */
-    void SpMatrix::print() {
+    void SpTripletMat::print() {
         std::cout << "Row Column Entry Order" << std::endl;
         for (int i = 0; i < EntryNum_; i++) {
             std::cout << RowIndex_[i] << "    ";
@@ -61,7 +61,7 @@ namespace SQPhotstart {
     }
 
     /** free all memory*/
-    bool SpMatrix::freeMemory() {
+    bool SpTripletMat::freeMemory() {
         delete[] RowIndex_;
         RowIndex_ = NULL;
         delete[] ColIndex_;
@@ -74,13 +74,13 @@ namespace SQPhotstart {
     }
 
     //TODO: change the function name: set/.
-    bool SpMatrix::setMatValAt(int location, int value_to_assign) {
+    bool SpTripletMat::setMatValAt(int location, int value_to_assign) {
         MatVal_[location] = value_to_assign;
         return true;
     }
 
 
-    bool SpMatrix::setOrderAt(int location, int order_to_assign) {
+    bool SpTripletMat::setOrderAt(int location, int order_to_assign) {
         order_[location] = order_to_assign;
         return true;
     }
@@ -158,7 +158,7 @@ namespace SQPhotstart {
      * @param I_info the information of 2 identity sub matrices.
      *
      */
-    bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpMatrix> rhs,
+    bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                                         Identity2Info I_info) {
         assert(isinitialized == false);
 
@@ -253,7 +253,7 @@ namespace SQPhotstart {
      * called "result"
      */
 
-    bool SpMatrix::times(std::shared_ptr<const Vector> p,
+    bool SpTripletMat::times(std::shared_ptr<const Vector> p,
                          std::shared_ptr<Vector> result) {
         assert(ColNum_==p->Dim());
         result->set_zeros(); //set all entries to be 0
@@ -265,7 +265,7 @@ namespace SQPhotstart {
     }
 
 
-    double SpMatrix::infnorm() {
+    double SpTripletMat::infnorm() {
         double InfNorm = 0;
         //FIXME: finish it!
 
@@ -273,7 +273,7 @@ namespace SQPhotstart {
     }
 
 
-    double SpMatrix::onenorm(){
+    double SpTripletMat::onenorm(){
         double OneNorm = 0;
         return OneNorm;
     }

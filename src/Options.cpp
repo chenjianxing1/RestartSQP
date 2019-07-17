@@ -21,7 +21,10 @@ namespace SQPhotstart{
         iter_max = 10;
         printLevel = 2;
         qpPrintLevel = 0;       //does not print anything
+        QPsolverChoice = "qpOASES";
+        LPsolverChoice = "qpOASES";
         second_order_correction = true;
+        penalty_update = true;
         eta_c = 0.25;
         eta_s = 1.0e-8;
         eta_e = 0.75;
@@ -35,6 +38,7 @@ namespace SQPhotstart{
         opt_prim_fea_tol = 1.0e-5;
         opt_second_tol = 1.0e-8;
         tol = 1.0e-8;
+        penalty_update_tol = 1.0e-6;
         rho = 100;
         qp_maxiter = 1000;
         //penalty_tol = 1.0e-8;
@@ -44,6 +48,7 @@ namespace SQPhotstart{
         eps1 = 0.3;
         eps2 = 1.0e-6;
         EnablePertubation = false;
+        lp_maxiter = 100;
         return 0;
         
     }
