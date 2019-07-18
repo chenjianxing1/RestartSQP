@@ -38,7 +38,7 @@ namespace SQPhotstart{
         opt_prim_fea_tol = 1.0e-5;
         opt_second_tol = 1.0e-8;
         tol = 1.0e-8;
-        penalty_update_tol = 1.0e-6;
+        penalty_update_tol = 1.0e-8;
         rho = 100;
         qp_maxiter = 1000;
         //penalty_tol = 1.0e-8;

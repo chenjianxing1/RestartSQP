@@ -13,6 +13,7 @@
 #include <sqphot/Types.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPhandler.hpp>
+#include <sqphot/LPhandler.hpp>
 #include <sqphot/Utils.hpp>
 #include <sqphot/Log.hpp>
 #include <sqphot/SQPTNLP.hpp>
@@ -42,7 +43,7 @@ namespace SQPhotstart {
         //@{
         /** Default Constructor*/
         Algorithm();
-        
+
         /** Default Destructor*/
         virtual ~Algorithm();
 
@@ -57,18 +58,15 @@ namespace SQPhotstart {
 
         /** @name Set the corresponding option to the user-defined value */
         //@{
-        bool setOptions(const std::string& name, double value){ return false;};
-
-        bool setOptions(const std::string& name, int value){ return false;};
-
-        bool setOptions(const std::string& name, bool value){ return false;};
+        template<typename T>
+        bool setOptions(const std::string &name, T value) { return false; };
         //@}
         /* Private methods*/
     private:
 
         /** Copy Constructor */
         Algorithm(const Algorithm &);
-        
+
         /** Overloaded Equals Operator */
         void operator=(const Algorithm &);
 
@@ -87,7 +85,7 @@ namespace SQPhotstart {
          *  code according to the error type.
          */
         virtual bool termination_check();
-        
+
         /**
          *  @brief This function initializes the objects required by the SQP Algorithm,
          *  copies some parameters required by the algorithm, obtains the function
@@ -95,7 +93,7 @@ namespace SQPhotstart {
          *
          */
         virtual bool initilization();
-        
+
         /**
          * @brief This function calculates the infeasibility measure for either trial
          * point or
@@ -111,7 +109,7 @@ namespace SQPhotstart {
          *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
          *
          */
-        
+
         virtual bool infea_cal(bool trial);
 
         /**
@@ -140,8 +138,8 @@ namespace SQPhotstart {
          * member QPinfoFlag_ will set to be true.
          */
         virtual bool ratio_test();
-        
-        
+
+
         /**
          * @brief Update the trust region radius.
          *
@@ -157,12 +155,16 @@ namespace SQPhotstart {
          * true;
          */
         virtual bool radius_update();
-        
+
         /**
          * @brief Update the penalty parameter
          */
         virtual bool penalty_update();;
-        
+
+
+        /**@name Get the search direction from the LP/QP handler*/
+
+        //@{
         /**
          * @brief This function extracts the search direction for NLP from the QP subproblem
          * solved, and copies it to the class member _p_k
@@ -175,17 +177,24 @@ namespace SQPhotstart {
          */
         bool get_search_direction(shared_ptr<QPhandler> qphandler);
 
+        bool get_full_search_direction(shared_ptr<QPhandler> qphandler,
+                                       shared_ptr<Vector> search_direction);
+
+        bool get_full_search_direction(shared_ptr<LPhandler> lphandler,
+                                       shared_ptr<Vector> search_direction);
+
+        //@}
 
         /**
-         * @brief This function will set up the data for the QP subproblem
-         *
-         * It will initialize all the data at once at the beginning of the Algorithm. After
-         * that, the data in the QP problem will be updated according to the class
-         * member QPinfoFlag_
-         */
-        
+        * @brief This function will set up the data for the QP subproblem
+        *
+        * It will initialize all the data at once at the beginning of the Algorithm. After
+        * that, the data in the QP problem will be updated according to the class
+        * member QPinfoFlag_
+        */
+
         bool setupQP();
-        
+
         /**
          * @brief This function extracts the the Lagragian multipliers for constraints
          * in NLP and copies it to the class member lambda_
@@ -197,9 +206,9 @@ namespace SQPhotstart {
          * @param qphandler the QPhandler class object used for solving a QP subproblem
          * with specified QP information
          */
-        
+
         bool get_multipliers(shared_ptr<QPhandler> qphandler);
-        
+
         /**
          * @brief alloocate memory for class members.
          * This function initializes all the shared pointer which will be used in the
@@ -209,7 +218,7 @@ namespace SQPhotstart {
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
         bool allocate(SmartPtr<Ipopt::TNLP> nlp);
-        
+
         /**
          *
          * @brief This function checks how each constraint specified by the nlp readers are
@@ -226,7 +235,7 @@ namespace SQPhotstart {
          * The same rules are also applied to the bound-constraints.
          */
         bool ClassifyConstraintType();
-        
+
         /* public class members */
     private:
         Index nVar_; /**< number of variables*/
@@ -239,14 +248,14 @@ namespace SQPhotstart {
         Number obj_value_;/**<the objective corresponding to the x_k*/
         shared_ptr<Vector> x_k_; /**< current iterate point*/
         shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
-        
+
         Number infea_measure_trial_;/**< the measure of infeasibility evaluated at
                                      * x_trial*/
         Number obj_value_trial_;/**<the objective corresponding to the x_trial*/
         shared_ptr<Vector> x_trial_;/**< the trial point from the search direction,
                                      * x_trial = x_k+p_k*/
         shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
-        
+
         shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
         shared_ptr<Vector> c_u_; /* the upper constraints vector*/
         shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
@@ -256,20 +265,20 @@ namespace SQPhotstart {
                                        * f(x)-sum_{i=1}^m lambda_i c_i(x)*/
         shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian from
                                         * c(x)*/
-        ConstraintType* cons_type_; /**<the constraints type, it can be either bounded,
+        ConstraintType *cons_type_; /**<the constraints type, it can be either bounded,
                                      * bounded above,bounded below, or unbounded*/
-        ConstraintType* bound_cons_type_;/**< the variables type, it can be either
+        ConstraintType *bound_cons_type_;/**< the variables type, it can be either
                                           * bounded, bounded above,bounded below, or
                                           * unbounded*/
         shared_ptr<Options> options;/**< the default options used for now. */
-        shared_ptr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
+        Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
  *                                                        it will replace options in
  *                                                        the future*/
         shared_ptr<Stats> stats;
         shared_ptr<QPhandler> myQP;
-        shared_ptr<QPhandler> myLP;
+        shared_ptr<LPhandler> myLP;
         shared_ptr<Log> log;
-        
+
         Number norm_p_k_;/**< the infinity norm of p_k*/
         Number delta_;/**< trust-region radius*/
         Number rho_; /**< penalty parameter*/
@@ -279,9 +288,9 @@ namespace SQPhotstart {
         bool isaccept_; // is the new point accepted?
         UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     };//END_OF_ALG_CLASS
-    
-    
-    
+
+
+
 }//END_NAMESPACE_SQPHOTSTART
 
 

@@ -85,8 +85,11 @@ namespace SQPhotstart {
         void subtract_subvector(int iloc, int subvec_size, const double* subvector);
         
         /**copy all the entries from another vector*/
-        void copy_vector(const double* copy);
-        
+        void copy_vector(const double* rhs);
+
+        /**copy all the entries from another vector*/
+        void copy_vector(std::shared_ptr<const Vector> rhs);
+
         /** 
          * copy a subvector from member_vector from (Location) to (Location+subvector_size) 
          * to the pointer (results)

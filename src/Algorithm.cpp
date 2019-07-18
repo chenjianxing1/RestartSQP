@@ -8,7 +8,7 @@
 #include <sqphot/Utils.hpp>
 
 namespace SQPhotstart {
-    
+
     /**
      * Default Constructor
      */
@@ -16,7 +16,7 @@ namespace SQPhotstart {
 
         cout << "ALG created" << endl;
     }
-    
+
     /**
      * Default Destructor
      */
@@ -27,7 +27,7 @@ namespace SQPhotstart {
         bound_cons_type_ = NULL;
         cout << "ALG destroyed" << endl;
     }
-    
+
     /**
      * @brief This is the main function to optimize the NLP given as the input
      *
@@ -36,9 +36,9 @@ namespace SQPhotstart {
     bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         allocate(nlp); //allocate memory to class members
         initilization();
-        
+
         /** Main iteration */
-        
+
         while (stats->iter < options->iter_max) {
             //setup the QPs problems
 //            std::cout<<QPinfoFlag_.Update_A;
@@ -49,51 +49,51 @@ namespace SQPhotstart {
             setupQP();
             //based on the information given by NLP reader otherwise, it will do nothing
             myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
-            
+
             //get the search direction from the solution of the QPsubproblem
             get_search_direction(myQP);
-            
+
             //calculate the infinity norm of the search direction
             norm_p_k_ = p_k_->getInfNorm();
-            
+
             //Update the penalty parameter if necessary
             penalty_update();
-            
+
             // Calculate the the trial points, x_trial = x_k+p_k
             x_trial_->copy_vector(x_k_->values());
             x_trial_->add_vector(p_k_->values());
-            
+
             // Calculate f_trial, c_trial and infea_measure_trial for the trial points
             // x_trial
             nlp_->Eval_f(x_trial_, obj_value_trial_);
             nlp_->Eval_constraints(x_trial_, c_trial_);
 
             infea_cal(true);
-            
+
 //                        std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
 //                        std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
-            
+
             ratio_test();
-            
+
             // Calculate the second-order-correction steps
             second_order_correction();
-            
+
             // Update the radius and the QP bounds if the radius has been changed
-            
+
             stats->iter_addone();
-            
+
             /* output some information to the console, TODO: change it*/
             if (stats->iter % 10 == 0)log->print_header();
             if (options->printLevel > 0)
                 log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
                                      delta_, rho_);
-            
+
             radius_update();
-            
+
             //check if the current iterates is optimal and decide to
             //exit the loop or not
             termination_check();
-            
+
             if (exitflag_ != UNKNOWN) {
                 break;
             }
@@ -140,7 +140,7 @@ namespace SQPhotstart {
         nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
-        
+
         infea_cal(false); //calculate the infeasibility measure for x_k
         // initializes QP objects*/
         myQP->init(nlp_->nlp_info_, QP);
@@ -149,7 +149,7 @@ namespace SQPhotstart {
         log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_, rho_);
         return true;
     }
-    
+
     /**
      * @brief alloocate memory for class members.
      * This function initializes all the shared pointer which will be used in the 
@@ -177,21 +177,21 @@ namespace SQPhotstart {
         grad_f_ = make_shared<Vector>(nVar_);
         jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
         hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_);
-        
+
         options = make_shared<Options>();
         stats = make_shared<Stats>();
         log = make_shared<Log>();
         myQP = make_shared<QPhandler>();
-        myLP = make_shared<QPhandler>();
-        
+        myLP = make_shared<LPhandler>();
+
         delta_ = options->delta;
         rho_ = options->rho;
-        
-        
+
+
         return true;
     }
-    
-    
+
+
     /**
      * @brief This function calculates the infeasibility measure for either trial point
      * or current iterate x_k
@@ -206,7 +206,7 @@ namespace SQPhotstart {
      *
      */
     bool Algorithm::infea_cal(bool trial) {
-        
+
         if (trial) {
             infea_measure_trial_ = 0;
             for (int i = 0; i < c_k_->Dim(); i++) {
@@ -226,8 +226,8 @@ namespace SQPhotstart {
         }
         return true;
     }
-    
-    
+
+
     /**
      * @brief This function extracts the search direction for NLP from the QP subproblem
      * solved, and copies it to the class member _p_k
@@ -239,12 +239,12 @@ namespace SQPhotstart {
      * specified QP information
      */
     bool Algorithm::get_search_direction(shared_ptr<SQPhotstart::QPhandler> qphandler) {
-        
-        double* tmp_p_k = new double[nVar_ + 2 * nCon_];
+
+        double *tmp_p_k = new double[nVar_ + 2 * nCon_];
         qphandler->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
-        if(options->penalty_update)
-            infea_measure_model = oneNorm(tmp_p_k+nVar_,2*nCon_);
+        if (options->penalty_update)
+            infea_measure_model = oneNorm(tmp_p_k + nVar_, 2 * nCon_);
         //FIXME:calculate somewhere else?
         delete[] tmp_p_k;
         return true;
@@ -264,10 +264,10 @@ namespace SQPhotstart {
      */
 
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
-        double* tmp_lambda = new double[nVar_ + 3 * nCon_];
+        double *tmp_lambda = new double[nVar_ + 3 * nCon_];
         qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
-        
+
         //        lambda_->print();
         delete[] tmp_lambda;
         return true;
@@ -280,9 +280,9 @@ namespace SQPhotstart {
      * that, the data in the QP problem will be updated according to the class
      * member QPinfoFlag_
      */
-    
+
     bool Algorithm::setupQP() {
-        
+
         if (stats->iter == 0) {
             myQP->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
             myQP->setup_g(grad_f_, rho_);
@@ -301,7 +301,7 @@ namespace SQPhotstart {
                 myQP->update_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
                 QPinfoFlag_.Update_bounds = false;
             }
-            
+
             if (QPinfoFlag_.Update_penalty) {
                 myQP->update_penalty(rho_);
                 QPinfoFlag_.Update_penalty = false;
@@ -313,7 +313,7 @@ namespace SQPhotstart {
         }
         return true;
     }
-    
+
     /**
      *
      * @brief This function performs the ratio test to determine if we should accept
@@ -335,9 +335,9 @@ namespace SQPhotstart {
         Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
         actual_reduction_ = P1x - P1_x_trial;
 //                cout<<"actual reduction is"<<actual_reduction_<<endl;
-        
+
         pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
-        
+
 //                cout<<"pred reduction is"<<pred_reduction_<<endl;
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
             //succesfully update
@@ -360,7 +360,7 @@ namespace SQPhotstart {
         }
         return true;
     }
-    
+
     /**
      * @brief Update the trust region radius.
      * 
@@ -375,7 +375,7 @@ namespace SQPhotstart {
      * If trust region radius has changed, the corresponding flags will be set to be
      * true;
      */
-    
+
     bool Algorithm::radius_update() {
         if (actual_reduction_ < options->eta_c * pred_reduction_) {
             delta_ = options->gamma_c * delta_;
@@ -383,7 +383,7 @@ namespace SQPhotstart {
             //decrease the trust region radius. gamma_c is the parameter in options object
         } else {
             if (actual_reduction_ > options->
-                eta_e * pred_reduction_
+                    eta_e * pred_reduction_
                 && options->tol > (delta_ - norm_p_k_)) {
                 delta_ = std::min(options->gamma_e * delta_, options->delta_max);
                 QPinfoFlag_.Update_bounds = true;
@@ -391,7 +391,7 @@ namespace SQPhotstart {
         }
         return true;
     }
-    
+
     /**
      *
      * @brief This function checks how each constraint specified by the nlp readers are
@@ -407,8 +407,8 @@ namespace SQPhotstart {
      * 
      * The same rules are also applied to the bound-constraints.
      */
-    
-    
+
+
     bool Algorithm::ClassifyConstraintType() {
         for (int i = 0; i < nCon_; i++) {
             cons_type_[i] = classify_single_constraint(x_l_->values()[i],
@@ -422,15 +422,44 @@ namespace SQPhotstart {
     }
 
     /**
-     * @brief
+     * @brief update the penalty parameter for the algorithm.
      *
-     * @param options
-     * @return
      */
     bool Algorithm::penalty_update() {
-        if(options->penalty_update) {
-            if (infea_measure_model>=options->penalty_update_tol){
+        if (options->penalty_update) {
+            if (infea_measure_model > options->penalty_update_tol) {
+                myLP->copy_QP_info(myQP);
+                myLP->solveLP(stats, options);
+                shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
 
+                cout<<"sol_tmp dimension is"<< sol_tmp->Dim()<<endl;
+                double rho_trial = rho_;
+                //calculate the infea_measure of the LP
+                get_full_search_direction(myLP, sol_tmp);
+                double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
+                                                     2 * nCon_);
+                if(infea_measure_infty<= options->penalty_update_tol){
+                    //try to increase the penalty parameter to a number such that the
+                    // infeasibility measure of QP model with such penalty parameter
+                    // becomes zero
+                    while(infea_measure_model>options->penalty_update_tol) {
+                        rho_trial = options->increase_parm * rho_trial; //increase rho
+                        stats->penalty_change_trial_addone();
+                        myQP->update_penalty(rho_trial);
+                        myQP->solveQP(stats, options);
+                        get_full_search_direction(myQP, sol_tmp);
+                        sol_tmp->print();
+                        infea_measure_model = oneNorm(sol_tmp->values()+nVar_, 2 *nCon_);
+//                        cout<<infea_measure_model<<endl;
+                    }
+
+                }
+                else{
+
+                }
+                p_k_->copy_vector(sol_tmp);
+                rho_ = rho_trial;
+                QPinfoFlag_.Update_penalty = true;
 
             }
         }
@@ -438,41 +467,46 @@ namespace SQPhotstart {
     }
 
     bool Algorithm::setDefaultOption() {
-        roptions = make_shared<Ipopt::RegisteredOptions>();
+        roptions = new Ipopt::RegisteredOptions();
         roptions->SetRegisteringCategory("trust-region");
-        roptions->AddNumberOption("eta_c","trust-region parameter for the ratio test.",
-                0.25,"If ratio<=eta_c, then the trust-region radius for the next "
-                     "iteration will be decreased for the next iteration.");
-        roptions->AddNumberOption("eta_s","trust-region parameter for the ratio test.",
-                1.0e-8,"The trial point will be accepted if ratio>= eta_s. ");
-        roptions->AddNumberOption("eta_e","trust-region parameter for the ratio test.",
-                0.75, "If ratio>=eta_e and the search direction hits the trust-region "
-                      "boundary, the trust-region radius will be increased for the next"
-                      " iteration.");
-        roptions->AddNumberOption("gamma_c","radius update parameter",
-                0.5, "If the trust-region radius is going to be decreased, then it will"
-                     " be set as gamma_c*delta, where delta is current trust-region "
-                     "radius.");
-        roptions->AddNumberOption("gamma_e","radius update parameter",
-                2.0, "If the trust-region radius is going to be increased, then it will"
-                     " be set as gamma_e*delta, where delta is current trust-region "
-                     "radius.");
+        roptions->AddNumberOption("eta_c", "trust-region parameter for the ratio test.",
+                                  0.25,
+                                  "If ratio<=eta_c, then the trust-region radius for the next "
+                                  "iteration will be decreased for the next iteration.");
+        roptions->AddNumberOption("eta_s", "trust-region parameter for the ratio test.",
+                                  1.0e-8,
+                                  "The trial point will be accepted if ratio>= eta_s. ");
+        roptions->AddNumberOption("eta_e", "trust-region parameter for the ratio test.",
+                                  0.75,
+                                  "If ratio>=eta_e and the search direction hits the  "
+                                  "trust-region boundary, the trust-region radius will "
+                                  " be increased for the next iteration.");
+        roptions->AddNumberOption("gamma_c", "radius update parameter",
+                                  0.5,
+                                  "If the trust-region radius is going to be decreased,"
+                                  " then it will be set as gamma_c*delta, where delta "
+                                  "is current trust-region radius.");
+        roptions->AddNumberOption("gamma_e", "radius update parameter",
+                                  2.0,
+                                  "If the trust-region radius is going to be "
+                                  "increased, then it will be set as gamma_e*delta,"
+                                  "where delta is current trust-region radius.");
         roptions->AddNumberOption("delta_0", "initial trust-region radius value", 1.0);
-        roptions->AddNumberOption("delta_max","the maximum value of trust-region radius"
-                                              " allowed for the radius update", 1.0e8);
+        roptions->AddNumberOption("delta_max", "the maximum value of trust-region radius"
+                                               " allowed for the radius update", 1.0e8);
 
         roptions->SetRegisteringCategory("Penalty Update");
-        roptions->AddNumberOption("eps1","penalty update parameter", 0.3,"");
-        roptions->AddNumberOption("eps2","penalty update parameter", 1.0e-6,"");
+        roptions->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
+        roptions->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
         roptions->AddNumberOption("print_level", "print level for penalty update", 0);
 
         roptions->SetRegisteringCategory("Optimality Test");
 
-        roptions->AddNumberOption("opt_tol","",1.0e-5);
-        roptions->AddNumberOption("opt_compl_tol","",1.0e-6);
-        roptions->AddNumberOption("opt_dual_fea_tol"," ",1.0e-6);
-        roptions->AddNumberOption("opt_prim_fea_tol"," ",1.0e-5);
-        roptions->AddNumberOption("opt_second_tol"," ",1.0e-8);
+        roptions->AddNumberOption("opt_tol", "", 1.0e-5);
+        roptions->AddNumberOption("opt_compl_tol", "", 1.0e-6);
+        roptions->AddNumberOption("opt_dual_fea_tol", " ", 1.0e-6);
+        roptions->AddNumberOption("opt_prim_fea_tol", " ", 1.0e-5);
+        roptions->AddNumberOption("opt_second_tol", " ", 1.0e-8);
 
         roptions->SetRegisteringCategory("General");
         roptions->AddNumberOption("iter_max", "maximum number of iteration for the "
@@ -493,6 +527,28 @@ namespace SQPhotstart {
         roptions->AddNumberOption("print_level", "print level for QP solver", 0);
 
         return true;
+    }
+
+    bool Algorithm::get_full_search_direction(
+            shared_ptr<SQPhotstart::QPhandler> qphandler,
+            shared_ptr<SQPhotstart::Vector> search_direction){
+        cout<<"dimension is"<< search_direction->Dim()<<endl;
+        qphandler->GetOptimalSolution(search_direction->values());
+        return true;
+    }
+
+    /**
+     * @brief
+     * @param lphandler
+     * @param search_direction
+     * @return
+     */
+    bool Algorithm::get_full_search_direction(shared_ptr<LPhandler> lphandler,
+                                         shared_ptr<Vector> search_direction) {
+
+        cout<<"dimension is"<< search_direction->Dim()<<endl;
+        lphandler->GetOptimalSolution(search_direction->values());
+        return false;
     }
 
 }//END_NAMESPACE_SQPHOTSTART

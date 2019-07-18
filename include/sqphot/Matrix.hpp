@@ -18,23 +18,23 @@
 
 
 namespace SQPhotstart {
-    
+
     class Matrix {
-        
+
     public:
         /** Default constructor*/
         Matrix() = default;
-        
+
         /** Default destructor*/
         virtual ~Matrix() = default;
-        
+
         virtual void print() = 0;
 
     };
-    
+
     class qpOASESSparseMat;
-    
-    typedef struct{
+
+    typedef struct {
         int irow1 = 0;
         int jcol1 = 0;
         int size = 0;
@@ -42,8 +42,8 @@ namespace SQPhotstart {
         int irow2 = 0;
         int jcol2 = 0;
         double scaling_factor2 = -1.0;
-    }Identity2Info;
-    
+    } Identity2Info;
+
     /**
      *
      * This is the class for SparseMatrix, it stores the sparse matrix data in triplet,
@@ -51,24 +51,23 @@ namespace SQPhotstart {
      * allocate data to the class member, and perform a matrix vector multiplication.
      *
      */
-    
+
     class SpTripletMat : public Matrix {
     public:
-        
+
         /** Default constructor */
-        SpTripletMat():
-        RowIndex_(NULL),
-        ColIndex_(NULL),
-        MatVal_(NULL),
-        order_(NULL)
-        {};
-        
+        SpTripletMat() :
+                RowIndex_(NULL),
+                ColIndex_(NULL),
+                MatVal_(NULL),
+                order_(NULL) {};
+
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
         SpTripletMat(int nnz, int RowNum, int ColNum);
-        
+
         /** Default destructor */
         virtual ~SpTripletMat();
-        
+
         /**
          * @brief allocate the data to the class members
          *
@@ -77,16 +76,15 @@ namespace SQPhotstart {
          * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
          *
          */
-        
-        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
-        
+
+        bool setMatrix(Index *RowIndex, Index *ColIndex, Number *MatVal);
+
         /**
          *@brief print the sparse matrix in triplet form
          */
         void print();
-        
-        
-        
+
+
         /**
          * @brief Times a matrix with a vector p, the pointer to the matrix-vector
          * product  will be stored in the class member of another Vector class object
@@ -94,82 +92,88 @@ namespace SQPhotstart {
          * */
         virtual bool times(std::shared_ptr<const Vector> p,
                            std::shared_ptr<Vector> result);
-        
-        
+
+
         /**
          * @brief calculate the one norm of the matrix
          *
          * @return the calculated one-norm
          */
         double onenorm();
-        
+
         /**
          * @brief calculate the infinity norm of the matrix
          *
          * @return the calculated inf-norm
          */
         double infnorm();;
-        
+
+        /**
+         *@brief make a deep copy of a matrix information
+         */
+        virtual bool copy(std::shared_ptr<const SpTripletMat> rhs);;
+
+
         /**Extract Matrix info*/
-        inline int ColNum() { return ColNum_; }
-        
-        inline int RowNum() { return RowNum_; }
-        
+        inline int ColNum() const { return ColNum_; }
+
+        inline int RowNum() const { return RowNum_; }
+
         inline int EntryNum() { return EntryNum_; }
-        
+
         inline int EntryNum() const { return EntryNum_; }
-        
-        inline int* RowIndex() { return RowIndex_; }
-        
-        inline int* ColIndex() { return ColIndex_; }
-        
-        inline double* MatVal() { return MatVal_; }
-        
-        inline int* order() { return order_; }
-        
-        inline const int* RowIndex() const { return RowIndex_; }
-        
-        inline const int* ColIndex() const { return ColIndex_; }
-        
-        inline const double* MatVal() const { return MatVal_; }
-        
-        inline const int* order() const { return order_; }
-        
+
+        inline int *RowIndex() { return RowIndex_; }
+
+        inline int *ColIndex() { return ColIndex_; }
+
+        inline double *MatVal() { return MatVal_; }
+
+        inline int *order() { return order_; }
+
+        inline const int *RowIndex() const { return RowIndex_; }
+
+        inline const int *ColIndex() const { return ColIndex_; }
+
+        inline const double *MatVal() const { return MatVal_; }
+
+        inline const int *order() const { return order_; }
+
         inline bool setOrderAt(int location, int order_to_assign);
-        
+
         inline bool setMatValAt(int location, int value_to_assign);
-        
-        
+
+
         /** Private Method */
     private:
-        
+
         /** free all memory*/
         bool freeMemory();
-        
+
         /** Copy Constructor */
         SpTripletMat(const SpTripletMat &);
-        
+
         /** Overloaded Equals Operator */
         void operator=(const SpTripletMat &);
         /** Private Class Members*/
-        
-        
+
+
     private:
-        double* MatVal_;  /**< the entry data of a matrix */
-        int* order_;    /**< the corresponding original position of a matrix entry */
-        int* RowIndex_;/**< the row number of a matrix entry */
-        int* ColIndex_;/**< the column number of a matrix entry */
+        double *MatVal_;  /**< the entry data of a matrix */
+        int *order_;    /**< the corresponding original position of a matrix entry */
+        int *RowIndex_;/**< the row number of a matrix entry */
+        int *ColIndex_;/**< the column number of a matrix entry */
         int ColNum_;    /**< the number columns of a matrix */
         int RowNum_;    /**< the number of rows of a matrix */
         int EntryNum_;  /**< number of non-zero entries in  matrix */
     };
-    
+
     /**
      *
      *
      */
-    class qpOASESSparseMat : public Matrix{
-        
+    class qpOASESSparseMat : public Matrix {
+
     public:
         /**
          * @brief A constructor
@@ -178,20 +182,20 @@ namespace SQPhotstart {
          * @param ColNum the number of columns
          */
         qpOASESSparseMat(int nnz, int RowNum, int ColNum);
-        
+
         /**
          * @brief Default destructor
          */
         ~qpOASESSparseMat() override;
-        
+
         /**
          * @brief set the Matrix values to the matrix, convert from triplet format to
          * Harwell-Boeing Matrix format.
          * @param MatVal entry values(orders are not yet under permutation)
          * @param I_info the 2 identity matrices information
          */
-        virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
-        
+        virtual bool setMatVal(const double *MatVal, Identity2Info I_info);
+
         /**
          * @brief setup the structure of the sparse matrix for solver qpOASES(should
          * be called only for once).
@@ -204,55 +208,74 @@ namespace SQPhotstart {
          * @param I_info the information of 2 identity sub matrices.
          *
          */
-        virtual bool setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
-        
-        bool updateMatVal(const double* MatVal) { return false; }
-        
+        virtual bool
+        setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
+
+        bool updateMatVal(const double *MatVal) { return false; }
+
         /**
-         * @brief
+         * @brief print out matrix information
          */
         void print() override;
-        
+
+
+        /**
+         * @brief make a deep copy of a matrix information
+         */
+
+        virtual bool copy(std::shared_ptr<const qpOASESSparseMat> rhs);
+
         /** Extract class member information*/
         inline int EntryNum() { return EntryNum_; }
-        
+
         inline int EntryNum() const { return EntryNum_; }
-        
-        inline int ColNum() { return ColNum_; }
-        
-        inline int RowNum() { return RowNum_; }
-        
-        inline qpOASES::sparse_int_t* RowIndex(){ return RowIndex_; }
-        
-        inline qpOASES::sparse_int_t* ColIndex(){ return ColIndex_; }
-        
-        inline qpOASES::real_t* MatVal() {return MatVal_; }
-        
-        inline int* order() { return order_; }
-        
+
+        inline int ColNum() const { return ColNum_; }
+
+        inline int RowNum() const { return RowNum_; }
+
+        inline qpOASES::sparse_int_t *RowIndex() { return RowIndex_; }
+
+        inline qpOASES::sparse_int_t *ColIndex() { return ColIndex_; }
+
+        inline qpOASES::real_t *MatVal() { return MatVal_; }
+
+        inline int *order() { return order_; }
+
+        inline const qpOASES::sparse_int_t *RowIndex() const { return RowIndex_; }
+
+        inline const qpOASES::sparse_int_t *ColIndex() const { return ColIndex_; }
+
+        inline const qpOASES::real_t *MatVal() const { return MatVal_; }
+
+        inline const int *order() const { return order_; }
+
+        bool isIsinitialized() const;
+
         /**Private methods*/
     private:
-        
+
         /**Default constructor*/
         qpOASESSparseMat();
-        
-        
+
+
         /** free all memory*/
         bool freeMemory();
-        
+
         /** Copy Constructor */
         qpOASESSparseMat(const qpOASESSparseMat &);
-        
+
         /** Overloaded Equals Operator */
         void operator=(const qpOASESSparseMat &);
-        
+
         /**
          * This is part of qpOASESMatrixAdapter
          * @brief This is the sorted rule that used to sort data, first based on column
          * index then based on row index
          */
         static bool
-        tuple_sort_rule(const std::tuple<int, int, int> left, const std::tuple<int, int, int> right) {
+        tuple_sort_rule(const std::tuple<int, int, int> left,
+                        const std::tuple<int, int, int> right) {
             if (std::get<1>(left) < std::get<1>(right)) return true;
             else if (std::get<1>(left) > std::get<1>(right)) return false;
             else {
@@ -260,21 +283,21 @@ namespace SQPhotstart {
                 else return false;
             }
         }
-        
+
         /** Private members*/
     private:
-        qpOASES::sparse_int_t* RowIndex_;
-        qpOASES::sparse_int_t* ColIndex_;
-        qpOASES::real_t* MatVal_;
-        int* order_;
+        qpOASES::sparse_int_t *RowIndex_;
+        qpOASES::sparse_int_t *ColIndex_;
+        qpOASES::real_t *MatVal_;
+        int *order_;
         int RowNum_;
         int ColNum_;
         int EntryNum_;
-        bool isinitialized;
-        
+        bool isinitialized_;
+
     };
-    
-    
+
+
 }
 #endif //SQPHOTSTART_MATRIX_HPP_
 

@@ -58,7 +58,7 @@ namespace SQPhotstart {
             values_[Location + i - 1] = scaling_factor;
         }
     }
-    
+
     /** print the vector*/
     void Vector::print() const {
         for (int i = 0; i < size_; i++) std::cout << values_[i] << std::endl;
@@ -113,13 +113,22 @@ namespace SQPhotstart {
     }
     
     /*copy all the entries from another vector*/
-    void Vector::copy_vector(const double *_copy) {
+    void Vector::copy_vector(const double *rhs) {
         for (int i = 0; i < size_; i++) {
-            values_[i] = (double) _copy[i];
+            values_[i] = (double) rhs[i];
         }
     }
-    
-    
+
+    /*copy all the entries from another vector*/
+    void Vector::copy_vector(std::shared_ptr<const Vector> rhs) {
+        assert(size_ == rhs->Dim());
+        for(int i=0; i<size_; i++){
+            values_[i] = rhs->values()[i];
+        }
+//        print();
+    }
+
+
     /** copy a subvector from member_vector from (Location) to (Location+subvector_size) to the pointer (results)*/
     void Vector::get_subVector(int Location, int subvector_size, std::shared_ptr<Vector> rhs) const {
         //TODO::test it! not sure if it will work...
