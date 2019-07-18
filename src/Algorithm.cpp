@@ -13,7 +13,7 @@ namespace SQPhotstart {
      * Default Constructor
      */
     Algorithm::Algorithm() {
-       setDefaultOption();
+        setDefaultOption();
         cout << "ALG created" << endl;
     }
 
@@ -244,7 +244,7 @@ namespace SQPhotstart {
         qphandler->GetOptimalSolution(tmp_p_k);
         p_k_->copy_vector(tmp_p_k);
         if (options->penalty_update)
-            infea_measure_model = oneNorm(tmp_p_k + nVar_, 2 * nCon_);
+            infea_measure_model_ = oneNorm(tmp_p_k + nVar_, 2 * nCon_);
         //FIXME:calculate somewhere else?
         delete[] tmp_p_k;
         return true;
@@ -427,40 +427,59 @@ namespace SQPhotstart {
      */
     bool Algorithm::penalty_update() {
         if (options->penalty_update) {
-            if (infea_measure_model > options->penalty_update_tol) {
+            if (infea_measure_model_ > options->penalty_update_tol) {
                 myLP->copy_QP_info(myQP);
                 myLP->solveLP(stats, options);
                 shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
 
-                cout<<"sol_tmp dimension is"<< sol_tmp->Dim()<<endl;
                 double rho_trial = rho_;
                 //calculate the infea_measure of the LP
                 get_full_search_direction(myLP, sol_tmp);
                 double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
                                                      2 * nCon_);
-                if(infea_measure_infty<= options->penalty_update_tol){
+                if (infea_measure_infty <= options->penalty_update_tol) {
                     //try to increase the penalty parameter to a number such that the
                     // infeasibility measure of QP model with such penalty parameter
                     // becomes zero
-                    while(infea_measure_model>options->penalty_update_tol) {
+                    while (infea_measure_model_ > options->penalty_update_tol) {
+                        rho_trial = options->increase_parm * rho_trial; //increase rho
+                        stats->penalty_change_trial_addone();
+                        myQP->update_penalty(rho_trial);
+                        myQP->solveQP(stats, options);
+                        get_full_search_direction(myQP, sol_tmp);
+                        infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+                                                       2 * nCon_);
+                    }
+
+                } else {
+
+                    while ((infea_measure_ - infea_measure_model_ <
+                            options->eps1 * (infea_measure_ - infea_measure_infty) &&
+                            (stats->penalty_change_trial < options->penalty_iter_max))) {
                         rho_trial = options->increase_parm * rho_trial; //increase rho
                         stats->penalty_change_trial_addone();
                         myQP->update_penalty(rho_trial);
                         myQP->solveQP(stats, options);
                         get_full_search_direction(myQP, sol_tmp);
                         sol_tmp->print();
-                        infea_measure_model = oneNorm(sol_tmp->values()+nVar_, 2 *nCon_);
-//                        cout<<infea_measure_model<<endl;
+                        infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+                                                       2 * nCon_);
+
                     }
-
                 }
-                else{
-
+                //if any change occurs
+                if(rho_trial>rho_) {
+                    if(rho_trial*infea_measure_-myQP->get_obj()>=
+                    options->eps2*rho_trial*(infea_measure_-infea_measure_model_)){
+                        stats->penalty_change_Succ_addone();
+                        options->eps1+=(1-options->eps1)*0.1;
+                        p_k_->copy_vector(sol_tmp);
+                        rho_ = rho_trial;
+                    }
+                    else{
+                        stats->penalty_change_Fail_addone();
+                    }
                 }
-                p_k_->copy_vector(sol_tmp);
-                rho_ = rho_trial;
-                QPinfoFlag_.Update_penalty = true;
-
             }
         }
         return true;
@@ -468,7 +487,7 @@ namespace SQPhotstart {
 
     bool Algorithm::setDefaultOption() {
         roptions = new Ipopt::RegisteredOptions();
-        roptions->SetRegisteringCategory("trust-region");
+        roptions->SetRegisteringCategory("rust-region");
         roptions->AddNumberOption("eta_c", "trust-region parameter for the ratio test.",
                                   0.25,
                                   "If ratio<=eta_c, then the trust-region radius for the next "
@@ -499,8 +518,8 @@ namespace SQPhotstart {
         roptions->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
         roptions->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
         roptions->AddNumberOption("print_level_penalty_update", "print level for penalty "
-                                                          "update",
-                0);
+                                                                "update",
+                                  0);
 
         roptions->SetRegisteringCategory("Optimality Test");
 
@@ -525,7 +544,7 @@ namespace SQPhotstart {
 
         roptions->SetRegisteringCategory("QPsolver");
         roptions->AddNumberOption("iter_max_qp", "maximum number of iteration for the "
-                                              "QP solver in solving each QP", 10);
+                                                 "QP solver in solving each QP", 10);
         roptions->AddNumberOption("print_level_qp", "print level for QP solver", 0);
 
         return true;
@@ -533,8 +552,7 @@ namespace SQPhotstart {
 
     bool Algorithm::get_full_search_direction(
             shared_ptr<SQPhotstart::QPhandler> qphandler,
-            shared_ptr<SQPhotstart::Vector> search_direction){
-        cout<<"dimension is"<< search_direction->Dim()<<endl;
+            shared_ptr<SQPhotstart::Vector> search_direction) {
         qphandler->GetOptimalSolution(search_direction->values());
         return true;
     }
@@ -546,9 +564,8 @@ namespace SQPhotstart {
      * @return
      */
     bool Algorithm::get_full_search_direction(shared_ptr<LPhandler> lphandler,
-                                         shared_ptr<Vector> search_direction) {
+                                              shared_ptr<Vector> search_direction) {
 
-        cout<<"dimension is"<< search_direction->Dim()<<endl;
         lphandler->GetOptimalSolution(search_direction->values());
         return false;
     }

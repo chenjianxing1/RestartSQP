@@ -244,7 +244,7 @@ namespace SQPhotstart {
         shared_ptr<Vector> lambda_;/**< multiplier for constraints evaluated at x_k*/
         shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
         Number infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
-        Number infea_measure_model; /**< the one norm of all slack variables in the QP */
+        Number infea_measure_model_; /**< the one norm of all slack variables in the QP */
         Number obj_value_;/**<the objective corresponding to the x_k*/
         shared_ptr<Vector> x_k_; /**< current iterate point*/
         shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
