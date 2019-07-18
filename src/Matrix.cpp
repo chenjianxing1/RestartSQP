@@ -30,23 +30,6 @@ namespace SQPhotstart {
     }
 
 
-    //    /**
-    //     * @name allocate the data to the class members
-    //     *
-    //     * @param RowIndex the row index of a entry in a matrix, starting from 1
-    //     * @param ColIndex the column index of a entry in a matrix, starting from 1
-    //     * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
-    //     *
-    //     */
-    //    bool SparseMatrix::setMatrix(SQPhotstart::Index *RowIndex, SQPhotstart::Index *ColIndex,
-    //                              SQPhotstart::Number *MatVal) {
-    //        RowIndex_ = RowIndex;
-    //        ColIndex_ = ColIndex;
-    //        MatVal_ = MatVal;
-    //
-    //        return true;
-    //    }
-
     /**
      *@name print the sparse matrix in triplet form
      */
@@ -122,6 +105,7 @@ namespace SQPhotstart {
     qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
 
     /**
+     * @brief A constructor
      *
      *
      * @param: nnz number of nonzero entry
@@ -165,15 +149,18 @@ namespace SQPhotstart {
         int counter = 0; // the counter for recording the index location
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         for (int i = 0; i < rhs->EntryNum(); i++) {
-            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i], rhs->ColIndex()[i], counter));
+            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
+                    rhs->ColIndex()[i], counter));
             counter++;
         }
 
         // adding 2 identity matrix to the tuple array.
         if (I_info.irow1 != 0) {
             for (int j = 0; j < I_info.size; j++) {
-                sorted_index_info.push_back(std::make_tuple(I_info.irow1 + j, I_info.jcol1 + j, counter));
-                sorted_index_info.push_back(std::make_tuple(I_info.irow2 + j, I_info.jcol2 + j, counter + 1));
+                sorted_index_info.push_back(std::make_tuple(I_info.irow1 + j, I_info
+                .jcol1 + j, counter));
+                sorted_index_info.push_back(std::make_tuple(I_info.irow2 + j, I_info
+                .jcol2 + j, counter + 1));
                 counter += 2;
             }
 
@@ -188,7 +175,8 @@ namespace SQPhotstart {
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
             order_[i] = std::get<2>(sorted_index_info[i]);
             if (i < EntryNum_ - 1) {
-                if (std::get<1>(sorted_index_info[i]) < std::get<1>(sorted_index_info[i + 1])) {
+                if (std::get<1>(sorted_index_info[i]) <  std::get<1>
+                        (sorted_index_info[i + 1])) {
                     ColIndex_[std::get<1>(sorted_index_info[i])] = i + 1;
                 }
             }

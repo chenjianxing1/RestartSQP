@@ -15,12 +15,15 @@ namespace SQPhotstart {
         lb_ = make_shared<Vector>(nVar_QP);
         ub_ = make_shared<Vector>(nVar_QP);
         g_ = make_shared<Vector>(nVar_QP);
-        A_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
+        A_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_jac_g + 2 *
+                nlp_index_info.nCon, nCon_QP, nVar_QP);
         if(qptype!=LP){
-            H_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_h_lag, nVar_QP, nVar_QP);
+            H_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_h_lag, nVar_QP,
+                    nVar_QP);
         }
         //FIXME: the qpOASES does not accept any extra input
-        qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP, (qpOASES::int_t) nCon_QP);
+        qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
+                (qpOASES::int_t) nCon_QP);
         return true;
     }
 
@@ -37,11 +40,13 @@ namespace SQPhotstart {
     qpOASESInterface::~qpOASESInterface() = default;
 
     /**
-     * @name This function solves the QP problem specified in the data, with given options. After the QP
-     * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
-     * in object stats
+     * @brief This function solves the QP problem specified in the data, with given 
+     * options.
+     * After the QP being solved, it updates the stats, adding the iteration
+     * number used to solve the QP to the qp_iter in object stats
      */
-    bool qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
+    bool qpOASESInterface::optimizeQP(shared_ptr<Stats> stats,
+                                      shared_ptr<Options> options) {
         H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(), H_->ColNum()
                 , H_->RowIndex(), H_->ColIndex(), H_->MatVal());
         A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum()
@@ -99,6 +104,7 @@ namespace SQPhotstart {
         return true;
 
     }
+    
     /**
     * @brief copy the multipliers of the QP to the input pointer
     *

@@ -171,6 +171,9 @@ namespace SQPhotstart {
     class qpOASESSparseMat : public Matrix{
         
     public:
+        /** constructor/destructor */
+
+        //@{
         /**
          * @brief A constructor
          * @param nnz the number of nonzero entries
@@ -183,7 +186,9 @@ namespace SQPhotstart {
          * @brief Default destructor
          */
         ~qpOASESSparseMat() override;
-        
+        //@}
+
+
         /**
          * @brief set the Matrix values to the matrix, convert from triplet format to
          * Harwell-Boeing Matrix format.
@@ -209,11 +214,12 @@ namespace SQPhotstart {
         bool updateMatVal(const double* MatVal) { return false; }
         
         /**
-         * @brief
+         * @brief print the matrix information
          */
         void print() override;
         
         /** Extract class member information*/
+        //@{
         inline int EntryNum() { return EntryNum_; }
         
         inline int EntryNum() const { return EntryNum_; }
@@ -229,7 +235,9 @@ namespace SQPhotstart {
         inline qpOASES::real_t* MatVal() {return MatVal_; }
         
         inline int* order() { return order_; }
-        
+
+        //@}
+
         /**Private methods*/
     private:
         
@@ -262,6 +270,7 @@ namespace SQPhotstart {
         }
         
         /** Private members*/
+
     private:
         qpOASES::sparse_int_t* RowIndex_;
         qpOASES::sparse_int_t* ColIndex_;
