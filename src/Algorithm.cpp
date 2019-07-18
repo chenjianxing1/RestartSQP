@@ -498,7 +498,9 @@ namespace SQPhotstart {
         roptions->SetRegisteringCategory("Penalty Update");
         roptions->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
         roptions->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
-        roptions->AddNumberOption("print_level", "print level for penalty update", 0);
+        roptions->AddNumberOption("print_level_penalty_update", "print level for penalty "
+                                                          "update",
+                0);
 
         roptions->SetRegisteringCategory("Optimality Test");
 
@@ -522,9 +524,9 @@ namespace SQPhotstart {
                 "");
 
         roptions->SetRegisteringCategory("QPsolver");
-        roptions->AddNumberOption("iter_max", "maximum number of iteration for the "
+        roptions->AddNumberOption("iter_max_qp", "maximum number of iteration for the "
                                               "QP solver in solving each QP", 10);
-        roptions->AddNumberOption("print_level", "print level for QP solver", 0);
+        roptions->AddNumberOption("print_level_qp", "print level for QP solver", 0);
 
         return true;
     }
