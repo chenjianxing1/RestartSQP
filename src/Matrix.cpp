@@ -30,23 +30,6 @@ namespace SQPhotstart {
     }
 
 
-    //    /**
-    //     * @name allocate the data to the class members
-    //     *
-    //     * @param RowIndex the row index of a entry in a matrix, starting from 1
-    //     * @param ColIndex the column index of a entry in a matrix, starting from 1
-    //     * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
-    //     *
-    //     */
-    //    bool SparseMatrix::setMatrix(SQPhotstart::Index *RowIndex, SQPhotstart::Index *ColIndex,
-    //                              SQPhotstart::Number *MatVal) {
-    //        RowIndex_ = RowIndex;
-    //        ColIndex_ = ColIndex;
-    //        MatVal_ = MatVal;
-    //
-    //        return true;
-    //    }
-
     /**
      *@name print the sparse matrix in triplet form
      */
@@ -168,6 +151,8 @@ namespace SQPhotstart {
     qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
 
     /**
+     * @brief A constructor
+     *
      *@brief A constructor with the number of non-zero entries, row number and column
      * number specified.
      *
@@ -212,8 +197,8 @@ namespace SQPhotstart {
         int counter = 0; // the counter for recording the index location
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         for (int i = 0; i < rhs->EntryNum(); i++) {
-            sorted_index_info.push_back(
-                    std::make_tuple(rhs->RowIndex()[i], rhs->ColIndex()[i], counter));
+            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
+                    rhs->ColIndex()[i], counter));
             counter++;
         }
 

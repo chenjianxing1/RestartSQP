@@ -13,7 +13,7 @@ namespace SQPhotstart {
      * Default Constructor
      */
     Algorithm::Algorithm() {
-
+       setDefaultOption();
         cout << "ALG created" << endl;
     }
 

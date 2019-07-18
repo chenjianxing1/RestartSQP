@@ -40,9 +40,10 @@ namespace SQPhotstart {
     qpOASESInterface::~qpOASESInterface() = default;
 
     /**
-     * @name This function solves the QP problem specified in the data, with given options. After the QP
-     * is solved, it updates the stats, adding the iteration number used to solve the QP to the qp_iter
-     * in object stats
+     * @brief This function solves the QP problem specified in the data, with given 
+     * options.
+     * After the QP being solved, it updates the stats, adding the iteration
+     * number used to solve the QP to the qp_iter in object stats
      */
     bool
     qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
