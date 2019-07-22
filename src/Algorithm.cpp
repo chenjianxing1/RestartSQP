@@ -48,7 +48,8 @@ namespace SQPhotstart {
 
             setupQP();
             //based on the information given by NLP reader otherwise, it will do nothing
-            myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+            myQP->solveQP(stats, options);//solve the QP subproblem and update the
+            // stats
 
             //get the search direction from the solution of the QPsubproblem
             get_search_direction(myQP);
@@ -268,7 +269,6 @@ namespace SQPhotstart {
         qphandler->GetMultipliers(tmp_lambda);
         lambda_->copy_vector(tmp_lambda);
 
-        //        lambda_->print();
         delete[] tmp_lambda;
         return true;
     }
@@ -336,7 +336,7 @@ namespace SQPhotstart {
         actual_reduction_ = P1x - P1_x_trial;
 //                cout<<"actual reduction is"<<actual_reduction_<<endl;
 
-        pred_reduction_ = rho_ * infea_measure_ - myQP->get_obj();
+        pred_reduction_ = rho_ * infea_measure_ - qp_obj_;
 
 //                cout<<"pred reduction is"<<pred_reduction_<<endl;
         if (actual_reduction_ >= options->eta_s * pred_reduction_) {
@@ -428,13 +428,15 @@ namespace SQPhotstart {
     bool Algorithm::penalty_update() {
         if (options->penalty_update) {
             if (infea_measure_model_ > options->penalty_update_tol) {
-                myLP->copy_QP_info(myQP);
+                myLP->copy_QP_info(myQP); //copy part of the objective and bounds
+                // information from the QPhandler objects
+
                 myLP->solveLP(stats, options);
                 shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
 
-                double rho_trial = rho_;
+                double rho_trial = rho_;//the temporary trial value for rho
                 //calculate the infea_measure of the LP
-                get_full_search_direction(myLP, sol_tmp);
+                get_full_direction(myLP, sol_tmp);
                 double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
                                                      2 * nCon_);
                 if (infea_measure_infty <= options->penalty_update_tol) {
@@ -446,7 +448,9 @@ namespace SQPhotstart {
                         stats->penalty_change_trial_addone();
                         myQP->update_penalty(rho_trial);
                         myQP->solveQP(stats, options);
-                        get_full_search_direction(myQP, sol_tmp);
+                        //recalculate the infeasibility measure of the model by
+                        // calculating the one norm of the slack variables
+                        get_full_direction(myQP, sol_tmp);
                         infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                        2 * nCon_);
                     }
@@ -456,12 +460,17 @@ namespace SQPhotstart {
                     while ((infea_measure_ - infea_measure_model_ <
                             options->eps1 * (infea_measure_ - infea_measure_infty) &&
                             (stats->penalty_change_trial < options->penalty_iter_max))) {
+                        //try to increase the penalty parameter to a number such that
+                        // the incurred reduction for the QP model is to a ratio to the
+                        // maximum possible reduction for current linear model.
                         rho_trial = options->increase_parm * rho_trial; //increase rho
                         stats->penalty_change_trial_addone();
                         myQP->update_penalty(rho_trial);
                         myQP->solveQP(stats, options);
-                        get_full_search_direction(myQP, sol_tmp);
-                        sol_tmp->print();
+
+                        //recalculate the infeasibility measure of the model by
+                        // calculating the one norm of the slack variables
+                        get_full_direction(myQP, sol_tmp);
                         infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                        2 * nCon_);
 
@@ -469,14 +478,16 @@ namespace SQPhotstart {
                 }
                 //if any change occurs
                 if(rho_trial>rho_) {
-                    if(rho_trial*infea_measure_-myQP->get_obj()>=
+                    if(rho_trial*infea_measure_-qp_obj_>=
                     options->eps2*rho_trial*(infea_measure_-infea_measure_model_)){
                         stats->penalty_change_Succ_addone();
                         options->eps1+=(1-options->eps1)*0.1;
                         p_k_->copy_vector(sol_tmp);
                         rho_ = rho_trial;
+                        myQP->GetObjective(qp_obj_);//update the qp_obj
                     }
                     else{
+
                         stats->penalty_change_Fail_addone();
                     }
                 }
@@ -485,6 +496,9 @@ namespace SQPhotstart {
         return true;
     }
 
+    /**
+     * @brief Use the Ipopt Reference Options and set it to default values.
+     */
     bool Algorithm::setDefaultOption() {
         roptions = new Ipopt::RegisteredOptions();
         roptions->SetRegisteringCategory("rust-region");
@@ -547,10 +561,12 @@ namespace SQPhotstart {
                                                  "QP solver in solving each QP", 10);
         roptions->AddNumberOption("print_level_qp", "print level for QP solver", 0);
 
+
         return true;
     }
 
-    bool Algorithm::get_full_search_direction(
+
+    bool Algorithm::get_full_direction(
             shared_ptr<SQPhotstart::QPhandler> qphandler,
             shared_ptr<SQPhotstart::Vector> search_direction) {
         qphandler->GetOptimalSolution(search_direction->values());
@@ -563,11 +579,23 @@ namespace SQPhotstart {
      * @param search_direction
      * @return
      */
-    bool Algorithm::get_full_search_direction(shared_ptr<LPhandler> lphandler,
-                                              shared_ptr<Vector> search_direction) {
+    bool Algorithm::get_full_direction(shared_ptr<LPhandler> lphandler,
+                                       shared_ptr<Vector> search_direction) {
 
         lphandler->GetOptimalSolution(search_direction->values());
         return false;
+    }
+
+    const SmartPtr<RegisteredOptions>& Algorithm::getRoptions() const {
+        return roptions;
+    }
+
+    const SmartPtr<OptionsList>& Algorithm::getRoptions2() const {
+        return roptions2;
+    }
+
+    const SmartPtr<Journalist>& Algorithm::getJnlst() const {
+        return jnlst;
     }
 
 }//END_NAMESPACE_SQPHOTSTART

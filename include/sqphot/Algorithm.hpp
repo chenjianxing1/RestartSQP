@@ -20,6 +20,7 @@
 #include <sqphot/Vector.hpp>
 
 #include <sqphot/Matrix.hpp>
+#include <coin/IpOptionsList.hpp>
 
 
 namespace SQPhotstart {
@@ -31,7 +32,7 @@ namespace SQPhotstart {
      *
      *	minimize 	f(x)
      *	subject   c_l<=c(x)<=c_u,
-     *		  x_l<= x  <=u
+     *	      	  x_l<= x  <=x_u
      *
      *
      *To use this method, call @Optimize and input NLP class object.
@@ -46,11 +47,34 @@ namespace SQPhotstart {
 
         /** Default Destructor*/
         virtual ~Algorithm();
-
         //@}
 
+        /** temporarily use Ipopt options*/
+        //@{
+        //
+        const SmartPtr<RegisteredOptions>& getRoptions() const;
+
+        const SmartPtr<OptionsList>& getRoptions2() const;
+
+        const SmartPtr<Journalist>& getJnlst() const;
+
+
+        virtual SmartPtr<RegisteredOptions> getRoptions(){
+            return roptions;
+        }
+
+        virtual SmartPtr<OptionsList> getRoptions2(){
+            return roptions2;
+        }
+
+        virtual SmartPtr<Journalist> getJnlst(){
+            return jnlst;
+        }
+        //@}
+
+
         /**
-         * This is the main method to optimize the NLP given as the input
+         * @brief This is the main method to optimize the NLP given as the input
          *
          * @param nlp: the nlp reader that read data of the function to be minimized;
          */
@@ -59,16 +83,18 @@ namespace SQPhotstart {
         /** @name Set the corresponding option to the user-defined value */
         //@{
         template<typename T>
-        bool setOptions(const std::string &name, T value) { return false; };
+        bool setOptions(const std::string& name, T value) { return false; };
+
+
         //@}
         /* Private methods*/
     private:
 
         /** Copy Constructor */
-        Algorithm(const Algorithm &);
+        Algorithm(const Algorithm&);
 
         /** Overloaded Equals Operator */
-        void operator=(const Algorithm &);
+        void operator=(const Algorithm&);
 
         /**
          * @brief set the default option values
@@ -139,7 +165,6 @@ namespace SQPhotstart {
          */
         virtual bool ratio_test();
 
-
         /**
          * @brief Update the trust region radius.
          *
@@ -177,11 +202,25 @@ namespace SQPhotstart {
          */
         bool get_search_direction(shared_ptr<QPhandler> qphandler);
 
-        bool get_full_search_direction(shared_ptr<QPhandler> qphandler,
-                                       shared_ptr<Vector> search_direction);
+        /**
+         * @brief get the full search direction(including the slack variables) from the
+         * QPhandler
+         * @param qphandler a QP handler objbect which has already solved a QP
+         * @param search_direction a Vector object which will be used to store the full
+         * direction
+         */
+        bool get_full_direction(shared_ptr<QPhandler> qphandler,
+                                shared_ptr<Vector> search_direction);
 
-        bool get_full_search_direction(shared_ptr<LPhandler> lphandler,
-                                       shared_ptr<Vector> search_direction);
+        /**
+         * @brief get the full search direction(including the slack variables) from the
+         * LPhandler
+         * @param lphandler an LP handler objbect which has already solved a LP
+         * @param search_direction a Vector object which will be used to store the full
+         * direction
+         */
+        bool get_full_direction(shared_ptr<LPhandler> lphandler,
+                                shared_ptr<Vector> search_direction);
 
         //@}
 
@@ -252,6 +291,7 @@ namespace SQPhotstart {
         Number infea_measure_trial_;/**< the measure of infeasibility evaluated at
                                      * x_trial*/
         Number obj_value_trial_;/**<the objective corresponding to the x_trial*/
+        Number qp_obj_;/**< the objective value of current qp*/
         shared_ptr<Vector> x_trial_;/**< the trial point from the search direction,
                                      * x_trial = x_k+p_k*/
         shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
@@ -265,15 +305,19 @@ namespace SQPhotstart {
                                        * f(x)-sum_{i=1}^m lambda_i c_i(x)*/
         shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian from
                                         * c(x)*/
-        ConstraintType *cons_type_; /**<the constraints type, it can be either bounded,
+        ConstraintType* cons_type_; /**<the constraints type, it can be either bounded,
                                      * bounded above,bounded below, or unbounded*/
-        ConstraintType *bound_cons_type_;/**< the variables type, it can be either
+        ConstraintType* bound_cons_type_;/**< the variables type, it can be either
                                           * bounded, bounded above,bounded below, or
                                           * unbounded*/
         shared_ptr<Options> options;/**< the default options used for now. */
         Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
  *                                                        it will replace options in
  *                                                        the future*/
+        Ipopt::SmartPtr<Ipopt::OptionsList> roptions2;
+        Ipopt::SmartPtr<Ipopt::Journalist> jnlst;
+
+    private:
         shared_ptr<Stats> stats;
         shared_ptr<QPhandler> myQP;
         shared_ptr<LPhandler> myLP;

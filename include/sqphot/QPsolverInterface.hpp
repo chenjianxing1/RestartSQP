@@ -45,8 +45,8 @@ namespace SQPhotstart {
          * overload this method to optimize a QP with the data specified, update the 
          * stats by adding the iteration number used to solve this QP to stats.qp_iter
          */
-        virtual bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options)
-        {return false;}
+        virtual bool
+        optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) { return false; }
 
         /**
          * @brief Solve a regular LP with given data and options
@@ -54,8 +54,8 @@ namespace SQPhotstart {
          * stats by adding the iteration number used to solve this QP to stats.qp_iter
          */
 
-        virtual bool optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options)
-        {return false;}
+        virtual bool
+        optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) { return false; }
 
         /**
          * @brief copy the optimal solution of the QP to the input pointer
@@ -84,24 +84,24 @@ namespace SQPhotstart {
         /**
          * Return private class members info
          */
-        virtual shared_ptr<Vector> &getLb() = 0;
+        virtual shared_ptr<Vector>& getLb() = 0;
 
-        virtual shared_ptr<Vector> &getUb() = 0;
+        virtual shared_ptr<Vector>& getUb() = 0;
 
-        virtual shared_ptr<Vector> &getLbA() = 0;
+        virtual shared_ptr<Vector>& getLbA() = 0;
 
-        virtual shared_ptr<Vector> &getUbA() = 0;
+        virtual shared_ptr<Vector>& getUbA() = 0;
 
-        virtual shared_ptr<Vector> &getG() = 0;
+        virtual shared_ptr<Vector>& getG() = 0;
 
 
     private:
 
         /** Copy Constructor */
-        QPSolverInterface(const QPSolverInterface &);
+        QPSolverInterface(const QPSolverInterface&);
 
         /** Overloaded Equals Operator */
-        void operator=(const QPSolverInterface &);
+        void operator=(const QPSolverInterface&);
     };
 
 
@@ -123,7 +123,7 @@ namespace SQPhotstart {
         qpOASESInterface(Index_info nlp_index_info,
                          QPType qptype);    //number of constraints in the QP problem
 
-        bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override ;
+        bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
 
         /**
          * @brief
@@ -160,19 +160,19 @@ namespace SQPhotstart {
         inline double get_obj_value();
 
         //@{
-        shared_ptr<Vector> &getLb();
+        shared_ptr<Vector>& getLb();
 
-        shared_ptr<Vector> &getUb();
+        shared_ptr<Vector>& getUb();
 
-        shared_ptr<qpOASESSparseMat> &getH();
+        shared_ptr<qpOASESSparseMat>& getH();
 
-        shared_ptr<qpOASESSparseMat> &getA();
+        shared_ptr<qpOASESSparseMat>& getA();
 
-        shared_ptr<Vector> &getLbA();
+        shared_ptr<Vector>& getLbA();
 
-        shared_ptr<Vector> &getUbA();
+        shared_ptr<Vector>& getUbA();
 
-        shared_ptr<Vector> &getG();
+        shared_ptr<Vector>& getG();
         //@}
 
     public:
@@ -214,10 +214,10 @@ namespace SQPhotstart {
         bool allocate(Index_info nlp_index_info, QPType qptype);
 
         /** Copy Constructor */
-        qpOASESInterface(const qpOASESInterface &);
+        qpOASESInterface(const qpOASESInterface&);
 
         /** Overloaded Equals Operator */
-        void operator=(const qpOASESInterface &);
+        void operator=(const qpOASESInterface&);
 
     };
 }//SQPHOTSTART

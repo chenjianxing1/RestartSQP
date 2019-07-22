@@ -248,13 +248,17 @@ namespace SQPhotstart {
      *
      * @param stats     the static used to record iterations numbers
      */
-    bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
-                            shared_ptr<Options> options) {
+    bool
+    QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
+                       shared_ptr<Options> options) {
         qp_interface_->optimizeQP(stats, options);
-        qp_obj_ = qp_interface_->get_obj_value();
         return true;
     }
-    
+
+    bool QPhandler::GetObjective(double& qp_obj){
+        qp_obj = qp_interface_->get_obj_value();
+        return true;
+    }
     
     /**
      * This function initializes all class members which

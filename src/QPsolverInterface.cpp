@@ -119,7 +119,7 @@ namespace SQPhotstart {
     * @param y_k   a pointer to an array with allocated memory equals to
     * sizeof(double)*(num_variable+num_constraint)
     */
-    bool qpOASESInterface::get_multipliers(double *y_k) {
+    bool qpOASESInterface::get_multipliers(double* y_k) {
         qp_->getDualSolution(y_k);
         return true;
     }
@@ -131,7 +131,7 @@ namespace SQPhotstart {
      * sizeof(double)*number_variables
      *
      */
-    bool qpOASESInterface::get_optimal_solution(double *p_k) {
+    bool qpOASESInterface::get_optimal_solution(double* p_k) {
         qp_->getPrimalSolution(p_k);
         return true;
     }
@@ -150,31 +150,31 @@ namespace SQPhotstart {
 
     /** Extract private member information*/
     //@{
-    shared_ptr<Vector> &qpOASESInterface::getLb() {
+    shared_ptr<Vector>& qpOASESInterface::getLb() {
         return lb_;
     }
 
-    shared_ptr<Vector> &qpOASESInterface::getUb() {
+    shared_ptr<Vector>& qpOASESInterface::getUb() {
         return ub_;
     }
 
-    shared_ptr<Vector> &qpOASESInterface::getLbA() {
+    shared_ptr<Vector>& qpOASESInterface::getLbA() {
         return lbA_;
     }
 
-    shared_ptr<Vector> &qpOASESInterface::getUbA() {
+    shared_ptr<Vector>& qpOASESInterface::getUbA() {
         return ubA_;
     }
 
-    shared_ptr<Vector> &qpOASESInterface::getG() {
+    shared_ptr<Vector>& qpOASESInterface::getG() {
         return g_;
     }
 
-    shared_ptr<qpOASESSparseMat> &qpOASESInterface::getH() {
+    shared_ptr<qpOASESSparseMat>& qpOASESInterface::getH() {
         return H_;
     }
 
-    shared_ptr<qpOASESSparseMat> &qpOASESInterface::getA() {
+    shared_ptr<qpOASESSparseMat>& qpOASESInterface::getA() {
         return A_;
     }
     //@}

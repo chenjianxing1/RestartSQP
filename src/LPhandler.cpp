@@ -37,18 +37,6 @@ namespace SQPhotstart {
         return true;
     }
 
-    /**
-     *Get the multipliers from the LPhandler_interface
-     *
-     *This is only an interface for user to avoid call interface directly.
-     *
-     * @param y_k       the pointer to an empty array with the length equal to the size of multipliers of the QP subproblem
-     */
-    bool LPhandler::GetMultipliers(double *y_k) {
-        lp_interface_->get_multipliers(y_k);
-        return true;
-    }
-
 
     /**
      * This function initializes all objects will be used in this class.
@@ -64,6 +52,7 @@ namespace SQPhotstart {
      *          it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
      */
     bool LPhandler::init(Index_info nlp_info, QPType qptype) {
+        assert(qptype == LP);
         allocate(nlp_info, qptype);
         nlp_info_ = nlp_info;
         qptype_ = qptype;
@@ -113,18 +102,6 @@ namespace SQPhotstart {
         return true;
     }
 
-
-    /**
-     * This function sets up the object vector g of the QP problem
-     * The (2*nCon+nVar) vector g_^T in QP problem will be the same as
-     * [grad_f^T, rho* e^T], where the unit vector is of length (2*nCon).
-     * @param grad      Gradient vector from nlp class
-     * @param rho       Penalty Parameter
-     */
-    bool LPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
-        lp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon * 2, rho);
-        return true;
-    }
 
 
     /**
@@ -177,35 +154,7 @@ namespace SQPhotstart {
 
 
     /**
-     * Set up the H for the first time in the QP
-     * problem.
-     * It will be concatenated as [H_k 0]
-     *          		         [0   0]
-     * where H_k is the Lagragian hessian evaluated at x_k
-     * and lambda_k.
-     *
-     * This method should only be called for once.
-     *
-     * @param hessian the Lagragian hessian evaluated
-     * at x_k and lambda_k from nlp readers.
-     * @return
-     */
-    bool LPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
-
-        lp_interface_->getH()->setStructure(hessian, I_info_H);
-        lp_interface_->getH()->setMatVal(hessian->MatVal(), I_info_H);
-
-        //        if(DEBUG){
-        //
-        //            std::cout<<"H is"<<std::endl;
-        //            lp_interface_->getH()->print();
-        //                        divider();
-        //        }
-        return true;
-    }
-
-    /**
-     * This function sets up the matrix A in the QP subproblem
+     * @brief This function sets up the matrix A in the LP subproblem
      * The matrix A in QP problem will be concatenate as [J I -I]
      * @param jacobian  the Matrix object for Jacobian from c(x)
      */
@@ -226,9 +175,8 @@ namespace SQPhotstart {
 
 
     /**
-     *
-     *
-     * @param stats     the static used to record iterations numbers
+     * @brief solve the LP problem with bounds and objectives defined by the class
+     * members
      */
 
     bool LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
@@ -240,7 +188,7 @@ namespace SQPhotstart {
 
 
     /**
-     * This function initializes all class members which
+     * @brief This function initializes all class members which
      * will be used in _qp_interface
      *
      * @param nlp_info
@@ -263,11 +211,12 @@ namespace SQPhotstart {
         return true;
     }
 
-    bool LPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
-        lp_interface_->getH()->setMatVal(Hessian->MatVal(), I_info_H);
-        return true;
-    }
 
+    /**
+     * @brief
+     * @param Jacobian
+     * @return
+     */
     bool LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
         lp_interface_->getA()->setMatVal(Jacobian->MatVal(), I_info_A);
         return true;
@@ -291,6 +240,17 @@ namespace SQPhotstart {
 
         lp_interface_->getA()->copy(rhs->getQpInterface()->getA());
 
+        return true;
+    }
+
+    /**
+     * @brief This function sets up the object vector g of the LP problem
+     * The (2*nCon+nVar) vector g_^T in QP problem will be the same as
+     * [0 , rho* e^T], where the unit vector is of length (2*nCon).
+     * @param rho       Penalty Parameter
+     */
+    bool LPhandler::setup_g(double rho) {
+        lp_interface_->getG()->assign_n(nlp_info_.nVar+ 1, nlp_info_.nCon * 2, rho);
         return true;
     }
 
