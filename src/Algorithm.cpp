@@ -14,6 +14,8 @@ namespace SQPhotstart {
      */
     Algorithm::Algorithm() {
         setDefaultOption();
+        jnlst = new Ipopt::Journalist();
+        roptions2 = new Ipopt::OptionsList();
         cout << "ALG created" << endl;
     }
 
