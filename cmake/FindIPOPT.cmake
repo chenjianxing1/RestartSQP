@@ -38,13 +38,13 @@ find_library(IPOPT_LIBRARY
 	HINTS ${IPOPT_ROOT_DIR}/lib
 )
 find_library(IPOPT_LIBRARY2 
-	libcoinasl.dylib
+	libcoinasl.so
 	HINTS /usr/local/lib
 	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
 	HINTS ${IPOPT_ROOT_DIR}/lib
 )
 find_library(IPOPT_LIBRARY3 
-	libipoptamplinterface.dylib
+	libipoptamplinterface.so
 	HINTS /usr/local/lib
 	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
 	HINTS ${IPOPT_ROOT_DIR}/lib
