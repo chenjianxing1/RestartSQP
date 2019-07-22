@@ -25,6 +25,8 @@ before_install:
 - cd ./third_party/CoinIpopt
 - cd ThirdParty/Mumps
 - "./get.Mumps"
+- cd ../ASL
+- "./get.ASL"
 - cd ../..
 - mkdir build
 - cd build
