@@ -10,6 +10,14 @@
 /* Declaration of all non-built in types (except for classes) */
 namespace SQPhotstart {
 
+    enum QPReturnType{
+        QP_OPTIMAL = 0,
+        QP_NOTINITIALISED = -1,
+        QP_EXCEED_MAX_ITER = 1,
+        QP_INFEASIBLE = -2,
+        QP_UNBOUNDED = -3
+    };
+
 
     enum QPType {
         LP = 1,/** solving a linear program*/

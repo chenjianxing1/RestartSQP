@@ -71,7 +71,7 @@ namespace SQPhotstart {
          * objective value of the qp problem
          */
 
-        bool GetObjective(double& qp_obj);
+        double GetObjective();
 
         /**
          * @brief This function initializes all objects will be used in this class.

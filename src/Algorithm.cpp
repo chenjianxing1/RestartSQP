@@ -50,8 +50,8 @@ namespace SQPhotstart {
 
             setupQP();
             //based on the information given by NLP reader otherwise, it will do nothing
-            myQP->solveQP(stats, options);//solve the QP subproblem and update the
-            // stats
+            myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+            qp_obj_ = myQP->GetObjective();
 
             //get the search direction from the solution of the QPsubproblem
             get_search_direction(myQP);
@@ -486,10 +486,9 @@ namespace SQPhotstart {
                         options->eps1+=(1-options->eps1)*0.1;
                         p_k_->copy_vector(sol_tmp);
                         rho_ = rho_trial;
-                        myQP->GetObjective(qp_obj_);//update the qp_obj
+                        qp_obj_ = myQP->GetObjective();//update the qp_obj
                     }
                     else{
-
                         stats->penalty_change_Fail_addone();
                     }
                 }

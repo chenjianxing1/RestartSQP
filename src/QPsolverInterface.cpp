@@ -39,6 +39,7 @@ namespace SQPhotstart {
     /**Default destructor*/
     qpOASESInterface::~qpOASESInterface() = default;
 
+
     /**
      * @brief This function solves the QP problem specified in the data, with given 
      * options.

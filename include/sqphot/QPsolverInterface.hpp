@@ -13,6 +13,7 @@
 #include <qpOASES.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>
+#include <sqphot/Types.hpp>
 //#include <sqphot/SQPDebug.hpp>
 
 
@@ -157,7 +158,24 @@ namespace SQPhotstart {
          *
          * @return the objective function value of the QP problem
          */
-        inline double get_obj_value();
+
+        double get_obj_value();
+
+        /**
+         * @brief get the final return status of the QP problem
+         */
+
+        inline QPReturnType get_status() {
+            qpOASES::QProblemStatus finalStatus = qp_->getStatus();
+            if (finalStatus == qpOASES::QPS_NOTINITIALISED)
+                return QP_NOTINITIALISED;
+            if (finalStatus == qpOASES::QPS_SOLVED)
+                return QP_OPTIMAL;
+            else if (qp_->isInfeasible())
+                return QP_INFEASIBLE;
+            else if (qp_->isUnbounded())
+                return QP_UNBOUNDED;
+        }
 
         //@{
         shared_ptr<Vector>& getLb();

@@ -39,7 +39,16 @@ before_install:
 - mkdir build && cd build && cmake -DIpopt=ON ..
 script:
 - make -j5
-- ../bin/Release/simple_test
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs001
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs002
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs003
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs004
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs005
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs006
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs007
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs008
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs009
+- ../bin/Release/simple_test ../test/CUTE_examples/HS/hs010
 - cd ../
 - ./get_code_cov.sh
 

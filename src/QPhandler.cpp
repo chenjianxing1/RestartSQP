@@ -252,12 +252,12 @@ namespace SQPhotstart {
     QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
                        shared_ptr<Options> options) {
         qp_interface_->optimizeQP(stats, options);
+        assert(qp_interface_->get_status()==OPTIMAL);
         return true;
     }
 
-    bool QPhandler::GetObjective(double& qp_obj){
-        qp_obj = qp_interface_->get_obj_value();
-        return true;
+    double QPhandler::GetObjective() {
+        return qp_interface_->get_obj_value();
     }
     
     /**
