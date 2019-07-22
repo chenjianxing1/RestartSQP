@@ -207,7 +207,15 @@ namespace SQPhotstart {
             setValueAt(i,std::max(rhs.values()[i],compared_const));
         return true;
     }
-    
-    
+
+    double Vector::times(Vector& rhs) {
+        double product = 0;
+        for(int i = 0; i<size_;i++){
+            product+=values_[i]*rhs.values()[i];
+        }
+        return product;
+    }
+
+
 }
 

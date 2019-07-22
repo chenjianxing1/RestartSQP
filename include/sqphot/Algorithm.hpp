@@ -146,7 +146,7 @@ namespace SQPhotstart {
          *
          */
 
-        virtual bool second_order_correction() { return false; };
+        virtual bool second_order_correction();
 
         /**
          *

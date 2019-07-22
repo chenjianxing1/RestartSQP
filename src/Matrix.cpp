@@ -13,10 +13,10 @@ namespace SQPhotstart {
         RowNum_ = RowNum;
         ColNum_ = ColNum;
         //do nothing unless any data is to be assigned
-        RowIndex_ = new int[nnz];
-        ColIndex_ = new int[nnz];
-        MatVal_ = new Number[nnz];
-        order_ = new int[nnz];
+        RowIndex_ = new int[nnz]();
+        ColIndex_ = new int[nnz]();
+        MatVal_ = new Number[nnz]();
+        order_ = new int[nnz]();
         //initialize the order to 0:N-1
         for (int i = 0; i < nnz; i++) {
             order_[i] = i;
@@ -33,6 +33,18 @@ namespace SQPhotstart {
     /**
      *@name print the sparse matrix in triplet form
      */
+    //@{
+    void SpTripletMat::print() const{
+        std::cout << "Row Column Entry Order" << std::endl;
+        for (int i = 0; i < EntryNum_; i++) {
+            std::cout << RowIndex_[i] << "    ";
+            std::cout << ColIndex_[i] << "    ";
+            std::cout << MatVal_[i] << "    ";
+            std::cout << order_[i] << std::endl;
+        }
+    }
+
+
     void SpTripletMat::print() {
         std::cout << "Row Column Entry Order" << std::endl;
         for (int i = 0; i < EntryNum_; i++) {
@@ -42,6 +54,8 @@ namespace SQPhotstart {
             std::cout << order_[i] << std::endl;
         }
     }
+    //@}
+
 
     /** free all memory*/
     bool SpTripletMat::freeMemory() {
@@ -198,7 +212,7 @@ namespace SQPhotstart {
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         for (int i = 0; i < rhs->EntryNum(); i++) {
             sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
-                    rhs->ColIndex()[i], counter));
+                                                        rhs->ColIndex()[i], counter));
             counter++;
         }
 
@@ -244,13 +258,69 @@ namespace SQPhotstart {
         return true;
     }
 
+
+    /**
+ * @brief setup the structure of the sparse matrix for solver qpOASES(should
+ * be called only for once).
+ *
+ * This method will convert the strucutre information from the triplet form from a
+ * SpMatrix object to the format required by the QPsolver qpOASES.
+ *
+ * @param rhs a SpMatrix object whose content will be copied to the class members
+ * (in a different sparse matrix representations)
+ * @param I_info the information of 2 identity sub matrices.
+ *
+ */
+    bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
+        assert(isinitialized_ == false);
+
+        int counter = 0; // the counter for recording the index location
+        std::vector<std::tuple<int, int, int>> sorted_index_info;
+        for (int i = 0; i < rhs->EntryNum(); i++) {
+            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
+                                                        rhs->ColIndex()[i], counter));
+            counter++;
+        }
+
+
+        assert(counter == EntryNum_);
+
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(), tuple_sort_rule);
+        //copy the order information back
+
+        for (int i = 0; i < EntryNum_; i++) {
+            RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
+            order_[i] = std::get<2>(sorted_index_info[i]);
+            if (i < EntryNum_ - 1) {
+                if (std::get<1>(sorted_index_info[i]) <
+                    std::get<1>(sorted_index_info[i + 1])) {
+                    ColIndex_[std::get<1>(sorted_index_info[i])] = i + 1;
+                }
+            }
+            int j = ColNum_;
+
+            while (j >= 1 && ColIndex_[j] == 0) {
+                ColIndex_[j] = EntryNum_;
+                if (ColIndex_[j - 1] == EntryNum_)
+                    break;
+                else
+                    j--;
+
+            }
+        }
+
+         sorted_index_info.clear();
+        return true;
+    }
+
+
     /**
      * @brief set the Matrix values to the matrix, convert from triplet format to
      * Harwell-Boeing Matrix format.
      * @param MatVal entry values(orders are not yet under permutation)
      * @param I_info the 2 identity matrices information
      */
-    bool qpOASESSparseMat::setMatVal(const double *MatVal, Identity2Info I_info) {
+    bool qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
         //adding the value to the matrix
         if (isinitialized_ == false) {
             for (int i = 0; i < I_info.size; i++) {

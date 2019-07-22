@@ -28,7 +28,8 @@ namespace SQPhotstart {
      * Get the optimal solution from the QPhandler_interface
      *
      *This is only an interface for user to avoid call interface directly.
-     * @param p_k       the pointer to an empty array with the length equal to the size of the QP subproblem
+     * @param p_k       the pointer to an empty array with the length equal to the size
+     * of the QP subproblem
      */
     bool QPhandler::GetOptimalSolution(double* p_k) {
         qp_interface_->get_optimal_solution(p_k);
@@ -204,10 +205,9 @@ namespace SQPhotstart {
      * @return
      */
     bool QPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
-        
-        qp_interface_->getH()->setStructure(hessian,I_info_H);
-        qp_interface_->getH()->setMatVal(hessian->MatVal(),I_info_H);
-        
+        qp_interface_->getH()->setStructure(hessian);
+        qp_interface_->getH()->setMatVal(hessian->MatVal());
+
         //        if(DEBUG){
         //
         //            std::cout<<"H is"<<std::endl;
