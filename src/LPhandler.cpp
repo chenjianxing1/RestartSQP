@@ -16,27 +16,27 @@ namespace SQPhotstart {
         //message for debugging purpose
         std::cout << "LP is created" << std::endl;
     }
-    
+
     /**
      *Default destructor
      */
     LPhandler::~LPhandler() {
         std::cout << "LP is destroyed" << std::endl;
     }
-    
+
     /**
      * Get the optimal solution from the LPhandler_interface
      *
      *This is only an interface for user to avoid call interface directly.
      * @param p_k       the pointer to an empty array with the length equal to the size of the QP subproblem
      */
-    bool LPhandler::GetOptimalSolution(double* p_k) {
+    bool LPhandler::GetOptimalSolution(double *p_k) {
         lp_interface_->get_optimal_solution(p_k);
-        
+
         //        print_("p_k", p_k,nlp_info_.nVar+2*nlp_info_.nCon);
         return true;
     }
-    
+
     /**
      *Get the multipliers from the LPhandler_interface
      *
@@ -44,12 +44,12 @@ namespace SQPhotstart {
      *
      * @param y_k       the pointer to an empty array with the length equal to the size of multipliers of the QP subproblem
      */
-    bool LPhandler::GetMultipliers(double* y_k) {
+    bool LPhandler::GetMultipliers(double *y_k) {
         lp_interface_->get_multipliers(y_k);
         return true;
     }
-    
-    
+
+
     /**
      * This function initializes all objects will be used in this class.
      * (Probably more functionality can be added to this)
@@ -67,10 +67,10 @@ namespace SQPhotstart {
         allocate(nlp_info, qptype);
         nlp_info_ = nlp_info;
         qptype_ = qptype;
-        
+
         return true;
     }
-    
+
     /**
      * Setup the bounds for the QP subproblems according to the information from current
      * iterate. We have
@@ -92,15 +92,17 @@ namespace SQPhotstart {
                                  shared_ptr<const Vector> c_k,
                                  shared_ptr<const Vector> c_l,
                                  shared_ptr<const Vector> c_u) {
-        
-        for(int i = 0 ; i<nlp_info_.nCon; i++){
-            lp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
-            lp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
+
+        for (int i = 0; i < nlp_info_.nCon; i++) {
+            lp_interface_->getLbA()->setValueAt(i, c_l->values()[i] - c_k->values()[i]);
+            lp_interface_->getUbA()->setValueAt(i, c_u->values()[i] - c_k->values()[i]);
         }
-        
+
         for (int i = 0; i < nlp_info_.nVar; i++) {
-            lp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
-            lp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
+            lp_interface_->getLb()->setValueAt(i, std::max(
+                    x_l->values()[i] - x_k->values()[i], -delta));
+            lp_interface_->getUb()->setValueAt(i, std::min(
+                    x_u->values()[i] - x_k->values()[i], delta));
         }
         /**
          * only set the upper bound for the last 2*nCon entries (those are slack variables).
@@ -110,8 +112,8 @@ namespace SQPhotstart {
             lp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
         return true;
     }
-    
-    
+
+
     /**
      * This function sets up the object vector g of the QP problem
      * The (2*nCon+nVar) vector g_^T in QP problem will be the same as
@@ -123,8 +125,8 @@ namespace SQPhotstart {
         lp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon * 2, rho);
         return true;
     }
-    
-    
+
+
     /**
      * This function updates the bounds on x if there is any changes to the values of trust-region radius
      *
@@ -137,30 +139,32 @@ namespace SQPhotstart {
                                   shared_ptr<const Vector> c_k,
                                   shared_ptr<const Vector> c_l,
                                   shared_ptr<const Vector> c_u) {
-        for(int i = 0 ; i<nlp_info_.nCon; i++){
-            lp_interface_->getLbA()->setValueAt(i,c_l->values()[i]-c_k->values()[i]);
-            lp_interface_->getUbA()->setValueAt(i,c_u->values()[i]-c_k->values()[i]);
+        for (int i = 0; i < nlp_info_.nCon; i++) {
+            lp_interface_->getLbA()->setValueAt(i, c_l->values()[i] - c_k->values()[i]);
+            lp_interface_->getUbA()->setValueAt(i, c_u->values()[i] - c_k->values()[i]);
         }
         for (int i = 0; i < nlp_info_.nVar; i++) {
-            lp_interface_->getLb()->setValueAt(i, std::max(x_l->values()[i] - x_k->values()[i], -delta));
-            lp_interface_->getUb()->setValueAt(i, std::min(x_u->values()[i] - x_k->values()[i], delta));
+            lp_interface_->getLb()->setValueAt(i, std::max(
+                    x_l->values()[i] - x_k->values()[i], -delta));
+            lp_interface_->getUb()->setValueAt(i, std::min(
+                    x_u->values()[i] - x_k->values()[i], delta));
         }
         return true;
     }
-    
+
     /**
      * This function updates the vector g in the QP subproblem when there are any change to the values of penalty parameter
      *
      * @param rho               penalty parameter
      * @param nVar              number of variables in NLP
      */
-    
+
     bool LPhandler::update_penalty(double rho) {
         lp_interface_->getG()->assign_n(nlp_info_.nVar + 1, nlp_info_.nCon * 2, rho);
         return true;
     }
-    
-    
+
+
     /**
      * This function updates the vector g in the QP subproblem when there are any change to the values of gradient in NLP
      *
@@ -170,8 +174,8 @@ namespace SQPhotstart {
         lp_interface_->getG()->assign(1, grad->Dim(), grad->values());
         return true;
     }
-    
-    
+
+
     /**
      * Set up the H for the first time in the QP
      * problem.
@@ -187,10 +191,10 @@ namespace SQPhotstart {
      * @return
      */
     bool LPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
-        
-        lp_interface_->getH()->setStructure(hessian,I_info_H);
-        lp_interface_->getH()->setMatVal(hessian->MatVal(),I_info_H);
-        
+
+        lp_interface_->getH()->setStructure(hessian, I_info_H);
+        lp_interface_->getH()->setMatVal(hessian->MatVal(), I_info_H);
+
         //        if(DEBUG){
         //
         //            std::cout<<"H is"<<std::endl;
@@ -199,27 +203,27 @@ namespace SQPhotstart {
         //        }
         return true;
     }
-    
+
     /**
      * This function sets up the matrix A in the QP subproblem
      * The matrix A in QP problem will be concatenate as [J I -I]
      * @param jacobian  the Matrix object for Jacobian from c(x)
      */
     bool LPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
-        
-        
+
+
         I_info_A.irow1 = 1;
         I_info_A.irow2 = 1;
-        I_info_A.jcol1 = nlp_info_.nVar+1;
-        I_info_A.jcol2 = nlp_info_.nVar+nlp_info_.nCon+1;
+        I_info_A.jcol1 = nlp_info_.nVar + 1;
+        I_info_A.jcol2 = nlp_info_.nVar + nlp_info_.nCon + 1;
         I_info_A.size = nlp_info_.nCon;
-        
-        lp_interface_->getA()->setStructure(jacobian,I_info_A);
-        lp_interface_->getA()->setMatVal(jacobian->MatVal(),I_info_A);
+
+        lp_interface_->getA()->setStructure(jacobian, I_info_A);
+        lp_interface_->getA()->setMatVal(jacobian->MatVal(), I_info_A);
 
         return true;
     }
-    
+
 
     /**
      *
@@ -233,8 +237,8 @@ namespace SQPhotstart {
         lp_obj_ = lp_interface_->get_obj_value();
         return true;
     }
-    
-    
+
+
     /**
      * This function initializes all class members which
      * will be used in _qp_interface
@@ -253,18 +257,19 @@ namespace SQPhotstart {
      *          it specifies which type of QP is going to
      *          be solved. It can be either LP, or QP, or SOC
      */
-    bool LPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-        lp_interface_ = make_shared<qpOASESInterface>(nlp_info,qptype);
+    bool
+    LPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
+        lp_interface_ = make_shared<qpOASESInterface>(nlp_info, qptype);
         return true;
     }
-    
+
     bool LPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
-        lp_interface_->getH()->setMatVal(Hessian->MatVal(),I_info_H);
+        lp_interface_->getH()->setMatVal(Hessian->MatVal(), I_info_H);
         return true;
     }
-    
+
     bool LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
-        lp_interface_->getA()->setMatVal(Jacobian->MatVal(),I_info_A);
+        lp_interface_->getA()->setMatVal(Jacobian->MatVal(), I_info_A);
         return true;
     }
 
@@ -275,17 +280,18 @@ namespace SQPhotstart {
      * @return
      */
     bool LPhandler::copy_QP_info(shared_ptr<const QPhandler> rhs) {
-	lp_interface_->getLbA()->copy_vector(rhs->getQpInterface()->getLbA());
-	lp_interface_->getLb()->copy_vector(rhs->getQpInterface()->getLb());
-	lp_interface_->getUb()->copy_vector(rhs->getQpInterface()->getUb());
-	lp_interface_->getUbA()->copy_vector(rhs->getQpInterface()->getUbA());
+        lp_interface_->getLbA()->copy_vector(rhs->getQpInterface()->getLbA());
+        lp_interface_->getLb()->copy_vector(rhs->getQpInterface()->getLb());
+        lp_interface_->getUb()->copy_vector(rhs->getQpInterface()->getUb());
+        lp_interface_->getUbA()->copy_vector(rhs->getQpInterface()->getUbA());
 
-	lp_interface_->getG()->assign(nlp_info_.nVar+1, 2*nlp_info_.nCon, rhs->getQpInterface()
-	->getG()->values()+nlp_info_.nVar);
+        lp_interface_->getG()->assign(nlp_info_.nVar + 1, 2 * nlp_info_.nCon,
+                                      rhs->getQpInterface()
+                                              ->getG()->values() + nlp_info_.nVar);
 
-	lp_interface_->getA()->copy(rhs->getQpInterface()->getA());
+        lp_interface_->getA()->copy(rhs->getQpInterface()->getA());
 
-	    return true;
+        return true;
     }
 
 
