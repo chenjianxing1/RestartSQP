@@ -70,7 +70,6 @@ namespace SQPhotstart {
         return true;
     }
 
-    //TODO: change the function name: set/.
     bool SpTripletMat::setMatValAt(int location, int value_to_assign) {
         MatVal_[location] = value_to_assign;
         return true;

@@ -112,15 +112,6 @@ namespace SQPhotstart {
         for (int i = 0; i < nlp_info_.nCon * 2; i++)
             qp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
 
-        //        if(DEBUG){
-        //            std::cout<<"the value of lb is"<<endl;
-        //        qp_interface_->getLb()->print();
-        //            divider();
-        //                        std::cout<<"the value of ub is"<<endl;
-        //        qp_interface_->getUb()->print();
-        //            divider();
-        //        }
-        //
         return true;
     }
 
@@ -135,9 +126,6 @@ namespace SQPhotstart {
     bool QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
         qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
         qp_interface_->getG()->assign_n(grad->Dim() + 1, nlp_info_.nCon * 2, rho);
-        //        std::cout<<"--------------------------"<<std::endl;
-        //        qp_interface_->getG()->print();
-        //        std::cout<<"--------------------------"<<std::endl;
         return true;
     }
 

@@ -50,20 +50,8 @@ namespace SQPhotstart {
          * @param p_k 	the pointer to an empty array with the length equal to the size
          * of the QP subproblem
          */
-        virtual bool GetOptimalSolution(double *p_k);
+        virtual bool GetOptimalSolution(double* p_k);
 
-
-        /**
-         *@brief Get the multipliers from the LPhandler_interface
-         *
-         * This is only an interface for user to avoid call
-         * interface directly.
-         *
-         * @param y_k 	the pointer to an empty array with
-         * the length equal to the size of multipliers of the QP
-         * subproblem
-         */
-        virtual bool GetMultipliers(double *y_k){return false;};
 
         /**
          * @brief This function initializes all objects will be used in this class.
@@ -92,12 +80,13 @@ namespace SQPhotstart {
          * @param c_l        the lower bounds for constraints
          * @param c_u        the upper bounds for constraints
          */
-         bool setup_bounds(double delta, shared_ptr<const Vector> x_k,
-                                  shared_ptr<const Vector> x_l,
-                                  shared_ptr<const Vector> x_u,
-                                  shared_ptr<const Vector> c_k,
-                                  shared_ptr<const Vector> c_l,
-                                  shared_ptr<const Vector> c_u) override;
+        bool setup_bounds(double delta,
+                          shared_ptr<const Vector> x_k,
+                          shared_ptr<const Vector> x_l,
+                          shared_ptr<const Vector> x_u,
+                          shared_ptr<const Vector> c_k,
+                          shared_ptr<const Vector> c_l,
+                          shared_ptr<const Vector> c_u) override;
 
 
         /**
@@ -111,7 +100,7 @@ namespace SQPhotstart {
 
         /** @brief setup the matrix A for the QP subproblems according to the
          * information from current iterate*/
-        bool setup_A(shared_ptr<const SpTripletMat> jacobian) override ;
+        bool setup_A(shared_ptr<const SpTripletMat> jacobian) override;
 
 
         /**
@@ -158,7 +147,7 @@ namespace SQPhotstart {
          * @param rho		penalty parameter
          * @param nVar 		number of variables in NLP
          */
-        bool update_penalty(double rho) override ;
+        bool update_penalty(double rho) override;
 
         /**
          * @brief This function updates the vector g in the
@@ -167,14 +156,14 @@ namespace SQPhotstart {
          *
          * @param grad		the gradient vector from NLP
          */
-        bool update_grad(shared_ptr<const Vector> grad) override ;
+        bool update_grad(shared_ptr<const Vector> grad) override;
 
 
         /**
          * @brief Update the Matrix H of the QP problems
          * when there is any change to the Jacobian to the constraints.
          */
-        bool update_A(shared_ptr<const SpTripletMat> Jacobian) override ;
+        bool update_A(shared_ptr<const SpTripletMat> Jacobian) override;
 
     private:
         /**
@@ -187,10 +176,10 @@ namespace SQPhotstart {
         virtual bool freeMemory() { return false; };
 
         /** Copy Constructor */
-        LPhandler(const LPhandler &);
+        LPhandler(const LPhandler&);
 
         /** Overloaded Equals Operator */
-        void operator=(const LPhandler &);
+        void operator=(const LPhandler&);
         //@}
 
         /**public class member*/

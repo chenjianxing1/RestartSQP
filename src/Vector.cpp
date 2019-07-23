@@ -31,7 +31,7 @@ namespace SQPhotstart {
     size_(vector_size),
     values_(NULL)
     {
-        values_ = new double[size_];
+        values_ = new double[size_]();
         std::copy(vector_value, vector_value+size_,values_);
     }
     
@@ -201,7 +201,7 @@ namespace SQPhotstart {
         rhs.print();
         if(size_==0){
             size_ = rhs.size_;
-            values_ = new double[size_];
+            values_ = new double[size_]();
         }
         for(int i=0; i<size_;i++)
             setValueAt(i,std::max(rhs.values()[i],compared_const));

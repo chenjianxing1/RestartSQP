@@ -85,6 +85,8 @@ namespace SQPhotstart {
         /**
          * Return private class members info
          */
+
+        //@{
         virtual shared_ptr<Vector>& getLb() = 0;
 
         virtual shared_ptr<Vector>& getUb() = 0;
@@ -94,7 +96,7 @@ namespace SQPhotstart {
         virtual shared_ptr<Vector>& getUbA() = 0;
 
         virtual shared_ptr<Vector>& getG() = 0;
-
+        //@}
 
     private:
 
@@ -124,13 +126,12 @@ namespace SQPhotstart {
         qpOASESInterface(Index_info nlp_index_info,
                          QPType qptype);    //number of constraints in the QP problem
 
+
         bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
 
         /**
-         * @brief
-         * @param stats
-         * @param options
-         * @return
+         * @brief optimize the LP problem whose objective and constraints are defined
+         * in the class members.
          */
 
         bool optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
@@ -143,7 +144,7 @@ namespace SQPhotstart {
          *
          */
 
-        inline bool get_optimal_solution(double* p_k);
+        bool get_optimal_solution(double* p_k) override;
 
         /**
          * @brief copy the multipliers of the QP to the input pointer
@@ -151,7 +152,7 @@ namespace SQPhotstart {
          * @param y_k   a pointer to an array with allocated memory equals to
          * sizeof(double)*(num_variable+num_constraint)
          */
-        inline bool get_multipliers(double* y_k);
+        bool get_multipliers(double* y_k) override;
 
         /**
          *@brief get the objective value from the QP solvers
@@ -159,38 +160,29 @@ namespace SQPhotstart {
          * @return the objective function value of the QP problem
          */
 
-        double get_obj_value();
+        double get_obj_value() override;
 
         /**
          * @brief get the final return status of the QP problem
          */
 
-        inline QPReturnType get_status() {
-            qpOASES::QProblemStatus finalStatus = qp_->getStatus();
-            if (finalStatus == qpOASES::QPS_NOTINITIALISED)
-                return QP_NOTINITIALISED;
-            if (finalStatus == qpOASES::QPS_SOLVED)
-                return QP_OPTIMAL;
-            else if (qp_->isInfeasible())
-                return QP_INFEASIBLE;
-            else if (qp_->isUnbounded())
-                return QP_UNBOUNDED;
-        }
+        inline QPReturnType get_status();
 
         //@{
-        shared_ptr<Vector>& getLb();
+        shared_ptr<Vector>& getLb() override;
 
-        shared_ptr<Vector>& getUb();
+        shared_ptr<Vector>& getUb() override;
+
+        shared_ptr<Vector>& getLbA() override;
+
+        shared_ptr<Vector>& getUbA() override;
+
+        shared_ptr<Vector>& getG() override;
 
         shared_ptr<qpOASESSparseMat>& getH();
 
         shared_ptr<qpOASESSparseMat>& getA();
 
-        shared_ptr<Vector>& getLbA();
-
-        shared_ptr<Vector>& getUbA();
-
-        shared_ptr<Vector>& getG();
         //@}
 
     public:
@@ -227,7 +219,6 @@ namespace SQPhotstart {
          * @brief Allocate memory for the class members
          * @param nlp_index_info  the struct that stores simple nlp dimension info
          * @param qptype is the problem to be solved QP or LP or SOC?
-         * @return
          */
         bool allocate(Index_info nlp_index_info, QPType qptype);
 

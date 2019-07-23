@@ -53,7 +53,7 @@ namespace SQPhotstart {
         virtual bool GetOptimalSolution(double* p_k);
 
 
-        /**
+        virtual /**
          *@brief Get the multipliers from the QPhandler_interface
          *
          * This is only an interface for user to avoid call
@@ -103,7 +103,8 @@ namespace SQPhotstart {
          * @param c_l        the lower bounds for constraints
          * @param c_u        the upper bounds for constraints
          */
-        virtual bool setup_bounds(double delta, shared_ptr<const Vector> x_k,
+        virtual bool setup_bounds(double delta,
+                                  shared_ptr<const Vector> x_k,
                                   shared_ptr<const Vector> x_l,
                                   shared_ptr<const Vector> x_u,
                                   shared_ptr<const Vector> c_k,

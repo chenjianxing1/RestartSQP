@@ -51,8 +51,6 @@ namespace SQPhotstart {
     typedef double Number;
     /** Type of all indices of vectors, matrices etc */
     typedef int Index;
-    /** Type of default integer */
-    typedef int Int;
 
     typedef struct {
         Index nCon;

@@ -5,7 +5,7 @@
  * Date:2019-06
  */
 #include <sqphot/Algorithm.hpp>
-#include <sqphot/Utils.hpp>
+
 
 namespace SQPhotstart {
 
@@ -152,8 +152,8 @@ namespace SQPhotstart {
 
     /**
      * @brief alloocate memory for class members.
-     * This function initializes all the shared pointer which will be used in the 
-     * Algorithm::Optimize, and it copies all parameters that might be changed during 
+     * This function initializes all the shared pointer which will be used in the
+     * Algorithm::Optimize, and it copies all parameters that might be changed during
      * the run of the function Algorithm::Optimize.
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
@@ -362,15 +362,15 @@ namespace SQPhotstart {
 
     /**
      * @brief Update the trust region radius.
-     * 
-     * This function update the trust-region radius when the ratio calculated by the 
-     * ratio test is smaller than eta_c or bigger than eta_e and the search_direction 
-     * hits the trust-region bounds. 
-     * If ratio<eta_c, the trust region radius will decrease by the parameter 
+     *
+     * This function update the trust-region radius when the ratio calculated by the
+     * ratio test is smaller than eta_c or bigger than eta_e and the search_direction
+     * hits the trust-region bounds.
+     * If ratio<eta_c, the trust region radius will decrease by the parameter
      * gamma_c, to be gamma_c* delta_
-     * If ratio_test> eta_e and delta_= norm_p_k_ the trust-region radius will be 
+     * If ratio_test> eta_e and delta_= norm_p_k_ the trust-region radius will be
      * increased by the parameter gamma_c.
-     * 
+     *
      * If trust region radius has changed, the corresponding flags will be set to be
      * true;
      */
@@ -395,15 +395,15 @@ namespace SQPhotstart {
      *
      * @brief This function checks how each constraint specified by the nlp readers are
      * bounded.
-     * If there is only upper bounds for a constraint, c_i(x)<=c^i_u, then 
+     * If there is only upper bounds for a constraint, c_i(x)<=c^i_u, then
      * cons_type_[i]= BOUNDED_ABOVE
-     * If there is only lower bounds for a constraint, c_i(x)>=c^i_l, then 
+     * If there is only lower bounds for a constraint, c_i(x)>=c^i_l, then
      * cons_type_[i]= BOUNDED_BELOW
-     * If there are both upper bounds and lower bounds, c^i_l<=c_i(x)<=c^i_u, and 
+     * If there are both upper bounds and lower bounds, c^i_l<=c_i(x)<=c^i_u, and
      * c^i_l<c^i_u then cons_type_[i]= BOUNDED,
-     * If there is no constraints on all 
+     * If there is no constraints on all
      * of c_i(x), then cons_type_[i]= UNBOUNDED;
-     * 
+     *
      * The same rules are also applied to the bound-constraints.
      */
 
@@ -499,7 +499,7 @@ namespace SQPhotstart {
      */
     bool Algorithm::setDefaultOption() {
         roptions = new Ipopt::RegisteredOptions();
-        roptions->SetRegisteringCategory("rust-region");
+        roptions->SetRegisteringCategory("trust-region");
         roptions->AddNumberOption("eta_c", "trust-region parameter for the ratio test.",
                                   0.25,
                                   "If ratio<=eta_c, then the trust-region radius for the next "
@@ -529,12 +529,31 @@ namespace SQPhotstart {
         roptions->SetRegisteringCategory("Penalty Update");
         roptions->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
         roptions->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
-        roptions->AddNumberOption("print_level_penalty_update", "print level for penalty "
-                                                                "update",
-                                  0);
+        roptions->AddNumberOption("print_level_penalty_update",
+                                  "print level for penalty update", 0);
+        roptions->AddNumberOption("rho_max", "maximum value of penalty parameter", 1.0e6);
+        roptions->AddNumberOption("increase_parm",
+                                  "the number which will be use for scaling the new "
+                                  "penalty parameter", 10);
+        roptions->AddIntegerOption("penalty_iter_max",
+                                   "maximum number of penalty paramter update allowed in a "
+                                   "single iteration in the main algorithm", 10);
+        roptions->AddIntegerOption("penalty_iter_max_total",
+                                   "maximum number of penalty paramter update allowed "
+                                   "in total", 100);
 
         roptions->SetRegisteringCategory("Optimality Test");
-
+        roptions->AddIntegerOption("testOption_NLP", "Level of Optimality test for "
+                                                     "NLP", 0);
+        roptions->AddStringOption2("auto_gen_tol",
+                                   "Tell the algorithm to automatically"
+                                   "generate the tolerance level for optimality test "
+                                   "based on information from NLP",
+                                   "no",
+                                   "no", "will use user-defined values of tolerance for"
+                                         " the optimality test",
+                                   "yes", "will automatically generate the tolerance "
+                                          "level for the optimality test");
         roptions->AddNumberOption("opt_tol", "", 1.0e-5);
         roptions->AddNumberOption("opt_compl_tol", "", 1.0e-6);
         roptions->AddNumberOption("opt_dual_fea_tol", " ", 1.0e-6);
@@ -542,8 +561,8 @@ namespace SQPhotstart {
         roptions->AddNumberOption("opt_second_tol", " ", 1.0e-8);
 
         roptions->SetRegisteringCategory("General");
-        roptions->AddNumberOption("iter_max", "maximum number of iteration for the "
-                                              "algorithm", 10);
+        roptions->AddNumberOption("iter_max",
+                                  "maximum number of iteration for the algorithm", 10);
         roptions->AddNumberOption("print_level", "print level for main algorithm", 2);
         roptions->AddStringOption2(
                 "second_order_correction",
@@ -555,10 +574,19 @@ namespace SQPhotstart {
                 "");
 
         roptions->SetRegisteringCategory("QPsolver");
+        roptions->AddIntegerOption("testOption_QP",
+                                   "Level of Optimality test for QP", -99);
         roptions->AddNumberOption("iter_max_qp", "maximum number of iteration for the "
-                                                 "QP solver in solving each QP", 10);
+                                                 "QP solver in solving each QP", 100);
         roptions->AddNumberOption("print_level_qp", "print level for QP solver", 0);
 
+
+        roptions->SetRegisteringCategory("LPsolver");
+        roptions->AddIntegerOption("testOption_LP",
+                                   "Level of Optimality test for LP", -99);
+        roptions->AddNumberOption("iter_max_lp", "maximum number of iteration for the "
+                                                 "LP solver in solving each LP", 100);
+        roptions->AddNumberOption("print_level_lp", "print level for LP solver", 0);
 
         return true;
     }

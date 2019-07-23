@@ -8,18 +8,20 @@
 #define SQPHOTSTART_OPTIONS_HPP
 
 #include <string>
-namespace SQPhotstart{
-    class Options{
+#include <sqphot/OptTest.hpp>
+
+namespace SQPhotstart {
+    class Options {
     public:
         /**Default Constructor */
         Options();
-        
+
         /**Destructor**/
         ~Options();
-        
+
         /** Sets all options to the default values */
         int setToDefault();
-        
+
     public:
         /** Public Member Variables*/
 
@@ -50,6 +52,8 @@ namespace SQPhotstart{
 
         /** optimality test parameters */
         //@{
+        TestOption testOption_NLP;
+        bool auto_gen_tol = false;
         double opt_tol;
         double opt_compl_tol;
         double opt_dual_fea_tol;
@@ -59,7 +63,7 @@ namespace SQPhotstart{
 
         /**QPsolver options */
         //@{
-
+        TestOption testOption_QP;
         int qp_maxiter;
         int lp_maxiter;
         int qpPrintLevel;
@@ -74,7 +78,7 @@ namespace SQPhotstart{
         double rho;
         double increase_parm;
         int rho_max;
-        int penalty_iter_max ;
+        int penalty_iter_max;
 
         //int update_method
         //double decrease_parm;

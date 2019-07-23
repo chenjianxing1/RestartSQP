@@ -30,7 +30,7 @@ namespace SQPhotstart {
      *This is only an interface for user to avoid call interface directly.
      * @param p_k       the pointer to an empty array with the length equal to the size of the QP subproblem
      */
-    bool LPhandler::GetOptimalSolution(double *p_k) {
+    bool LPhandler::GetOptimalSolution(double* p_k) {
         lp_interface_->get_optimal_solution(p_k);
 
         //        print_("p_k", p_k,nlp_info_.nVar+2*nlp_info_.nCon);
@@ -75,7 +75,8 @@ namespace SQPhotstart {
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    bool LPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
+    bool LPhandler::setup_bounds(double delta,
+                                 shared_ptr<const Vector> x_k,
                                  shared_ptr<const Vector> x_l,
                                  shared_ptr<const Vector> x_u,
                                  shared_ptr<const Vector> c_k,
@@ -101,7 +102,6 @@ namespace SQPhotstart {
             lp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
         return true;
     }
-
 
 
     /**
@@ -251,7 +251,7 @@ namespace SQPhotstart {
      * @param rho       Penalty Parameter
      */
     bool LPhandler::setup_g(double rho) {
-        lp_interface_->getG()->assign_n(nlp_info_.nVar+ 1, nlp_info_.nCon * 2, rho);
+        lp_interface_->getG()->assign_n(nlp_info_.nVar + 1, nlp_info_.nCon * 2, rho);
         return true;
     }
 

@@ -57,21 +57,51 @@ namespace SQPhotstart {
                                                              A_->ColIndex(),
                                                              A_->MatVal());
         H_qpOASES_->createDiagInfo();
-        qpOASES::int_t nWSR = options->qp_maxiter;//TODO modify it
-        if (!firstQPsolved) {//if haven't solve any QP before then initialize the
-            //  first qp
+
+        qpOASES::int_t nWSR = options->qp_maxiter;
+
+        if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
             qpOASES::Options qp_options;
-            if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
-                qp_options.printLevel = qpOASES::PL_NONE;
+
+            //setup the printlevel of qpOASES
+            switch (options->qpPrintLevel) {
+                case 0:
+                    qp_options.printLevel = qpOASES::PL_NONE;
+                    break;
+                case 1:
+                    qp_options.printLevel = qpOASES::PL_TABULAR;
+                    break;
+                case 2:
+                    qp_options.printLevel = qpOASES::PL_LOW;
+                    break;
+                case 3:
+                    qp_options.printLevel = qpOASES::PL_MEDIUM;
+                    break;
+                case 4:
+                    qp_options.printLevel = qpOASES::PL_HIGH;
+                    break;
+                case -2:
+                    qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
+                    break;
+            }
+
+
             qp_->setOptions(qp_options);
+
             qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
             if (qp_->isSolved())
                 firstQPsolved = true;
+            else {
+                //THROW EXCEPTION
+            }
         } else
             qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                           lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                           nWSR, 0);
+        if (!qp_->isSolved()) {
+            //THROW EXCEPTION
+        }
         stats->qp_iter_addValue((int) nWSR);
         return true;
     }
@@ -89,13 +119,34 @@ namespace SQPhotstart {
         if (!firstQPsolved) {//if haven't solve any QP before then initialize the
             //  first qp
             qpOASES::Options qp_options;
-            if (options->qpPrintLevel == 0)//else use the default print level in qpOASES
-                qp_options.printLevel = qpOASES::PL_NONE;
+            //setup the printlevel of qpOASES
+            switch (options->qpPrintLevel) {
+                case 0:
+                    qp_options.printLevel = qpOASES::PL_NONE;
+                    break;
+                case 1:
+                    qp_options.printLevel = qpOASES::PL_TABULAR;
+                    break;
+                case 2:
+                    qp_options.printLevel = qpOASES::PL_LOW;
+                    break;
+                case 3:
+                    qp_options.printLevel = qpOASES::PL_MEDIUM;
+                    break;
+                case 4:
+                    qp_options.printLevel = qpOASES::PL_HIGH;
+                    break;
+                case -2:
+                    qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
+                    break;
+            }
+
             qp_->setOptions(qp_options);
             qp_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
             if (qp_->isSolved())
                 firstQPsolved = true;
+
         } else
             qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
                           lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
@@ -112,7 +163,7 @@ namespace SQPhotstart {
     * @param y_k   a pointer to an array with allocated memory equals to
     * sizeof(double)*(num_variable+num_constraint)
     */
-    bool qpOASESInterface::get_multipliers(double* y_k) {
+    inline bool qpOASESInterface::get_multipliers(double* y_k) {
         qp_->getDualSolution(y_k);
         return true;
     }
@@ -124,7 +175,7 @@ namespace SQPhotstart {
      * sizeof(double)*number_variables
      *
      */
-    bool qpOASESInterface::get_optimal_solution(double* p_k) {
+    inline bool qpOASESInterface::get_optimal_solution(double* p_k) {
         qp_->getPrimalSolution(p_k);
         return true;
     }
@@ -136,10 +187,10 @@ namespace SQPhotstart {
      * @return the objective function value of the QP problem
      */
 
-    double qpOASESInterface::get_obj_value() {
+
+    inline double qpOASESInterface::get_obj_value() {
         return (double) (qp_->getObjVal());
     }
-
 
     /** Getters, extract private member information*/
     //@{
@@ -169,6 +220,18 @@ namespace SQPhotstart {
 
     shared_ptr<qpOASESSparseMat>& qpOASESInterface::getA() {
         return A_;
+    }
+
+    QPReturnType qpOASESInterface::get_status() {
+        qpOASES::QProblemStatus finalStatus = qp_->getStatus();
+        if (finalStatus == qpOASES::QPS_NOTINITIALISED)
+            return QP_NOTINITIALISED;
+        if (finalStatus == qpOASES::QPS_SOLVED)
+            return QP_OPTIMAL;
+        else if (qp_->isInfeasible())
+            return QP_INFEASIBLE;
+        else if (qp_->isUnbounded())
+            return QP_UNBOUNDED;
     }
     //@}
 

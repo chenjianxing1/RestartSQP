@@ -22,7 +22,6 @@
 #include <sqphot/Matrix.hpp>
 
 
-
 namespace SQPhotstart {
     /**
      *
@@ -98,7 +97,8 @@ namespace SQPhotstart {
         /**
          * @brief This is the function that checks if the current point is optimal, and
          * decides if to exit the loop or not
-         * *@return if it decides the function is optimal, the class member _exitflag =
+         *
+         * If it decides the function is optimal, the class member _exitflag =
          * OPTIMAL
          * if it decides that there is an error during the function run or the
          *  function cannot be solved, it will assign _exitflag the	corresponding

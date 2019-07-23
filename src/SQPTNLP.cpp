@@ -14,7 +14,7 @@ namespace SQPhotstart {
         Ipopt::TNLP::IndexStyleEnum index_style;
         nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                            nlp_info_.nnz_h_lag, index_style);
-        //assert(index_style == Ipopt::TNLP::C_STYLE);
+//        assert(index_style == Ipopt::TNLP::C_STYLE);
     }
 
 
@@ -123,8 +123,9 @@ namespace SQPhotstart {
     SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
                           shared_ptr<SpTripletMat> Hessian) {
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nVar,
-                lambda->values(), true,
-                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), Hessian->MatVal());
+                     lambda->values(), true,
+                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(),
+                     Hessian->MatVal());
         return true;
     }
 
