@@ -67,11 +67,11 @@ namespace SQPhotstart {
 
     };
 
-    class NlP_OptTest : public OptTest {
+    class NLP_OptTest : public OptTest {
     public:
-        NlP_OptTest() = default;
+        NLP_OptTest() = default;
 
-        virtual ~NlP_OptTest() = default;
+        virtual ~NLP_OptTest() = default;
 
         /**
          * @brief Test the KKT conditions
@@ -115,10 +115,10 @@ namespace SQPhotstart {
     private:
         //@{
         /** Copy Constructor */
-        NlP_OptTest(const NLP_OptTest&);
+        NLP_OptTest(const NLP_OptTest&);
 
         /** Overloaded Equals Operator */
-        void operator=(const NlP_OptTest&);
+        void operator=(const NLP_OptTest&);
         //@}
     };
 
@@ -162,11 +162,11 @@ namespace SQPhotstart {
 
 
     public:
-        bool primal_feasibility_;
-        bool dual_feasibility_;
-        bool complementarity_;
-        bool Stationarity_;
-        bool Second_order_opt_;
+        bool primal_feasibility_ = false;
+        bool dual_feasibility_ = false;
+        bool complementarity_ = false;
+        bool Stationarity_ = false;
+        bool Second_order_opt_ = false;
 
     private:
         //@{
