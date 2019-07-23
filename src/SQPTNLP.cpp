@@ -36,7 +36,6 @@ namespace SQPhotstart {
 
     /*
      * @name Get the starting point from the NLP object.
-     * TODO: add options to enable user to choose if to use default input or not
      */
     bool
     SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0) {
@@ -113,7 +112,6 @@ namespace SQPhotstart {
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar,
                      lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
-
         return true;
     }
 
@@ -127,7 +125,6 @@ namespace SQPhotstart {
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nVar,
                 lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), Hessian->MatVal());
-
         return true;
     }
 

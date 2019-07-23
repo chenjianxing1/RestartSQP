@@ -42,59 +42,59 @@ namespace SQPhotstart {
         /** Main iteration */
         while (stats->iter < options->iter_max) {
 
-        setupQP();
-        //based on the information given by NLP reader otherwise, it will do nothing
-        myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
-        qp_obj_ = myQP->GetObjective();
+            setupQP();
+            //based on the information given by NLP reader otherwise, it will do nothing
+            myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+            qp_obj_ = myQP->GetObjective();
 
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction(myQP);
+            //get the search direction from the solution of the QPsubproblem
+            get_search_direction(myQP);
 
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
+            //calculate the infinity norm of the search direction
+            norm_p_k_ = p_k_->getInfNorm();
 
-        //Update the penalty parameter if necessary
-        penalty_update();
+            //Update the penalty parameter if necessary
+            penalty_update();
 
-        // Calculate the the trial points, x_trial = x_k+p_k
-        x_trial_->copy_vector(x_k_->values());
-        x_trial_->add_vector(p_k_->values());
+            // Calculate the the trial points, x_trial = x_k+p_k
+            x_trial_->copy_vector(x_k_->values());
+            x_trial_->add_vector(p_k_->values());
 
-        // Calculate f_trial, c_trial and infea_measure_trial for the trial points
-        // x_trial
-        nlp_->Eval_f(x_trial_, obj_value_trial_);
-        nlp_->Eval_constraints(x_trial_, c_trial_);
+            // Calculate f_trial, c_trial and infea_measure_trial for the trial points
+            // x_trial
+            nlp_->Eval_f(x_trial_, obj_value_trial_);
+            nlp_->Eval_constraints(x_trial_, c_trial_);
 
-        infea_cal(true);
+            infea_cal(true);
 
 //                        std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
 //                        std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
 
-        ratio_test();
+            ratio_test();
 
-        // Calculate the second-order-correction steps
+            // Calculate the second-order-correction steps
 //            second_order_correction();
 
-        // Update the radius and the QP bounds if the radius has been changed
-        stats->iter_addone();
+            // Update the radius and the QP bounds if the radius has been changed
+            stats->iter_addone();
 
-        /* output some information to the console*/
+            /* output some information to the console*/
 
-        if (options->printLevel > 0) {
-            if (stats->iter % 10 == 0)log->print_header();
-            log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
-                                 delta_, rho_);
+            if (options->printLevel > 0) {
+                if (stats->iter % 10 == 0)log->print_header();
+                log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
+                                     delta_, rho_);
+            }
+            radius_update();
+
+            //check if the current iterates is optimal and decide to
+            //exit the loop or not
+            termination_check();
+
+            if (exitflag_ != UNKNOWN) {
+                break;
+            }
         }
-        radius_update();
-
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        termination_check();
-
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-    }
         // print the final summary message to the console
 //        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_,
 //                         infea_measure_, exitflag_);
@@ -296,9 +296,9 @@ namespace SQPhotstart {
                 myQP->update_H(hessian_);
                 QPinfoFlag_.Update_H = false;
             }
-            if (QPinfoFlag_.Update_bounds) {
-                myQP->update_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
-                QPinfoFlag_.Update_bounds = false;
+            if (QPinfoFlag_.Update_constraints) {
+                myQP->update_constraints(delta_, x_l_, x_u_, c_k_, c_l_, c_u_, x_k_);
+                QPinfoFlag_.Update_constraints = false;
             }
 
             if (QPinfoFlag_.Update_penalty) {
@@ -378,14 +378,14 @@ namespace SQPhotstart {
     bool Algorithm::radius_update() {
         if (actual_reduction_ < options->eta_c * pred_reduction_) {
             delta_ = options->gamma_c * delta_;
-            QPinfoFlag_.Update_bounds = true;
+            QPinfoFlag_.Update_constraints = true;
             //decrease the trust region radius. gamma_c is the parameter in options object
         } else {
             if (actual_reduction_ > options->
                     eta_e * pred_reduction_
                 && options->tol > (delta_ - norm_p_k_)) {
                 delta_ = std::min(options->gamma_e * delta_, options->delta_max);
-                QPinfoFlag_.Update_bounds = true;
+                QPinfoFlag_.Update_constraints = true;
             }
         }
         return true;
@@ -578,17 +578,6 @@ namespace SQPhotstart {
         return false;
     }
 
-    const SmartPtr<RegisteredOptions>& Algorithm::getRoptions() const {
-        return roptions;
-    }
-
-    const SmartPtr<OptionsList>& Algorithm::getRoptions2() const {
-        return roptions2;
-    }
-
-    const SmartPtr<Journalist>& Algorithm::getJnlst() const {
-        return jnlst;
-    }
 
     bool Algorithm::second_order_correction() {
         if (!isaccept_ && options->second_order_correction) {
@@ -602,7 +591,7 @@ namespace SQPhotstart {
             Htimesp->add_vector(grad_f_->values());
             myQP->update_grad(Htimesp);
 
-            myQP->update_bounds(delta_, x_trial_, x_l_, x_u_, c_trial_, c_l_, c_u_);
+            myQP->update_constraints(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
             myQP->solveQP(stats, options);
             auto tmp_sol = new double[nVar_ + 2 * nCon_];
             myQP->GetOptimalSolution(tmp_sol);

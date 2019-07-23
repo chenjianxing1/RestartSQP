@@ -110,12 +110,13 @@ namespace SQPhotstart {
      * @param delta      trust region radius
      * @param nVar               number of variables in NLP
      */
-    bool LPhandler::update_bounds(double delta, shared_ptr<const Vector> x_k,
-                                  shared_ptr<const Vector> x_l,
+    bool
+    LPhandler::update_constraints(double delta, shared_ptr<const Vector> x_l,
                                   shared_ptr<const Vector> x_u,
                                   shared_ptr<const Vector> c_k,
                                   shared_ptr<const Vector> c_l,
-                                  shared_ptr<const Vector> c_u) {
+                                  shared_ptr<const Vector> c_u,
+                                  shared_ptr<const Vector> x_k) {
         for (int i = 0; i < nlp_info_.nCon; i++) {
             lp_interface_->getLbA()->setValueAt(i, c_l->values()[i] - c_k->values()[i]);
             lp_interface_->getUbA()->setValueAt(i, c_u->values()[i] - c_k->values()[i]);

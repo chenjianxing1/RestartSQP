@@ -141,12 +141,11 @@ namespace SQPhotstart {
          * @param delta 	 trust region radius
          * @param nVar 		 number of variables in NLP
          */
-        virtual bool update_bounds(double delta, shared_ptr<const Vector> x_k,
-                                   shared_ptr<const Vector> x_l,
-                                   shared_ptr<const Vector> x_u,
-                                   shared_ptr<const Vector> c_k,
-                                   shared_ptr<const Vector> c_l,
-                                   shared_ptr<const Vector> c_u); //the trust region radius
+        virtual bool
+        update_constraints(double delta, shared_ptr<const Vector> x_l,
+                           shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_k,
+                           shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                           shared_ptr<const Vector> x_k); //the trust region radius
 
 
 

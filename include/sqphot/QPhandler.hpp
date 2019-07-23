@@ -88,7 +88,7 @@ namespace SQPhotstart {
          * 		it specifies which type of QP is going to be solved. It can be either
          * 		QP, or SOC
          */
-         virtual bool init(Index_info nlp_info, QPType qptype);
+        virtual bool init(Index_info nlp_info, QPType qptype);
 
         /**
          *
@@ -151,18 +151,16 @@ namespace SQPhotstart {
 
 
         /**
-         * @brief This function updates the bounds on x if there is any changes to the
-	     * values of trust-region
-         * radius
-         */
-        virtual bool update_bounds(double delta, shared_ptr<const Vector> x_k,
-                                   shared_ptr<const Vector> x_l,
-                                   shared_ptr<const Vector> x_u,
-                                   shared_ptr<const Vector> c_k,
-                                   shared_ptr<const Vector> c_l,
-                                   shared_ptr<const Vector> c_u);
-
-
+        * @brief This function updates the bounds on x if there is any changes to the
+        * values of trust-region or the iterate
+        */
+        virtual bool update_constraints(double delta,
+                                        shared_ptr<const Vector> x_l,
+                                        shared_ptr<const Vector> x_u,
+                                        shared_ptr<const Vector> c_k,
+                                        shared_ptr<const Vector> c_l,
+                                        shared_ptr<const Vector> c_u,
+                                        shared_ptr<const Vector> x_k);
 
 
         /**

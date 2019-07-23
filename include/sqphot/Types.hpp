@@ -67,7 +67,7 @@ namespace SQPhotstart {
         bool Update_H = false;
         bool Update_penalty = false;
         bool Update_grad = false;
-        bool Update_bounds = false;
+        bool Update_constraints = false;
     } UpdateFlags;
 
 }

@@ -57,7 +57,6 @@ namespace SQPhotstart {
                                                              A_->ColIndex(),
                                                              A_->MatVal());
         H_qpOASES_->createDiagInfo();
-
         qpOASES::int_t nWSR = options->qp_maxiter;//TODO modify it
         if (!firstQPsolved) {//if haven't solve any QP before then initialize the
             //  first qp
@@ -77,13 +76,6 @@ namespace SQPhotstart {
         return true;
     }
 
-    /**
-     * @brief
-     *
-     * @param stats
-     * @param options
-     * @return
-     */
     bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
     options) {
 
@@ -149,7 +141,7 @@ namespace SQPhotstart {
     }
 
 
-    /** Extract private member information*/
+    /** Getters, extract private member information*/
     //@{
     shared_ptr<Vector>& qpOASESInterface::getLb() {
         return lb_;

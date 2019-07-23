@@ -9,6 +9,7 @@
 
 #include <coin/IpTNLP.hpp>
 #include <coin/IpRegOptions.hpp>
+#include <coin/IpOptionsList.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Options.hpp>
@@ -18,15 +19,14 @@
 #include <sqphot/Log.hpp>
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Vector.hpp>
-
 #include <sqphot/Matrix.hpp>
-#include <coin/IpOptionsList.hpp>
+
 
 
 namespace SQPhotstart {
     /**
      *
-     * This is the class with method solve a NLP problem by using SQP(SL1QP)
+     * @brief This is the class with method solve a NLP problem by using SQP(SL1QP)
      *
      *It can solve a problem in the following format
      *
@@ -52,22 +52,16 @@ namespace SQPhotstart {
         /** temporarily use Ipopt options*/
         //@{
         //
-        const SmartPtr<RegisteredOptions>& getRoptions() const;
 
-        const SmartPtr<OptionsList>& getRoptions2() const;
-
-        const SmartPtr<Journalist>& getJnlst() const;
-
-
-        virtual SmartPtr<RegisteredOptions> getRoptions(){
+        virtual SmartPtr<RegisteredOptions> getRoptions() {
             return roptions;
         }
 
-        virtual SmartPtr<OptionsList> getRoptions2(){
+        virtual SmartPtr<OptionsList> getRoptions2() {
             return roptions2;
         }
 
-        virtual SmartPtr<Journalist> getJnlst(){
+        virtual SmartPtr<Journalist> getJnlst() {
             return jnlst;
         }
         //@}
@@ -312,12 +306,11 @@ namespace SQPhotstart {
                                           * unbounded*/
         shared_ptr<Options> options;/**< the default options used for now. */
         Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
- *                                                        it will replace options in
- *                                                        the future*/
+                                                             it will replace options in
+                                                             the future*/
         Ipopt::SmartPtr<Ipopt::OptionsList> roptions2;
         Ipopt::SmartPtr<Ipopt::Journalist> jnlst;
 
-    private:
         shared_ptr<Stats> stats;
         shared_ptr<QPhandler> myQP;
         shared_ptr<LPhandler> myLP;
