@@ -8,7 +8,7 @@
 #define SQPHOTSTART_OPTIONS_HPP
 
 #include <string>
-#include <sqphot/OptTest.hpp>
+#include <sqphot/Types.hpp>
 
 namespace SQPhotstart {
     class Options {

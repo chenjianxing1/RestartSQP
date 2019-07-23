@@ -554,9 +554,9 @@ namespace SQPhotstart {
                                          " the optimality test",
                                    "yes", "will automatically generate the tolerance "
                                           "level for the optimality test");
-        roptions->AddNumberOption("opt_tol", "", 1.0e-5);
-        roptions->AddNumberOption("opt_compl_tol", "", 1.0e-6);
-        roptions->AddNumberOption("opt_dual_fea_tol", " ", 1.0e-6);
+        roptions->AddNumberOption("opt_tol_", "", 1.0e-5);
+        roptions->AddNumberOption("opt_compl_tol_", "", 1.0e-6);
+        roptions->AddNumberOption("opt_dual_fea_tol_", " ", 1.0e-6);
         roptions->AddNumberOption("opt_prim_fea_tol", " ", 1.0e-5);
         roptions->AddNumberOption("opt_second_tol", " ", 1.0e-8);
 

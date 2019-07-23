@@ -10,6 +10,18 @@
 /* Declaration of all non-built in types (except for classes) */
 namespace SQPhotstart {
 
+
+    enum TestOption {
+        NO_TEST = -99,
+        TEST_1ST_ORDER = 1,
+        TEST_2ND_ORDER = 2,
+        TEST_STATIONARITY = -1,
+        TEST_COMPLEMENTARITY = -2,
+        TEST_FEASIBILITY = -3,
+        TEST_DUAL_FEASIBILITY = -4,
+        TEST_ALL = 0
+    };
+
     enum QPReturnType{
         QP_OPTIMAL = 0,
         QP_NOTINITIALISED = -1,

@@ -8,22 +8,12 @@
 #include <sqphot/Types.hpp>
 #include <coin/IpTNLP.hpp>
 #include "Vector.hpp"
+#include "Options.hpp"
 
 #ifndef _SQPHOTSTART_OPTTEST_HPP
 #define _SQPHOTSTART_OPTTEST_HPP
 
 namespace SQPhotstart {
-
-    enum TestOption {
-        NO_TEST = -99,
-        TEST_1ST_ORDER = 1,
-        TEST_2ND_ORDER = 2,
-        TEST_STATIONARITY = -1,
-        TEST_COMPLEMENTARITY = -2,
-        TEST_FEASIBILITY = -3,
-        TEST_DUAL_FEASIBILITY = -4,
-        TEST_ALL = 0
-    };
 
     /**
      * @brief This is a pure virtual base class for Optimality Test
@@ -95,7 +85,13 @@ namespace SQPhotstart {
     class NLP_OptTest : public OptTest {
     public:
 
-        NLP_OptTest(Ipopt::SmartPtr<Ipopt::TNLP> nlp, shared_ptr<Vector> x_k);
+        NLP_OptTest(shared_ptr<SQPhotstart::Options> options) {
+            opt_tol_ = options->opt_tol;
+            opt_compl_tol_ = options->opt_compl_tol;
+            opt_dual_fea_tol_ = options->opt_dual_fea_tol;
+            opt_prim_fea_tol_ = options->opt_prim_fea_tol;
+            opt_second_tol_ = options->opt_second_tol;
+        }
 
         NLP_OptTest() = default;
 
@@ -114,7 +110,13 @@ namespace SQPhotstart {
         /**
          * @brief Check the Feasibility conditions;
          */
-        bool Check_Feasibility() override;
+        bool Check_Feasibility();
+
+
+        bool Check_Feasibility(double infea_measure) {
+            if (infea_measure < opt_prim_fea_tol_)
+                primal_feasibility_ = true;
+        }
 
         /**
          * @brief Check the sign of the multipliers
@@ -132,7 +134,6 @@ namespace SQPhotstart {
          */
         bool Check_Stationarity() override;
 
-
         /** Public class members*/
     public:
         bool primal_feasibility_ = false;
@@ -149,6 +150,12 @@ namespace SQPhotstart {
         /** Overloaded Equals Operator */
         void operator=(const NLP_OptTest&);
         //@}
+    private:
+        double opt_tol_;
+        double opt_compl_tol_;
+        double opt_dual_fea_tol_;
+        double opt_prim_fea_tol_;
+        double opt_second_tol_;
     };
 
 

@@ -7,6 +7,7 @@
 
 #include <sqphot/OptTest.hpp>
 #include <coin/IpTNLP.hpp>
+#include <sqphot/Options.hpp>
 #include <sqphot/Vector.hpp>
 
 namespace SQPhotstart {
@@ -25,6 +26,7 @@ namespace SQPhotstart {
     }
 
     bool NLP_OptTest::Check_Feasibility() {
+
         return true;
     }
 
@@ -35,7 +37,7 @@ namespace SQPhotstart {
 
 
     bool NLP_OptTest::Check_SecondOrder() {
-        if (complementarity_ && dual_feasibility_ && stationarity_&&
+        if (complementarity_ && dual_feasibility_ && stationarity_ &&
             primal_feasibility_) {
             //Check the 2nd order condition
         } else {
@@ -88,5 +90,6 @@ namespace SQPhotstart {
     bool QP_OptTest::Check_Stationarity() {
         return true;
     }
+
 
 }
