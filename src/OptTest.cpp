@@ -120,21 +120,17 @@ namespace SQPhotstart {
         for (int i = 0; i < nCon_; i++) {
 
             if (cons_type_[i] == BOUNDED_ABOVE) {
-                if (std::abs(c_u_->values()[i] - c_k_->values()[i]) <
-                    active_set_tol_)
+                if (std::abs(c_u_->values()[i] - c_k_->values()[i]) < active_set_tol_)
                     // consider adding another tolerance for identifying active set...
                     Active_Set_constraints_[i] = 1;
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
-                    active_set_tol_) {
+                if (std::abs(c_k_->values()[i] - c_l_->values()[i]) < active_set_tol_) {
                     // consider adding another tolerance for identifying active set...
                     Active_Set_constraints_[i] = -1;
                 }
             } else if (cons_type_[i] == EQUAL) {
-                if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) <
-                     active_set_tol_) &&
-                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
-                     active_set_tol_))
+                if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) < active_set_tol_) &&
+                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) < active_set_tol_))
                     Active_Set_constraints_[i] = 99;
                 else {
                     //TODO: Print out warning message
@@ -145,20 +141,16 @@ namespace SQPhotstart {
 
         for (int i = 0; i < nVar_; i++) {
             if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-                if (std::abs(x_u_->values()[i] - x_k_->values()[i]) <
-                    active_set_tol_)
+                if (std::abs(x_u_->values()[i] - x_k_->values()[i]) < active_set_tol_)
                     // consider adding another tolerance for identifying active set...
                     Active_Set_bounds_[i] = 1;
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
-                    active_set_tol_)
+                if (std::abs(x_k_->values()[i] - x_l_->values()[i]) < active_set_tol_)
                     // consider adding another tolerance for identifying active set...
                     Active_Set_bounds_[i] = -1;
             } else if (cons_type_[i] == EQUAL) {
-                if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) <
-                     active_set_tol_) &&
-                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
-                     active_set_tol_))
+                if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) < active_set_tol_) &&
+                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) < active_set_tol_))
                     Active_Set_bounds_[i] = 99;
                 else {
                     //TODO: Print out warning message
