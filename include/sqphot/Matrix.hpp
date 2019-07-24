@@ -23,10 +23,10 @@ namespace SQPhotstart {
 
     public:
         /** Default constructor*/
-        Matrix(){};
+        Matrix() {};
 
         /** Default destructor*/
-        virtual ~Matrix(){};
+        virtual ~Matrix() {};
 
         virtual void print() = 0;
 
@@ -55,12 +55,19 @@ namespace SQPhotstart {
     class SpTripletMat : public Matrix {
     public:
 
+        /** constructor/destructor */
+        //@{
+
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
+        SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric);
+
         SpTripletMat(int nnz, int RowNum, int ColNum);
 
-        /** Default destructor */
-        virtual ~SpTripletMat();
 
+        /** Default destructor */
+        ~SpTripletMat() override ;
+
+        //@}
         /**
          * @brief allocate the data to the class members
          *
@@ -70,14 +77,14 @@ namespace SQPhotstart {
          *
          */
 
-        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal);
+        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal){return false;}
 
         /**
          *@brief print the sparse matrix in triplet form
          */
         void print() const;
 
-        void print() override ;
+        void print() override;
 
         /**
          * @brief Times a matrix with a vector p, the pointer to the matrix-vector
@@ -133,6 +140,8 @@ namespace SQPhotstart {
 
         inline const int* order() const { return order_; }
 
+        bool isSymmetric() const;
+
         inline bool setOrderAt(int location, int order_to_assign);
 
         inline bool setMatValAt(int location, int value_to_assign);
@@ -143,6 +152,10 @@ namespace SQPhotstart {
 
         /** Default constructor */
         SpTripletMat();
+
+
+    private:
+
         /** free all memory*/
         bool freeMemory();
 
@@ -162,6 +175,8 @@ namespace SQPhotstart {
         int ColNum_;    /**< the number columns of a matrix */
         int RowNum_;    /**< the number of rows of a matrix */
         int EntryNum_;  /**< number of non-zero entries in  matrix */
+        bool isSymmetric_;
+
     };
 
     /**
@@ -172,6 +187,8 @@ namespace SQPhotstart {
 
     public:
         /** constructor/destructor */
+        /**Default constructor*/
+        qpOASESSparseMat(int RowNum, int ColNum, bool isSymmetric);
 
         //@{
         /**
@@ -181,6 +198,8 @@ namespace SQPhotstart {
          * @param ColNum the number of columns
          */
         qpOASESSparseMat(int nnz, int RowNum, int ColNum);
+
+        bool isSymmetric() const;
 
         /**
          * @brief Default destructor
@@ -197,7 +216,8 @@ namespace SQPhotstart {
          */
         virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
 
-        virtual bool setMatVal(const double* MatVal){ return  false;};
+        virtual bool setMatVal(std::shared_ptr<const SpTripletMat> rhs);
+
         /**
          * @brief setup the structure of the sparse matrix for solver qpOASES(should
          * be called only for once).
@@ -231,7 +251,6 @@ namespace SQPhotstart {
 
         /** Extract class member information*/
         //@{
-        inline int EntryNum() { return EntryNum_; }
 
         inline int EntryNum() const { return EntryNum_; }
 
@@ -261,8 +280,6 @@ namespace SQPhotstart {
         /**Private methods*/
     private:
 
-        /**Default constructor*/
-        qpOASESSparseMat();
 
 
         /** free all memory*/
@@ -300,8 +317,8 @@ namespace SQPhotstart {
         int RowNum_;
         int ColNum_;
         int EntryNum_;
-        bool isinitialized_;
-
+        bool isInitialised_;
+        bool isSymmetric_;
     };
 
 

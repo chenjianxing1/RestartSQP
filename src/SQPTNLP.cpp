@@ -23,7 +23,7 @@ namespace SQPhotstart {
     }
 
     /**
-     *@name get the bounds information from the NLP object
+     *@brief get the bounds information from the NLP object
      */
     bool SQPTNLP::Get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
                                   shared_ptr<Vector> c_l, shared_ptr<Vector> c_u) {
@@ -35,7 +35,7 @@ namespace SQPhotstart {
     }
 
     /*
-     * @name Get the starting point from the NLP object.
+     * @brief Get the starting point from the NLP object.
      */
     bool
     SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0) {
@@ -47,7 +47,7 @@ namespace SQPhotstart {
     }
 
     /**
-     *@name Evaluate the objective value
+     *@brief Evaluate the objective value
      */
     bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, Number& obj_value) {
         nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
@@ -55,7 +55,7 @@ namespace SQPhotstart {
     }
 
     /**
-     * @name Evaluate the constraints at point x
+     * @brief Evaluate the constraints at point x
      *
      */
     bool SQPTNLP::Eval_constraints(shared_ptr<const Vector> x,
@@ -66,7 +66,7 @@ namespace SQPhotstart {
     }
 
     /**
-     *@name Evaluate gradient at point x
+     *@brief Evaluate gradient at point x
      */
     bool SQPTNLP::Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradient) {
         nlp_->eval_grad_f(nlp_info_.nVar, x->values(), true, gradient->values());
@@ -74,7 +74,8 @@ namespace SQPhotstart {
     }
 
     /**
-     *@name Evaluate Jacobian at point x
+     * @brief Get the matrix structure of the Jacobian
+     * Always call this before the first time using @Eval_Jacobian
      */
 
     bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x,
@@ -85,26 +86,21 @@ namespace SQPhotstart {
         return true;
     }
 
-
     /**
-     *@name
-     *@param x
-     *@param Jacobian
+     *@brief Evaluate Jacobian at point x
      */
+
     bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x,
                                 shared_ptr<SpTripletMat> Jacobian) {
         nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
                          nlp_info_.nnz_jac_g,
-                         Jacobian->RowIndex(), Jacobian->ColIndex(), Jacobian->MatVal());
+                         NULL, NULL, Jacobian->MatVal());
         return true;
     }
 
     /**
-     *
-     * @param x
-     * @param lambda
-       * @param Hessian
-     * @return
+     * @brief Get the structure of the Hessian
+     * Always call this before the first time using @Eval_Hessian
      */
     bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
                                         shared_ptr<const Vector> lambda,
@@ -112,25 +108,26 @@ namespace SQPhotstart {
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar,
                      lambda->values(), true,
                      nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
+
         return true;
     }
 
 
     /**
-     *@name Evaluate Hessian of Lagragian function at  (x, lambda)
+     *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
      */
     bool
     SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
                           shared_ptr<SpTripletMat> Hessian) {
         nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nVar,
                      lambda->values(), true,
-                     nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(),
-                     Hessian->MatVal());
+                     nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
+//        Hessian->print();
         return true;
     }
 
     /**
-     * @name This function shifts the initial starting point to be feasible to the bound constraints
+     * @brief This function shifts the initial starting point to be feasible to the bound constraints
      * @param x initial starting point
      * @param x_l lower bound constraints
      * @param x_u upper bound constraints

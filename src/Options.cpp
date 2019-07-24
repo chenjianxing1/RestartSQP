@@ -17,7 +17,7 @@ namespace SQPhotstart {
 
 
     int Options::setToDefault() {
-        iter_max = 10;
+        iter_max = 100;
         printLevel = 2;
         qpPrintLevel = 0;       //does not print anything
         QPsolverChoice = "qpOASES";
@@ -39,7 +39,7 @@ namespace SQPhotstart {
         opt_second_tol = 1.0e-8;
         tol = 1.0e-8;
         penalty_update_tol = 1.0e-8;
-        rho = 100;
+        rho = 1;
         qp_maxiter = 1000;
         //penalty_tol = 1.0e-8;
         increase_parm = 2;

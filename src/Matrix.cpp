@@ -8,7 +8,29 @@ namespace SQPhotstart {
             RowIndex_(NULL),
             ColIndex_(NULL),
             MatVal_(NULL),
-            order_(NULL) {
+            order_(NULL),
+            isSymmetric_(false) {
+        EntryNum_ = nnz;
+        RowNum_ = RowNum;
+        ColNum_ = ColNum;
+        //do nothing unless any data is to be assigned
+        RowIndex_ = new int[nnz]();
+        ColIndex_ = new int[nnz]();
+        MatVal_ = new Number[nnz]();
+        order_ = new int[nnz]();
+        //initialize the order to 0:N-1
+        for (int i = 0; i < nnz; i++) {
+            order_[i] = i;
+        }
+
+    }
+
+    SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric) :
+            RowIndex_(NULL),
+            ColIndex_(NULL),
+            MatVal_(NULL),
+            order_(NULL),
+            isSymmetric_(isSymmetric) {
         EntryNum_ = nnz;
         RowNum_ = RowNum;
         ColNum_ = ColNum;
@@ -34,7 +56,7 @@ namespace SQPhotstart {
      *@name print the sparse matrix in triplet form
      */
     //@{
-    void SpTripletMat::print() const{
+    void SpTripletMat::print() const {
         std::cout << "Row Column Entry Order" << std::endl;
         for (int i = 0; i < EntryNum_; i++) {
             std::cout << RowIndex_[i] << "    ";
@@ -128,6 +150,10 @@ namespace SQPhotstart {
 
     }
 
+    bool SpTripletMat::isSymmetric() const {
+        return isSymmetric_;
+    }
+
     /**
      * qpOASESSparseMatrix
      */
@@ -158,14 +184,22 @@ namespace SQPhotstart {
 
     }
 
-    /**
-     *Default destructor
-     */
-    qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
+    /** Default constructor*/
+    qpOASESSparseMat::qpOASESSparseMat(int RowNum, int ColNum, bool
+    isSymmetric) :
+            RowIndex_(NULL),
+            ColIndex_(NULL),
+            MatVal_(NULL),
+            order_(NULL),
+            EntryNum_(-1),
+            isInitialised_(false),
+            RowNum_(RowNum),
+            ColNum_(ColNum),
+            isSymmetric_(isSymmetric) {
+        ColIndex_ = new qpOASES::int_t[ColNum + 1]();
+    }
 
     /**
-     * @brief A constructor
-     *
      *@brief A constructor with the number of non-zero entries, row number and column
      * number specified.
      *
@@ -177,8 +211,9 @@ namespace SQPhotstart {
             RowIndex_(NULL),
             ColIndex_(NULL),
             MatVal_(NULL),
-            order_(NULL) {
-        isinitialized_ = false;
+            order_(NULL),
+            isSymmetric_(false),
+            isInitialised_(false) {
         EntryNum_ = nnz;
         RowNum_ = RowNum;
         ColNum_ = ColNum;
@@ -190,6 +225,12 @@ namespace SQPhotstart {
             order_[i] = i;
 
     }
+
+    /**
+     *Default destructor
+     */
+    qpOASESSparseMat::~qpOASESSparseMat() { freeMemory(); }
+
 
     /**
      * @brief setup the structure of the sparse matrix for solver qpOASES(should
@@ -205,8 +246,7 @@ namespace SQPhotstart {
      */
     bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                                         Identity2Info I_info) {
-        assert(isinitialized_ == false);
-
+        assert(isInitialised_ == false);
         int counter = 0; // the counter for recording the index location
         std::vector<std::tuple<int, int, int>> sorted_index_info;
         for (int i = 0; i < rhs->EntryNum(); i++) {
@@ -221,7 +261,8 @@ namespace SQPhotstart {
                 sorted_index_info.push_back(
                         std::make_tuple(I_info.irow1 + j, I_info.jcol1 + j, counter));
                 sorted_index_info.push_back(
-                        std::make_tuple(I_info.irow2 + j, I_info.jcol2 + j, counter + 1));
+                        std::make_tuple(I_info.irow2 + j, I_info.jcol2 + j,
+                                        counter + 1));
                 counter += 2;
             }
 
@@ -229,7 +270,8 @@ namespace SQPhotstart {
 
         assert(counter == EntryNum_);
 
-        std::sort(sorted_index_info.begin(), sorted_index_info.end(), tuple_sort_rule);
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule);
         //copy the order information back
 
         for (int i = 0; i < EntryNum_; i++) {
@@ -271,20 +313,36 @@ namespace SQPhotstart {
  *
  */
     bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
-        assert(isinitialized_ == false);
-
+        assert(isInitialised_ == false);
         int counter = 0; // the counter for recording the index location
         std::vector<std::tuple<int, int, int>> sorted_index_info;
-        for (int i = 0; i < rhs->EntryNum(); i++) {
-            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
-                                                        rhs->ColIndex()[i], counter));
-            counter++;
+        if (isSymmetric_) {
+            for (int i = 0; i < rhs->EntryNum(); i++) {
+
+                sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
+                                                            rhs->ColIndex()[i],
+                                                            counter));
+                counter++;
+                if (rhs->RowIndex()[i] != rhs->ColIndex()[i]) {
+                    sorted_index_info.push_back(std::make_tuple(rhs->ColIndex()[i],
+                                                                rhs->RowIndex()[i],
+                                                                counter));
+                    counter++;
+                }
+
+            }
+//            std::cout << "EntryNum is " << EntryNum_;
+            if (EntryNum_ == -1) {
+                EntryNum_ = counter;
+                RowIndex_ = new qpOASES::sparse_int_t[counter]();
+                MatVal_ = new double[counter]();
+                order_ = new int[counter]();
+            }
         }
-
-
         assert(counter == EntryNum_);
 
-        std::sort(sorted_index_info.begin(), sorted_index_info.end(), tuple_sort_rule);
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule);
         //copy the order information back
 
         for (int i = 0; i < EntryNum_; i++) {
@@ -308,26 +366,27 @@ namespace SQPhotstart {
             }
         }
 
-         sorted_index_info.clear();
+        sorted_index_info.clear();
+//        print();
         return true;
     }
 
 
-    /**
-     * @brief set the Matrix values to the matrix, convert from triplet format to
-     * Harwell-Boeing Matrix format.
-     * @param MatVal entry values(orders are not yet under permutation)
-     * @param I_info the 2 identity matrices information
-     */
+/**
+ * @brief set the Matrix values to the matrix, convert from triplet format to
+ * Harwell-Boeing Matrix format.
+ * @param MatVal entry values(orders are not yet under permutation)
+ * @param I_info the 2 identity matrices information
+ */
     bool qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
         //adding the value to the matrix
-        if (isinitialized_ == false) {
+        if (isInitialised_ == false) {
             for (int i = 0; i < I_info.size; i++) {
                 MatVal_[order()[EntryNum_ - i - 1]] = -1;
                 MatVal_[order()[EntryNum_ - i - I_info.size - 1]] = 1;
             }
 
-            isinitialized_ = true;
+            isInitialised_ = true;
         }
 
         //assign each matrix entry to the corresponding
@@ -338,9 +397,24 @@ namespace SQPhotstart {
         return true;
     }
 
+    bool qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
+        int j = 0;
+//        rhs->print();
+        for (int i = 0; i < rhs->EntryNum(); i++) {
+            MatVal_[order()[j]] = rhs->MatVal()[i];
+            j++;
+            if (isSymmetric_&&(rhs->ColIndex()[i]!=rhs->RowIndex()[i])) {
+                MatVal_[order()[j]] = rhs->MatVal()[i];
+                j++;
+            }
+        }
+//        print();
+        return true;
+    }
+
     /**
-     * Free all memory allocated
-     */
+ * Free all memory allocated
+ */
     bool qpOASESSparseMat::freeMemory() {
         delete[] ColIndex_;
         ColIndex_ = NULL;
@@ -354,7 +428,7 @@ namespace SQPhotstart {
     }
 
     bool qpOASESSparseMat::copy(std::shared_ptr<const qpOASESSparseMat> rhs) {
-        assert(isinitialized_ == rhs->isIsinitialized());
+        assert(isInitialised_ == rhs->isIsinitialized());
         assert(EntryNum_ == rhs->EntryNum());
         assert(RowNum_ == rhs->RowNum());
         assert(ColNum_ == rhs->ColNum());
@@ -371,7 +445,11 @@ namespace SQPhotstart {
     }
 
     bool qpOASESSparseMat::isIsinitialized() const {
-        return isinitialized_;
+        return isInitialised_;
+    }
+
+    bool qpOASESSparseMat::isSymmetric() const {
+        return isSymmetric_;
     }
 
 }//END_OF_NAMESPACE

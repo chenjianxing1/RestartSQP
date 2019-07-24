@@ -85,13 +85,8 @@ namespace SQPhotstart {
     class NLP_OptTest : public OptTest {
     public:
 
-        NLP_OptTest(shared_ptr<SQPhotstart::Options> options) {
-            opt_tol_ = options->opt_tol;
-            opt_compl_tol_ = options->opt_compl_tol;
-            opt_dual_fea_tol_ = options->opt_dual_fea_tol;
-            opt_prim_fea_tol_ = options->opt_prim_fea_tol;
-            opt_second_tol_ = options->opt_second_tol;
-        }
+
+        NLP_OptTest(shared_ptr<SQPhotstart::Options> options, Index_info nlp_index_info);
 
         NLP_OptTest() = default;
 
@@ -113,16 +108,16 @@ namespace SQPhotstart {
         bool Check_Feasibility();
 
 
-        bool Check_Feasibility(double infea_measure) {
-            if (infea_measure < opt_prim_fea_tol_)
-                primal_feasibility_ = true;
-        }
+        bool Check_Feasibility(double infea_measure);
 
         /**
          * @brief Check the sign of the multipliers
          */
         bool Check_Dual_Feasibility() override;
 
+
+        bool
+        Check_Dual_Feasibility(const double* multiplier, ConstraintType nlp_cons_type);
         /**
          * @brief Check the complementarity condition
          *
@@ -156,6 +151,9 @@ namespace SQPhotstart {
         double opt_dual_fea_tol_;
         double opt_prim_fea_tol_;
         double opt_second_tol_;
+        int nVar_; /**< number of variables of NLP*/
+        int nCon_; /**< number of constraints of NLP*/
+
     };
 
 
@@ -207,9 +205,12 @@ namespace SQPhotstart {
         bool dual_feasibility_ = false;
         bool complementarity_ = false;
         bool stationarity_ = false;
-        bool second_order_opt = false;
+        bool second_order_opt_ = false;
+
+
 
     private:
+
         //@{
         /** Copy Constructor */
         QP_OptTest(const QP_OptTest&);

@@ -23,15 +23,15 @@ namespace SQPhotstart {
      *
      */
     class SQPTNLP {
-        
+
     public:
-        
+
         /** @brief constructor that copies nlp to _nlp as a local data reader*/
         SQPTNLP(SmartPtr<Ipopt::TNLP> nlp);
-        
+
         /** Default destructor*/
         virtual ~SQPTNLP();
-        
+
         /**
          *@brief get the bounds information from the NLP object
          */
@@ -39,82 +39,87 @@ namespace SQPhotstart {
                                      shared_ptr<Vector> x_u,
                                      shared_ptr<Vector> c_l,
                                      shared_ptr<Vector> c_u);
-        
+
         /*
          * @brief Get the starting point from the NLP object.
          * TODO: add options to enable user to choose if to use default input or not
          */
-        virtual bool Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0);
-        
+        virtual bool
+        Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0);
+
         /**
          *@brief Evaluate the objective value
          */
-        virtual bool Eval_f(shared_ptr<const Vector> x, Number &obj_value);
-        
+        virtual bool Eval_f(shared_ptr<const Vector> x, Number& obj_value);
+
         /**
          * @brief Evaluate the constraints at point x
          *
          */
-        virtual bool Eval_constraints(shared_ptr<const Vector> x, shared_ptr<Vector> constraints);
-        
+        virtual bool
+        Eval_constraints(shared_ptr<const Vector> x, shared_ptr<Vector> constraints);
+
         /**
          *@brief Evaluate gradient at point x
          */
-        virtual bool Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradient);
-        
+        virtual bool
+        Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradient);
+
         /**
          * @brief Get the matrix structure of the Jacobian
          * Always call this before the first time using @Eval_Jacobian
          */
-        virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
-        
+        virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x,
+                                            shared_ptr<SpTripletMat> Jacobian);
+
         /**
          *@brief Evaluate Jacobian at point x
          */
-        virtual bool Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
-        
-        
+        virtual bool
+        Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
+
+
         /**
-         * @brief
-         * @param x the
-         * @param Jacobian
-         * @return
+         * @brief Get the structure of the Hessian
+         * Always call this before the first time using @Eval_Hessian
          */
-        virtual bool Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
-                                           shared_ptr<SpTripletMat> Hessian);
-        
+        virtual bool
+        Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
+                              shared_ptr<SpTripletMat> Hessian);
+
         /**
          *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
          */
         virtual bool
-        Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda, shared_ptr<SpTripletMat> Hessian);
-        
+        Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
+                     shared_ptr<SpTripletMat> Hessian);
+
         /**
-         * @brief
-         * @param x
-         * @param x_l
-         * @param x_u
-         * @return
+         * @brief This function shifts the initial starting point to be feasible to the bound constraints
+         * @param x initial starting point
+         * @param x_l lower bound constraints
+         * @param x_u upper bound constraints
          */
         virtual bool
-        shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u);
-        
+        shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l,
+                             shared_ptr<const Vector> x_u);
+
     public:
         Index_info nlp_info_; /**< the struct record the number of variables, number of
                                constraints, number of nonzeoro entry of Hessian and that of Jacobian
                                Please check Types.hpp for details*/
         SmartPtr<Ipopt::TNLP> nlp_;/**< a local nlp reader */
-        
+
     private:
         /** Default constructor*/
         SQPTNLP();
-        
-        
+
+
         /** Copy Constructor */
-        SQPTNLP(const SQPTNLP &);
-        
+        SQPTNLP(const SQPTNLP&);
+
         /** Overloaded Equals Operator */
-        void operator=(const SQPTNLP &);
+        void operator=(const SQPTNLP&);
         //@}
     };
 }

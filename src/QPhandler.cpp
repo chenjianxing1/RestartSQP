@@ -193,7 +193,7 @@ namespace SQPhotstart {
      */
     bool QPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
         qp_interface_->getH()->setStructure(hessian);
-        qp_interface_->getH()->setMatVal(hessian->MatVal());
+        qp_interface_->getH()->setMatVal(hessian);
 
         return true;
     }
@@ -256,7 +256,7 @@ namespace SQPhotstart {
     }
 
     bool QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
-        qp_interface_->getH()->setMatVal(Hessian->MatVal(), I_info_H);
+        qp_interface_->getH()->setMatVal(Hessian);
         return true;
     }
 

@@ -17,9 +17,9 @@ namespace SQPhotstart {
         g_ = make_shared<Vector>(nVar_QP);
         A_ = make_shared<qpOASESSparseMat>(
                 nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
+
         if (qptype != LP) {
-            H_ = make_shared<qpOASESSparseMat>(nlp_index_info.nnz_h_lag, nVar_QP,
-                                               nVar_QP);
+            H_ = make_shared<qpOASESSparseMat>(nVar_QP, nVar_QP, true);
         }
         //FIXME: the qpOASES does not accept any extra input
         qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
@@ -56,8 +56,8 @@ namespace SQPhotstart {
                                                              A_->RowIndex(),
                                                              A_->ColIndex(),
                                                              A_->MatVal());
-        H_qpOASES_->createDiagInfo();
 
+        H_qpOASES_->createDiagInfo();
         qpOASES::int_t nWSR = options->qp_maxiter;
 
         if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
