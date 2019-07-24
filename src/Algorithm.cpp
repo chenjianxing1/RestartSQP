@@ -175,7 +175,7 @@ namespace SQPhotstart {
         c_l_ = make_shared<Vector>(nCon_);
         c_u_ = make_shared<Vector>(nCon_);
         grad_f_ = make_shared<Vector>(nVar_);
-        jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
+        jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_, false);
         hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_, true);
         options = make_shared<Options>();
         stats = make_shared<Stats>();

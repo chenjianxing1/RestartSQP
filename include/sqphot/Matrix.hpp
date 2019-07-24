@@ -28,7 +28,7 @@ namespace SQPhotstart {
         /** Default destructor*/
         virtual ~Matrix() {};
 
-        virtual void print() = 0;
+        virtual void print() const = 0;
 
     };
 
@@ -57,17 +57,14 @@ namespace SQPhotstart {
 
         /** constructor/destructor */
         //@{
-
         /** Constructor for an empty Sparse Matrix with N non-zero entries*/
-        SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric);
-
-        SpTripletMat(int nnz, int RowNum, int ColNum);
+        SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false);
 
 
-        /** Default destructor */
-        ~SpTripletMat() override ;
-
+        /** Default destructor*/
+        ~SpTripletMat() override;
         //@}
+
         /**
          * @brief allocate the data to the class members
          *
@@ -77,14 +74,13 @@ namespace SQPhotstart {
          *
          */
 
-        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal){return false;}
+        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) { return false; }
 
         /**
          *@brief print the sparse matrix in triplet form
          */
-        void print() const;
+        void print() const override ;
 
-        void print() override;
 
         /**
          * @brief Times a matrix with a vector p, the pointer to the matrix-vector
@@ -149,12 +145,9 @@ namespace SQPhotstart {
 
         /** Private Method */
     private:
+        /** Default constructor*/
 
-        /** Default constructor */
         SpTripletMat();
-
-
-    private:
 
         /** free all memory*/
         bool freeMemory();
@@ -175,22 +168,26 @@ namespace SQPhotstart {
         int ColNum_;    /**< the number columns of a matrix */
         int RowNum_;    /**< the number of rows of a matrix */
         int EntryNum_;  /**< number of non-zero entries in  matrix */
-        bool isSymmetric_;
+        bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal data
+                             * will only be stored for once*/
 
     };
 
     /**
-     *
-     *
+     *@brief This is a derived class of Matrix.
+     * It strored matrix in Harwell-Boeing format which is required by qpOASES.
+     * It contains method to transform matrix format from Triplet form to
+     * Harwell-Boeing format and then stored to its class members
      */
     class qpOASESSparseMat : public Matrix {
 
     public:
         /** constructor/destructor */
+        //@{
+
         /**Default constructor*/
         qpOASESSparseMat(int RowNum, int ColNum, bool isSymmetric);
 
-        //@{
         /**
          * @brief A constructor
          * @param nnz the number of nonzero entries
@@ -199,7 +196,6 @@ namespace SQPhotstart {
          */
         qpOASESSparseMat(int nnz, int RowNum, int ColNum);
 
-        bool isSymmetric() const;
 
         /**
          * @brief Default destructor
@@ -240,7 +236,7 @@ namespace SQPhotstart {
         /**
          * @brief print the matrix information
          */
-        void print() override;
+        void print() const override;
 
 
         /**
@@ -274,13 +270,16 @@ namespace SQPhotstart {
 
         inline const int* order() const { return order_; }
 
-        bool isIsinitialized() const;
+        inline bool isSymmetric() const { return isSymmetric_; };
+
+        inline bool isIsinitialized() const { return isInitialised_; };
         //@}
 
         /**Private methods*/
     private:
 
-
+        /**Default constructor*/
+        qpOASESSparseMat();
 
         /** free all memory*/
         bool freeMemory();

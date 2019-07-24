@@ -4,26 +4,6 @@ namespace SQPhotstart {
 
     /** Constructor for an empty matrix with N non-zero
      * entries*/
-    SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum) :
-            RowIndex_(NULL),
-            ColIndex_(NULL),
-            MatVal_(NULL),
-            order_(NULL),
-            isSymmetric_(false) {
-        EntryNum_ = nnz;
-        RowNum_ = RowNum;
-        ColNum_ = ColNum;
-        //do nothing unless any data is to be assigned
-        RowIndex_ = new int[nnz]();
-        ColIndex_ = new int[nnz]();
-        MatVal_ = new Number[nnz]();
-        order_ = new int[nnz]();
-        //initialize the order to 0:N-1
-        for (int i = 0; i < nnz; i++) {
-            order_[i] = i;
-        }
-
-    }
 
     SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric) :
             RowIndex_(NULL),
@@ -66,16 +46,6 @@ namespace SQPhotstart {
         }
     }
 
-
-    void SpTripletMat::print() {
-        std::cout << "Row Column Entry Order" << std::endl;
-        for (int i = 0; i < EntryNum_; i++) {
-            std::cout << RowIndex_[i] << "    ";
-            std::cout << ColIndex_[i] << "    ";
-            std::cout << MatVal_[i] << "    ";
-            std::cout << order_[i] << std::endl;
-        }
-    }
     //@}
 
 
@@ -163,7 +133,7 @@ namespace SQPhotstart {
     /**
      * qpOASESSparseMatrix
      */
-    void qpOASESSparseMat::print() {
+    void qpOASESSparseMat::print() const {
         std::cout << "ColIndex: ";
         for (int i = 0; i < ColNum_ + 1; i++)
             std::cout << ColIndex()[i] << " ";
@@ -373,7 +343,6 @@ namespace SQPhotstart {
         }
 
         sorted_index_info.clear();
-//        print();
         return true;
     }
 
@@ -405,7 +374,6 @@ namespace SQPhotstart {
 
     bool qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
         int j = 0;
-//        rhs->print();
         for (int i = 0; i < rhs->EntryNum(); i++) {
             MatVal_[order()[j]] = rhs->MatVal()[i];
             j++;
@@ -450,13 +418,7 @@ namespace SQPhotstart {
         return true;
     }
 
-    bool qpOASESSparseMat::isIsinitialized() const {
-        return isInitialised_;
-    }
 
-    bool qpOASESSparseMat::isSymmetric() const {
-        return isSymmetric_;
-    }
 
 }//END_OF_NAMESPACE
 

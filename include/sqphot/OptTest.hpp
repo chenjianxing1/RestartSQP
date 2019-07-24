@@ -98,6 +98,9 @@ namespace SQPhotstart {
 
         ~NLP_OptTest();
 
+        /**
+         * @brief Identify the active set at x_k
+         */
         bool IdentifyActiveSet();;
 
         /**
