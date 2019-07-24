@@ -14,9 +14,9 @@ namespace SQPhotstart {
      */
     Algorithm::Algorithm() {
         setDefaultOption();
+        //TODO: move to somewhere else
         jnlst = new Ipopt::Journalist();
         roptions2 = new Ipopt::OptionsList();
-        cout << "ALG created" << endl;
     }
 
     /**
@@ -27,7 +27,6 @@ namespace SQPhotstart {
         cons_type_ = NULL;
         delete[] bound_cons_type_;
         bound_cons_type_ = NULL;
-        cout << "ALG destroyed" << endl;
     }
 
     /**
@@ -80,7 +79,7 @@ namespace SQPhotstart {
 
             /* output some information to the console*/
 
-            if (options->printLevel > 0) {
+            if (options->printLevel > 1) {
                 if (stats->iter % 10 == 0)log->print_header();
                 log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
                                      delta_, rho_);
@@ -96,8 +95,9 @@ namespace SQPhotstart {
             }
         }
         // print the final summary message to the console
-//        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_,
-//                         infea_measure_, exitflag_);
+        if (options->printLevel > 0)
+            log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_,
+                             infea_measure_, exitflag_);
         return true;
     }
 
@@ -142,7 +142,7 @@ namespace SQPhotstart {
         // initializes QP objects*/
         myQP->init(nlp_->nlp_info_, QP);
         myLP->init(nlp_->nlp_info_, LP);
-        if (options->printLevel > 0) {
+        if (options->printLevel > 1) {
             log->print_header();
             log->print_main_iter(stats->iter, obj_value_, 0.0, infea_measure_, delta_,
                                  rho_);
@@ -176,14 +176,14 @@ namespace SQPhotstart {
         c_u_ = make_shared<Vector>(nCon_);
         grad_f_ = make_shared<Vector>(nVar_);
         jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_);
-        hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_,true);
-
+        hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_, true);
         options = make_shared<Options>();
         stats = make_shared<Stats>();
         log = make_shared<Log>();
         myQP = make_shared<QPhandler>();
         myLP = make_shared<LPhandler>();
-
+        nlp_opt_tester = make_shared<NLP_OptTest>(x_k_, x_u_, x_l_, c_k_, c_u_, c_l_,
+                                                  options, cons_type_, bound_cons_type_);
         delta_ = options->delta;
         rho_ = options->rho;
 
@@ -443,6 +443,9 @@ namespace SQPhotstart {
                     // infeasibility measure of QP model with such penalty parameter
                     // becomes zero
                     while (infea_measure_model_ > options->penalty_update_tol) {
+                        if (rho_trial * 2 > options->rho_max) {
+                            break;
+                        }
                         rho_trial = options->increase_parm * rho_trial; //increase rho
                         stats->penalty_change_trial_addone();
                         myQP->update_penalty(rho_trial);
@@ -459,6 +462,9 @@ namespace SQPhotstart {
                     while ((infea_measure_ - infea_measure_model_ <
                             options->eps1 * (infea_measure_ - infea_measure_infty) &&
                             (stats->penalty_change_trial < options->penalty_iter_max))) {
+                        if (rho_trial * 2 > options->rho_max) {
+                            break;
+                        }
                         //try to increase the penalty parameter to a number such that
                         // the incurred reduction for the QP model is to a ratio to the
                         // maximum possible reduction for current linear model.

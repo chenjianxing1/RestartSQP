@@ -113,10 +113,16 @@ namespace SQPhotstart {
     bool SpTripletMat::times(std::shared_ptr<const Vector> p,
                              std::shared_ptr<Vector> result) {
         assert(ColNum_ == p->Dim());
-        result->set_zeros(); //set all entries to be 0
-        for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(RowIndex_[i], MatVal_[ColIndex_[i]] * p->values()
-            [RowIndex_[i]]);
+        if(!isSymmetric_) {
+            result->set_zeros(); //set all entries to be 0
+            for (int i = 0; i < EntryNum_; i++) {
+                result->addNumberAt(RowIndex_[i], MatVal_[ColIndex_[i]] * p->values()
+                [RowIndex_[i]]);
+            }
+        }
+        else{
+            //TODO: implement this part
+            printf("Times a Symmetric Matrix");
         }
         return true;
     }

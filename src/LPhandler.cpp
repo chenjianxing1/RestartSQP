@@ -12,16 +12,12 @@ namespace SQPhotstart {
      * Default constructor
      *
      */
-    LPhandler::LPhandler() {
-        //message for debugging purpose
-        std::cout << "LP is created" << std::endl;
-    }
+    LPhandler::LPhandler(){};
 
     /**
      *Default destructor
      */
     LPhandler::~LPhandler() {
-        std::cout << "LP is destroyed" << std::endl;
     }
 
     /**

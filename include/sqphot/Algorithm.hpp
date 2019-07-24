@@ -12,6 +12,7 @@
 #include <coin/IpOptionsList.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
+#include <sqphot/OptTest.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPhandler.hpp>
 #include <sqphot/LPhandler.hpp>
@@ -315,7 +316,7 @@ namespace SQPhotstart {
         shared_ptr<QPhandler> myQP;
         shared_ptr<LPhandler> myLP;
         shared_ptr<Log> log;
-
+        shared_ptr<NLP_OptTest> nlp_opt_tester;
         Number norm_p_k_;/**< the infinity norm of p_k*/
         Number delta_;/**< trust-region radius*/
         Number rho_; /**< penalty parameter*/

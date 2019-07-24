@@ -12,17 +12,12 @@ namespace SQPhotstart {
      * Default constructor
      *
      */
-    QPhandler::QPhandler() {
-        //message for debugging purpose
-        std::cout << "QP is created" << std::endl;
-    }
+    QPhandler::QPhandler() {}
 
     /**
      *Default destructor
      */
-    QPhandler::~QPhandler() {
-        std::cout << "QP is destroyed" << std::endl;
-    }
+    QPhandler::~QPhandler() {}
 
     /**
      * Get the optimal solution from the QPhandler_interface

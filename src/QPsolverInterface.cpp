@@ -63,7 +63,8 @@ namespace SQPhotstart {
         if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
             qpOASES::Options qp_options;
 
-            //setup the printlevel of qpOASES
+//            printf("options_qp_print_level is %i",options->qpPrintLevel);
+            //setup the printlevel of q
             switch (options->qpPrintLevel) {
                 case 0:
                     qp_options.printLevel = qpOASES::PL_NONE;

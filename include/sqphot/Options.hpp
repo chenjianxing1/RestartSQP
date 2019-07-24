@@ -54,6 +54,7 @@ namespace SQPhotstart {
         //@{
         TestOption testOption_NLP;
         bool auto_gen_tol = false;
+        double active_set_tol;
         double opt_tol;
         double opt_compl_tol;
         double opt_dual_fea_tol;
