@@ -12,7 +12,9 @@ namespace SQPhotstart {
     /**
      * Default Constructor
      */
-    Algorithm::Algorithm() {
+    Algorithm::Algorithm() :
+            cons_type_(NULL),
+            bound_cons_type_(NULL) {
         setDefaultOption();
         //TODO: move to somewhere else
         jnlst = new Ipopt::Journalist();
@@ -23,6 +25,7 @@ namespace SQPhotstart {
      * Default Destructor
      */
     Algorithm::~Algorithm() {
+
         delete[] cons_type_;
         cons_type_ = NULL;
         delete[] bound_cons_type_;
@@ -126,14 +129,14 @@ namespace SQPhotstart {
      */
     bool Algorithm::initilization() {
         nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
-        nlp_->Get_starting_point(x_k_, lambda_);
+        nlp_->Get_starting_point(x_k_, multiplier_cons_);
         //shift starting point to satisfy the bound constraint
         nlp_->shift_starting_point(x_k_, x_l_, x_u_);
         nlp_->Eval_f(x_k_, obj_value_);
         nlp_->Eval_gradient(x_k_, grad_f_);
         nlp_->Eval_constraints(x_k_, c_k_);
-        nlp_->Get_Structure_Hessian(x_k_, lambda_, hessian_);
-        nlp_->Eval_Hessian(x_k_, lambda_, hessian_);
+        nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
+        nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
         nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
         nlp_->Eval_Jacobian(x_k_, jacobian_);
         ClassifyConstraintType();
@@ -167,7 +170,8 @@ namespace SQPhotstart {
         x_k_ = make_shared<Vector>(nVar_);
         x_trial_ = make_shared<Vector>(nVar_);
         p_k_ = make_shared<Vector>(nVar_);
-        lambda_ = make_shared<Vector>(nCon_);
+        multiplier_cons_ = make_shared<Vector>(nCon_);
+        multiplier_vars_ = make_shared<Vector>(nVar_);
         c_k_ = make_shared<Vector>(nCon_);
         c_trial_ = make_shared<Vector>(nCon_);
         x_l_ = make_shared<Vector>(nVar_);
@@ -175,15 +179,20 @@ namespace SQPhotstart {
         c_l_ = make_shared<Vector>(nCon_);
         c_u_ = make_shared<Vector>(nCon_);
         grad_f_ = make_shared<Vector>(nVar_);
-        jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_, false);
-        hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_, true);
+        jacobian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_jac_g, nCon_, nVar_,
+                                              false);
+        hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_,
+                                             true);
         options = make_shared<Options>();
         stats = make_shared<Stats>();
         log = make_shared<Log>();
         myQP = make_shared<QPhandler>();
         myLP = make_shared<LPhandler>();
         nlp_opt_tester = make_shared<NLP_OptTest>(x_k_, x_u_, x_l_, c_k_, c_u_, c_l_,
-                                                  options, cons_type_, bound_cons_type_);
+                                                  multiplier_cons_, multiplier_vars_,
+                                                  grad_f_, jacobian_,
+                                                  bound_cons_type_, cons_type_,
+                                                  options);
         delta_ = options->delta;
         rho_ = options->rho;
 
@@ -266,7 +275,7 @@ namespace SQPhotstart {
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_];
         qphandler->GetMultipliers(tmp_lambda);
-        lambda_->copy_vector(tmp_lambda);
+        multiplier_cons_->copy_vector(tmp_lambda);
 
         delete[] tmp_lambda;
         return true;
@@ -349,7 +358,7 @@ namespace SQPhotstart {
             get_multipliers(myQP);
             nlp_->Eval_gradient(x_k_, grad_f_);
             nlp_->Eval_Jacobian(x_k_, jacobian_);
-            nlp_->Eval_Hessian(x_k_, lambda_, hessian_);
+            nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
             QPinfoFlag_.Update_A = true;
             QPinfoFlag_.Update_H = true;
             QPinfoFlag_.Update_grad = true;

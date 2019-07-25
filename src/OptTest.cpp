@@ -6,18 +6,19 @@
 */
 
 #include <sqphot/OptTest.hpp>
-#include <coin/IpTNLP.hpp>
-#include <sqphot/Options.hpp>
-#include <sqphot/Vector.hpp>
 
 namespace SQPhotstart {
 
     NLP_OptTest::NLP_OptTest(shared_ptr<const Vector> x_k, shared_ptr<const Vector> x_u,
                              shared_ptr<const Vector> x_l, shared_ptr<const Vector> c_k,
                              shared_ptr<const Vector> c_u, shared_ptr<const Vector> c_l,
-                             shared_ptr<SQPhotstart::Options> options,
+                             shared_ptr<const Vector> multiplier_cons,
+                             shared_ptr<const Vector> multiplier_vars,
+                             shared_ptr<const Vector> grad_f,
+                             shared_ptr<const SpTripletMat> Jacobian,
+                             const ConstraintType* bound_cons_type,
                              const ConstraintType* cons_type,
-                             const ConstraintType* bound_cons_type) :
+                             shared_ptr<SQPhotstart::Options> options) :
             cons_type_(cons_type),
             bound_cons_type_(bound_cons_type),
             opt_tol_(options->opt_tol),
@@ -34,6 +35,10 @@ namespace SQPhotstart {
             c_u_(c_u),
             c_k_(c_k),
             c_l_(c_l),
+            grad_f_(grad_f),
+            Jacobian_(Jacobian),
+            multiplier_cons_(multiplier_cons),
+            multiplier_vars_(multiplier_cons),
             Active_Set_constraints_(NULL),
             Active_Set_bounds_(NULL) {
     }
@@ -57,20 +62,38 @@ namespace SQPhotstart {
         return true;
     }
 
-    bool NLP_OptTest::Check_Complementarity() {
-        return true;
-    }
-
 
     bool NLP_OptTest::Check_Dual_Feasibility() {
+        bool skip_check = false;
+        for (int i = 0; i < nVar_; i++) {
+            if (bound_cons_type_[i] == BOUNDED_ABOVE &&
+                multiplier_vars_->values()[i] > opt_dual_fea_tol_) {
+                dual_feasibility_ = false;
+                skip_check = true;
+                break;
+            } else if (bound_cons_type_[i] == BOUNDED_BELOW &&
+                       multiplier_vars_->values()[i] < opt_dual_fea_tol_) {
+                dual_feasibility_ = false;
+                skip_check = true;
+                break;
+            }
+        }
+        if (!skip_check) {
+            for (int i = 0; i < nCon_; i++) {
+                if (cons_type_[i] == BOUNDED_ABOVE &&
+                    multiplier_cons_->values()[i] > opt_dual_fea_tol_) {
+                    dual_feasibility_ = false;
+                    break;
+                } else if (cons_type_[i] == BOUNDED_BELOW &&
+                           multiplier_cons_->values()[i] < opt_dual_fea_tol_) {
+                    dual_feasibility_ = false;
+                    break;
+                }
+            }
+        }
+        complementarity_ = true;
         return true;
-    }
 
-
-    bool NLP_OptTest::Check_Dual_Feasibility(const double* multiplier,
-                                             ConstraintType nlp_cons_type) {
-
-        return true;
     }
 
     bool NLP_OptTest::Check_SecondOrder() {
@@ -85,6 +108,14 @@ namespace SQPhotstart {
 
 
     bool NLP_OptTest::Check_Stationarity() {
+        shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
+        // the difference of g-J^T y -\lambda
+        Jacobian_->transposed_times(multiplier_cons_, difference);
+        difference->add_vector(multiplier_vars_->values());
+        difference->subtract_vector(grad_f_->values());
+        if(difference->getInfNorm()<opt_tol_){
+            stationarity_ = true;
+        }
         return true;
     }
 
@@ -124,13 +155,16 @@ namespace SQPhotstart {
                     // consider adding another tolerance for identifying active set...
                     Active_Set_constraints_[i] = 1;
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (std::abs(c_k_->values()[i] - c_l_->values()[i]) < active_set_tol_) {
+                if (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+                    active_set_tol_) {
                     // consider adding another tolerance for identifying active set...
                     Active_Set_constraints_[i] = -1;
                 }
             } else if (cons_type_[i] == EQUAL) {
-                if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) < active_set_tol_) &&
-                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) < active_set_tol_))
+                if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) <
+                     active_set_tol_) &&
+                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+                     active_set_tol_))
                     Active_Set_constraints_[i] = 99;
                 else {
                     //TODO: Print out warning message
@@ -149,8 +183,10 @@ namespace SQPhotstart {
                     // consider adding another tolerance for identifying active set...
                     Active_Set_bounds_[i] = -1;
             } else if (cons_type_[i] == EQUAL) {
-                if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) < active_set_tol_) &&
-                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) < active_set_tol_))
+                if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) <
+                     active_set_tol_) &&
+                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
+                     active_set_tol_))
                     Active_Set_bounds_[i] = 99;
                 else {
                     //TODO: Print out warning message
@@ -159,6 +195,33 @@ namespace SQPhotstart {
         }
 
 
+        return true;
+    }
+
+    bool NLP_OptTest::Check_Complementarity() {
+        bool skip_check = false;
+        if (nCon_ > 0) {
+            for (int i = 0; i < nCon_; i++) {
+                if (multiplier_cons_->values()[i] * c_k_->values()[i] >
+                    opt_compl_tol_) {
+                    complementarity_ = false;
+                    skip_check = true;
+                    break;
+                }
+            }
+        }
+        if (!skip_check) {
+            if (nVar_ > 0) {
+                for (int i = 0; i < nVar_; i++) {
+                    if (multiplier_vars_->values()[i] * x_k_->values()[i] >
+                        opt_compl_tol_) {
+                        complementarity_ = false;
+                        break;
+                    }
+                }
+            }
+        }
+        complementarity_ = true;
         return true;
     }
 
@@ -173,15 +236,13 @@ namespace SQPhotstart {
         return true;
     }
 
+    bool QP_OptTest::Check_Feasibility() {
+        return true;
+    }
+
     bool QP_OptTest::Check_Complementarity() {
         return true;
     }
-
-    bool QP_OptTest::Check_Feasibility() {
-
-        return true;
-    }
-
 
     bool QP_OptTest::Check_Dual_Feasibility() {
         return true;
