@@ -40,6 +40,7 @@ namespace SQPhotstart {
 
     enum Exitflag {
         OPTIMAL = 0,
+        CONVERGE_TO_NONOPTIMAL = 2,
         EXCEED_MAX_ITER = 1,//exceeds the maximum number of iteration
         QPERROR_INTERNAL_ERROR = -1,//QP solver internal error
         QPERROR_INFEASIBLE = -2,//QP solver error: conclude QP formulation infeasible

@@ -275,7 +275,8 @@ namespace SQPhotstart {
         Index nVar_; /**< number of variables*/
         Index nCon_; /**< number of constraints*/
         shared_ptr<SQPTNLP> nlp_;
-        shared_ptr<Vector> lambda_;/**< multiplier for constraints evaluated at x_k*/
+        shared_ptr<Vector> multiplier_cons_;/**< multiplier for constraints*/
+        shared_ptr<Vector> multiplier_vars_;/**< multipliers for variables*/
         shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
         Number infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
         Number infea_measure_model_; /**< the one norm of all slack variables in the QP */

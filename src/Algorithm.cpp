@@ -69,13 +69,10 @@ namespace SQPhotstart {
 
             infea_cal(true);
 
-//                        std::cout<<"infea_measure is"<<infea_measure_<<std::endl;
-//                        std::cout<<"infea_measure_trial is"<<infea_measure_trial_<<std::endl;
-
             ratio_test();
 
             // Calculate the second-order-correction steps
-//            second_order_correction();
+            second_order_correction();
 
             // Update the radius and the QP bounds if the radius has been changed
             stats->iter_addone();
@@ -114,8 +111,30 @@ namespace SQPhotstart {
      *  code according to the error type.
      */
     bool Algorithm::termination_check() {
+	    get_multipliers(myQP);
         if (norm_p_k_ < options->tol) {
-            exitflag_ = OPTIMAL;
+            if (nlp_opt_tester->Check_Stationarity()) {
+                nlp_opt_tester->Check_KKTConditions(infea_measure_);
+                if (nlp_opt_tester->first_order_opt_ &&
+                    (options->testOption_NLP == TEST_ALL ||
+                     options->testOption_NLP == TEST_1ST_ORDER)) {
+                    exitflag_ = OPTIMAL;
+                } else {
+			std::cout<<"feasibility      "<<nlp_opt_tester->primal_feasibility_ <<std::endl;                   
+			std::cout<<"dual_feasibility "<<nlp_opt_tester->dual_feasibility_ <<std::endl;
+			std::cout<<"stationarity     "<<nlp_opt_tester->stationarity_ <<std::endl;
+			std::cout<<"complementarity  "<<nlp_opt_tester->complementarity_ <<std::endl;
+                    //TODO:
+                }
+            } else {
+		
+		       nlp_opt_tester->Check_KKTConditions(infea_measure_);
+			std::cout<<"feasibility      "<<nlp_opt_tester->primal_feasibility_ <<std::endl;                   
+			std::cout<<"dual_feasibility "<<nlp_opt_tester->dual_feasibility_ <<std::endl;
+			std::cout<<"stationarity     "<<nlp_opt_tester->stationarity_ <<std::endl;
+			std::cout<<"complementarity  "<<nlp_opt_tester->complementarity_ <<std::endl;
+                exitflag_ = CONVERGE_TO_NONOPTIMAL;
+            }
         }
         return true;
     }
@@ -273,10 +292,13 @@ namespace SQPhotstart {
      */
 
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
-        double* tmp_lambda = new double[nVar_ + 3 * nCon_];
-        qphandler->GetMultipliers(tmp_lambda);
-        multiplier_cons_->copy_vector(tmp_lambda);
-
+        double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
+//TODO: rewrite
+	//	qphandler->GetMultipliers(tmp_lambda);
+//	
+//        multiplier_cons_->copy_vector(tmp_lambda);
+//	multiplier_vars_->copy_vector(tmp_lambda+nCon_);
+	
         delete[] tmp_lambda;
         return true;
     }
@@ -626,6 +648,7 @@ namespace SQPhotstart {
         if (!isaccept_ && options->second_order_correction) {
             shared_ptr<Vector> p_k_tmp = make_shared<Vector>(nVar_);
             shared_ptr<Vector> s_k = make_shared<Vector>(nVar_);
+            shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_+2*nCon_);
             p_k_tmp->copy_vector(p_k_);
 
             double qp_obj_tmp = qp_obj_;
@@ -636,9 +659,9 @@ namespace SQPhotstart {
 
             myQP->update_constraints(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
             myQP->solveQP(stats, options);
-            auto tmp_sol = new double[nVar_ + 2 * nCon_];
-            myQP->GetOptimalSolution(tmp_sol);
-            p_k_->add_vector(tmp_sol);
+
+            myQP->GetOptimalSolution(tmp_sol->values());
+            p_k_->add_vector(tmp_sol->values());
 
             qp_obj_ = myQP->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
             p_k_->add_vector(s_k->values());

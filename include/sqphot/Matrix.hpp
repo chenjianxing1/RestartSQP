@@ -79,7 +79,7 @@ namespace SQPhotstart {
         /**
          *@brief print the sparse matrix in triplet form
          */
-        void print() const override ;
+        void print() const override;
 
 
         /**
@@ -88,8 +88,15 @@ namespace SQPhotstart {
          * called "result"
          * */
         virtual bool times(std::shared_ptr<const Vector> p,
-                           std::shared_ptr<Vector> result);
+                           std::shared_ptr<Vector> result) const ;
 
+        /**
+         * @brief Times the matrix transpose with a vector p, the pointer to the matrix-vector
+         * product  will be stored in the class member of another Vector class object
+         * called "result"
+         * */
+        virtual bool transposed_times(std::shared_ptr<const Vector> p,
+                                      std::shared_ptr<Vector> result) const;;
 
         /**
          * @brief calculate the one norm of the matrix

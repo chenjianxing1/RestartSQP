@@ -198,7 +198,6 @@ namespace SQPhotstart {
      */
     bool Vector::setValue2Max(const Vector rhs, double compared_const) {
         assert(this->size_==rhs.Dim());
-        rhs.print();
         if(size_==0){
             size_ = rhs.size_;
             values_ = new double[size_]();

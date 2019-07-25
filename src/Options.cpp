@@ -17,7 +17,7 @@ namespace SQPhotstart {
 
 
     int Options::setToDefault() {
-        iter_max = 10;
+        iter_max = 100;
         printLevel = 2;
         qpPrintLevel = 0;       //does not print anything
         QPsolverChoice = "qpOASES";

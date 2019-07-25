@@ -81,18 +81,24 @@ namespace SQPhotstart {
      */
 
     bool SpTripletMat::times(std::shared_ptr<const Vector> p,
-                             std::shared_ptr<Vector> result) {
+                             std::shared_ptr<Vector> result) const {
         assert(ColNum_ == p->Dim());
-        if(!isSymmetric_) {
+        if (isSymmetric_) {
+            result->set_zeros();
+            for (int i = 0; i < EntryNum_; i++) {
+                result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
+                [ColIndex_[i] - 1]);
+                if (RowIndex_[i] != ColIndex_[i]) {
+                    result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
+                    [RowIndex_[i] - 1]);
+                }
+            }
+        } else {
             result->set_zeros(); //set all entries to be 0
             for (int i = 0; i < EntryNum_; i++) {
-                result->addNumberAt(RowIndex_[i], MatVal_[ColIndex_[i]] * p->values()
-                [RowIndex_[i]]);
+                result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
+                [ColIndex_[i] - 1]);
             }
-        }
-        else{
-            //TODO: implement this part
-            printf("Times a Symmetric Matrix");
         }
         return true;
     }
@@ -128,6 +134,21 @@ namespace SQPhotstart {
 
     bool SpTripletMat::isSymmetric() const {
         return isSymmetric_;
+    }
+
+    bool SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
+                                        std::shared_ptr<Vector> result) const {
+        if (isSymmetric_) {
+            times(p, result);
+        } else {
+            result->set_zeros(); //set all entries to be 0
+            for (int i = 0; i < EntryNum_; i++) {
+                result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
+                [RowIndex_[i] - 1]);
+            }
+        }//TODO:test it..
+
+        return true;
     }
 
     /**
@@ -377,7 +398,7 @@ namespace SQPhotstart {
         for (int i = 0; i < rhs->EntryNum(); i++) {
             MatVal_[order()[j]] = rhs->MatVal()[i];
             j++;
-            if (isSymmetric_&&(rhs->ColIndex()[i]!=rhs->RowIndex()[i])) {
+            if (isSymmetric_ && (rhs->ColIndex()[i] != rhs->RowIndex()[i])) {
                 MatVal_[order()[j]] = rhs->MatVal()[i];
                 j++;
             }
@@ -417,7 +438,6 @@ namespace SQPhotstart {
         }
         return true;
     }
-
 
 
 }//END_OF_NAMESPACE
