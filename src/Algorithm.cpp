@@ -111,12 +111,10 @@ namespace SQPhotstart {
      *  code according to the error type.
      */
     bool Algorithm::termination_check() {
-	    get_multipliers(myQP);	
-	    //TODO:DELETE OUTPUT
-	    // nlp_->Eval_gradient(x_trial_, grad_f_);
-//	    printf( "the grad_f_trial is \n");
-//	    grad_f_->print();
-        if (norm_p_k_ < options->tol) {
+        get_multipliers(myQP);
+
+        //TODO:DELETE OUTPUT
+        if (norm_p_k_ < 1.0e-16) {
             if (nlp_opt_tester->Check_Stationarity()) {
                 nlp_opt_tester->Check_KKTConditions(infea_measure_);
                 if (nlp_opt_tester->first_order_opt_ &&
@@ -124,18 +122,26 @@ namespace SQPhotstart {
                      options->testOption_NLP == TEST_1ST_ORDER)) {
                     exitflag_ = OPTIMAL;
                 } else {
-			std::cout<<"feasibility      "<<nlp_opt_tester->primal_feasibility_ <<std::endl;                   
-			std::cout<<"dual_feasibility "<<nlp_opt_tester->dual_feasibility_ <<std::endl;
-			std::cout<<"stationarity     "<<nlp_opt_tester->stationarity_ <<std::endl;
-			std::cout<<"complementarity  "<<nlp_opt_tester->complementarity_ <<std::endl;
+                    std::cout << "feasibility      "
+                              << nlp_opt_tester->primal_feasibility_ << std::endl;
+                    std::cout << "dual_feasibility " << nlp_opt_tester->dual_feasibility_
+                              << std::endl;
+                    std::cout << "stationarity     " << nlp_opt_tester->stationarity_
+                              << std::endl;
+                    std::cout << "complementarity  " << nlp_opt_tester->complementarity_
+                              << std::endl;
                 }
             } else {
-		
-		       nlp_opt_tester->Check_KKTConditions(infea_measure_);
-			std::cout<<"feasibility      "<<nlp_opt_tester->primal_feasibility_ <<std::endl;                   
-			std::cout<<"dual_feasibility "<<nlp_opt_tester->dual_feasibility_ <<std::endl;
-			std::cout<<"stationarity     "<<nlp_opt_tester->stationarity_ <<std::endl;
-			std::cout<<"complementarity  "<<nlp_opt_tester->complementarity_ <<std::endl;
+
+                nlp_opt_tester->Check_KKTConditions(infea_measure_);
+                std::cout << "feasibility      " << nlp_opt_tester->primal_feasibility_
+                          << std::endl;
+                std::cout << "dual_feasibility " << nlp_opt_tester->dual_feasibility_
+                          << std::endl;
+                std::cout << "stationarity     " << nlp_opt_tester->stationarity_
+                          << std::endl;
+                std::cout << "complementarity  " << nlp_opt_tester->complementarity_
+                          << std::endl;
                 exitflag_ = CONVERGE_TO_NONOPTIMAL;
             }
         }
@@ -296,21 +302,14 @@ namespace SQPhotstart {
 
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
-		qphandler->GetMultipliers(tmp_lambda);
+        qphandler->GetMultipliers(tmp_lambda);
 
-	
-	if(options->QPsolverChoice=="qpOASES"){
-	//The qpOASES stores the multipliers of variables to the first (num_QP_var)
-	//position and multipliers of constraints to the last (num_QP_nCon) position 
-		multiplier_cons_->copy_vector(tmp_lambda+3*nCon_);
-		multiplier_vars_->copy_vector(tmp_lambda);
-	//TODO:DELETE OUTPUT
-		//		printf("multiplier_vars\n");
-//		multiplier_vars_->print();
-//		printf("multiplier_cons\n");
-//		multiplier_cons_->print();
-//		grad_f_->print();
-	}
+        if (options->QPsolverChoice == "qpOASES") {
+            //The qpOASES stores the multipliers of variables to the first (num_QP_var)
+            //position and multipliers of constraints to the last (num_QP_nCon) position
+            multiplier_cons_->copy_vector(tmp_lambda + 2 * nCon_ + nVar_);
+            multiplier_vars_->copy_vector(tmp_lambda);
+        }
         delete[] tmp_lambda;
         return true;
     }
@@ -660,7 +659,7 @@ namespace SQPhotstart {
         if (!isaccept_ && options->second_order_correction) {
             shared_ptr<Vector> p_k_tmp = make_shared<Vector>(nVar_);
             shared_ptr<Vector> s_k = make_shared<Vector>(nVar_);
-            shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_+2*nCon_);
+            shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_ + 2 * nCon_);
             p_k_tmp->copy_vector(p_k_);
 
             double qp_obj_tmp = qp_obj_;

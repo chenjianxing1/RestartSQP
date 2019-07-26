@@ -1,0 +1,1775 @@
+
+List of options:
+
+                                    Name   Value                # times used
+                        file_print_level = 8                         1
+                             output_file = all.out                   1
+
+******************************************************************************
+This program contains Ipopt, a library for large-scale nonlinear optimization.
+ Ipopt is released as open source code under the Common Public License (CPL).
+         For more information visit http://projects.coin-or.org/Ipopt
+******************************************************************************
+
+This is Ipopt version 3.4trunk, running with linear solver ma27.
+
+Number of nonzeros in equality constraint Jacobian...:        0
+Number of nonzeros in inequality constraint Jacobian.:        1
+Number of nonzeros in Lagrangian Hessian.............:        3
+
+Scaling parameter for objective function = 4.156276e-02
+Inequality constraints are not scaled.
+objective scaling factor = 0.0415628
+No x scaling provided
+No c scaling provided
+No d scaling provided
+DenseVector "modified x_L scaled" with 0 elements:
+DenseVector "modified x_U scaled" with 0 elements:
+DenseVector "modified d_L scaled" with 0 elements:
+DenseVector "modified d_U scaled" with 1 elements:
+modified d_U scaled[    1]=-1.4999999850000001e+00
+DenseVector "initial x unscaled" with 2 elements:
+initial x unscaled[    1]=-2.0000000000000000e+00
+initial x unscaled[    2]= 1.0000000000000000e+00
+Initial values of x sufficiently inside the bounds.
+Moved initial values of s sufficiently inside the bounds.
+DenseVector "original vars" with 1 elements:
+original vars[    1]=-1.4999999850000001e+00
+DenseVector "new vars" with 1 elements:
+new vars[    1]=-1.5149999848500002e+00
+In Ma27TSolverInterface::InitializeStructure: Using overestimation factor LiwFact = 2.000000e+00
+Return values from MA27AD: IFLAG = 0, IERROR = 0
+Size of integer work space recommended by MA27 is 16
+Setting integer work space size to 80
+Size of doublespace recommended by MA27 is 13
+Setting double work space size to 65
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Least square estimates max(y_c) = 0.000000e+00, max(y_d) = 1.196883e+01
+Total number of variables............................:        2
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:        0
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:        0
+Total number of inequality constraints...............:        1
+        inequality constraints with only lower bounds:        0
+   inequality constraints with lower and upper bounds:        0
+        inequality constraints with only upper bounds:        1
+
+
+**************************************************
+*** Update HessianMatrix for Iteration 0:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 0:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  9.0900000e+02 5.15e-01 1.00e+02  -1.0 0.00e+00    -  0.00e+00 0.00e+00   0 y
+
+**************************************************
+*** Beginning Iteration 0 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.0000000000000001e-01
+Current fraction-to-the-boundary parameter tau = 9.8999999999999999e-01
+
+||curr_x||_inf   = 2.0000000000000000e+00
+||curr_s||_inf   = 1.5149999848500002e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 1.1968827930174564e+01
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 1.0000000000000000e+00
+
+No search direction has been computed yet.
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-2.0000000000000000e+00
+curr_x[    2]= 1.0000000000000000e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5149999848500002e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]=-1.1968827930174564e+01
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+Homogeneous vector, all elements have value  1.0000000000000000e+00
+DenseVector "curr_z_U" with 0 elements:
+Homogeneous vector, all elements have value  1.0000000000000000e+00
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 1.4999999850000112e-02
+DenseVector "curr_v_L" with 0 elements:
+Homogeneous vector, all elements have value  1.0000000000000000e+00
+DenseVector "curr_v_U" with 1 elements:
+Homogeneous vector, all elements have value  1.0000000000000000e+00
+
+
+***Current NLP Values for Iteration 0:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   3.7780548628428932e+01    9.0900000000000000e+02
+Dual infeasibility......:   1.0000000000000000e+02    2.4060000000000000e+03
+Constraint violation....:   4.9999998500000009e-01    4.9999998500000009e-01
+Complementarity.........:   1.4999999850000112e-02    3.6089999639100268e-01
+Overall NLP error.......:   1.0000000000000000e+02    2.4060000000000000e+03
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-1.0000000000000000e+02
+grad_f[    2]=-2.4937655860349128e+01
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.0000000000000000e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 5.1499998485000020e-01
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 0:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 1.000000e+02
+Barrier Parameter: 1.000000e-01
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 0:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  1.421085e-14
+max-norm resid_s  1.776357e-15
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 1.00e+02 nrm_sol = 6.78e+00 nrm_resid = 1.42e-14
+residual_ratio = 1.330886e-16
+Factorization successful.
+max-norm resid_x  1.421085e-14
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 1.00e+02 nrm_sol = 6.78e+00 nrm_resid = 1.42e-14
+residual_ratio = 1.330886e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 0:
+**************************************************
+
+--> Starting filter line search in iteration 0 <--
+Mu has changed in line search - resetting watchdog counters.
+The current filter has 0 entries.
+Relative step size for delta_x = 3.464356e-01
+minimal step size ALPHA_MIN = 4.254129E-12
+Starting checks for alpha (primal) = 1.00e+00
+trial_max is initialized to 1.000000e+04
+trial_min is initialized to 1.000000e-04
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  3.1109200018440797e+00  (reference  3.8200519152216920e+01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  5.1499998485000020e-01):
+reference_theta = 5.150000e-01 reference_gradBarrTDelta = -6.052943e+01
+Checking sufficient reduction...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 5.150000e-01 reference_gradBarrTDelta = -6.052943e+01
+
+**************************************************
+*** Update HessianMatrix for Iteration 1:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 1:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   1  7.0889098e+01 0.00e+00 2.13e+01  -1.0 6.93e-01    -  1.60e-01 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 1 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.0000000000000001e-01
+Current fraction-to-the-boundary parameter tau = 9.8999999999999999e-01
+
+||curr_x||_inf   = 1.6928711935912943e+00
+||curr_s||_inf   = 1.6928711935912943e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 5.1914149680003812e+00
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 9.9999999999998979e-03
+
+||delta_x||_inf   = 6.9287119359129445e-01
+||delta_s||_inf   = 1.7787120874129422e-01
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 6.7774129621741830e+00
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 6.1914139680003819e+00
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.5793496035604351e+00
+curr_x[    2]= 1.6928711935912943e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.6928711935912943e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]=-5.1914149680003812e+00
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 1.9287120859129425e-01
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 9.9999999999998979e-03
+
+
+***Current NLP Values for Iteration 1:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.9463465463900564e+00    7.0889097906144755e+01
+Dual infeasibility......:   2.1258592773795499e+01    5.1148174213751969e+02
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   1.9287120859129228e-03    4.6404812787064917e-02
+Overall NLP error.......:   2.1258592773795499e+01    5.1148174213751969e+02
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-2.1258592773795499e+01
+grad_f[    2]=-6.6622940704506171e+00
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.6928711935912943e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 1:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 2.125859e+01
+Barrier Parameter: 1.000000e-01
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 1:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  8.881784e-16
+max-norm resid_s  4.440892e-16
+max-norm resid_c  0.000000e+00
+max-norm resid_d  3.996803e-15
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 2.13e+01 nrm_sol = 5.65e+00 nrm_resid = 4.00e-15
+residual_ratio = 1.485304e-16
+Factorization successful.
+max-norm resid_x  8.881784e-16
+max-norm resid_s  2.775558e-16
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 2.13e+01 nrm_sol = 5.65e+00 nrm_resid = 8.88e-16
+residual_ratio = 3.300677e-17
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 1:
+**************************************************
+
+--> Starting filter line search in iteration 1 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 4.262073e-01
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.7639111083353823e-01  (reference  3.1109200018440797e+00):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -6.282825e+00
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -6.282825e+00
+
+**************************************************
+*** Update HessianMatrix for Iteration 2:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 2:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   2  7.3551648e+00 0.00e+00 1.08e+00  -1.0 1.15e+00    -  1.00e+00 1.00e+00f  1 Nhj 
+
+**************************************************
+*** Beginning Iteration 2 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.0000000000000001e-01
+Current fraction-to-the-boundary parameter tau = 9.8999999999999999e-01
+
+||curr_x||_inf   = 2.8405926331619575e+00
+||curr_s||_inf   = 2.8405926331619575e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 4.5897256194764413e-01
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 4.5897356194764466e-01
+
+||delta_x||_inf   = 1.1477214395706632e+00
+||delta_s||_inf   = 1.1477214395706632e+00
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 5.6503875299480253e+00
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 4.4897356194764476e-01
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.6714866019289587e+00
+curr_x[    2]= 2.8405926331619575e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-2.8405926331619575e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 4.5897256194764413e-01
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 1.3405926481619574e+00
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 4.5897356194764466e-01
+
+
+***Current NLP Values for Iteration 2:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   3.0570094933448017e-01    7.3551648409875927e+00
+Dual infeasibility......:   1.0763602192510868e+00    2.5897226875181147e+01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   6.1529658284771915e-01    1.4804035783316122e+01
+Overall NLP error.......:   1.0763602192510868e+00    2.5897226875181147e+01
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]= 1.0763602192510868e+00
+grad_f[    2]= 3.8840542588479127e-01
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-2.8405926331619575e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 2:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 1.076360e+00
+Barrier Parameter: 1.000000e-01
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 2:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  5.551115e-17
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  1.318390e-16
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 1.08e+00 nrm_sol = 3.97e-01 nrm_resid = 1.32e-16
+residual_ratio = 8.946165e-17
+Factorization successful.
+max-norm resid_x  2.220446e-16
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.110223e-16
+nrm_rhs = 1.08e+00 nrm_sol = 3.97e-01 nrm_resid = 2.22e-16
+residual_ratio = 1.506723e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 2:
+**************************************************
+
+--> Starting filter line search in iteration 2 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 9.850874e-03
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.6987748264603567e-01  (reference  2.7639111083353823e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.296576e-02
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.296576e-02
+
+**************************************************
+*** Update HessianMatrix for Iteration 3:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 3:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   3  7.2654059e+00 0.00e+00 3.01e-02  -1.0 3.78e-02    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 3 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.0000000000000001e-01
+Current fraction-to-the-boundary parameter tau = 9.8999999999999999e-01
+
+||curr_x||_inf   = 2.8784258256551616e+00
+||curr_s||_inf   = 2.8784258256551616e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 6.1640069712594836e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 6.1641069712594809e-02
+
+||delta_x||_inf   = 3.7833192493204056e-02
+||delta_s||_inf   = 3.7833192493204056e-02
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 3.9733249223504929e-01
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 3.9733249223504985e-01
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.6945627859533157e+00
+curr_x[    2]= 2.8784258256551616e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-2.8784258256551616e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 6.1640069712594836e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 1.3784258406551615e+00
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 6.1641069712594809e-02
+
+
+***Current NLP Values for Iteration 3:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   3.0197031951057246e-01    7.2654058874243734e+00
+Dual infeasibility......:   3.0083024662757342e-02    7.2379757338594164e-01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   8.4967643337466911e-02    2.0443214986994538e+00
+Overall NLP error.......:   8.4967643337466911e-02    2.0443214986994538e+00
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-3.0083024662757342e-02
+grad_f[    2]= 5.7213550434736110e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-2.8784258256551616e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 3:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 3.008302e-02
+  sub_problem_error < kappa_eps * mu (1.000000e+00)
+Updating mu=   1.0000000000000001e-01 and tau=   9.8999999999999999e-01 to new_mu=   2.0000000000000004e-02 and new_tau=   9.8999999999999999e-01
+  sub_problem_error < kappa_eps * mu (2.000000e-01)
+Updating mu=   2.0000000000000004e-02 and tau=   9.8999999999999999e-01 to new_mu=   2.8284271247461901e-03 and new_tau=   9.9717157287525382e-01
+Barrier Parameter: 2.828427e-03
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 3:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  6.085410e-15
+max-norm resid_s  1.908196e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.734723e-18
+nrm_rhs = 8.21e-02 nrm_sol = 1.53e+00 nrm_resid = 6.09e-15
+residual_ratio = 3.786346e-15
+Factorization successful.
+max-norm resid_x  6.085410e-15
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.561251e-17
+nrm_rhs = 8.21e-02 nrm_sol = 1.53e+00 nrm_resid = 6.09e-15
+residual_ratio = 3.786346e-15
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 3:
+**************************************************
+
+--> Starting filter line search in iteration 3 <--
+Mu has changed in line search - resetting watchdog counters.
+The current filter has 0 entries.
+Relative step size for delta_x = 3.932160e-01
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 9.01e-01
+Checking acceptability for trial step size alpha_primal_test= 9.012942e-01:
+  New values of barrier function     =  3.3521217217309429e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Failed...
+Trying second order correction number 1
+Factorization successful.
+max-norm resid_x  6.085410e-15
+max-norm resid_s  1.908196e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.734723e-18
+Checking acceptability for trial step size alpha_primal_test= 9.012942e-01:
+  New values of barrier function     =  3.3521217217309474e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Failed...
+Trying second order correction number 2
+Factorization successful.
+max-norm resid_x  6.085410e-15
+max-norm resid_s  1.908196e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.734723e-18
+Checking acceptability for trial step size alpha_primal_test= 9.012942e-01:
+  New values of barrier function     =  3.3521217217309474e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Failed...
+Trying second order correction number 3
+Factorization successful.
+max-norm resid_x  6.085410e-15
+max-norm resid_s  1.908196e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.734723e-18
+Checking acceptability for trial step size alpha_primal_test= 9.012942e-01:
+  New values of barrier function     =  3.3521217217309474e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Failed...
+Trying second order correction number 4
+Factorization successful.
+max-norm resid_x  6.085410e-15
+max-norm resid_s  1.908196e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.734723e-18
+Checking acceptability for trial step size alpha_primal_test= 9.012942e-01:
+  New values of barrier function     =  3.3521217217309474e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Failed...
+Starting checks for alpha (primal) = 4.51e-01
+Checking acceptability for trial step size alpha_primal_test= 4.506471e-01:
+  New values of barrier function     =  2.6375994229963373e-01  (reference  3.0106259700759536e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -9.767565e-02
+
+**************************************************
+*** Update HessianMatrix for Iteration 4:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 4:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   4  6.3209267e+00 0.00e+00 1.04e+00  -2.5 1.53e+00    -  1.00e+00 4.51e-01f  2 
+
+**************************************************
+*** Beginning Iteration 4 from the following point:
+**************************************************
+
+Current barrier parameter mu = 2.8284271247461901e-03
+Current fraction-to-the-boundary parameter tau = 9.9717157287525382e-01
+
+||curr_x||_inf   = 2.1911622938461610e+00
+||curr_s||_inf   = 2.1911622938461610e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 6.5520192373288724e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.0250210997920642e-02
+
+||delta_x||_inf   = 1.5250591766913677e+00
+||delta_s||_inf   = 1.5250591766913677e+00
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 8.6101130010545531e-03
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 8.6091412853258279e-03
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.4915693381775530e+00
+curr_x[    2]= 2.1911622938461610e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-2.1911622938461610e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 6.5520192373288724e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 6.9116230884616092e-01
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.0250210997920642e-02
+
+
+***Current NLP Values for Iteration 4:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.6271515666200157e-01    6.3209266692877577e+00
+Dual infeasibility......:   1.0407253526827649e+00    2.5039851985547322e+01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   4.8554298030252796e-02    1.1682164106078823e+00
+Overall NLP error.......:   1.0407253526827649e+00    2.5039851985547322e+01
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-1.0407253526827649e+00
+grad_f[    2]=-2.7944136945355380e-01
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-2.1911622938461610e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 4:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 1.040725e+00
+Barrier Parameter: 2.828427e-03
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 4:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  2.220446e-16
+max-norm resid_s  3.469447e-18
+max-norm resid_c  0.000000e+00
+max-norm resid_d  5.551115e-17
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 1.04e+00 nrm_sol = 3.60e-01 nrm_resid = 2.22e-16
+residual_ratio = 1.585242e-16
+Factorization successful.
+max-norm resid_x  5.551115e-17
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 3.469447e-18
+nrm_rhs = 1.04e+00 nrm_sol = 3.60e-01 nrm_resid = 5.55e-17
+residual_ratio = 3.963106e-17
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 4:
+**************************************************
+
+--> Starting filter line search in iteration 4 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 1.128030e-01
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.3491651099712713e-01  (reference  2.6375994229963373e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -3.695422e-02
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -3.695422e-02
+
+**************************************************
+*** Update HessianMatrix for Iteration 5:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 5:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   5  5.5768892e+00 0.00e+00 4.88e-01  -2.5 3.60e-01    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 5 from the following point:
+**************************************************
+
+Current barrier parameter mu = 2.8284271247461901e-03
+Current fraction-to-the-boundary parameter tau = 9.9717157287525382e-01
+
+||curr_x||_inf   = 1.8311895381439787e+00
+||curr_s||_inf   = 1.8311895381439787e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 4.0680125720749347e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 4.0680154005020591e-02
+
+||delta_x||_inf   = 3.5997275570218229e-01
+||delta_s||_inf   = 3.5997275570218229e-01
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 2.4840066652539378e-02
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 2.9570056992900048e-02
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.3579907772041386e+00
+curr_x[    2]= 1.8311895381439787e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.8311895381439787e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 4.0680125720749347e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 3.3118955314397858e-01
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 4.0680154005020591e-02
+
+
+***Current NLP Values for Iteration 5:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.3179090750779452e-01    5.5768892346375356e+00
+Dual infeasibility......:   4.8836470616798494e-01    1.1750054830401718e+01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   1.3472842026750999e-02    3.2415657916362905e-01
+Overall NLP error.......:   4.8836470616798494e-01    1.1750054830401718e+01
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-4.8836470616798494e-01
+grad_f[    2]=-1.0764266689544325e-01
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.8311895381439787e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 5:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 4.883647e-01
+Barrier Parameter: 2.828427e-03
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 5:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  1.498801e-15
+max-norm resid_s  6.938894e-18
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 4.88e-01 nrm_sol = 3.85e-01 nrm_resid = 1.50e-15
+residual_ratio = 1.716499e-15
+Factorization successful.
+max-norm resid_x  2.775558e-16
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 4.88e-01 nrm_sol = 3.85e-01 nrm_resid = 2.78e-16
+residual_ratio = 3.178702e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 5:
+**************************************************
+
+--> Starting filter line search in iteration 5 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 1.359176e-01
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 8.58e-01
+Checking acceptability for trial step size alpha_primal_test= 8.582265e-01:
+  New values of barrier function     =  2.2708400926041444e-01  (reference  2.3491651099712713e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -2.802046e-02
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -2.802046e-02
+
+**************************************************
+*** Update HessianMatrix for Iteration 6:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 6:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   6  4.9891082e+00 0.00e+00 4.39e-01  -2.5 3.85e-01    -  1.00e+00 8.58e-01f  1 
+
+**************************************************
+*** Beginning Iteration 6 from the following point:
+**************************************************
+
+Current barrier parameter mu = 2.8284271247461901e-03
+Current fraction-to-the-boundary parameter tau = 9.9717157287525382e-01
+
+||curr_x||_inf   = 1.5009367305155450e+00
+||curr_s||_inf   = 1.5009367305155450e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 5.3661863619991999e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 5.5806391284788787e-02
+
+||delta_x||_inf   = 3.8480844161772498e-01
+||delta_s||_inf   = 3.8480844161772498e-01
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 1.5126237279768190e-02
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 1.5126237279768194e-02
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2301813504792150e+00
+curr_x[    2]= 1.5009367305155450e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5009367305155450e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 5.3661863619991999e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 9.3674551554490115e-04
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 5.5806391284788787e-02
+
+
+***Current NLP Values for Iteration 6:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0736110714026540e-01    4.9891082377947855e+00
+Dual infeasibility......:   4.3918120375077019e-01    1.0566699762243530e+01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   5.2276386774769952e-05    1.2577698658009649e-03
+Overall NLP error.......:   4.3918120375077019e-01    1.0566699762243530e+01
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-4.3918120375077019e-01
+grad_f[    2]=-1.0315398629526178e-01
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5009367305155450e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 6:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 4.391812e-01
+Barrier Parameter: 2.828427e-03
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 6:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  1.110223e-16
+max-norm resid_s  4.406198e-16
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 4.39e-01 nrm_sol = 4.94e-02 nrm_resid = 4.41e-16
+residual_ratio = 9.018430e-16
+Factorization successful.
+max-norm resid_x  3.330669e-16
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.253609e-19
+nrm_rhs = 4.39e-01 nrm_sol = 4.94e-02 nrm_resid = 3.33e-16
+residual_ratio = 6.817081e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 6:
+**************************************************
+
+--> Starting filter line search in iteration 6 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 1.975092e-02
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.1761660779760153e-01  (reference  2.2708400926041444e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.492863e-01
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.492863e-01
+
+**************************************************
+*** Update HessianMatrix for Iteration 7:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 7:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   7  5.0324412e+00 0.00e+00 1.43e-03  -2.5 4.94e-02    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 7 from the following point:
+**************************************************
+
+Current barrier parameter mu = 2.8284271247461901e-03
+Current fraction-to-the-boundary parameter tau = 9.9717157287525382e-01
+
+||curr_x||_inf   = 1.5503325271052584e+00
+||curr_s||_inf   = 1.5503325271052584e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 7.6676049951367245e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.6676078235638490e-02
+
+||delta_x||_inf   = 4.9395796589713471e-02
+||delta_s||_inf   = 4.9395796589713471e-02
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 2.3014186331375242e-02
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 2.0869686950849703e-02
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2414651515295354e+00
+curr_x[    2]= 1.5503325271052584e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5503325271052584e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 7.6676049951367245e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 5.0332542105258282e-02
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.6676078235638490e-02
+
+
+***Current NLP Values for Iteration 7:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0916214509528783e-01    5.0324412109926246e+00
+Dual infeasibility......:   1.4304272139042656e-03    3.4416078766536629e-02
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   3.8593019362613526e-03    9.2854804586448139e-02
+Overall NLP error.......:   3.8593019362613526e-03    9.2854804586448139e-02
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]= 1.4304272139042656e-03
+grad_f[    2]= 7.5617661205369877e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5503325271052584e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 7:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 1.430427e-03
+  sub_problem_error < kappa_eps * mu (2.828427e-02)
+Updating mu=   2.8284271247461901e-03 and tau=   9.9717157287525382e-01 to new_mu=   1.5042412372345566e-04 and new_tau=   9.9984957587627654e-01
+Barrier Parameter: 1.504241e-04
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 7:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  2.949030e-17
+max-norm resid_s  1.539567e-17
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 3.71e-03 nrm_sol = 4.76e-02 nrm_resid = 2.95e-17
+residual_ratio = 5.742760e-16
+Factorization successful.
+max-norm resid_x  4.358493e-17
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 2.439455e-19
+nrm_rhs = 3.71e-03 nrm_sol = 4.76e-02 nrm_resid = 4.36e-17
+residual_ratio = 8.487462e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 7:
+**************************************************
+
+--> Starting filter line search in iteration 7 <--
+Mu has changed in line search - resetting watchdog counters.
+The current filter has 0 entries.
+Relative step size for delta_x = 1.868119e-02
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.0646524574393779e-01  (reference  2.0961177843829373e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -3.432841e-03
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -3.432841e-03
+
+**************************************************
+*** Update HessianMatrix for Iteration 8:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 8:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   8  4.9461336e+00 0.00e+00 7.48e-03  -3.8 4.76e-02    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 8 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.5042412372345566e-04
+Current fraction-to-the-boundary parameter tau = 9.9984957587627654e-01
+
+||curr_x||_inf   = 1.5026892725068224e+00
+||curr_s||_inf   = 1.5026892725068224e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 7.5567849465007220e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.5567850969248451e-02
+
+||delta_x||_inf   = 4.7643254598436040e-02
+||delta_s||_inf   = 4.7643254598436040e-02
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 1.1082004863600273e-03
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 1.1082272663900346e-03
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2222792476048947e+00
+curr_x[    2]= 1.5026892725068224e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5026892725068224e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 7.5567849465007220e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 2.6892875068222910e-03
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.5567850969248451e-02
+
+
+***Current NLP Values for Iteration 8:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0557496372437631e-01    4.9461336272084937e+00
+Dual infeasibility......:   7.4780496980144462e-03    1.7992187573422758e-01
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   2.0322367752900861e-04    4.8895616813479465e-03
+Overall NLP error.......:   7.4780496980144462e-03    1.7992187573422758e-01
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-7.4780496980144462e-03
+grad_f[    2]= 7.2508008156565842e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5026892725068224e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 8:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 7.478050e-03
+Barrier Parameter: 1.504241e-04
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 8:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  2.602085e-18
+max-norm resid_s  3.784543e-18
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 7.48e-03 nrm_sol = 6.99e-04 nrm_resid = 3.78e-18
+residual_ratio = 4.628211e-16
+Factorization successful.
+max-norm resid_x  8.673617e-19
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 5.360130e-22
+nrm_rhs = 7.48e-03 nrm_sol = 6.99e-04 nrm_resid = 8.67e-19
+residual_ratio = 1.060718e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 8:
+**************************************************
+
+--> Starting filter line search in iteration 8 <--
+The current filter has 0 entries.
+Relative step size for delta_x = 2.793275e-04
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.0645713223735004e-01  (reference  2.0646524574393779e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.485431e-05
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.485431e-05
+
+**************************************************
+*** Update HessianMatrix for Iteration 9:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 9:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   9  4.9448489e+00 0.00e+00 6.56e-06  -3.8 6.99e-04    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 9 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.5042412372345566e-04
+Current fraction-to-the-boundary parameter tau = 9.9984957587627654e-01
+
+||curr_x||_inf   = 1.5019902026256207e+00
+||curr_s||_inf   = 1.5019902026256207e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 7.5578132781359414e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.5578134285600646e-02
+
+||delta_x||_inf   = 6.9906988120179705e-04
+||delta_s||_inf   = 6.9906988120179705e-04
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 1.0283316352191857e-05
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 1.0283316352197515e-05
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2218421928665204e+00
+curr_x[    2]= 1.5019902026256207e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5019902026256207e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 7.5578132781359414e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 1.9902176256205717e-03
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.5578134285600646e-02
+
+
+***Current NLP Values for Iteration 9:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0552156769907881e-01    4.9448489188398357e+00
+Dual infeasibility......:   6.5637985904202867e-06    1.5792499408551208e-04
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   1.5041693496672083e-04    3.6190314552993030e-03
+Overall NLP error.......:   1.5041693496672083e-04    3.6190314552993030e-03
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-6.5637985904202867e-06
+grad_f[    2]= 7.5576544943918647e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5019902026256207e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 9:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 6.563799e-06
+  sub_problem_error < kappa_eps * mu (1.504241e-03)
+Updating mu=   1.5042412372345566e-04 and tau=   9.9984957587627654e-01 to new_mu=   1.8449144625279479e-06 and new_tau=   9.9999815508553747e-01
+Barrier Parameter: 1.844914e-06
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 9:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  1.387779e-17
+max-norm resid_s  5.031376e-18
+max-norm resid_c  0.000000e+00
+max-norm resid_d  4.336809e-19
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 0.000000e+00
+nrm_rhs = 1.49e-04 nrm_sol = 1.97e-03 nrm_resid = 1.39e-17
+residual_ratio = 6.561606e-15
+Factorization successful.
+max-norm resid_x  3.765908e-18
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.453191e-20
+nrm_rhs = 1.49e-04 nrm_sol = 1.97e-03 nrm_resid = 3.77e-18
+residual_ratio = 1.780573e-15
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 9:
+**************************************************
+
+--> Starting filter line search in iteration 9 <--
+Mu has changed in line search - resetting watchdog counters.
+The current filter has 0 entries.
+Relative step size for delta_x = 7.859450e-04
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.0539256594350808e-01  (reference  2.0553304216543805e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.467982e-04
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.467982e-04
+
+**************************************************
+*** Update HessianMatrix for Iteration 10:
+**************************************************
+
+
+
+**************************************************
+*** Summary of Iteration: 10:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  10  4.9412726e+00 0.00e+00 1.32e-05  -5.7 1.97e-03    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 10 from the following point:
+**************************************************
+
+Current barrier parameter mu = 1.8449144625279479e-06
+Current fraction-to-the-boundary parameter tau = 9.9999815508553747e-01
+
+||curr_x||_inf   = 1.5000237760064712e+00
+||curr_s||_inf   = 1.5000237760064712e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 7.5601666658816277e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.5601666677265422e-02
+
+||delta_x||_inf   = 1.9664266191494538e-03
+||delta_s||_inf   = 1.9664266191494538e-03
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 2.3533877456861761e-05
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 2.3532391664774812e-05
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2210362586906711e+00
+curr_x[    2]= 1.5000237760064712e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5000237760064712e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 7.5601666658816277e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 2.3791006471096665e-05
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.5601666677265422e-02
+
+
+***Current NLP Values for Iteration 10:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0537292460975465e-01    4.9412725661106967e+00
+Dual infeasibility......:   1.3225855390204831e-05    3.1821408068832824e-04
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   1.7986397411445147e-06    4.3275272171937021e-05
+Overall NLP error.......:   1.3225855390204831e-05    3.1821408068832824e-04
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-1.3225855390204831e-05
+grad_f[    2]= 7.5596267407811585e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5000237760064712e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+**************************************************
+*** Update Barrier Parameter for Iteration 10:
+**************************************************
+
+Optimality Error for Barrier Sub-problem = 1.322586e-05
+  sub_problem_error < kappa_eps * mu (1.844914e-05)
+Updating mu=   1.8449144625279479e-06 and tau=   9.9999815508553747e-01 to new_mu=   2.5059035596800560e-09 and new_tau=   9.9999999749409640e-01
+Barrier Parameter: 2.505904e-09
+
+**************************************************
+*** Solving the Primal Dual System for Iteration 10:
+**************************************************
+
+Solving system with delta_x=0.000000e+00 delta_s=0.000000e+00
+                    delta_c=0.000000e+00 delta_d=0.000000e+00
+Return values from MA27BD: IFLAG = 0, IERROR = 0
+Number of doubles for MA27 to hold factorization (INFO(9)) = 7
+Number of integers for MA27 to hold factorization (INFO(10)) = 11
+Factorization successful.
+Number of trial factorizations performed: 1
+Perturbation parameters: delta_x=0.000000e+00 delta_s=0.000000e+00
+                         delta_c=0.000000e+00 delta_d=0.000000e+00
+max-norm resid_x  8.863353e-18
+max-norm resid_s  9.628118e-18
+max-norm resid_c  0.000000e+00
+max-norm resid_d  3.388132e-21
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 8.077936e-28
+nrm_rhs = 1.32e-05 nrm_sol = 2.38e-05 nrm_resid = 9.63e-18
+residual_ratio = 2.603333e-13
+Factorization successful.
+max-norm resid_x  2.710505e-20
+max-norm resid_s  0.000000e+00
+max-norm resid_c  0.000000e+00
+max-norm resid_d  0.000000e+00
+max-norm resid_zL 0.000000e+00
+max-norm resid_zU 0.000000e+00
+max-norm resid_vL 0.000000e+00
+max-norm resid_vU 1.667851e-23
+nrm_rhs = 1.32e-05 nrm_sol = 2.38e-05 nrm_resid = 2.71e-20
+residual_ratio = 7.328897e-16
+
+**************************************************
+*** Finding Acceptable Trial Point for Iteration 10:
+**************************************************
+
+--> Starting filter line search in iteration 10 <--
+Mu has changed in line search - resetting watchdog counters.
+The current filter has 0 entries.
+Relative step size for delta_x = 9.503091e-06
+minimal step size ALPHA_MIN = 0.000000E+00
+Starting checks for alpha (primal) = 1.00e+00
+Checking acceptability for trial step size alpha_primal_test= 1.000000e+00:
+  New values of barrier function     =  2.0537117162788554e-01  (reference  2.0537295128811248e-01):
+  New values of constraint violation =  0.0000000000000000e+00  (reference  0.0000000000000000e+00):
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.793643e-06
+Checking Armijo Condition...
+Succeeded...
+Checking filter acceptability...
+Succeeded...
+reference_theta = 0.000000e+00 reference_gradBarrTDelta = -1.793643e-06
+
+
+**************************************************
+*** Summary of Iteration: 11:
+**************************************************
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  11  4.9412294e+00 0.00e+00 2.15e-09  -8.6 2.38e-05    -  1.00e+00 1.00e+00f  1 
+
+**************************************************
+*** Beginning Iteration 11 from the following point:
+**************************************************
+
+Current barrier parameter mu = 2.5059035596800560e-09
+Current fraction-to-the-boundary parameter tau = 9.9999999749409640e-01
+
+||curr_x||_inf   = 1.5000000180531374e+00
+||curr_s||_inf   = 1.5000000180531374e+00
+||curr_y_c||_inf = 0.0000000000000000e+00
+||curr_y_d||_inf = 7.5601962221294963e-02
+||curr_z_L||_inf = 0.0000000000000000e+00
+||curr_z_U||_inf = 0.0000000000000000e+00
+||curr_v_L||_inf = 0.0000000000000000e+00
+||curr_v_U||_inf = 7.5601962221320013e-02
+
+||delta_x||_inf   = 2.3757953333791741e-05
+||delta_s||_inf   = 2.3757953333791741e-05
+||delta_y_c||_inf = 0.0000000000000000e+00
+||delta_y_d||_inf = 2.9556247868100340e-07
+||delta_z_L||_inf = 0.0000000000000000e+00
+||delta_z_U||_inf = 0.0000000000000000e+00
+||delta_v_L||_inf = 0.0000000000000000e+00
+||delta_v_U||_inf = 2.9554405459504949e-07
+DenseVector "curr_x" with 2 elements:
+curr_x[    1]=-1.2210262495532593e+00
+curr_x[    2]= 1.5000000180531374e+00
+DenseVector "curr_s" with 1 elements:
+curr_s[    1]=-1.5000000180531374e+00
+DenseVector "curr_y_c" with 0 elements:
+DenseVector "curr_y_d" with 1 elements:
+curr_y_d[    1]= 7.5601962221294963e-02
+DenseVector "curr_slack_x_L" with 0 elements:
+DenseVector "curr_slack_x_U" with 0 elements:
+DenseVector "curr_z_L" with 0 elements:
+DenseVector "curr_z_U" with 0 elements:
+DenseVector "curr_slack_s_L" with 0 elements:
+DenseVector "curr_slack_s_U" with 1 elements:
+curr_slack_s_U[    1]= 3.3053137338256988e-08
+DenseVector "curr_v_L" with 0 elements:
+DenseVector "curr_v_U" with 1 elements:
+curr_v_U[    1]= 7.5601962221320013e-02
+
+
+***Current NLP Values for Iteration 11:
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0537112846332248e-01    4.9412293508275384e+00
+Dual infeasibility......:   2.1476778423472768e-09    5.1673128886875481e-08
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   2.4988820403430069e-09    6.0123101890652746e-08
+Overall NLP error.......:   2.4988820403430069e-09    6.0123101890652746e-08
+
+DenseVector "grad_f" with 2 elements:
+grad_f[    1]=-2.1476778423472768e-09
+grad_f[    2]= 7.5601961388521072e-02
+DenseVector "curr_c" with 0 elements:
+DenseVector "curr_d" with 1 elements:
+curr_d[    1]=-1.5000000180531374e+00
+DenseVector "curr_d - curr_s" with 1 elements:
+curr_d - curr_s[    1]= 0.0000000000000000e+00
+
+
+
+Number of Iterations....: 11
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.0537112846332248e-01    4.9412293508275384e+00
+Dual infeasibility......:   2.1476778423472768e-09    5.1673128886875481e-08
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   2.4988820403430069e-09    6.0123101890652746e-08
+Overall NLP error.......:   2.4988820403430069e-09    6.0123101890652746e-08
+
+DenseVector "x" with 2 elements:
+x[    1]=-1.2210262495532593e+00
+x[    2]= 1.5000000180531374e+00
+DenseVector "y_c" with 0 elements:
+DenseVector "y_d" with 1 elements:
+y_d[    1]= 7.5601962221294963e-02
+DenseVector "z_L" with 0 elements:
+DenseVector "z_U" with 0 elements:
+DenseVector "v_L" with 0 elements:
+DenseVector "v_U" with 1 elements:
+v_U[    1]= 7.5601962221320013e-02
+
+Number of objective function evaluations             = 17
+Number of objective gradient evaluations             = 12
+Number of equality constraint evaluations            = 0
+Number of inequality constraint evaluations          = 17
+Number of equality constraint Jacobian evaluations   = 0
+Number of inequality constraint Jacobian evaluations = 12
+Number of Lagrangian Hessian evaluations             = 11
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.005
+Total CPU secs in NLP function evaluations           =      0.000
+
+EXIT: Optimal Solution Found.
+DenseVector "final x unscaled" with 2 elements:
+final x unscaled[    1]=-1.2210262495532593e+00
+final x unscaled[    2]= 1.5000000180531374e+00
+DenseVector "final y_c unscaled" with 0 elements:
+DenseVector "final y_d unscaled" with 1 elements:
+final y_d unscaled[    1]= 1.8189832110443567e+00
+DenseVector "final z_L unscaled" with 0 elements:
+DenseVector "final z_U unscaled" with 0 elements:

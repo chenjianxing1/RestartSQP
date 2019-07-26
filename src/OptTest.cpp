@@ -59,7 +59,8 @@ namespace SQPhotstart {
         Check_Complementarity();
         Check_Dual_Feasibility();
         Check_Stationarity();
-        if(primal_feasibility_&&dual_feasibility_&&complementarity_&&stationarity_){
+        if (primal_feasibility_ && dual_feasibility_ && complementarity_ &&
+            stationarity_) {
             first_order_opt_ = true;
         }
 
@@ -115,8 +116,9 @@ namespace SQPhotstart {
         // the difference of g-J^T y -\lambda
         Jacobian_->transposed_times(multiplier_cons_, difference);
         difference->add_vector(multiplier_vars_->values());
-	       difference->add_vector(multiplier_vars_->values());difference->subtract_vector(grad_f_->values());	
-	if (difference->getInfNorm() < opt_tol_) {
+        difference->add_vector(multiplier_vars_->values());
+        difference->subtract_vector(grad_f_->values());
+        if (difference->getInfNorm() < opt_tol_) {
             stationarity_ = true;
             return true;
         }
@@ -200,25 +202,57 @@ namespace SQPhotstart {
     }
 
     bool NLP_OptTest::Check_Complementarity() {
-	//TODO: rewrite it 
-	//   if (complementarity_) return true;
-     //   if (nCon_ > 0) {
-     //       for (int i = 0; i < nCon_; i++) {
-     //           if (multiplier_cons_->values()[i] * c_k_->values()[i] > opt_compl_tol_) {
-     //               complementarity_ = false;
-     //               return false;
-     //           }
-     //       }
-     //   }
-     //   if (nVar_ > 0) {
-     //       for (int i = 0; i < nVar_; i++) {
-     //           if (multiplier_vars_->values()[i] * x_k_->values()[i] > opt_compl_tol_) {
-     //               complementarity_ = false;
-     //               return false;
-     //           }
-     //       }
-     //   }
-     //   complementarity_ = true;
+        if (complementarity_) return true;
+        if (nCon_ > 0) {
+            for (int i = 0; i < nCon_; i++) {
+                if (cons_type_[i] == BOUNDED_ABOVE) {
+                    if (multiplier_cons_->values()[i] *
+                        (c_u_->values()[i] - c_k_->values()[i])
+                        > opt_compl_tol_) {
+                        complementarity_ = false;
+                        return false;
+                    }
+                } else if (cons_type_[i] == BOUNDED_BELOW) {
+                    if (multiplier_cons_->values()[i] *
+                        (c_k_->values()[i] - c_l_->values()[i])
+                        > opt_compl_tol_) {
+                        complementarity_ = false;
+                        return false;
+                    }
+                } else if (cons_type_[i] == UNBOUNDED) {
+                    if (multiplier_cons_->values()[i] > opt_compl_tol_) {
+                        complementarity_ = false;
+                        return false;
+                    }
+                }
+            }
+
+        }
+        for (int i = 0; i < nVar_; i++) {
+            if (bound_cons_type_[i] == BOUNDED_ABOVE) {
+                if (multiplier_vars_->values()[i] *
+                    (x_u_->values()[i] - x_k_->values()[i])
+                    > opt_compl_tol_) {
+                    complementarity_ = false;
+                    return false;
+                }
+            } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
+                if (multiplier_vars_->values()[i] *
+                    (x_k_->values()[i] - x_l_->values()[i])
+                    > opt_compl_tol_) {
+                    complementarity_ = false;
+                    return false;
+                }
+            } else if (bound_cons_type_[i] == UNBOUNDED) {
+                if (multiplier_vars_->values()[i] > opt_compl_tol_) {
+                    complementarity_ = false;
+                    return false;
+                }
+            }
+        }
+
+
+        complementarity_ = true;
         return true;
     }
 
