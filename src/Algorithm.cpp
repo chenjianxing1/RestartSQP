@@ -111,7 +111,11 @@ namespace SQPhotstart {
      *  code according to the error type.
      */
     bool Algorithm::termination_check() {
-	    get_multipliers(myQP);
+	    get_multipliers(myQP);	
+	    //TODO:DELETE OUTPUT
+	    // nlp_->Eval_gradient(x_trial_, grad_f_);
+//	    printf( "the grad_f_trial is \n");
+//	    grad_f_->print();
         if (norm_p_k_ < options->tol) {
             if (nlp_opt_tester->Check_Stationarity()) {
                 nlp_opt_tester->Check_KKTConditions(infea_measure_);
@@ -124,7 +128,6 @@ namespace SQPhotstart {
 			std::cout<<"dual_feasibility "<<nlp_opt_tester->dual_feasibility_ <<std::endl;
 			std::cout<<"stationarity     "<<nlp_opt_tester->stationarity_ <<std::endl;
 			std::cout<<"complementarity  "<<nlp_opt_tester->complementarity_ <<std::endl;
-                    //TODO:
                 }
             } else {
 		
@@ -293,12 +296,21 @@ namespace SQPhotstart {
 
     bool Algorithm::get_multipliers(shared_ptr<QPhandler> qphandler) {
         double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
-//TODO: rewrite
-	//	qphandler->GetMultipliers(tmp_lambda);
-//	
-//        multiplier_cons_->copy_vector(tmp_lambda);
-//	multiplier_vars_->copy_vector(tmp_lambda+nCon_);
+		qphandler->GetMultipliers(tmp_lambda);
+
 	
+	if(options->QPsolverChoice=="qpOASES"){
+	//The qpOASES stores the multipliers of variables to the first (num_QP_var)
+	//position and multipliers of constraints to the last (num_QP_nCon) position 
+		multiplier_cons_->copy_vector(tmp_lambda+3*nCon_);
+		multiplier_vars_->copy_vector(tmp_lambda);
+	//TODO:DELETE OUTPUT
+		//		printf("multiplier_vars\n");
+//		multiplier_vars_->print();
+//		printf("multiplier_cons\n");
+//		multiplier_cons_->print();
+//		grad_f_->print();
+	}
         delete[] tmp_lambda;
         return true;
     }

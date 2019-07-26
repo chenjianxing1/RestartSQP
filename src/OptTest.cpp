@@ -115,7 +115,7 @@ namespace SQPhotstart {
         // the difference of g-J^T y -\lambda
         Jacobian_->transposed_times(multiplier_cons_, difference);
         difference->add_vector(multiplier_vars_->values());
-	difference->subtract_vector(grad_f_->values());	
+	       difference->add_vector(multiplier_vars_->values());difference->subtract_vector(grad_f_->values());	
 	if (difference->getInfNorm() < opt_tol_) {
             stationarity_ = true;
             return true;
