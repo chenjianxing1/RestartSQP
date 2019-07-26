@@ -19,313 +19,371 @@
 
 namespace SQPhotstart {
 
-    class Matrix {
+class Matrix {
 
-    public:
-        /** Default constructor*/
-        Matrix() {};
+public:
+    /** Default constructor*/
+    Matrix() {};
 
-        /** Default destructor*/
-        virtual ~Matrix() {};
+    /** Default destructor*/
+    virtual ~Matrix() {};
 
-        virtual void print() const = 0;
+    virtual void print() const = 0;
 
-    };
+};
 
-    class qpOASESSparseMat;
+class qpOASESSparseMat;
 
-    typedef struct {
-        int irow1 = 0;
-        int jcol1 = 0;
-        int size = 0;
-        double scaling_factor1 = 1.0;
-        int irow2 = 0;
-        int jcol2 = 0;
-        double scaling_factor2 = -1.0;
-    } Identity2Info;
+typedef struct {
+    int irow1 = 0;
+    int jcol1 = 0;
+    int size = 0;
+    double scaling_factor1 = 1.0;
+    int irow2 = 0;
+    int jcol2 = 0;
+    double scaling_factor2 = -1.0;
+} Identity2Info;
+
+/**
+ *
+ * This is the class for SparseMatrix, it stores the sparse matrix data in triplet,
+ * in class member @_vector. It contains the methods that can copy a Matrix,
+ * allocate data to the class member, and perform a matrix vector multiplication.
+ *
+ */
+
+class SpTripletMat : public Matrix {
+public:
+
+    /** constructor/destructor */
+    //@{
+    /** Constructor for an empty Sparse Matrix with N non-zero entries*/
+    SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false);
+
+
+    /** Default destructor*/
+    ~SpTripletMat() override;
+    //@}
 
     /**
+     * @brief allocate the data to the class members
      *
-     * This is the class for SparseMatrix, it stores the sparse matrix data in triplet,
-     * in class member @_vector. It contains the methods that can copy a Matrix,
-     * allocate data to the class member, and perform a matrix vector multiplication.
+     * @param RowIndex the row index of a entry in a matrix, starting from 1
+     * @param ColIndex the column index of a entry in a matrix, starting from 1
+     * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
      *
      */
 
-    class SpTripletMat : public Matrix {
-    public:
+    bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) {
+        return false;
+    }
 
-        /** constructor/destructor */
-        //@{
-        /** Constructor for an empty Sparse Matrix with N non-zero entries*/
-        SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false);
-
-
-        /** Default destructor*/
-        ~SpTripletMat() override;
-        //@}
-
-        /**
-         * @brief allocate the data to the class members
-         *
-         * @param RowIndex the row index of a entry in a matrix, starting from 1
-         * @param ColIndex the column index of a entry in a matrix, starting from 1
-         * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
-         *
-         */
-
-        bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) { return false; }
-
-        /**
-         *@brief print the sparse matrix in triplet form
-         */
-        void print() const override;
+    /**
+     *@brief print the sparse matrix in triplet form
+     */
+    void print() const override;
 
 
-        /**
-         * @brief Times a matrix with a vector p, the pointer to the matrix-vector
-         * product  will be stored in the class member of another Vector class object
-         * called "result"
-         * */
-        virtual bool times(std::shared_ptr<const Vector> p,
-                           std::shared_ptr<Vector> result) const ;
+    /**
+     * @brief print the sparse matrix in the sense form
+     */
+    void print_full(const char* name = NULL	) const ;
+    /**
+     * @brief Times a matrix with a vector p, the pointer to the matrix-vector
+     * product  will be stored in the class member of another Vector class object
+     * called "result"
+     * */
+    virtual bool times(std::shared_ptr<const Vector> p,
+                       std::shared_ptr<Vector> result) const ;
 
-        /**
-         * @brief Times the matrix transpose with a vector p, the pointer to the matrix-vector
-         * product  will be stored in the class member of another Vector class object
-         * called "result"
-         * */
-        virtual bool transposed_times(std::shared_ptr<const Vector> p,
-                                      std::shared_ptr<Vector> result) const;;
+    /**
+     * @brief Times the matrix transpose with a vector p, the pointer to the matrix-vector
+     * product  will be stored in the class member of another Vector class object
+     * called "result"
+     * */
+    virtual bool transposed_times(std::shared_ptr<const Vector> p,
+                                  std::shared_ptr<Vector> result) const;;
 
-        /**
-         * @brief calculate the one norm of the matrix
-         *
-         * @return the calculated one-norm
-         */
-        double onenorm();
+    /**
+     * @brief calculate the one norm of the matrix
+     *
+     * @return the calculated one-norm
+     */
+    double onenorm();
 
-        /**
-         * @brief calculate the infinity norm of the matrix
-         *
-         * @return the calculated inf-norm
-         */
-        double infnorm();;
+    /**
+     * @brief calculate the infinity norm of the matrix
+     *
+     * @return the calculated inf-norm
+     */
+    double infnorm();;
 
-        /**
-         *@brief make a deep copy of a matrix information
-         */
-        virtual bool copy(std::shared_ptr<const SpTripletMat> rhs);;
-
-
-        /**Extract Matrix info*/
-        inline int ColNum() const { return ColNum_; }
-
-        inline int RowNum() const { return RowNum_; }
-
-        inline int EntryNum() { return EntryNum_; }
-
-        inline int EntryNum() const { return EntryNum_; }
-
-        inline int* RowIndex() { return RowIndex_; }
-
-        inline int* ColIndex() { return ColIndex_; }
-
-        inline double* MatVal() { return MatVal_; }
-
-        inline int* order() { return order_; }
-
-        inline const int* RowIndex() const { return RowIndex_; }
-
-        inline const int* ColIndex() const { return ColIndex_; }
-
-        inline const double* MatVal() const { return MatVal_; }
-
-        inline const int* order() const { return order_; }
-
-        bool isSymmetric() const;
-
-        inline bool setOrderAt(int location, int order_to_assign);
-
-        inline bool setMatValAt(int location, int value_to_assign);
+    /**
+     *@brief make a deep copy of a matrix information
+     */
+    virtual bool copy(std::shared_ptr<const SpTripletMat> rhs);;
 
 
-        /** Private Method */
-    private:
-        /** Default constructor*/
+    /**Extract Matrix info*/
+    inline int ColNum() const {
+        return ColNum_;
+    }
 
-        SpTripletMat();
+    inline int RowNum() const {
+        return RowNum_;
+    }
 
-        /** free all memory*/
-        bool freeMemory();
+    inline int EntryNum() {
+        return EntryNum_;
+    }
 
-        /** Copy Constructor */
-        SpTripletMat(const SpTripletMat&);
+    inline int EntryNum() const {
+        return EntryNum_;
+    }
 
-        /** Overloaded Equals Operator */
-        void operator=(const SpTripletMat&);
-        /** Private Class Members*/
+    inline int* RowIndex() {
+        return RowIndex_;
+    }
+
+    inline int* ColIndex() {
+        return ColIndex_;
+    }
+
+    inline double* MatVal() {
+        return MatVal_;
+    }
+
+    inline int* order() {
+        return order_;
+    }
+
+    inline const int* RowIndex() const {
+        return RowIndex_;
+    }
+
+    inline const int* ColIndex() const {
+        return ColIndex_;
+    }
+
+    inline const double* MatVal() const {
+        return MatVal_;
+    }
+
+    inline const int* order() const {
+        return order_;
+    }
+
+    bool isSymmetric() const;
+
+    inline bool setOrderAt(int location, int order_to_assign);
+
+    inline bool setMatValAt(int location, int value_to_assign);
 
 
-    private:
-        double* MatVal_;  /**< the entry data of a matrix */
-        int* order_;    /**< the corresponding original position of a matrix entry */
-        int* RowIndex_;/**< the row number of a matrix entry */
-        int* ColIndex_;/**< the column number of a matrix entry */
-        int ColNum_;    /**< the number columns of a matrix */
-        int RowNum_;    /**< the number of rows of a matrix */
-        int EntryNum_;  /**< number of non-zero entries in  matrix */
-        bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal data
+    /** Private Method */
+private:
+    /** Default constructor*/
+
+    SpTripletMat();
+
+    /** free all memory*/
+    bool freeMemory();
+
+    /** Copy Constructor */
+    SpTripletMat(const SpTripletMat&);
+
+    /** Overloaded Equals Operator */
+    void operator=(const SpTripletMat&);
+    /** Private Class Members*/
+
+
+private:
+    double* MatVal_;  /**< the entry data of a matrix */
+    int* order_;    /**< the corresponding original position of a matrix entry */
+    int* RowIndex_;/**< the row number of a matrix entry */
+    int* ColIndex_;/**< the column number of a matrix entry */
+    int ColNum_;    /**< the number columns of a matrix */
+    int RowNum_;    /**< the number of rows of a matrix */
+    int EntryNum_;  /**< number of non-zero entries in  matrix */
+    bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal data
                              * will only be stored for once*/
 
-    };
+};
+
+/**
+ *@brief This is a derived class of Matrix.
+ * It strored matrix in Harwell-Boeing format which is required by qpOASES.
+ * It contains method to transform matrix format from Triplet form to
+ * Harwell-Boeing format and then stored to its class members
+ */
+class qpOASESSparseMat : public Matrix {
+
+public:
+    /** constructor/destructor */
+    //@{
+
+    /**Default constructor*/
+    qpOASESSparseMat(int RowNum, int ColNum, bool isSymmetric);
 
     /**
-     *@brief This is a derived class of Matrix.
-     * It strored matrix in Harwell-Boeing format which is required by qpOASES.
-     * It contains method to transform matrix format from Triplet form to
-     * Harwell-Boeing format and then stored to its class members
+     * @brief A constructor
+     * @param nnz the number of nonzero entries
+     * @param RowNum the number of rows
+     * @param ColNum the number of columns
      */
-    class qpOASESSparseMat : public Matrix {
-
-    public:
-        /** constructor/destructor */
-        //@{
-
-        /**Default constructor*/
-        qpOASESSparseMat(int RowNum, int ColNum, bool isSymmetric);
-
-        /**
-         * @brief A constructor
-         * @param nnz the number of nonzero entries
-         * @param RowNum the number of rows
-         * @param ColNum the number of columns
-         */
-        qpOASESSparseMat(int nnz, int RowNum, int ColNum);
+    qpOASESSparseMat(int nnz, int RowNum, int ColNum);
 
 
-        /**
-         * @brief Default destructor
-         */
-        ~qpOASESSparseMat() override;
-        //@}
+    /**
+     * @brief Default destructor
+     */
+    ~qpOASESSparseMat() override;
+    //@}
 
 
-        /**
-         * @brief set the Matrix values to the matrix, convert from triplet format to
-         * Harwell-Boeing Matrix format.
-         * @param MatVal entry values(orders are not yet under permutation)
-         * @param I_info the 2 identity matrices information
-         */
-        virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
+    /**
+     * @brief set the Matrix values to the matrix, convert from triplet format to
+     * Harwell-Boeing Matrix format.
+     * @param MatVal entry values(orders are not yet under permutation)
+     * @param I_info the 2 identity matrices information
+     */
+    virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
 
-        virtual bool setMatVal(std::shared_ptr<const SpTripletMat> rhs);
+    virtual bool setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 
-        /**
-         * @brief setup the structure of the sparse matrix for solver qpOASES(should
-         * be called only for once).
-         *
-         * This method will convert the strucutre information from the triplet form from a
-         * SpMatrix object to the format required by the QPsolver qpOASES.
-         *
-         * @param rhs a SpMatrix object whose content will be copied to the class members
-         * (in a different sparse matrix representations)
-         * @param I_info the information of 2 identity sub matrices.
-         *
-         */
-        bool setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
+    /**
+     * @brief setup the structure of the sparse matrix for solver qpOASES(should
+     * be called only for once).
+     *
+     * This method will convert the strucutre information from the triplet form from a
+     * SpMatrix object to the format required by the QPsolver qpOASES.
+     *
+     * @param rhs a SpMatrix object whose content will be copied to the class members
+     * (in a different sparse matrix representations)
+     * @param I_info the information of 2 identity sub matrices.
+     *
+     */
+    bool setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
 
-        bool setStructure(std::shared_ptr<const SpTripletMat> rhs);
-
-
-        bool updateMatVal(const double* MatVal) { return false; }
-
-        /**
-         * @brief print the matrix information
-         */
-        void print() const override;
+    bool setStructure(std::shared_ptr<const SpTripletMat> rhs);
 
 
-        /**
-         * @brief make a deep copy of a matrix information
-         */
+    bool updateMatVal(const double* MatVal) {
+        return false;
+    }
 
-        virtual bool copy(std::shared_ptr<const qpOASESSparseMat> rhs);
+    /**
+     * @brief print the matrix information
+     */
+    void print() const override;
 
-        /** Extract class member information*/
-        //@{
 
-        inline int EntryNum() const { return EntryNum_; }
+    /**
+     * @brief make a deep copy of a matrix information
+     */
 
-        inline int ColNum() const { return ColNum_; }
+    virtual bool copy(std::shared_ptr<const qpOASESSparseMat> rhs);
 
-        inline int RowNum() const { return RowNum_; }
+    /** Extract class member information*/
+    //@{
 
-        inline qpOASES::sparse_int_t* RowIndex() { return RowIndex_; }
+    inline int EntryNum() const {
+        return EntryNum_;
+    }
 
-        inline qpOASES::sparse_int_t* ColIndex() { return ColIndex_; }
+    inline int ColNum() const {
+        return ColNum_;
+    }
 
-        inline qpOASES::real_t* MatVal() { return MatVal_; }
+    inline int RowNum() const {
+        return RowNum_;
+    }
 
-        inline int* order() { return order_; }
+    inline qpOASES::sparse_int_t* RowIndex() {
+        return RowIndex_;
+    }
 
-        inline const qpOASES::sparse_int_t* RowIndex() const { return RowIndex_; }
+    inline qpOASES::sparse_int_t* ColIndex() {
+        return ColIndex_;
+    }
 
-        inline const qpOASES::sparse_int_t* ColIndex() const { return ColIndex_; }
+    inline qpOASES::real_t* MatVal() {
+        return MatVal_;
+    }
 
-        inline const qpOASES::real_t* MatVal() const { return MatVal_; }
+    inline int* order() {
+        return order_;
+    }
 
-        inline const int* order() const { return order_; }
+    inline const qpOASES::sparse_int_t* RowIndex() const {
+        return RowIndex_;
+    }
 
-        inline bool isSymmetric() const { return isSymmetric_; };
+    inline const qpOASES::sparse_int_t* ColIndex() const {
+        return ColIndex_;
+    }
 
-        inline bool isIsinitialized() const { return isInitialised_; };
-        //@}
+    inline const qpOASES::real_t* MatVal() const {
+        return MatVal_;
+    }
 
-        /**Private methods*/
-    private:
+    inline const int* order() const {
+        return order_;
+    }
 
-        /**Default constructor*/
-        qpOASESSparseMat();
-
-        /** free all memory*/
-        bool freeMemory();
-
-        /** Copy Constructor */
-        qpOASESSparseMat(const qpOASESSparseMat&);
-
-        /** Overloaded Equals Operator */
-        void operator=(const qpOASESSparseMat&);
-
-        /**
-         * This is part of qpOASESMatrixAdapter
-         * @brief This is the sorted rule that used to sort data, first based on column
-         * index then based on row index
-         */
-        static bool
-        tuple_sort_rule(const std::tuple<int, int, int> left,
-                        const std::tuple<int, int, int> right) {
-            if (std::get<1>(left) < std::get<1>(right)) return true;
-            else if (std::get<1>(left) > std::get<1>(right)) return false;
-            else {
-                if (std::get<0>(left) < std::get<0>(right))return true;
-                else return false;
-            }
-        }
-
-        /** Private members*/
-
-    private:
-        qpOASES::sparse_int_t* RowIndex_;
-        qpOASES::sparse_int_t* ColIndex_;
-        qpOASES::real_t* MatVal_;
-        int* order_;
-        int RowNum_;
-        int ColNum_;
-        int EntryNum_;
-        bool isInitialised_;
-        bool isSymmetric_;
+    inline bool isSymmetric() const {
+        return isSymmetric_;
     };
+
+    inline bool isIsinitialized() const {
+        return isInitialised_;
+    };
+    //@}
+
+    /**Private methods*/
+private:
+
+    /**Default constructor*/
+    qpOASESSparseMat();
+
+    /** free all memory*/
+    bool freeMemory();
+
+    /** Copy Constructor */
+    qpOASESSparseMat(const qpOASESSparseMat&);
+
+    /** Overloaded Equals Operator */
+    void operator=(const qpOASESSparseMat&);
+
+    /**
+     * This is part of qpOASESMatrixAdapter
+     * @brief This is the sorted rule that used to sort data, first based on column
+     * index then based on row index
+     */
+    static bool
+    tuple_sort_rule(const std::tuple<int, int, int> left,
+                    const std::tuple<int, int, int> right) {
+        if (std::get<1>(left) < std::get<1>(right)) return true;
+        else if (std::get<1>(left) > std::get<1>(right)) return false;
+        else {
+            if (std::get<0>(left) < std::get<0>(right))return true;
+            else return false;
+        }
+    }
+
+    /** Private members*/
+
+private:
+    qpOASES::sparse_int_t* RowIndex_;
+    qpOASES::sparse_int_t* ColIndex_;
+    qpOASES::real_t* MatVal_;
+    int* order_;
+    int RowNum_;
+    int ColNum_;
+    int EntryNum_;
+    bool isInitialised_;
+    bool isSymmetric_;
+};
 
 
 }
