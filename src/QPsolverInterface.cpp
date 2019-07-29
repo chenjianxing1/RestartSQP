@@ -148,7 +148,9 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         if (qp_->isSolved())
             firstQPsolved = true;
         else {
-            std::cout<<"Warning, the QP problem didn't solved to optimality\n";
+		THROW_EXCEPTION(QP_NOT_OPTIMAL,"the QP problem didn't solved to optimality\n")
+
+
         }
 
     } else
@@ -156,8 +158,7 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
     if(!qp_->isSolved())
-        std::cout<<"Warning, the QP problem didn't solved to optimality\n";
-
+		THROW_EXCEPTION(QP_NOT_OPTIMAL,"the QP problem didn't solved to optimality\n")
     stats->qp_iter_addValue((int) nWSR);
 
     return true;

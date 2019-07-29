@@ -8,6 +8,7 @@
 
 
 namespace SQPhotstart {
+
 /** Default constructor*/
 SQPTNLP::SQPTNLP(SmartPtr<TNLP> nlp) {
     nlp_ = nlp;
@@ -107,8 +108,9 @@ bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
                                     shared_ptr<SpTripletMat> Hessian) {
 
     nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar,
-                 lambda->negative_of_values(), true,
+                 lambda->values(), true,
                  nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
+
 
     return true;
 }
@@ -121,7 +123,7 @@ bool
 SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
                       shared_ptr<SpTripletMat> Hessian) {
     nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nVar,
-                 lambda->negative_of_values(), true,
+                 lambda->values(), true,
                  nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
     if (DEBUG) {
         if (CHECK_NLP_READER) {
@@ -130,6 +132,7 @@ SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambd
             cout << " the lambda values is \n";
             lambda->print();
             cout << " the Hessian values is \n";
+            Hessian->print();
             Hessian->print_full();
             cout << "---------------------------------------------------------\n";
             cout << endl;

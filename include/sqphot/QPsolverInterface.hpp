@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <vector>
+#include <coin/IpException.hpp>
 #include <sqphot/Vector.hpp>
 #include <sqphot/Matrix.hpp>
 #include <qpOASES.hpp>
@@ -20,6 +21,7 @@
 using namespace std;
 namespace SQPhotstart {
 
+DECLARE_STD_EXCEPTION(QP_NOT_OPTIMAL);
 /**
  * @brief Base class for all standard QP solvers that use standard triplet matrix
  * form and dense vectors.
@@ -111,6 +113,8 @@ private:
     void operator=(const QPSolverInterface&);
 };
 
+
+DECLARE_STD_EXCEPTION(QP_INTERNAL_ERROR);
 
 /**
  * @brief This is a derived class of QPsolverInterface.
@@ -215,7 +219,6 @@ private:
     bool firstQPsolved = false; /**< if the first QP has been solved? */
 
 private:
-
     /** default constructor*/
     qpOASESInterface();
 
