@@ -15,7 +15,7 @@ SQPTNLP::SQPTNLP(SmartPtr<TNLP> nlp) {
     Ipopt::TNLP::IndexStyleEnum index_style;
     nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                        nlp_info_.nnz_h_lag, index_style);
-//        assert(index_style == Ipopt::TNLP::C_STYLE);
+        assert(index_style == Ipopt::TNLP::FORTRAN_STYLE);
 }
 
 
@@ -106,7 +106,7 @@ bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
                                     shared_ptr<const Vector> lambda,
                                     shared_ptr<SpTripletMat> Hessian) {
 
-    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nVar,
+    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nCon,
                  lambda->values(), true,
                  nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
 
@@ -121,7 +121,7 @@ bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
 bool
 SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
                       shared_ptr<SpTripletMat> Hessian) {
-    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nVar,
+    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nCon,
                  lambda->values(), true,
                  nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
     if (DEBUG) {

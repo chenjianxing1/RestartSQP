@@ -91,9 +91,10 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
         //check if the current iterates is optimal and decide to
         //exit the loop or not
-        if (norm_p_k_ < 1.0e-15) {
-            termination_check();
-        }
+        
+    if (nlp_opt_tester->Check_Stationarity()||norm_p_k_<1.0e-8) {
+	termination_check();
+    }
         if (exitflag_ != UNKNOWN) {
             break;
         }
@@ -121,16 +122,10 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 bool Algorithm::termination_check() {
     if (DEBUG) {
         if (CHECK_TERMINATION) {
-            printf("multiplier_cons_ at termination_check is\n");
-            multiplier_cons_->print(nullptr);
-
-            printf("multiplier_vars_ at termination_check is\n");
-            multiplier_vars_->print(nullptr);
-
-            printf("grad_f_ at termination_check is\n");
-            grad_f_->print(nullptr);
-
-            printf("Jacobian at termination_check is\n");
+	    get_multipliers(myQP);
+            multiplier_cons_->print("multiplier_cons_");
+            multiplier_vars_->print("multiplier_vars_");
+            grad_f_->print("grad_f_");
             jacobian_->print_full("jacobian_");
         }
     }

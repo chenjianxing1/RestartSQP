@@ -52,7 +52,7 @@ void SpTripletMat::print() const {
 //@{
 void SpTripletMat::print_full(const char* name) const {
     if (name != NULL) {
-        std::cout << name << "is" << std::endl;
+        std::cout << name << " is" << std::endl;
     }
     auto dense_matrix = new double[RowNum_ * ColNum_]();
 
@@ -64,7 +64,7 @@ void SpTripletMat::print_full(const char* name) const {
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-            std::cout << dense_matrix[i * ColNum_ + j] << " ";
+		printf( "%10f  ", dense_matrix[i * ColNum_ + j]);
         }
         std::cout << std::endl;
     }
@@ -309,7 +309,7 @@ bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         }
 
         int j = ColNum_;
-        while (j >= 0 && ColIndex_[j] == 0) {
+        while (j > 1 && ColIndex_[j] == 0) {
             ColIndex_[j] = EntryNum_;
             if (ColIndex_[j - 1] == EntryNum_)
                 break;
@@ -318,7 +318,7 @@ bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 
         }
     }
-
+//    print();
     sorted_index_info.clear();
     return true;
 }
@@ -450,7 +450,6 @@ bool qpOASESSparseMat::freeMemory() {
 }
 
 bool qpOASESSparseMat::copy(std::shared_ptr<const qpOASESSparseMat> rhs) {
-    assert(isInitialised_ == rhs->isIsinitialized());
     assert(EntryNum_ == rhs->EntryNum());
     assert(RowNum_ == rhs->RowNum());
     assert(ColNum_ == rhs->ColNum());

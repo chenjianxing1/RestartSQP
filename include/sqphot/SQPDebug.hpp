@@ -21,7 +21,7 @@
 #define CHECK_SOC false
 #define CHECK_INFEA_CAL false
 #define CHECK_QP_SOLVER false
-#define CHECK_NLP_READER true
+#define CHECK_NLP_READER false
 #endif
 
 #endif /* __SQPDEBUG_HPP */

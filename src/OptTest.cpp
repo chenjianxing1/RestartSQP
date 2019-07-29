@@ -72,13 +72,28 @@ bool NLP_OptTest::Check_Dual_Feasibility() {
     if (dual_feasibility_) {
         return true;
     }
+//DEBUG
+//std::cout << "The bound_cons_type_[i] is "<<std::endl;
+//    for (int i = 0; i <nVar_; i++) {
+//	    std::cout <<bound_cons_type_[i]<< "    "; 
+//    }
+//    std::cout << std::endl;
+//    
+//    multiplier_vars_->print("multiplier_var");
+//	std::cout << "The cons_type_[i] is " <<std::endl;
+//    for (int i = 0; i <nCon_; i++) {
+//	    std::cout <<cons_type_[i]<< "    "; 
+//    }
+//    std::cout << std::endl;
+//    multiplier_cons_->print("multiplier_cons_");
+//DEBUG_END
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE &&
                 multiplier_vars_->values()[i] > opt_dual_fea_tol_) {
             dual_feasibility_ = false;
             return false;
         } else if (bound_cons_type_[i] == BOUNDED_BELOW &&
-                   multiplier_vars_->values()[i] < opt_dual_fea_tol_) {
+                   multiplier_vars_->values()[i] < -opt_dual_fea_tol_) {
             dual_feasibility_ = false;
             return false;
         }
@@ -89,7 +104,7 @@ bool NLP_OptTest::Check_Dual_Feasibility() {
             dual_feasibility_ = false;
             return false;
         } else if (cons_type_[i] == BOUNDED_BELOW &&
-                   multiplier_cons_->values()[i] < opt_dual_fea_tol_) {
+                   multiplier_cons_->values()[i] < -opt_dual_fea_tol_) {
             dual_feasibility_ = false;
             return false;
         }
@@ -118,6 +133,11 @@ bool NLP_OptTest::Check_Stationarity() {
     difference->add_vector(multiplier_vars_->values());
     difference->add_vector(multiplier_vars_->values());
     difference->subtract_vector(grad_f_->values());
+	if(DEBUG) {
+		if(CHECK_TERMINATION) {
+		difference->print("Stationarity Gap");
+		}
+	}
     if (difference->getInfNorm() < opt_tol_) {
         stationarity_ = true;
         return true;
@@ -203,24 +223,24 @@ bool NLP_OptTest::IdentifyActiveSet() {
 
 bool NLP_OptTest::Check_Complementarity() {
     if (complementarity_) return true;
-    // c_u_->print("c_u");
-    // c_l_->print("c_l");
-    // c_k_->print("c_k");
-    // multiplier_cons_->print("multiplier_cons_");
-    // x_u_->print("x_u");
-    // x_l_->print("x_l");
-    // x_k_->print("x_k");
-    // multiplier_vars_->print("multiplier_vars_");
-
-    // std::cout << "bound_cons_type_[i]"<<std::endl;
-    // for (int i = 0; i <nVar_; i++) {
-    // std::cout << bound_cons_type_[i]<<std::endl;
-
-    // }
-    // std::cout << "cons_type_[i]"<<std::endl;
-    // for (int i = 0; i <nCon_; i++) {
-    // std::cout << cons_type_[i]<<std::endl;
-    // }
+//     c_u_->print("c_u");
+//     c_l_->print("c_l");
+//     c_k_->print("c_k");
+//     multiplier_cons_->print("multiplier_cons_");
+//     x_u_->print("x_u");
+//     x_l_->print("x_l");
+//     x_k_->print("x_k");
+//     multiplier_vars_->print("multiplier_vars_");
+//
+//     std::cout << "bound_cons_type_[i]"<<std::endl;
+//     for (int i = 0; i <nVar_; i++) {
+//     std::cout << bound_cons_type_[i]<<std::endl;
+//
+//     }
+//     std::cout << "cons_type_[i]"<<std::endl;
+//     for (int i = 0; i <nCon_; i++) {
+//     std::cout << cons_type_[i]<<std::endl;
+//     }
     if (nCon_ > 0) {
         for (int i = 0; i < nCon_; i++) {
             if (cons_type_[i] == BOUNDED_ABOVE) {
@@ -234,6 +254,10 @@ bool NLP_OptTest::Check_Complementarity() {
                 if (std::abs(multiplier_cons_->values()[i] *
                              (c_k_->values()[i] - c_l_->values()[i]))
                         > opt_compl_tol_) {
+
+                std::cout <<std::abs(multiplier_cons_->values()[i] *
+                             (c_k_->values()[i] - c_l_->values()[i]));
+		std::cout <<std::endl;
                     complementarity_ = false;
                     return false;
                 }

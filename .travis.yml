@@ -51,7 +51,17 @@ script:
 - ../bin/Release/simple_test ../test/CUTE_examples/hs008
 - ../bin/Release/simple_test ../test/CUTE_examples/hs009
 - ../bin/Release/simple_test ../test/CUTE_examples/hs010
-- cd ../
+- ../bin/Release/simple_test ../test/CUTE_examples/hs011
+- ../bin/Release/simple_test ../test/CUTE_examples/hs012
+- ../bin/Release/simple_test ../test/CUTE_examples/hs013
+- ../bin/Release/simple_test ../test/CUTE_examples/hs014
+- ../bin/Release/simple_test ../test/CUTE_examples/hs015
+- ../bin/Release/simple_test ../test/CUTE_examples/hs016
+- ../bin/Release/simple_test ../test/CUTE_examples/hs017
+- ../bin/Release/simple_test ../test/CUTE_examples/hs018
+- ../bin/Release/simple_test ../test/CUTE_examples/hs019
+- ../bin/Release/simple_test ../test/CUTE_examples/hs020
+- cd ..
 - ./get_code_cov.sh
 
 after_success:

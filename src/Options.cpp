@@ -33,9 +33,9 @@ int Options::setToDefault() {
     delta_max = 1.0e8;
     testOption_NLP = TEST_ALL;
     active_set_tol = 1.0e-5;
-    opt_tol = 1.0e-5;
-    opt_compl_tol = 1.0e-6;
-    opt_dual_fea_tol = 1.0e-6;
+    opt_tol = 1.0e-3;
+    opt_compl_tol = 1.0e-5;
+    opt_dual_fea_tol = 1.0e-5;
     opt_prim_fea_tol = 1.0e-5;
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;

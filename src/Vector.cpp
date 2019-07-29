@@ -125,11 +125,10 @@ void Vector::copy_vector(const double *rhs) {
 
 /*copy all the entries from another vector*/
 void Vector::copy_vector(std::shared_ptr<const Vector> rhs) {
-    assert(size_ == rhs->Dim());
+    assert(size_<=rhs->Dim());
     for(int i=0; i<size_; i++) {
         values_[i] = rhs->values()[i];
     }
-//        print();
 }
 
 
