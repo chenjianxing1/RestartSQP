@@ -31,7 +31,6 @@ bool SQPTNLP::Get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
 
     nlp_->get_bounds_info(nlp_info_.nVar, x_l->values(), x_u->values(),
                           nlp_info_.nCon, c_l->values(), c_u->values());
-
     return true;
 }
 
@@ -129,16 +128,12 @@ SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambd
         if (CHECK_NLP_READER) {
             cout << endl;
             cout << "---------------------------------------------------------\n";
-            cout << " the lambda values is \n";
-            lambda->print();
-            cout << " the Hessian values is \n";
-            Hessian->print();
-            Hessian->print_full();
+            lambda->print("multiplier");
+            Hessian->print_full("hessian");
             cout << "---------------------------------------------------------\n";
             cout << endl;
         }
     }
-
 
     return true;
 }

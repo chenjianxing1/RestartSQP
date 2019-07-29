@@ -57,7 +57,7 @@ public:
     void assign_n(int Location, int subvector_size, double scaling_factor);
 
     /** print the vector*/
-    void print() const;
+    void print(const char* name = NULL) const;
 
     /* add all the element in the array by a number*/
     void addNumber(double increase_amount);

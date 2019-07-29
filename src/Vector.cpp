@@ -60,8 +60,12 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
 }
 
 /** print the vector*/
-void Vector::print() const {
+void Vector::print(const char* name) const {
+    if(name!=NULL) {
+        std::cout<<name << " is :"<<std::endl;
+    }
     for (int i = 0; i < size_; i++) std::cout << values_[i] << std::endl;
+    std::cout<<std::endl;
 }
 
 /* add all the element in the array by a number*/

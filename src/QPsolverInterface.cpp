@@ -63,7 +63,6 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
         qpOASES::Options qp_options;
 
-//            printf("options_qp_print_level is %i",options->qpPrintLevel);
         //setup the printlevel of q
         switch (options->qpPrintLevel) {
         case 0:
@@ -94,14 +93,20 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         if (qp_->isSolved())
             firstQPsolved = true;
         else {
-            //THROW EXCEPTION
+            std::cout << "The Status is" << get_status() << std::endl;
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
+
         }
     } else
         qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
     if (!qp_->isSolved()) {
-        //THROW EXCEPTION
+
+        std::cout << "The Status is" << get_status() << std::endl;
+        THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                        "the LP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
     return true;
@@ -148,7 +153,10 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         if (qp_->isSolved())
             firstQPsolved = true;
         else {
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,"the QP problem didn't solved to optimality\n")
+
+            std::cout << "The Status is" << get_status() << std::endl;
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
 
 
         }
@@ -157,9 +165,12 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
-    if(!qp_->isSolved())
-        THROW_EXCEPTION(QP_NOT_OPTIMAL,"the QP problem didn't solved to optimality\n")
-        stats->qp_iter_addValue((int) nWSR);
+    if (!qp_->isSolved()) {
+        std::cout << "The Status is" << get_status()<< std::endl;
+        THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                        "the QP problem didn't solved to optimality\n")
+    }
+    stats->qp_iter_addValue((int) nWSR);
 
     return true;
 
@@ -241,6 +252,8 @@ QPReturnType qpOASESInterface::get_status() {
     else if (qp_->isUnbounded())
         return QP_UNBOUNDED;
 }
+
+
 //@}
 
 

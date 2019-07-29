@@ -29,7 +29,7 @@ int Options::setToDefault() {
     eta_e = 0.75;
     gamma_c = 0.5;
     gamma_e = 2;
-    delta = 10;
+    delta = 1;
     delta_max = 1.0e8;
     testOption_NLP = TEST_ALL;
     active_set_tol = 1.0e-5;
@@ -40,7 +40,7 @@ int Options::setToDefault() {
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
-    rho = 100;
+    rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
     increase_parm = 10;

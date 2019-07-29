@@ -33,11 +33,11 @@ ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound
         } else
             return BOUNDED;
     }
-    else if(lower_bound>-INF&&upper_bound>=INF) {
-        return BOUNDED_ABOVE;
+    else if(lower_bound>-INF&&upper_bound>INF) {
+        return BOUNDED_BELOW;
     }
     else if(upper_bound<INF&&lower_bound<-INF) {
-        return BOUNDED_BELOW;
+        return BOUNDED_ABOVE;
     }
     else {
         return UNBOUNDED;

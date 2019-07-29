@@ -122,13 +122,13 @@ bool Algorithm::termination_check() {
     if (DEBUG) {
         if (CHECK_TERMINATION) {
             printf("multiplier_cons_ at termination_check is\n");
-            multiplier_cons_->print();
+            multiplier_cons_->print(nullptr);
 
             printf("multiplier_vars_ at termination_check is\n");
-            multiplier_vars_->print();
+            multiplier_vars_->print(nullptr);
 
             printf("grad_f_ at termination_check is\n");
-            grad_f_->print();
+            grad_f_->print(nullptr);
 
             printf("Jacobian at termination_check is\n");
             jacobian_->print_full("jacobian_");
@@ -166,7 +166,9 @@ bool Algorithm::termination_check() {
             std::cout << "complementarity  " << nlp_opt_tester->complementarity_
                       << std::endl;
         }
-        exitflag_ = CONVERGE_TO_NONOPTIMAL;
+
+        //exitflag_ = CONVERGE_TO_NONOPTIMAL;
+
     }
 
 
@@ -516,8 +518,8 @@ bool Algorithm::radius_update() {
 
 bool Algorithm::ClassifyConstraintType() {
     for (int i = 0; i < nCon_; i++) {
-        cons_type_[i] = classify_single_constraint(x_l_->values()[i],
-                        x_u_->values()[i]);
+        cons_type_[i] = classify_single_constraint(c_l_->values()[i],
+                        c_u_->values()[i]);
     }
     for (int i = 0; i < nVar_; i++) {
         bound_cons_type_[i] = classify_single_constraint(x_l_->values()[i],

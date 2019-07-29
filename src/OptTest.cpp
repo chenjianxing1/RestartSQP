@@ -203,18 +203,36 @@ bool NLP_OptTest::IdentifyActiveSet() {
 
 bool NLP_OptTest::Check_Complementarity() {
     if (complementarity_) return true;
+    // c_u_->print("c_u");
+    // c_l_->print("c_l");
+    // c_k_->print("c_k");
+    // multiplier_cons_->print("multiplier_cons_");
+    // x_u_->print("x_u");
+    // x_l_->print("x_l");
+    // x_k_->print("x_k");
+    // multiplier_vars_->print("multiplier_vars_");
+
+    // std::cout << "bound_cons_type_[i]"<<std::endl;
+    // for (int i = 0; i <nVar_; i++) {
+    // std::cout << bound_cons_type_[i]<<std::endl;
+
+    // }
+    // std::cout << "cons_type_[i]"<<std::endl;
+    // for (int i = 0; i <nCon_; i++) {
+    // std::cout << cons_type_[i]<<std::endl;
+    // }
     if (nCon_ > 0) {
         for (int i = 0; i < nCon_; i++) {
             if (cons_type_[i] == BOUNDED_ABOVE) {
-                if (multiplier_cons_->values()[i] *
-                        (c_u_->values()[i] - c_k_->values()[i])
+                if (std::abs(multiplier_cons_->values()[i] *
+                             (c_u_->values()[i] - c_k_->values()[i]))
                         > opt_compl_tol_) {
                     complementarity_ = false;
                     return false;
                 }
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (multiplier_cons_->values()[i] *
-                        (c_k_->values()[i] - c_l_->values()[i])
+                if (std::abs(multiplier_cons_->values()[i] *
+                             (c_k_->values()[i] - c_l_->values()[i]))
                         > opt_compl_tol_) {
                     complementarity_ = false;
                     return false;
@@ -230,15 +248,15 @@ bool NLP_OptTest::Check_Complementarity() {
     }
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (multiplier_vars_->values()[i] *
-                    (x_u_->values()[i] - x_k_->values()[i])
+            if (std::abs(multiplier_vars_->values()[i] *
+                         (x_u_->values()[i] - x_k_->values()[i]))
                     > opt_compl_tol_) {
                 complementarity_ = false;
                 return false;
             }
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (multiplier_vars_->values()[i] *
-                    (x_k_->values()[i] - x_l_->values()[i])
+            if (std::abs(multiplier_vars_->values()[i] *
+                         (x_k_->values()[i] - x_l_->values()[i]))
                     > opt_compl_tol_) {
                 complementarity_ = false;
                 return false;
