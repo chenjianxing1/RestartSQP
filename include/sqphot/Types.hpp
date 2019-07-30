@@ -42,6 +42,7 @@ enum QPType {
 
 enum Exitflag {
     OPTIMAL = 0,
+    INVALID_NLP = 3,
     CONVERGE_TO_NONOPTIMAL = 2,
     EXCEED_MAX_ITER = 1,//exceeds the maximum number of iteration
     QPERROR_INTERNAL_ERROR = -1,//QP solver internal error

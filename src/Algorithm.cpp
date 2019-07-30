@@ -41,11 +41,15 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
-    allocate(nlp); //allocate memory to class members
-    initilization();
-
+    try {
+        allocate(nlp); //allocate memory to class members
+        initilization();
+    }
+    catch(...) { //TODO: be more specific
+        ClassifyErrorCode("INVALID NLP");
+    }
     /** Main iteration */
-    while (stats->iter < options->iter_max) {
+    while (stats->iter < options->iter_max&& exitflag_ != INVALID_NLP) {
 
         setupQP();
 
@@ -55,20 +59,8 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
             myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
         }
         catch(QP_NOT_OPTIMAL) {
-            switch(myQP->GetStatus()) {
-            case QP_INFEASIBLE:
-                exitflag_ = QPERROR_INFEASIBLE;
-                break;
-            case QP_UNBOUNDED:
-                exitflag_ = QPERROR_UNBOUNDED;
-                break;
-            case QP_NOTINITIALISED:
-                exitflag_ = QPERROR_NOTINITIALISED;
-                break;
-            default:
-                exitflag_ = QPERROR_INTERNAL_ERROR;
-                break;
-            }
+            ClassifyErrorCode("QP NOT OPTIMAL");
+            break;
         }
         qp_obj_ = myQP->GetObjective();
 
@@ -122,7 +114,7 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
 
 
-    if (exitflag_ !=OPTIMAL ) {
+    if (exitflag_ !=OPTIMAL&& exitflag_!= INVALID_NLP) {
         termination_check();
     }
 
@@ -567,21 +559,9 @@ bool Algorithm::penalty_update() {
                 myLP->solveLP(stats, options);
             }
             catch(QP_NOT_OPTIMAL) {
-                switch(myQP->GetStatus()) {
-                case QP_INFEASIBLE:
-                    exitflag_ = QPERROR_INFEASIBLE;
-                    break;
-                case QP_UNBOUNDED:
-                    exitflag_ = QPERROR_UNBOUNDED;
-                    break;
-                case QP_NOTINITIALISED:
-                    exitflag_ = QPERROR_NOTINITIALISED;
-                    break;
-                default:
-                    exitflag_ = QPERROR_INTERNAL_ERROR;
-                    break;
-                }
+                ClassifyErrorCode("QP NOT OPTIMAL");
             }
+
 
             shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
 
@@ -605,20 +585,7 @@ bool Algorithm::penalty_update() {
                         myQP->solveQP(stats, options);
                     }
                     catch(QP_NOT_OPTIMAL) {
-                        switch(myQP->GetStatus()) {
-                        case QP_INFEASIBLE:
-                            exitflag_ = QPERROR_INFEASIBLE;
-                            break;
-                        case QP_UNBOUNDED:
-                            exitflag_ = QPERROR_UNBOUNDED;
-                            break;
-                        case QP_NOTINITIALISED:
-                            exitflag_ = QPERROR_NOTINITIALISED;
-                            break;
-                        default:
-                            exitflag_ = QPERROR_INTERNAL_ERROR;
-                            break;
-                        }
+                        ClassifyErrorCode("QP NOT OPTIMAL");
                     }
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
@@ -646,20 +613,7 @@ bool Algorithm::penalty_update() {
                         myQP->solveQP(stats, options);
                     }
                     catch(QP_NOT_OPTIMAL) {
-                        switch(myQP->GetStatus()) {
-                        case QP_INFEASIBLE:
-                            exitflag_ = QPERROR_INFEASIBLE;
-                            break;
-                        case QP_UNBOUNDED:
-                            exitflag_ = QPERROR_UNBOUNDED;
-                            break;
-                        case QP_NOTINITIALISED:
-                            exitflag_ = QPERROR_NOTINITIALISED;
-                            break;
-                        default:
-                            exitflag_ = QPERROR_INTERNAL_ERROR;
-                            break;
-                        }
+                        ClassifyErrorCode("QP NOT OPTIMAL");
                     }
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
@@ -687,6 +641,8 @@ bool Algorithm::penalty_update() {
     }
     return true;
 }
+
+
 
 /**
  * @brief Use the Ipopt Reference Options and set it to default values.
@@ -846,6 +802,26 @@ bool Algorithm::second_order_correction() {
             myQP->solveQP(stats, options);
         }
         catch(QP_NOT_OPTIMAL) {
+            ClassifyErrorCode("QP NOT OPTIMAL");
+        }
+
+        myQP->GetOptimalSolution(tmp_sol->values());
+        p_k_->add_vector(tmp_sol->values());
+
+        qp_obj_ = myQP->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
+        p_k_->add_vector(s_k->values());
+        infea_cal(true);
+        ratio_test();
+
+
+    }
+    return true;
+
+}
+
+bool Algorithm::ClassifyErrorCode(const char* error) {
+    if(error!= NULL) {
+        if(error=="QP NOT OPTIMAL") {
             switch(myQP->GetStatus()) {
             case QP_INFEASIBLE:
                 exitflag_ = QPERROR_INFEASIBLE;
@@ -861,19 +837,12 @@ bool Algorithm::second_order_correction() {
                 break;
             }
         }
-
-        myQP->GetOptimalSolution(tmp_sol->values());
-        p_k_->add_vector(tmp_sol->values());
-
-        qp_obj_ = myQP->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
-        p_k_->add_vector(s_k->values());
-        infea_cal(true);
-        ratio_test();
-
-
+        else if(error == "INVALID NLP") {
+            exitflag_ = INVALID_NLP;
+        }
     }
-    return true;
 
+    return true;
 }
 
 }//END_NAMESPACE_SQPHOTSTART

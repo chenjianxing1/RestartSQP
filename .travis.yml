@@ -41,26 +41,7 @@ before_install:
 - mkdir build && cd build && cmake -DIpopt=ON ..
 script:
 - make -j5
-- ../bin/Release/simple_test ../test/CUTE_examples/hs001
-- ../bin/Release/simple_test ../test/CUTE_examples/hs002
-- ../bin/Release/simple_test ../test/CUTE_examples/hs003
-- ../bin/Release/simple_test ../test/CUTE_examples/hs004
-- ../bin/Release/simple_test ../test/CUTE_examples/hs005
-- ../bin/Release/simple_test ../test/CUTE_examples/hs006
-- ../bin/Release/simple_test ../test/CUTE_examples/hs007
-- ../bin/Release/simple_test ../test/CUTE_examples/hs008
-- ../bin/Release/simple_test ../test/CUTE_examples/hs009
-- ../bin/Release/simple_test ../test/CUTE_examples/hs010
-- ../bin/Release/simple_test ../test/CUTE_examples/hs011
-- ../bin/Release/simple_test ../test/CUTE_examples/hs012
-- ../bin/Release/simple_test ../test/CUTE_examples/hs013
-- ../bin/Release/simple_test ../test/CUTE_examples/hs014
-- ../bin/Release/simple_test ../test/CUTE_examples/hs015
-- ../bin/Release/simple_test ../test/CUTE_examples/hs016
-- ../bin/Release/simple_test ../test/CUTE_examples/hs017
-- ../bin/Release/simple_test ../test/CUTE_examples/hs018
-- ../bin/Release/simple_test ../test/CUTE_examples/hs019
-- ../bin/Release/simple_test ../test/CUTE_examples/hs020
+- ../bin/Release/runtest.sh
 - cd ..
 - ./get_code_cov.sh
 

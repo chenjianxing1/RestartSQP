@@ -273,6 +273,10 @@ private:
      */
     bool ClassifyConstraintType();
 
+    bool ClassifyErrorCode(const char* error = NULL);
+    
+   
+
     /* public class members */
 private:
     Index nVar_; /**< number of variables*/
