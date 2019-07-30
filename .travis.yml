@@ -41,8 +41,8 @@ before_install:
 - mkdir build && cd build && cmake -DIpopt=ON ..
 script:
 - make -j5
-- ../bin/Release/runtest.sh
 - cd ..
+- ./test/runtest.sh
 - ./get_code_cov.sh
 
 after_success:
