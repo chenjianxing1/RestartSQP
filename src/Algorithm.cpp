@@ -48,8 +48,28 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     while (stats->iter < options->iter_max) {
 
         setupQP();
+
         //based on the information given by NLP reader otherwise, it will do nothing
-        myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+
+        try {
+            myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
+        }
+        catch(QP_NOT_OPTIMAL) {
+            switch(myQP->GetStatus()) {
+            case QP_INFEASIBLE:
+                exitflag_ = QPERROR_INFEASIBLE;
+                break;
+            case QP_UNBOUNDED:
+                exitflag_ = QPERROR_UNBOUNDED;
+                break;
+            case QP_NOTINITIALISED:
+                exitflag_ = QPERROR_NOTINITIALISED;
+                break;
+            default:
+                exitflag_ = QPERROR_INTERNAL_ERROR;
+                break;
+            }
+        }
         qp_obj_ = myQP->GetObjective();
 
         //get the search direction from the solution of the QPsubproblem
@@ -91,17 +111,27 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
         //check if the current iterates is optimal and decide to
         //exit the loop or not
-        
-    if (nlp_opt_tester->Check_Stationarity()||norm_p_k_<1.0e-8) {
-	termination_check();
-    }
+
+        if (nlp_opt_tester->Check_Stationarity()||norm_p_k_<1.0e-8) {
+            termination_check();
+        }
         if (exitflag_ != UNKNOWN) {
             break;
         }
     }
+
+
+
+    if (exitflag_ !=OPTIMAL ) {
+        termination_check();
+    }
+
 //check if the current iterates status before exiting
     if (stats->iter == options->iter_max)
-        termination_check();
+        exitflag_ = EXCEED_MAX_ITER;
+
+
+
 
     // print the final summary message to the console
     if (options->printLevel > 0)
@@ -122,7 +152,7 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 bool Algorithm::termination_check() {
     if (DEBUG) {
         if (CHECK_TERMINATION) {
-	    get_multipliers(myQP);
+            get_multipliers(myQP);
             multiplier_cons_->print("multiplier_cons_");
             multiplier_vars_->print("multiplier_vars_");
             grad_f_->print("grad_f_");
@@ -136,17 +166,18 @@ bool Algorithm::termination_check() {
                  options->testOption_NLP == TEST_1ST_ORDER)) {
             exitflag_ = OPTIMAL;
         } else {
-            std::cout << "feasibility      "
-                      << nlp_opt_tester->primal_feasibility_ << std::endl;
-            std::cout << "dual_feasibility "
-                      << nlp_opt_tester->dual_feasibility_
-                      << std::endl;
-            std::cout << "stationarity     " << nlp_opt_tester->stationarity_
-                      << std::endl;
-            std::cout << "complementarity  "
-                      << nlp_opt_tester->complementarity_
-                      << std::endl;
-
+            if(DEBUG) {
+                std::cout << "feasibility      "
+                          << nlp_opt_tester->primal_feasibility_ << std::endl;
+                std::cout << "dual_feasibility "
+                          << nlp_opt_tester->dual_feasibility_
+                          << std::endl;
+                std::cout << "stationarity     " << nlp_opt_tester->stationarity_
+                          << std::endl;
+                std::cout << "complementarity  "
+                          << nlp_opt_tester->complementarity_
+                          << std::endl;
+            }
 
         }
     } else {
@@ -532,8 +563,26 @@ bool Algorithm::penalty_update() {
         if (infea_measure_model_ > options->penalty_update_tol) {
             myLP->copy_QP_info(myQP); //copy part of the objective and bounds
             // information from the QPhandler objects
+            try {
+                myLP->solveLP(stats, options);
+            }
+            catch(QP_NOT_OPTIMAL) {
+                switch(myQP->GetStatus()) {
+                case QP_INFEASIBLE:
+                    exitflag_ = QPERROR_INFEASIBLE;
+                    break;
+                case QP_UNBOUNDED:
+                    exitflag_ = QPERROR_UNBOUNDED;
+                    break;
+                case QP_NOTINITIALISED:
+                    exitflag_ = QPERROR_NOTINITIALISED;
+                    break;
+                default:
+                    exitflag_ = QPERROR_INTERNAL_ERROR;
+                    break;
+                }
+            }
 
-            myLP->solveLP(stats, options);
             shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
 
             double rho_trial = rho_;//the temporary trial value for rho
@@ -552,7 +601,25 @@ bool Algorithm::penalty_update() {
                     rho_trial = options->increase_parm * rho_trial; //increase rho
                     stats->penalty_change_trial_addone();
                     myQP->update_penalty(rho_trial);
-                    myQP->solveQP(stats, options);
+                    try {
+                        myQP->solveQP(stats, options);
+                    }
+                    catch(QP_NOT_OPTIMAL) {
+                        switch(myQP->GetStatus()) {
+                        case QP_INFEASIBLE:
+                            exitflag_ = QPERROR_INFEASIBLE;
+                            break;
+                        case QP_UNBOUNDED:
+                            exitflag_ = QPERROR_UNBOUNDED;
+                            break;
+                        case QP_NOTINITIALISED:
+                            exitflag_ = QPERROR_NOTINITIALISED;
+                            break;
+                        default:
+                            exitflag_ = QPERROR_INTERNAL_ERROR;
+                            break;
+                        }
+                    }
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
                     get_full_direction(myQP, sol_tmp);
@@ -574,8 +641,26 @@ bool Algorithm::penalty_update() {
                     rho_trial = options->increase_parm * rho_trial; //increase rho
                     stats->penalty_change_trial_addone();
                     myQP->update_penalty(rho_trial);
-                    myQP->solveQP(stats, options);
 
+                    try {
+                        myQP->solveQP(stats, options);
+                    }
+                    catch(QP_NOT_OPTIMAL) {
+                        switch(myQP->GetStatus()) {
+                        case QP_INFEASIBLE:
+                            exitflag_ = QPERROR_INFEASIBLE;
+                            break;
+                        case QP_UNBOUNDED:
+                            exitflag_ = QPERROR_UNBOUNDED;
+                            break;
+                        case QP_NOTINITIALISED:
+                            exitflag_ = QPERROR_NOTINITIALISED;
+                            break;
+                        default:
+                            exitflag_ = QPERROR_INTERNAL_ERROR;
+                            break;
+                        }
+                    }
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
                     get_full_direction(myQP, sol_tmp);
@@ -757,7 +842,25 @@ bool Algorithm::second_order_correction() {
         myQP->update_grad(Htimesp);
 
         myQP->update_constraints(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
-        myQP->solveQP(stats, options);
+        try {
+            myQP->solveQP(stats, options);
+        }
+        catch(QP_NOT_OPTIMAL) {
+            switch(myQP->GetStatus()) {
+            case QP_INFEASIBLE:
+                exitflag_ = QPERROR_INFEASIBLE;
+                break;
+            case QP_UNBOUNDED:
+                exitflag_ = QPERROR_UNBOUNDED;
+                break;
+            case QP_NOTINITIALISED:
+                exitflag_ = QPERROR_NOTINITIALISED;
+                break;
+            default:
+                exitflag_ = QPERROR_INTERNAL_ERROR;
+                break;
+            }
+        }
 
         myQP->GetOptimalSolution(tmp_sol->values());
         p_k_->add_vector(tmp_sol->values());

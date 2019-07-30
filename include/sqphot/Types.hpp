@@ -23,11 +23,13 @@ enum TestOption {
 };
 
 enum QPReturnType {
+    UNSOLVED = -99,
     QP_OPTIMAL = 0,
     QP_NOTINITIALISED = -1,
     QP_EXCEED_MAX_ITER = 1,
     QP_INFEASIBLE = -2,
-    QP_UNBOUNDED = -3
+    QP_UNBOUNDED = -3,
+    QP_UNKNOWN_ERROR = 99
 };
 
 
@@ -46,6 +48,7 @@ enum Exitflag {
     QPERROR_INFEASIBLE = -2,//QP solver error: conclude QP formulation infeasible
     QPERROR_UNBOUNDED = -3, //QP solver error: unbounded QP
     QPERROR_EXCEED_MAX_ITER = -4,//QP solver error: Exceed maximum iteration,
+    QPERROR_NOTINITIALISED = -5,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.
     UNKNOWN = -99//unknown error
 };

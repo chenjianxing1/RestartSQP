@@ -218,7 +218,6 @@ bool QPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
 bool QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
                         shared_ptr<Options> options) {
     qp_interface_->optimizeQP(stats, options);
-    assert(qp_interface_->get_status() == OPTIMAL);
     return true;
 }
 

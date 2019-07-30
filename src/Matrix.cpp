@@ -64,7 +64,7 @@ void SpTripletMat::print_full(const char* name) const {
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-		printf( "%10f  ", dense_matrix[i * ColNum_ + j]);
+            printf( "%10f  ", dense_matrix[i * ColNum_ + j]);
         }
         std::cout << std::endl;
     }

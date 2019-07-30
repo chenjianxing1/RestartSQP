@@ -14,8 +14,12 @@
 using namespace Ipopt;
 using namespace SQPhotstart;
 
-int main(int argc, char** args){
+int main(int argc, char** args) {
     Algorithm alg;
+    printf("\n=====================================================================================\n");
+    printf( "	Solving Problem ");
+    std::cout << args[1]<<std::endl;
+    printf("=====================================================================================\n");
     SmartPtr<MyNLP> nlp= new MyNLP();
     SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                             alg.getRoptions2(),

@@ -196,6 +196,10 @@ public:
 
     const shared_ptr<qpOASESInterface>& getQpInterface() const;
 
+
+    inline QPReturnType GetStatus() {
+        return (qp_interface_->status());
+    }
 private:
     /**
      * @brief allocate memory to class members except QP objects

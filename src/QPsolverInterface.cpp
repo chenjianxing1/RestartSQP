@@ -32,7 +32,9 @@ bool qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype) {
+qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype):
+    status_(UNSOLVED)
+{
     allocate(nlp_index_info, qptype);
 }
 
@@ -93,7 +95,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         if (qp_->isSolved())
             firstQPsolved = true;
         else {
-            std::cout << "The Status is" << get_status() << std::endl;
+            get_status();
             THROW_EXCEPTION(QP_NOT_OPTIMAL,
                             "the QP problem didn't solved to optimality\n")
 
@@ -103,8 +105,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
     if (!qp_->isSolved()) {
-
-        std::cout << "The Status is" << get_status() << std::endl;
+        get_status();
         THROW_EXCEPTION(QP_NOT_OPTIMAL,
                         "the LP problem didn't solved to optimality\n")
     }
@@ -122,7 +123,7 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
 
     qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
 
-    if (!firstQPsolved) {//if haven't solve any QP before then initialize the
+    if (!firstQPsolved) {//if haven't solve any LP before then initialize the
         //  first qp
         qpOASES::Options qp_options;
         //setup the printlevel of qpOASES
@@ -153,12 +154,9 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         if (qp_->isSolved())
             firstQPsolved = true;
         else {
-
-            std::cout << "The Status is" << get_status() << std::endl;
+            get_status();
             THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n")
-
-
+                            "the LP problem didn't solved to optimality\n")
         }
 
     } else
@@ -166,9 +164,9 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
     if (!qp_->isSolved()) {
-        std::cout << "The Status is" << get_status()<< std::endl;
+        get_status();
         THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                        "the QP problem didn't solved to optimality\n")
+                        "the LP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
 
@@ -241,19 +239,26 @@ shared_ptr<qpOASESSparseMat>& qpOASESInterface::getA() {
     return A_;
 }
 
-QPReturnType qpOASESInterface::get_status() {
+bool qpOASESInterface::get_status() {
     qpOASES::QProblemStatus finalStatus = qp_->getStatus();
+
     if (finalStatus == qpOASES::QPS_NOTINITIALISED)
-        return QP_NOTINITIALISED;
-    if (finalStatus == qpOASES::QPS_SOLVED)
-        return QP_OPTIMAL;
-    else if (qp_->isInfeasible())
-        return QP_INFEASIBLE;
-    else if (qp_->isUnbounded())
-        return QP_UNBOUNDED;
+        status_ = QP_NOTINITIALISED;
+    else if (qp_->isInfeasible()) {
+        status_= QP_INFEASIBLE;
+    }
+    else if (qp_->isUnbounded()) {
+        status_ = QP_UNBOUNDED;
+    }
+    else
+        status_ = QP_UNKNOWN_ERROR;
+    return true;
 }
 
 
+QPReturnType qpOASESInterface::status() {
+    return status_;
+}
 //@}
 
 

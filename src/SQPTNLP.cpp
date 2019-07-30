@@ -15,7 +15,7 @@ SQPTNLP::SQPTNLP(SmartPtr<TNLP> nlp) {
     Ipopt::TNLP::IndexStyleEnum index_style;
     nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
                        nlp_info_.nnz_h_lag, index_style);
-        assert(index_style == Ipopt::TNLP::FORTRAN_STYLE);
+    assert(index_style == Ipopt::TNLP::FORTRAN_STYLE);
 }
 
 
