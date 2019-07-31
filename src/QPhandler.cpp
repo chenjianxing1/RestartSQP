@@ -110,6 +110,7 @@ bool QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
     for (int i = 0; i < nlp_info_.nCon * 2; i++)
         qp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
 
+
     return true;
 }
 

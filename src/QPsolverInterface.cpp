@@ -60,6 +60,15 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
                  A_->MatVal());
 
     H_qpOASES_->createDiagInfo();
+    if(DEBUG) {
+        if(CHECK_QP_INFEASIBILITY) {
+            A_qpOASES_->print("A_");
+            lb_->print("lb_");
+            ub_->print("ub_");
+            lbA_->print("lbA_");
+            ubA_->print("ubA_");
+        }
+    }
     qpOASES::int_t nWSR = options->qp_maxiter;
 
     if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
@@ -96,8 +105,9 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
             firstQPsolved = true;
         else {
             get_status();
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n")
+
+            //  THROW_EXCEPTION(QP_NOT_OPTIMAL,
+            //                  "the QP problem didn't solved to optimality\n")
 
         }
     } else
@@ -106,8 +116,8 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
                       nWSR, 0);
     if (!qp_->isSolved()) {
         get_status();
-        THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                        "the LP problem didn't solved to optimality\n")
+        //  THROW_EXCEPTION(QP_NOT_OPTIMAL,
+        //                  "the LP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
     return true;
@@ -155,8 +165,8 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
             firstQPsolved = true;
         else {
             get_status();
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the LP problem didn't solved to optimality\n")
+            //    THROW_EXCEPTION(QP_NOT_OPTIMAL,
+            //                    "the LP problem didn't solved to optimality\n")
         }
 
     } else
@@ -165,8 +175,8 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                       nWSR, 0);
     if (!qp_->isSolved()) {
         get_status();
-        THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                        "the LP problem didn't solved to optimality\n")
+        //THROW_EXCEPTION(QP_NOT_OPTIMAL,
+        //                 "the LP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
 
@@ -241,6 +251,25 @@ shared_ptr<qpOASESSparseMat>& qpOASESInterface::getA() {
 
 bool qpOASESInterface::get_status() {
     qpOASES::QProblemStatus finalStatus = qp_->getStatus();
+
+    //switch(finalStatus) {
+    //case qpOASES::QPS_NOTINITIALISED:
+    //    printf("QP_NOTINITIALISED\n");
+    //    break;
+    //case qpOASES::QPS_PREPARINGAUXILIARYQP:
+    //    printf("QPS_PREPARINGAUXILIARYQP\n");
+    //    break;
+    //case qpOASES::QPS_AUXILIARYQPSOLVED:
+    //    printf( "QPS_AUXILIARYQPSOLVED\n");
+    //    break;
+    //case qpOASES::QPS_PERFORMINGHOMOTOPY:
+    //    printf( "QPS_PERFORMINGHOMOTOPY\n");
+    //    break;
+    //case qpOASES::QPS_HOMOTOPYQPSOLVED:
+    //    printf("QPS_HOMOTOPYQPSOLVED\n");
+    //    break;
+
+    //}
 
     if (finalStatus == qpOASES::QPS_NOTINITIALISED)
         status_ = QP_NOTINITIALISED;

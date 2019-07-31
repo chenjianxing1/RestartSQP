@@ -51,6 +51,7 @@ void SpTripletMat::print() const {
  */
 //@{
 void SpTripletMat::print_full(const char* name) const {
+    print();
     if (name != NULL) {
         std::cout << name << " is" << std::endl;
     }
@@ -352,7 +353,7 @@ bool qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     std::vector<std::tuple<int, int, int>> sorted_index_info;
 
     //if it is symmetric, it will calculate the
-    // number of entry and allocate the memory
+    // number of entry and allocate_memory the memory
     // of RowIndex and MatVal by going through
     // all of its entries one by one
 
@@ -420,10 +421,9 @@ bool qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
     //adding the value to the matrix
     if (isInitialised_ == false) {
         for (int i = 0; i < I_info.size; i++) {
-            MatVal_[order()[EntryNum_ - i - 1]] = -1;
-            MatVal_[order()[EntryNum_ - i - I_info.size - 1]] = 1;
+            MatVal_[EntryNum_ - i - 1] = -1;
+            MatVal_[EntryNum_ - i - I_info.size - 1] = 1;
         }
-
         isInitialised_ = true;
     }
 

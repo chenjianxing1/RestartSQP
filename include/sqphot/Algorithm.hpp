@@ -73,7 +73,7 @@ public:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
+    virtual void Optimize(SmartPtr<Ipopt::TNLP> nlp);
 
     /** @name Set the corresponding option to the user-defined value */
     //@{
@@ -100,7 +100,7 @@ private:
     /**
      * @brief set the default option values
      */
-    bool setDefaultOption();
+    void setDefaultOption();
 
     /**
      * @brief This is the function that checks if the current point is optimal, and
@@ -112,7 +112,7 @@ private:
      *  function cannot be solved, it will assign _exitflag the	corresponding
      *  code according to the error type.
      */
-    bool termination_check();
+    void termination_check();
 
     /**
      *  @brief This function initializes the objects required by the SQP Algorithm,
@@ -120,25 +120,35 @@ private:
      *  information for the first QP.
      *
      */
-    bool initilization();
+    void initialization(SmartPtr<Ipopt::TNLP> nlp);
+
 
     /**
-     * @brief This function calculates the infeasibility measure for either trial
-     * point or
-     * current iterate x_k
+     * @brief This function calculates the infeasibility measure for  current
+     * iterate x_k
      *
-     * @param trial: true if the user are going to evaluate the infeasibility
-     * measure of
-     * the trial point _x_trial;
-     *	infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
-     *
-     * 	            false if the user are going to evaluate the infeasibility measure
-     * 	            of the current iterates _x_k
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
-//TODO: separate to two names
-    bool infea_cal(bool trial);
+    void cal_infea();
+
+    /**
+     * @brief This function calculates the infeasibility measure for  current
+     * iterate x_k
+     *
+     *   infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
+     *
+     *
+     */
+    void cal_infea_trial();
+
+    /**
+     * @brief Calculate the trial point based on current search direction,
+     * x_trial = x_k+p_k,
+     *       and get the funcion value, constraints value, and infeasibility measure
+     *       at the trial point
+     */
+    void get_trial_point_info();;
 
     /**
      * @brief calculate the second order correction step and decide if accept the
@@ -148,7 +158,7 @@ private:
      *
      */
 
-    bool second_order_correction();
+    void second_order_correction();
 
     /**
      *
@@ -165,7 +175,7 @@ private:
      * information by reading from nlp_ object. The corresponding flags of class
      * member QPinfoFlag_ will set to be true.
      */
-    bool ratio_test();
+    void ratio_test();
 
     /**
      * @brief Update the trust region radius.
@@ -181,12 +191,12 @@ private:
      * If trust region radius has changed, the corresponding flags will be set to be
      * true;
      */
-    bool radius_update();
+    void update_radius();
 
     /**
      * @brief Update the penalty parameter
      */
-    bool penalty_update();
+    void update_penalty_parameter();
 
 
     /**@name Get the search direction from the LP/QP handler*/
@@ -204,9 +214,9 @@ private:
      */
 
     //TODO: delete the argument...
-    bool get_search_direction(shared_ptr<QPhandler> qphandler);
+    void get_search_direction();
 
-    
+
     /**
      * @brief get the full search direction(including the slack variables) from the
      * QPhandler
@@ -214,8 +224,7 @@ private:
      * @param search_direction a Vector object which will be used to store the full
      * direction
      */
-    bool get_full_direction(shared_ptr<QPhandler> qphandler,
-                            shared_ptr<Vector> search_direction);
+    void get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction);
 
     /**
      * @brief get the full search direction(including the slack variables) from the
@@ -224,8 +233,7 @@ private:
      * @param search_direction a Vector object which will be used to store the full
      * direction
      */
-    bool get_full_direction(shared_ptr<LPhandler> lphandler,
-                            shared_ptr<Vector> search_direction);
+    void get_full_direction_LP(shared_ptr<Vector> search_direction);
 
     //@}
 
@@ -237,11 +245,11 @@ private:
     * member QPinfoFlag_
     */
 
-    bool setupQP();
+    void setupQP();
 
     /**
      * @brief This function extracts the Lagragian multipliers for constraints
-     * in NLP and copies it to the class member multiplier_cons_. 
+     * in NLP and copies it to the class member multiplier_cons_.
      *
      *   Note that the QP subproblem will return a multiplier for the constraints
      *   and the bound in a single vector, so we only take the first #constraints
@@ -251,7 +259,7 @@ private:
      * with specified QP information
      */
 
-    bool get_multipliers(shared_ptr<QPhandler> qphandler);
+    void get_multipliers();
 
     /**
      * @brief alloocate memory for class members.
@@ -261,7 +269,7 @@ private:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    bool allocate(SmartPtr<Ipopt::TNLP> nlp);
+    void allocate_memory(SmartPtr<Ipopt::TNLP> nlp);
 
     /**
      *
@@ -278,9 +286,10 @@ private:
      *
      * The same rules are also applied to the bound-constraints.
      */
-    bool ClassifyConstraintType();
+    void classify_constraints_types();
+
 //TODO: change name
-    bool ClassifyErrorCode(const char* error = NULL);
+    void handle_error_code(const char* error = NULL);
 
 
 
