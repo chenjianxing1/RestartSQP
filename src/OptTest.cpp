@@ -178,19 +178,19 @@ bool NLP_OptTest::IdentifyActiveSet() {
         Active_Set_bounds_ = new int[nVar_]();
     for (int i = 0; i < nCon_; i++) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(c_u_->values()[i] - c_k_->values()[i]) < active_set_tol_)
+            if (ABS(c_u_->values()[i] - c_k_->values()[i]) < active_set_tol_)
                 // consider adding another tolerance for identifying active set...
                 Active_Set_constraints_[i] = 1;
         } else if (cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+            if (ABS(c_k_->values()[i] - c_l_->values()[i]) <
                     active_set_tol_) {
                 // consider adding another tolerance for identifying active set...
                 Active_Set_constraints_[i] = -1;
             }
         } else if (cons_type_[i] == EQUAL) {
-            if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) <
+            if ((ABS(c_u_->values()[i] - c_k_->values()[i]) <
                     active_set_tol_) &&
-                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+                    (ABS(c_k_->values()[i] - c_l_->values()[i]) <
                      active_set_tol_))
                 Active_Set_constraints_[i] = 99;
             else {
@@ -202,15 +202,15 @@ bool NLP_OptTest::IdentifyActiveSet() {
 
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(x_u_->values()[i] - x_k_->values()[i]) < active_set_tol_)
+            if (ABS(x_u_->values()[i] - x_k_->values()[i]) < active_set_tol_)
                 Active_Set_bounds_[i] = 1;
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(x_k_->values()[i] - x_l_->values()[i]) < active_set_tol_)
+            if (ABS(x_k_->values()[i] - x_l_->values()[i]) < active_set_tol_)
                 Active_Set_bounds_[i] = -1;
         } else if (bound_cons_type_[i] == EQUAL) {
-            if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) <
+            if ((ABS(x_u_->values()[i] - x_k_->values()[i]) <
                     active_set_tol_) &&
-                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
+                    (ABS(x_k_->values()[i] - x_l_->values()[i]) <
                      active_set_tol_))
                 Active_Set_bounds_[i] = 99; //TODO: use another number?
             else {
@@ -244,18 +244,18 @@ bool NLP_OptTest::Check_Complementarity() {
     if (nCon_ > 0) {
         for (int i = 0; i < nCon_; i++) {
             if (cons_type_[i] == BOUNDED_ABOVE) {
-                if (std::abs(multiplier_cons_->values()[i] *
+                if (ABS(multiplier_cons_->values()[i] *
                              (c_u_->values()[i] - c_k_->values()[i]))
                         > opt_compl_tol_) {
                     complementarity_ = false;
                     return false;
                 }
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (std::abs(multiplier_cons_->values()[i] *
+                if (ABS(multiplier_cons_->values()[i] *
                              (c_k_->values()[i] - c_l_->values()[i]))
                         > opt_compl_tol_) {
 
-                std::cout <<std::abs(multiplier_cons_->values()[i] *
+                std::cout <<ABS(multiplier_cons_->values()[i] *
                              (c_k_->values()[i] - c_l_->values()[i]));
 		std::cout <<std::endl;
                     complementarity_ = false;
@@ -272,14 +272,14 @@ bool NLP_OptTest::Check_Complementarity() {
     }
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(multiplier_vars_->values()[i] *
+            if (ABS(multiplier_vars_->values()[i] *
                          (x_u_->values()[i] - x_k_->values()[i]))
                     > opt_compl_tol_) {
                 complementarity_ = false;
                 return false;
             }
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(multiplier_vars_->values()[i] *
+            if (ABS(multiplier_vars_->values()[i] *
                          (x_k_->values()[i] - x_l_->values()[i]))
                     > opt_compl_tol_) {
                 complementarity_ = false;

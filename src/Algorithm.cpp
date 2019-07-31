@@ -136,6 +136,8 @@ bool Algorithm::termination_check() {
                  options->testOption_NLP == TEST_1ST_ORDER)) {
             exitflag_ = OPTIMAL;
         } else {
+		if(DEBUG) {
+
             std::cout << "feasibility      "
                       << nlp_opt_tester->primal_feasibility_ << std::endl;
             std::cout << "dual_feasibility "
@@ -146,7 +148,7 @@ bool Algorithm::termination_check() {
             std::cout << "complementarity  "
                       << nlp_opt_tester->complementarity_
                       << std::endl;
-
+		}
 
         }
     } else {
