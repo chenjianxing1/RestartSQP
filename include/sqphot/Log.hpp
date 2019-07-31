@@ -19,7 +19,7 @@ public:
 
     void print_header() {
         printf("\n=====================================================================================\n");
-        printf("%6s %23s %9s %9s %9s %9s\n","iter", "f", "||p_k||","||c_k||", "Delta","rho");
+        printf("%6s   %23s%9s %9s %9s %9s\n","iter", "f", "||p_k||","||c_k||", "Delta","rho");
         printf("=====================================================================================\n");
     }
 
@@ -42,12 +42,49 @@ public:
                      double infea_measure,
                      int exitflag) {
         printf("\n=====================================================================================\n");
-        printf("Exitflag:                                                   %23i\n", exitflag);
+        switch(exitflag) {
+        case OPTIMAL:
+            printf("Exitflag:                                                   %23s\n","OPTIMAL");
+            break;
+        case INVALID_NLP :
+            printf("Exitflag:                                                   %23s\n","INVALID_NLP");
+            break;
+        case EXCEED_MAX_ITER :
+            printf("Exitflag:                                                   %23s\n","EXCEED_MAX_ITER");
+            break;
+        case QPERROR_INTERNAL_ERROR :
+            printf("Exitflag:                                                   %23s\n","QP_INTERNAL_ERROR");
+            break;
+        case QPERROR_INFEASIBLE :
+            printf("Exitflag:                                                   %23s\n","QP_INFEASIBLE");
+            break;
+        case QPERROR_UNBOUNDED :
+            printf("Exitflag:                                                   %23s\n","QP_UNBOUNDED");
+            break;
+        case QPERROR_EXCEED_MAX_ITER :
+            printf("Exitflag:                                                   %23s\n","QP_EXCEED_MAX_ITER");
+            break;
+        case QPERROR_NOTINITIALISED :
+            printf("Exitflag:                                                   %23s\n","QP_NOTINITIALISED");
+            break;
+        case AUXINPUT_NOT_OPTIMAL :
+            printf("Exitflag:                                                   %23s\n","AUXINPUT_NOT_OPTIMAL");
+            break;
+        case CONVERGE_TO_NONOPTIMAL :
+            printf("Exitflag:                                                   %23s\n","CONVERGE_TO_NONOPTIMAL");
+            break;
+        case UNKNOWN :
+            printf("Exitflag:                                                   %23s\n","UNKNOWN ERROR");
+
+            break;
+        }
+
         printf("Iterations:                                                 %23i\n", iter);
         printf("QP Solver Iterations:                                       %23i\n", qp_iter);
         printf("Final Objectives:                                           %23e\n",obj_value);
         printf("||p_k||                                                     %23e\n",norm_p_k);
         printf("||c_k||                                                     %23e\n",infea_measure);
+
         printf("=====================================================================================\n\n");
 
     }

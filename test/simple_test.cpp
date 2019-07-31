@@ -14,18 +14,27 @@
 using namespace Ipopt;
 using namespace SQPhotstart;
 
-int main(int argc, char** args){
+int main(int argc, char** args) {
     Algorithm alg;
+    printf("\n=====================================================================================\n");
+    printf( "	Solving Problem ");
+    std::cout << args[1]<<std::endl;
+    printf("=====================================================================================\n");
     SmartPtr<MyNLP> nlp= new MyNLP();
+    try{
     SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                             alg.getRoptions2(),
-                                            args);
-
+					    args);
     alg.Optimize(ampl_tnlp);
+//	if(alg.getExitFlag()==OPTIMAL)
+// 		std::cout<<args[1]<<std::endl;
 
-    // Call Initialize again to process output related options
+    }
+    catch(...){
+    printf( "WARNING, the NLP is invalid!");
+    
+    }
 
-    // finalize_solution method in AmplTNLP writes the solution file
 
     return 0;
 

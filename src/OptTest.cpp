@@ -55,6 +55,8 @@ NLP_OptTest::~NLP_OptTest() {
 bool NLP_OptTest::Check_KKTConditions(double infea_measure, bool isConstraintChanged,
                                       bool isPointChanged) {
     IdentifyActiveSet();
+
+
     Check_Feasibility(infea_measure);
     Check_Complementarity();
     Check_Dual_Feasibility();
@@ -75,14 +77,14 @@ bool NLP_OptTest::Check_Dual_Feasibility() {
 //DEBUG
 //std::cout << "The bound_cons_type_[i] is "<<std::endl;
 //    for (int i = 0; i <nVar_; i++) {
-//	    std::cout <<bound_cons_type_[i]<< "    "; 
+//	    std::cout <<bound_cons_type_[i]<< "    ";
 //    }
 //    std::cout << std::endl;
-//    
+//
 //    multiplier_vars_->print("multiplier_var");
 //	std::cout << "The cons_type_[i] is " <<std::endl;
 //    for (int i = 0; i <nCon_; i++) {
-//	    std::cout <<cons_type_[i]<< "    "; 
+//	    std::cout <<cons_type_[i]<< "    ";
 //    }
 //    std::cout << std::endl;
 //    multiplier_cons_->print("multiplier_cons_");
@@ -133,11 +135,11 @@ bool NLP_OptTest::Check_Stationarity() {
     difference->add_vector(multiplier_vars_->values());
     difference->add_vector(multiplier_vars_->values());
     difference->subtract_vector(grad_f_->values());
-	if(DEBUG) {
-		if(CHECK_TERMINATION) {
-		difference->print("Stationarity Gap");
-		}
-	}
+    if(DEBUG) {
+        if(CHECK_TERMINATION) {
+            difference->print("Stationarity Gap");
+        }
+    }
     if (difference->getInfNorm() < opt_tol_) {
         stationarity_ = true;
         return true;
@@ -255,9 +257,10 @@ bool NLP_OptTest::Check_Complementarity() {
                              (c_k_->values()[i] - c_l_->values()[i]))
                         > opt_compl_tol_) {
 
-                std::cout <<ABS(multiplier_cons_->values()[i] *
-                             (c_k_->values()[i] - c_l_->values()[i]));
-		std::cout <<std::endl;
+
+        //        std::cout <<ABS(multiplier_cons_->values()[i] *
+        //                     (c_k_->values()[i] - c_l_->values()[i]));
+	//	std::cout <<std::endl;
                     complementarity_ = false;
                     return false;
                 }

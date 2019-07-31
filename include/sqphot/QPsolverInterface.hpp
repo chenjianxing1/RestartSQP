@@ -174,7 +174,8 @@ public:
      * @brief get the final return status of the QP problem
      */
 
-    inline QPReturnType get_status();
+    QPReturnType status();
+
 
     //@{
     shared_ptr<Vector>& getLb() override;
@@ -198,6 +199,12 @@ public:
 
 
 private:
+    /**
+     * @brief get the final return status of the QP problem
+     */
+
+    bool get_status();
+
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
@@ -217,10 +224,11 @@ private:
     shared_ptr<qpOASESSparseMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
     bool firstQPsolved = false; /**< if the first QP has been solved? */
-
+    QPReturnType status_;
 private:
     /** default constructor*/
     qpOASESInterface();
+
 
     /**
      * @brief Allocate memory for the class members

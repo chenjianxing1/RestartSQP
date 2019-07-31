@@ -82,6 +82,10 @@ public:
         return false;
     };
 
+    inline Exitflag getExitFlag() {
+        return exitflag_;
+    }
+
 
     //@}
     /* Private methods*/
@@ -272,6 +276,10 @@ private:
      * The same rules are also applied to the bound-constraints.
      */
     bool ClassifyConstraintType();
+
+    bool ClassifyErrorCode(const char* error = NULL);
+
+
 
     /* public class members */
 private:
