@@ -76,8 +76,10 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         //Update the penalty parameter if necessary
         penalty_update();
 
+	
         // Calculate the the trial points, x_trial = x_k+p_k
-        x_trial_->copy_vector(x_k_->values());
+	//TODO: group them together
+	x_trial_->copy_vector(x_k_->values());
         x_trial_->add_vector(p_k_->values());
 
         // Calculate f_trial, c_trial and infea_measure_trial for the trial points
@@ -106,10 +108,9 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
         //check if the current iterates is optimal and decide to
         //exit the loop or not
-
-        if (nlp_opt_tester->Check_Stationarity()||norm_p_k_<1.0e-8) {
+	//TODO: get rid of step test
             termination_check();
-        }
+
         if (exitflag_ != UNKNOWN) {
             break;
         }
@@ -188,8 +189,8 @@ bool Algorithm::termination_check() {
                       << std::endl;
         }
 
-        if(norm_p_k_<1.0e-15)
-            exitflag_ = CONVERGE_TO_NONOPTIMAL;
+        if(norm_p_k_<1.0e-15)//TODO: put into options
+            exitflag_ = CONVERGE_TO_NONOPTIMAL; 
 
     }
 
@@ -466,7 +467,7 @@ bool Algorithm::ratio_test() {
         }
     }
 
-
+isaccept_ =false;
     if (actual_reduction_ >= (options->eta_s * pred_reduction_) &&
             actual_reduction_ >= -options->tol) {
         //succesfully update

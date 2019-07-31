@@ -112,7 +112,7 @@ private:
      *  function cannot be solved, it will assign _exitflag the	corresponding
      *  code according to the error type.
      */
-    virtual bool termination_check();
+    bool termination_check();
 
     /**
      *  @brief This function initializes the objects required by the SQP Algorithm,
@@ -120,7 +120,7 @@ private:
      *  information for the first QP.
      *
      */
-    virtual bool initilization();
+    bool initilization();
 
     /**
      * @brief This function calculates the infeasibility measure for either trial
@@ -137,8 +137,8 @@ private:
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
-
-    virtual bool infea_cal(bool trial);
+//TODO: separate to two names
+    bool infea_cal(bool trial);
 
     /**
      * @brief calculate the second order correction step and decide if accept the
@@ -148,7 +148,7 @@ private:
      *
      */
 
-    virtual bool second_order_correction();
+    bool second_order_correction();
 
     /**
      *
@@ -165,7 +165,7 @@ private:
      * information by reading from nlp_ object. The corresponding flags of class
      * member QPinfoFlag_ will set to be true.
      */
-    virtual bool ratio_test();
+    bool ratio_test();
 
     /**
      * @brief Update the trust region radius.
@@ -175,18 +175,18 @@ private:
      * hits the trust-region bounds.
      * If ratio<eta_c, the trust region radius will decrease by the parameter
      * gamma_c, to be gamma_c* delta_
-     * If ratio_test> eta_e and delta_= norm_p_k_ the trust-region radius will be
+     * If ratio > eta_e and delta_= norm_p_k_ the trust-region radius will be
      * increased by the parameter gamma_c.
      *
      * If trust region radius has changed, the corresponding flags will be set to be
      * true;
      */
-    virtual bool radius_update();
+    bool radius_update();
 
     /**
      * @brief Update the penalty parameter
      */
-    virtual bool penalty_update();;
+    bool penalty_update();
 
 
     /**@name Get the search direction from the LP/QP handler*/
@@ -202,8 +202,11 @@ private:
      * @param qphandler the QPhandler class object used for solving a QP subproblem with
      * specified QP information
      */
+
+    //TODO: delete the argument...
     bool get_search_direction(shared_ptr<QPhandler> qphandler);
 
+    
     /**
      * @brief get the full search direction(including the slack variables) from the
      * QPhandler
@@ -237,8 +240,8 @@ private:
     bool setupQP();
 
     /**
-     * @brief This function extracts the the Lagragian multipliers for constraints
-     * in NLP and copies it to the class member lambda_
+     * @brief This function extracts the Lagragian multipliers for constraints
+     * in NLP and copies it to the class member multiplier_cons_. 
      *
      *   Note that the QP subproblem will return a multiplier for the constraints
      *   and the bound in a single vector, so we only take the first #constraints
@@ -276,7 +279,7 @@ private:
      * The same rules are also applied to the bound-constraints.
      */
     bool ClassifyConstraintType();
-
+//TODO: change name
     bool ClassifyErrorCode(const char* error = NULL);
 
 
@@ -323,11 +326,12 @@ private:
                                                              the future*/
     Ipopt::SmartPtr<Ipopt::OptionsList> roptions2;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst;
-
+//TODO: change name to add underscore
     shared_ptr<Stats> stats;
     shared_ptr<QPhandler> myQP;
     shared_ptr<LPhandler> myLP;
     shared_ptr<Log> log;
+    //
     shared_ptr<NLP_OptTest> nlp_opt_tester;
     Number norm_p_k_;/**< the infinity norm of p_k*/
     Number delta_;/**< trust-region radius*/
