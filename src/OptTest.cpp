@@ -55,6 +55,8 @@ NLP_OptTest::~NLP_OptTest() {
 bool NLP_OptTest::Check_KKTConditions(double infea_measure, bool isConstraintChanged,
                                       bool isPointChanged) {
     IdentifyActiveSet();
+
+
     Check_Feasibility(infea_measure);
     Check_Complementarity();
     Check_Dual_Feasibility();
@@ -255,9 +257,9 @@ bool NLP_OptTest::Check_Complementarity() {
                              (c_k_->values()[i] - c_l_->values()[i]))
                         > opt_compl_tol_) {
 
-                    std::cout <<std::abs(multiplier_cons_->values()[i] *
-                                         (c_k_->values()[i] - c_l_->values()[i]));
-                    std::cout <<std::endl;
+//                    std::cout <<std::abs(multiplier_cons_->values()[i] *
+//                                         (c_k_->values()[i] - c_l_->values()[i]));
+//                    std::cout <<std::endl;
                     complementarity_ = false;
                     return false;
                 }

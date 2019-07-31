@@ -163,6 +163,7 @@ void Vector::set_zeros() {
  * @param rhs
  * @param compared_const
  * @return
+ * @return
  */
 bool Vector::setValue2Min(const Vector &rhs, double compared_const) {
     //        if(size_==0){

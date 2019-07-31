@@ -82,6 +82,10 @@ public:
         return false;
     };
 
+    inline Exitflag getExitFlag() {
+        return exitflag_;
+    }
+
 
     //@}
     /* Private methods*/
@@ -274,8 +278,8 @@ private:
     bool ClassifyConstraintType();
 
     bool ClassifyErrorCode(const char* error = NULL);
-    
-   
+
+
 
     /* public class members */
 private:

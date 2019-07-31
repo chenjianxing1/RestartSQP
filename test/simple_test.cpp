@@ -26,6 +26,9 @@ int main(int argc, char** args) {
                                             alg.getRoptions2(),
 					    args);
     alg.Optimize(ampl_tnlp);
+//	if(alg.getExitFlag()==OPTIMAL)
+// 		std::cout<<args[1]<<std::endl;
+
     }
     catch(...){
     printf( "WARNING, the NLP is invalid!");

@@ -10,8 +10,8 @@
 namespace SQPhotstart {
 /**
  * Default constructor
- *
  */
+
 LPhandler::LPhandler() {};
 
 /**
@@ -28,15 +28,12 @@ LPhandler::~LPhandler() {
  */
 bool LPhandler::GetOptimalSolution(double* p_k) {
     lp_interface_->get_optimal_solution(p_k);
-
-    //        print_("p_k", p_k,nlp_info_.nVar+2*nlp_info_.nCon);
     return true;
 }
 
 
 /**
  * This function initializes all objects will be used in this class.
- * (Probably more functionality can be added to this)
  *
  * @param nlp_info
  *          it contains the information about number of variables, number of constraints, number of
@@ -52,12 +49,12 @@ bool LPhandler::init(Index_info nlp_info, QPType qptype) {
     allocate(nlp_info, qptype);
     nlp_info_ = nlp_info;
     qptype_ = qptype;
-
+    //TODO: take this off...
     return true;
 }
 
 /**
- * Setup the bounds for the QP subproblems according to the information from current
+ * Setup the bounds for the LP subproblems according to the information from current
  * iterate. We have
  * 	c_l -c_k <=J_p+ u-v<=c_u-c_k
  * The bound is formulated as
@@ -210,9 +207,7 @@ LPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype
 
 
 /**
- * @brief
- * @param Jacobian
- * @return
+ * @brief Update the A matrix when there is any change to the Jacobian matrix
  */
 bool LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
     lp_interface_->getA()->setMatVal(Jacobian->MatVal(), I_info_A);

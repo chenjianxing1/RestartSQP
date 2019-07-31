@@ -48,12 +48,13 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     catch(...) { //TODO: be more specific
         ClassifyErrorCode("INVALID NLP");
     }
-    /** Main iteration */
+
+
+    /**
+     * Main iteration
+     */
     while (stats->iter < options->iter_max&& exitflag_ != INVALID_NLP) {
-
         setupQP();
-
-        //based on the information given by NLP reader otherwise, it will do nothing
 
         try {
             myQP->solveQP(stats, options);//solve the QP subproblem and update the stats
@@ -62,6 +63,8 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
             ClassifyErrorCode("QP NOT OPTIMAL");
             break;
         }
+
+
         qp_obj_ = myQP->GetObjective();
 
         //get the search direction from the solution of the QPsubproblem
@@ -112,15 +115,14 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         }
     }
 
-
+//check if the current iterates status before exiting
+    if (stats->iter == options->iter_max)
+        exitflag_ = EXCEED_MAX_ITER;
 
     if (exitflag_ !=OPTIMAL&& exitflag_!= INVALID_NLP) {
         termination_check();
     }
 
-//check if the current iterates status before exiting
-    if (stats->iter == options->iter_max)
-        exitflag_ = EXCEED_MAX_ITER;
 
 
 
@@ -144,7 +146,7 @@ bool Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 bool Algorithm::termination_check() {
     if (DEBUG) {
         if (CHECK_TERMINATION) {
-            get_multipliers(myQP);
+//            get_multipliers(myQP);
             multiplier_cons_->print("multiplier_cons_");
             multiplier_vars_->print("multiplier_vars_");
             grad_f_->print("grad_f_");
@@ -153,6 +155,7 @@ bool Algorithm::termination_check() {
     }
     if (nlp_opt_tester->Check_Stationarity()) {
         nlp_opt_tester->Check_KKTConditions(infea_measure_);
+//FIXME: be more specific about users' options for the Optimality test..
         if (nlp_opt_tester->first_order_opt_ &&
                 (options->testOption_NLP == TEST_ALL ||
                  options->testOption_NLP == TEST_1ST_ORDER)) {
@@ -185,7 +188,8 @@ bool Algorithm::termination_check() {
                       << std::endl;
         }
 
-        //exitflag_ = CONVERGE_TO_NONOPTIMAL;
+        if(norm_p_k_<1.0e-15)
+            exitflag_ = CONVERGE_TO_NONOPTIMAL;
 
     }
 

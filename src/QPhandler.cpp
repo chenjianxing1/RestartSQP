@@ -24,7 +24,7 @@ QPhandler::~QPhandler() {}
  *
  *This is only an interface for user to avoid call interface directly.
  * @param p_k       the pointer to an empty array with the length equal to the size
- * of the QP subproblem
+ *                  of the QP subproblem
  */
 bool QPhandler::GetOptimalSolution(double* p_k) {
     qp_interface_->get_optimal_solution(p_k);
@@ -38,7 +38,8 @@ bool QPhandler::GetOptimalSolution(double* p_k) {
  *
  *This is only an interface for user to avoid call interface directly.
  *
- * @param y_k       the pointer to an empty array with the length equal to the size of multipliers of the QP subproblem
+ * @param y_k       the pointer to an empty array with the length equal to the size of
+ * multipliers of the QP subproblem
  */
 bool QPhandler::GetMultipliers(double* y_k) {
     qp_interface_->get_multipliers(y_k);
@@ -48,16 +49,18 @@ bool QPhandler::GetMultipliers(double* y_k) {
 
 /**
  * This function initializes all objects will be used in this class.
- * (Probably more functionality can be added to this)
  *
  * @param nlp_info
- *          it contains the information about number of variables, number of constraints, number of
- *          elements in the Hessian and that of Jacobian. The definition of Index_info is in Types.hpp
+ *          it contains the information about number of variables, number of
+ *          constraints,  number of elements in the Hessian and that of Jacobian. The
+ *          definition of Index_info is in Types.hpp
  * @param Constraint_type
- *          it specifies how the variables are bounded. Please check @ClassifyConstraintType in Algorithm.hpp
+ *          it specifies how the variables are bounded. Please check
+ *           @ClassifyConstraintType in Algorithm.hpp
  *          for more details
  * @param qptype
- *          it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
+ *           it specifies which type of QP is going to be solved. It can be either LP,
+ *           or QP, or SOC
  */
 bool QPhandler::init(Index_info nlp_info, QPType qptype) {
     allocate(nlp_info, qptype);
