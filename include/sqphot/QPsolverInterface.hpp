@@ -71,7 +71,7 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    virtual bool get_optimal_solution(double* x_optimal) = 0;
+    virtual void get_optimal_solution(double* x_optimal) = 0;
 
     /**
      *@brief get the objective value from the QP solvers
@@ -86,7 +86,7 @@ public:
      *
      * @param y_k   a pointer to an array with allocated memory
      */
-    virtual bool get_multipliers(double* y_optimal) = 0;
+    virtual void get_multipliers(double* y_optimal) = 0;
 
 
     /**
@@ -132,8 +132,7 @@ public:
      * @param nlp_index_info the struct that stores simple nlp dimension info
      * @param qptype  is the problem to be solved QP or LP or SOC?
      */
-    qpOASESInterface(Index_info nlp_index_info,
-                     QPType qptype);    //number of constraints in the QP problem
+    qpOASESInterface(Index_info nlp_index_info, QPType qptype);    //number of constraints in the QP problem
 
 
     bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
@@ -153,7 +152,7 @@ public:
      *
      */
 
-    bool get_optimal_solution(double* p_k) override;
+    void get_optimal_solution(double* p_k) override;
 
     /**
      * @brief copy the multipliers of the QP to the input pointer
@@ -161,7 +160,7 @@ public:
      * @param y_k   a pointer to an array with allocated memory equals to
      * sizeof(double)*(num_variable+num_constraint)
      */
-    bool get_multipliers(double* y_k) override;
+    void get_multipliers(double* y_k) override;
 
     /**
      *@brief get the objective value from the QP solvers

@@ -40,7 +40,7 @@ public:
     LPhandler();
 
     /** Default destructor */
-    virtual ~LPhandler();
+    ~LPhandler() override ;
 
 
     /**
@@ -50,7 +50,7 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual void GetOptimalSolution(double* p_k);
+    void GetOptimalSolution(double* p_k) override ;
 
 
     /**
@@ -65,7 +65,7 @@ public:
      * 		@ClassifyConstraintType in Algorithm.hpp
      * 		for more details
      */
-    void init(Index_info nlp_info, QPType qptype);
+    void init(Index_info nlp_info) override ;
 
     /**
      *
@@ -119,7 +119,7 @@ public:
      *
      * @param a LPhandler object own a QPsolverInterface specific to QP.
      */
-    virtual void copy_QP_info(shared_ptr<const QPhandler> rhs);
+    void copy_QP_info(shared_ptr<const QPhandler> rhs);
 
 
     /**
@@ -130,11 +130,10 @@ public:
      * @param delta 	 trust region radius
      * @param nVar 		 number of variables in NLP
      */
-    virtual void
-    update_constraints(double delta, shared_ptr<const Vector> x_l,
-                       shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_k,
-                       shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                       shared_ptr<const Vector> x_k); //the trust region radius
+    void update_constraints(double delta, shared_ptr<const Vector> x_l,
+                            shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_k,
+                            shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                            shared_ptr<const Vector> x_k) override; //the trust region radius
 
 
 
@@ -169,8 +168,7 @@ private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    virtual void
-    allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
+    void allocate(SQPhotstart::Index_info nlp_info) override ;
 
     /**free all the memory*/
     virtual void freeMemory() {}
@@ -194,9 +192,7 @@ private:
 private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    Identity2Info I_info_H;
     Index_info nlp_info_;
-    QPType qptype_;
     shared_ptr<qpOASESInterface> lp_interface_; //an interface to the standard LP
 
     // solver specified by the user

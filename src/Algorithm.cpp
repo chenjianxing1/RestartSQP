@@ -220,8 +220,8 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
 
     cal_infea(); //calculate the infeasibility measure for x_k
     // initializes QP objects*/
-    myQP->init(nlp_->nlp_info_, QP);
-    myLP->init(nlp_->nlp_info_, LP);
+    myQP->init(nlp_->nlp_info_);
+    myLP->init(nlp_->nlp_info_);
     norm_p_k_ = 0.0;
     if (options->printLevel > 1) {
         log->print_header();
@@ -565,7 +565,7 @@ void Algorithm::update_penalty_parameter() {
                     if (rho_trial * 2 > options->rho_max) {
                         break;
                     }
-                    rho_trial = options->increase_parm * rho_trial; //increase rho
+                    rho_trial *=options->increase_parm;  //increase rho
                     stats->penalty_change_trial_addone();
                     myQP->update_penalty(rho_trial);
                     try {
@@ -592,7 +592,7 @@ void Algorithm::update_penalty_parameter() {
                     //try to increase the penalty parameter to a number such that
                     // tme incurred reduction for the QP model is to a ratio to the
                     // maximum possible reduction for current linear model.
-                    rho_trial = options->increase_parm * rho_trial; //increase rho
+                    rho_trial*=options->increase_parm; //increase rho
                     stats->penalty_change_trial_addone();
                     myQP->update_penalty(rho_trial);
 
@@ -770,14 +770,15 @@ void Algorithm::second_order_correction() {
         shared_ptr<Vector> s_k = make_shared<Vector>(nVar_);
         shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_ + 2 * nCon_);
         p_k_tmp->copy_vector(p_k_);
-
+        double norm_p_k_tmp = norm_p_k_;
         double qp_obj_tmp = qp_obj_;
         shared_ptr<Vector> Htimesp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Htimesp);
         Htimesp->add_vector(grad_f_->values());
         myQP->update_grad(Htimesp);
-
         myQP->update_constraints(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
+        norm_p_k_ = p_k_->getInfNorm();
+
         try {
             myQP->solveQP(stats, options);
         }
@@ -786,13 +787,16 @@ void Algorithm::second_order_correction() {
         }
 
         myQP->GetOptimalSolution(tmp_sol->values());
-        p_k_->add_vector(tmp_sol->values());
+        s_k->copy_vector(tmp_sol->values());
 
         qp_obj_ = myQP->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
         p_k_->add_vector(s_k->values());
-        cal_infea_trial();
+        get_trial_point_info();
         ratio_test();
-
+        if(!isaccept_)
+            p_k_ = p_k_tmp;
+        qp_obj_ = qp_obj_tmp;
+        norm_p_k_ = norm_p_k_tmp;
 
     }
 
@@ -979,30 +983,36 @@ void Algorithm::IdentifyActiveSet() {
 
 bool Algorithm::Check_Complementarity() {
     if (opt_status.complementarity) return true;
-//     c_u_->print("c_u");
-//     c_l_->print("c_l");
-//     c_k_->print("c_k");
-//     multiplier_cons_->print("multiplier_cons_");
-//     x_u_->print("x_u");
-//     x_l_->print("x_l");
-//     x_k_->print("x_k");
-//     multiplier_vars_->print("multiplier_vars_");
-//
-//     std::cout << "bound_cons_type_[i]"<<std::endl;
-//     for (int i = 0; i <nVar_; i++) {
-//     std::cout << bound_cons_type_[i]<<std::endl;
-//
-//     }
-//     std::cout << "cons_type_[i]"<<std::endl;
-//     for (int i = 0; i <nCon_; i++) {
-//     std::cout << cons_type_[i]<<std::endl;
-//     }
+    if (DEBUG)
+        if (CHECK_TERMINATION)
+            if(CHECK_COMPLEMENTARITY) {
+                c_u_->print("c_u");
+                c_l_->print("c_l");
+                c_k_->print("c_k");
+                multiplier_cons_->print("multiplier_cons_");
+                x_u_->print("x_u");
+                x_l_->print("x_l");
+                x_k_->print("x_k");
+                multiplier_vars_->print("multiplier_vars_");
+
+                std::cout << "bound_cons_type_[i]" << std::endl;
+                for (int i = 0; i < nVar_; i++) {
+                    std::cout << bound_cons_type_[i] << std::endl;
+
+                }
+                std::cout << "cons_type_[i]" << std::endl;
+                for (int i = 0; i < nCon_; i++) {
+                    std::cout << cons_type_[i] << std::endl;
+                }
+            }
+
     if (nCon_ > 0) {
         for (int i = 0; i < nCon_; i++) {
             if (cons_type_[i] == BOUNDED_ABOVE) {
                 if (std::abs(multiplier_cons_->values()[i] *
                              (c_u_->values()[i] - c_k_->values()[i]))
                         > options->opt_compl_tol) {
+
                     return false;
                 }
             } else if (cons_type_[i] == BOUNDED_BELOW) {

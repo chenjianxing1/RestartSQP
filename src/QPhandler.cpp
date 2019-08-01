@@ -60,10 +60,9 @@ void QPhandler::GetMultipliers(double* y_k) {
  *           it specifies which type of QP is going to be solved. It can be either LP,
  *           or QP, or SOC
  */
-void QPhandler::init(Index_info nlp_info, QPType qptype) {
-    allocate(nlp_info, qptype);
+void QPhandler::init(Index_info nlp_info) {
+    allocate(nlp_info);
     nlp_info_ = nlp_info;
-    qptype_ = qptype;
 
 }
 
@@ -236,8 +235,8 @@ double QPhandler::GetObjective() {
  *          be solved. It can be either LP, or QP, or SOC
  */
 void
-QPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-    qp_interface_ = make_shared<qpOASESInterface>(nlp_info, qptype);
+QPhandler::allocate(SQPhotstart::Index_info nlp_info) {
+    qp_interface_ = make_shared<qpOASESInterface>(nlp_info,QP);
 }
 
 void QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
