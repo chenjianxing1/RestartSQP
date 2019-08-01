@@ -18,11 +18,11 @@ namespace SQPhotstart {
  * It contains the methods to setup the QP problem in
  * the following format or similar ones,
  *
- * 	minimize  1/2 p_k^T H_k p^k + g_k^T p_k+rho*(u+v)
+ * 	minimize  1/2 p_k^T H_k p^k + g_k^T p_k+rho*e^T *(u+v)
  * 	subject to c_l<=c_k+J_k p+u-v<=c_u,
- * 		  x_l<=x_k+p_k<=x_u,
- *		  -delta<=p_i<=delta,
- *		  u,v>=0
+ * 		       x_l<=x_k+p_k<=x_u,
+ *		       -delta<=p_i<=delta,
+ *		       u,v>=0
  *
  *
  * and transform them into sparse matrix (triplet) and
@@ -88,7 +88,7 @@ public:
      * 		it specifies which type of QP is going to be solved. It can be either
      * 		QP, or SOC
      */
-    virtual void init(Index_info nlp_info, QPType qptype);
+    virtual void init(Index_info nlp_info);
 
     /**
      *
@@ -200,12 +200,13 @@ public:
     inline QPReturnType GetStatus() {
         return (qp_interface_->status());
     }
+
 private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
     virtual void
-    allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
+    allocate(SQPhotstart::Index_info nlp_info);
 
     //@{
     /** Copy Constructor */
@@ -227,9 +228,7 @@ private:
 private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    Identity2Info I_info_H;
     Index_info nlp_info_;
-    QPType qptype_;
     shared_ptr<qpOASESInterface> qp_interface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };

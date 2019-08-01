@@ -51,7 +51,7 @@ void SpTripletMat::print() const {
  */
 //@{
 void SpTripletMat::print_full(const char* name) const {
-    print();
+
     if (name != NULL) {
         std::cout << name << " is" << std::endl;
     }
@@ -297,7 +297,6 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         }
 
     }
-
     assert(counter == EntryNum_);
 
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),

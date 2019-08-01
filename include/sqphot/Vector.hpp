@@ -72,6 +72,7 @@ public:
     void subtract_vector(const double* rhs);
 
     /**
+     *
      * subtract  a subvector with length @subvec_size from the class member @_vector
      * from the location @iloc
      *

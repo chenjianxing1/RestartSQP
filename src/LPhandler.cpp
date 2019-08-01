@@ -44,11 +44,9 @@ void LPhandler::GetOptimalSolution(double* p_k) {
  * @param qptype
  *          it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
  */
-void LPhandler::init(Index_info nlp_info, QPType qptype) {
-    assert(qptype == LP);
-    allocate(nlp_info, qptype);
+void LPhandler::init(Index_info nlp_info) {
+    allocate(nlp_info);
     nlp_info_ = nlp_info;
-    qptype_ = qptype;
     //TODO: take this off...
 
 }
@@ -200,8 +198,8 @@ void LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
  *          be solved. It can be either LP, or QP, or SOC
  */
 void
-LPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
-    lp_interface_ = make_shared<qpOASESInterface>(nlp_info, qptype);
+LPhandler::allocate(SQPhotstart::Index_info nlp_info) {
+    lp_interface_ = make_shared<qpOASESInterface>(nlp_info, LP);
 
 }
 
