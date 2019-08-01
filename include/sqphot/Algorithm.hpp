@@ -13,7 +13,6 @@
 #include <coin/IpOptionsList.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
-#include <sqphot/OptTest.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPhandler.hpp>
 #include <sqphot/LPhandler.hpp>
@@ -47,24 +46,25 @@ public:
     Algorithm();
 
     /** Default Destructor*/
-    virtual ~Algorithm();
+    ~Algorithm();
     //@}
 
     /** temporarily use Ipopt options*/
     //@{
     //
 
-    virtual SmartPtr<RegisteredOptions> getRoptions() {
+    SmartPtr<RegisteredOptions> getRoptions() {
         return roptions;
     }
 
-    virtual SmartPtr<OptionsList> getRoptions2() {
+    SmartPtr<OptionsList> getRoptions2() {
         return roptions2;
     }
 
-    virtual SmartPtr<Journalist> getJnlst() {
+    SmartPtr<Journalist> getJnlst() {
         return jnlst;
     }
+
     //@}
 
 
@@ -81,11 +81,21 @@ public:
     bool setOptions(const std::string& name, T value) {
         return false;
     };
-
+//@}
+//
+    /** @name Getters*/
+    //@{
     inline Exitflag getExitFlag() {
         return exitflag_;
     }
 
+    int* getActiveSetConstraints() const {
+        return NULL;
+    };
+
+    int* getActiveSetBounds() const {
+        return NULL;
+    };
 
     //@}
     /* Private methods*/
@@ -288,11 +298,47 @@ private:
      */
     void classify_constraints_types();
 
-//TODO: change name
     void handle_error_code(const char* error = NULL);
 
 
+    /** @name Optimality Test */
+//@{
+    void IdentifyActiveSet();
 
+    bool Check_KKTConditions(double infea_measure = INF,
+                             bool isConstraintChanged = false,
+                             bool isPointChanged = false) ;
+
+    /**
+     * @brief Test the Second-order optimality conditions
+     */
+//    bool Check_SecondOrder() ;
+
+    /**
+     * @brief Check the Feasibility conditions;
+     */
+
+    bool Check_Feasibility(double infea_measure = INF) ;
+
+    /**
+     * @brief Check the sign of the multipliers
+     */
+    bool Check_Dual_Feasibility() ;
+
+
+    /**
+     * @brief Check the complementarity condition
+     *
+     */
+
+    bool Check_Complementarity() ;
+
+    /**
+     * @brief Check the Stationarity condition
+     */
+    bool Check_Stationarity() ;
+
+//@}
     /* public class members */
 private:
     Index nVar_; /**< number of variables*/
@@ -340,14 +386,16 @@ private:
     shared_ptr<QPhandler> myQP;
     shared_ptr<LPhandler> myLP;
     shared_ptr<Log> log;
-    //
-    shared_ptr<NLP_OptTest> nlp_opt_tester;
     Number norm_p_k_;/**< the infinity norm of p_k*/
     Number delta_;/**< trust-region radius*/
     Number rho_; /**< penalty parameter*/
     Number pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
     Number actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
+    int* Active_Set_bounds_;
+    int* Active_Set_constraints_;
+
     Exitflag exitflag_ = UNKNOWN;
+    OptimalityStatus opt_status;
     bool isaccept_; // is the new point accepted?
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
 };//END_OF_ALG_CLASS

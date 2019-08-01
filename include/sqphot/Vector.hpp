@@ -22,10 +22,6 @@ namespace SQPhotstart {
 
 class Vector {
 public:
-    /** Default Constructor*/
-    Vector() :
-        size_(0),
-        values_(NULL) {};
 
     /**
      * Default constructor
@@ -106,25 +102,12 @@ public:
     /** calculate the infinity norm of the member _vector*/
     double getInfNorm() const;
 
-    /**
-     * @brief
-     * @param rhs
-     * @return
-     */
-    Vector operator+(const Vector& rhs);
-
-    /**
-     * @brief
-     * @param rhs
-     * @return
-     */
-    const Vector operator-(const Vector& rhs);
+//    Vector operator+(const Vector& rhs);
+//
+//    const Vector operator-(const Vector& rhs);
 
     double times(Vector& rhs);
 
-    bool setValue2Max(const Vector rhs, double compared_const);
-
-    bool setValue2Min(const Vector& rhs, double compared_const);
 
     const double* negative_of_values() const {
         std::shared_ptr<Vector> negative_values = std::make_shared<Vector>(size_);
@@ -166,14 +149,15 @@ public:
 
 private:
 
-    //        Vector():
+    /** Default Constructor*/
+    Vector();
 
     //        /** Copy Constructor */
     //        Vector(const Vector &);
     //
     //        /** Overloaded Equals Operator */
     //        void operator=(const Vector &);
-
+private:
     int size_; /* the size of an vector*/
     double* values_;/*the array stored vector information*/
 };

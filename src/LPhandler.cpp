@@ -26,9 +26,9 @@ LPhandler::~LPhandler() {
  *This is only an interface for user to avoid call interface directly.
  * @param p_k       the pointer to an empty array with the length equal to the size of the QP subproblem
  */
-bool LPhandler::GetOptimalSolution(double* p_k) {
+void LPhandler::GetOptimalSolution(double* p_k) {
     lp_interface_->get_optimal_solution(p_k);
-    return true;
+
 }
 
 
@@ -44,13 +44,13 @@ bool LPhandler::GetOptimalSolution(double* p_k) {
  * @param qptype
  *          it specifies which type of QP is going to be solved. It can be either LP, or QP, or SOC
  */
-bool LPhandler::init(Index_info nlp_info, QPType qptype) {
+void LPhandler::init(Index_info nlp_info, QPType qptype) {
     assert(qptype == LP);
     allocate(nlp_info, qptype);
     nlp_info_ = nlp_info;
     qptype_ = qptype;
     //TODO: take this off...
-    return true;
+
 }
 
 /**
@@ -68,7 +68,7 @@ bool LPhandler::init(Index_info nlp_info, QPType qptype) {
  * @param c_l        the lower bounds for constraints
  * @param c_u        the upper bounds for constraints
  */
-bool LPhandler::setup_bounds(double delta,
+void LPhandler::setup_bounds(double delta,
                              shared_ptr<const Vector> x_k,
                              shared_ptr<const Vector> x_l,
                              shared_ptr<const Vector> x_u,
@@ -93,7 +93,7 @@ bool LPhandler::setup_bounds(double delta,
      */
     for (int i = 0; i < nlp_info_.nCon * 2; i++)
         lp_interface_->getUb()->setValueAt(nlp_info_.nVar + i, INF);
-    return true;
+
 }
 
 
@@ -103,7 +103,7 @@ bool LPhandler::setup_bounds(double delta,
  * @param delta      trust region radius
  * @param nVar               number of variables in NLP
  */
-bool
+void
 LPhandler::update_constraints(double delta, shared_ptr<const Vector> x_l,
                               shared_ptr<const Vector> x_u,
                               shared_ptr<const Vector> c_k,
@@ -120,7 +120,7 @@ LPhandler::update_constraints(double delta, shared_ptr<const Vector> x_l,
         lp_interface_->getUb()->setValueAt(i, std::min(
                                                x_u->values()[i] - x_k->values()[i], delta));
     }
-    return true;
+
 }
 
 /**
@@ -130,9 +130,9 @@ LPhandler::update_constraints(double delta, shared_ptr<const Vector> x_l,
  * @param nVar              number of variables in NLP
  */
 
-bool LPhandler::update_penalty(double rho) {
+void LPhandler::update_penalty(double rho) {
     lp_interface_->getG()->assign_n(nlp_info_.nVar + 1, nlp_info_.nCon * 2, rho);
-    return true;
+
 }
 
 
@@ -141,9 +141,9 @@ bool LPhandler::update_penalty(double rho) {
  *
  * @param grad              the gradient vector from NLP
  */
-bool LPhandler::update_grad(shared_ptr<const Vector> grad) {
+void LPhandler::update_grad(shared_ptr<const Vector> grad) {
     lp_interface_->getG()->assign(1, grad->Dim(), grad->values());
-    return true;
+
 }
 
 
@@ -152,7 +152,7 @@ bool LPhandler::update_grad(shared_ptr<const Vector> grad) {
  * The matrix A in QP problem will be concatenate as [J I -I]
  * @param jacobian  the Matrix object for Jacobian from c(x)
  */
-bool LPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
+void LPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
 
 
     I_info_A.irow1 = 1;
@@ -164,7 +164,7 @@ bool LPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
     lp_interface_->getA()->setStructure(jacobian, I_info_A);
     lp_interface_->getA()->setMatVal(jacobian->MatVal(), I_info_A);
 
-    return true;
+
 }
 
 
@@ -173,11 +173,11 @@ bool LPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
  * members
  */
 
-bool LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
+void LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
                         shared_ptr<Options> options) {
     lp_interface_->optimizeLP(stats, options);
     lp_obj_ = lp_interface_->get_obj_value();
-    return true;
+
 }
 
 
@@ -199,19 +199,19 @@ bool LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
  *          it specifies which type of QP is going to
  *          be solved. It can be either LP, or QP, or SOC
  */
-bool
+void
 LPhandler::allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype) {
     lp_interface_ = make_shared<qpOASESInterface>(nlp_info, qptype);
-    return true;
+
 }
 
 
 /**
  * @brief Update the A matrix when there is any change to the Jacobian matrix
  */
-bool LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
+void LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
     lp_interface_->getA()->setMatVal(Jacobian->MatVal(), I_info_A);
-    return true;
+
 }
 
 /**
@@ -220,7 +220,7 @@ bool LPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
  * @param rhs
  * @return
  */
-bool LPhandler::copy_QP_info(shared_ptr<const QPhandler> rhs) {
+void LPhandler::copy_QP_info(shared_ptr<const QPhandler> rhs) {
     lp_interface_->getLbA()->copy_vector(rhs->getQpInterface()->getLbA());
     lp_interface_->getLb()->copy_vector(rhs->getQpInterface()->getLb());
     lp_interface_->getUb()->copy_vector(rhs->getQpInterface()->getUb());
@@ -232,7 +232,7 @@ bool LPhandler::copy_QP_info(shared_ptr<const QPhandler> rhs) {
 
     lp_interface_->getA()->copy(rhs->getQpInterface()->getA());
 
-    return true;
+
 }
 
 /**
@@ -241,9 +241,9 @@ bool LPhandler::copy_QP_info(shared_ptr<const QPhandler> rhs) {
  * [0 , rho* e^T], where the unit vector is of length (2*nCon).
  * @param rho       Penalty Parameter
  */
-bool LPhandler::setup_g(double rho) {
+void LPhandler::setup_g(double rho) {
     lp_interface_->getG()->assign_n(nlp_info_.nVar + 1, nlp_info_.nCon * 2, rho);
-    return true;
+
 }
 
 

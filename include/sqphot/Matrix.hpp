@@ -74,9 +74,7 @@ public:
      *
      */
 
-    bool setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) {
-        return false;
-    }
+    void setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) {}
 
     /**
      *@brief print the sparse matrix in triplet form
@@ -93,7 +91,7 @@ public:
      * product  will be stored in the class member of another Vector class object
      * called "result"
      * */
-    virtual bool times(std::shared_ptr<const Vector> p,
+    virtual void times(std::shared_ptr<const Vector> p,
                        std::shared_ptr<Vector> result) const ;
 
     /**
@@ -101,7 +99,7 @@ public:
      * product  will be stored in the class member of another Vector class object
      * called "result"
      * */
-    virtual bool transposed_times(std::shared_ptr<const Vector> p,
+    virtual void transposed_times(std::shared_ptr<const Vector> p,
                                   std::shared_ptr<Vector> result) const;;
 
     /**
@@ -121,7 +119,7 @@ public:
     /**
      *@brief make a deep copy of a matrix information
      */
-    virtual bool copy(std::shared_ptr<const SpTripletMat> rhs);;
+    virtual void copy(std::shared_ptr<const SpTripletMat> rhs);;
 
 
     /**Extract Matrix info*/
@@ -175,9 +173,9 @@ public:
 
     bool isSymmetric() const;
 
-    inline bool setOrderAt(int location, int order_to_assign);
+    inline void setOrderAt(int location, int order_to_assign);
 
-    inline bool setMatValAt(int location, int value_to_assign);
+    inline void setMatValAt(int location, int value_to_assign);
 
 
     /** Private Method */
@@ -187,7 +185,7 @@ private:
     SpTripletMat();
 
     /** free all memory*/
-    bool freeMemory();
+    void freeMemory();
 
     /** Copy Constructor */
     SpTripletMat(const SpTripletMat&);
@@ -247,9 +245,9 @@ public:
      * @param MatVal entry values(orders are not yet under permutation)
      * @param I_info the 2 identity matrices information
      */
-    virtual bool setMatVal(const double* MatVal, Identity2Info I_info);
+    virtual void setMatVal(const double* MatVal, Identity2Info I_info);
 
-    virtual bool setMatVal(std::shared_ptr<const SpTripletMat> rhs);
+    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 
     /**
      * @brief setup the structure of the sparse matrix for solver qpOASES(should
@@ -263,14 +261,12 @@ public:
      * @param I_info the information of 2 identity sub matrices.
      *
      */
-    bool setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
+    void setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
 
-    bool setStructure(std::shared_ptr<const SpTripletMat> rhs);
+    void setStructure(std::shared_ptr<const SpTripletMat> rhs);
 
 
-    bool updateMatVal(const double* MatVal) {
-        return false;
-    }
+    void updateMatVal(const double* MatVal) {}
 
     /**
      * @brief print the matrix information
@@ -282,7 +278,7 @@ public:
      * @brief make a deep copy of a matrix information
      */
 
-    virtual bool copy(std::shared_ptr<const qpOASESSparseMat> rhs);
+    virtual void copy(std::shared_ptr<const qpOASESSparseMat> rhs);
 
     /** Extract class member information*/
     //@{
@@ -347,7 +343,7 @@ private:
     qpOASESSparseMat();
 
     /** free all memory*/
-    bool freeMemory();
+    void freeMemory();
 
     /** Copy Constructor */
     qpOASESSparseMat(const qpOASESSparseMat&);
@@ -388,4 +384,3 @@ private:
 
 }
 #endif //SQPHOTSTART_MATRIX_HPP_
-
