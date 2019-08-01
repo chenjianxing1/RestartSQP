@@ -158,58 +158,23 @@ void Vector::set_zeros() {
         values_[i] = 0;
     }
 }
-/**
- * @brief
- * @param rhs
- * @param compared_const
- * @return
- * @return
- */
-bool Vector::setValue2Min(const Vector &rhs, double compared_const) {
-    //        if(size_==0){
-    //            size_ = rhs.size_;
-    //            values_ = new double[size_];
-    //        }
-    //        for(int i=0; i<size_;i++)
-    //            setValueAt(i,std::min(rhs->values()[i],compared_const));
-    return true;
-}
+//
+//Vector Vector::operator+(const Vector& rhs) {
+//    assert(this->size_==rhs.size_);
+//    auto added_result = Vector(this->size_);
+//    for (int i = 0; i < this->size_; i++)
+//        added_result.setValueAt(i, this->values()[i] + rhs.values()[i]);
+//    return added_result;
+//}
+//
+//const Vector Vector::operator-(const Vector &rhs) {
+//    assert(this->size_==rhs.size_);
+//    auto added_result = Vector(this->size_);
+//    for (int i = 0; i < this->size_; i++)
+//        added_result.setValueAt(i, this->values()[i] - rhs.values()[i]);
+//    return added_result;
+//}
 
-Vector Vector::operator+(const Vector& rhs) {
-    assert(this->size_==rhs.size_);
-    auto added_result = Vector(this->size_);
-    for (int i = 0; i < this->size_; i++)
-        added_result.setValueAt(i, this->values()[i] + rhs.values()[i]);
-    return added_result;
-}
-
-const Vector Vector::operator-(const Vector &rhs) {
-    assert(this->size_==rhs.size_);
-    auto added_result = Vector(this->size_);
-    for (int i = 0; i < this->size_; i++)
-        added_result.setValueAt(i, this->values()[i] - rhs.values()[i]);
-    return added_result;
-}
-
-/**
- * @brief set each entry of values_ to be the max of the same entry of rhs and a
- * constant number.
- *
- * For example, values_[i] = max(rhs.values[i],compared_const).
- *
- * @param rhs the vector to be compared with the constant
- * @param compared_const the constant to be compared with each entry of the vector
- */
-bool Vector::setValue2Max(const Vector rhs, double compared_const) {
-    assert(this->size_==rhs.Dim());
-    if(size_==0) {
-        size_ = rhs.size_;
-        values_ = new double[size_]();
-    }
-    for(int i=0; i<size_; i++)
-        setValueAt(i,std::max(rhs.values()[i],compared_const));
-    return true;
-}
 
 double Vector::times(Vector& rhs) {
     double product = 0;

@@ -50,7 +50,7 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual bool GetOptimalSolution(double* p_k);
+    virtual void GetOptimalSolution(double* p_k);
 
 
     /**
@@ -65,7 +65,7 @@ public:
      * 		@ClassifyConstraintType in Algorithm.hpp
      * 		for more details
      */
-    bool init(Index_info nlp_info, QPType qptype);
+    void init(Index_info nlp_info, QPType qptype);
 
     /**
      *
@@ -80,7 +80,7 @@ public:
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    bool setup_bounds(double delta,
+    void setup_bounds(double delta,
                       shared_ptr<const Vector> x_k,
                       shared_ptr<const Vector> x_l,
                       shared_ptr<const Vector> x_u,
@@ -96,11 +96,11 @@ public:
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
-    bool setup_g(double rho);
+    void setup_g(double rho);
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    bool setup_A(shared_ptr<const SpTripletMat> jacobian) override;
+    void setup_A(shared_ptr<const SpTripletMat> jacobian) override;
 
 
     /**
@@ -108,7 +108,7 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    bool solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
+    void solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
     /**
      * @brief This function copies the information from another LPhandler object
@@ -119,7 +119,7 @@ public:
      *
      * @param a LPhandler object own a QPsolverInterface specific to QP.
      */
-    virtual bool copy_QP_info(shared_ptr<const QPhandler> rhs);
+    virtual void copy_QP_info(shared_ptr<const QPhandler> rhs);
 
 
     /**
@@ -130,7 +130,7 @@ public:
      * @param delta 	 trust region radius
      * @param nVar 		 number of variables in NLP
      */
-    virtual bool
+    virtual void
     update_constraints(double delta, shared_ptr<const Vector> x_l,
                        shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_k,
                        shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
@@ -147,7 +147,7 @@ public:
      * @param rho		penalty parameter
      * @param nVar 		number of variables in NLP
      */
-    bool update_penalty(double rho) override;
+    void update_penalty(double rho) override;
 
     /**
      * @brief This function updates the vector g in the
@@ -156,26 +156,24 @@ public:
      *
      * @param grad		the gradient vector from NLP
      */
-    bool update_grad(shared_ptr<const Vector> grad) override;
+    void update_grad(shared_ptr<const Vector> grad) override;
 
 
     /**
      * @brief Update the Matrix H of the QP problems
      * when there is any change to the Jacobian to the constraints.
      */
-    bool update_A(shared_ptr<const SpTripletMat> Jacobian) override;
+    void update_A(shared_ptr<const SpTripletMat> Jacobian) override;
 
 private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    virtual bool
+    virtual void
     allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
 
     /**free all the memory*/
-    virtual bool freeMemory() {
-        return false;
-    };
+    virtual void freeMemory() {}
 
     /** Copy Constructor */
     LPhandler(const LPhandler&);

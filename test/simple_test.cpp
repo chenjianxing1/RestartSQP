@@ -21,18 +21,18 @@ int main(int argc, char** args) {
     std::cout << args[1]<<std::endl;
     printf("=====================================================================================\n");
     SmartPtr<MyNLP> nlp= new MyNLP();
-    try{
-    SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
-                                            alg.getRoptions2(),
-					    args);
-    alg.Optimize(ampl_tnlp);
+    try {
+        SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
+                                                alg.getRoptions2(),
+                                                args);
+        alg.Optimize(ampl_tnlp);
 //	if(alg.getExitFlag()==OPTIMAL)
 // 		std::cout<<args[1]<<std::endl;
 
     }
-    catch(...){
-    printf( "WARNING, the NLP is invalid!");
-    
+    catch(...) {
+        printf( "WARNING, the NLP is invalid!");
+
     }
 
 

@@ -92,3 +92,4 @@ public:
 
 }
 #endif //CPP_LOG_HPP
+

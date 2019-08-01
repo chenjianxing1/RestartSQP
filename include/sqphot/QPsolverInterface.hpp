@@ -10,6 +10,7 @@
 #include <vector>
 #include <coin/IpException.hpp>
 #include <sqphot/Vector.hpp>
+#include <sqphot/Utils.hpp>
 #include <sqphot/Matrix.hpp>
 #include <qpOASES.hpp>
 #include <sqphot/Stats.hpp>

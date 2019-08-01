@@ -76,6 +76,14 @@ typedef struct {
     Index nnz_h_lag;
 } Index_info;
 
+typedef struct {
+    bool primal_feasibility = false;
+    bool dual_feasibility = false;
+    bool complementarity = false;
+    bool stationarity = false;
+    bool first_order_opt = false;
+    bool Second_order_opt = false;
+} OptimalityStatus;
 
 typedef struct {
     bool Update_A = false;

@@ -50,7 +50,7 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual bool GetOptimalSolution(double* p_k);
+    virtual void GetOptimalSolution(double* p_k);
 
 
     virtual /**
@@ -63,7 +63,7 @@ public:
          * the length equal to the size of multipliers of the QP
          * subproblem
          */
-    bool GetMultipliers(double* y_k);
+    void GetMultipliers(double* y_k);
 
     /**
      * @brief Get the objective value of the QP
@@ -88,7 +88,7 @@ public:
      * 		it specifies which type of QP is going to be solved. It can be either
      * 		QP, or SOC
      */
-    virtual bool init(Index_info nlp_info, QPType qptype);
+    virtual void init(Index_info nlp_info, QPType qptype);
 
     /**
      *
@@ -103,7 +103,7 @@ public:
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    virtual bool setup_bounds(double delta,
+    virtual void setup_bounds(double delta,
                               shared_ptr<const Vector> x_k,
                               shared_ptr<const Vector> x_l,
                               shared_ptr<const Vector> x_u,
@@ -118,7 +118,7 @@ public:
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
-    bool setup_g(shared_ptr<const Vector> grad_f, double rho);
+    void setup_g(shared_ptr<const Vector> grad, double rho);
 
     /**
      * Set up the H for the first time in the QP
@@ -135,11 +135,11 @@ public:
      * @return
      */
 
-    virtual bool setup_H(shared_ptr<const SpTripletMat> hessian);
+    virtual void setup_H(shared_ptr<const SpTripletMat> hessian);
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    virtual bool setup_A(shared_ptr<const SpTripletMat> jacobian);
+    virtual void setup_A(shared_ptr<const SpTripletMat> jacobian);
 
 
     /**
@@ -147,7 +147,7 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    bool
+    void
     solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
 
@@ -155,7 +155,7 @@ public:
     * @brief This function updates the bounds on x if there is any changes to the
     * values of trust-region or the iterate
     */
-    virtual bool update_constraints(double delta,
+    virtual void update_constraints(double delta,
                                     shared_ptr<const Vector> x_l,
                                     shared_ptr<const Vector> x_u,
                                     shared_ptr<const Vector> c_k,
@@ -170,7 +170,7 @@ public:
      *
      * @param rho		penalty parameter
      */
-    virtual bool update_penalty(double rho);
+    virtual void update_penalty(double rho);
 
     /**
      * @brief This function updates the vector g in the QP subproblem when there
@@ -178,20 +178,20 @@ public:
      *
      * @param grad		the gradient vector from NLP
      */
-    virtual bool update_grad(shared_ptr<const Vector> grad);
+    virtual void update_grad(shared_ptr<const Vector> grad);
 
     /*  @brief Update the SparseMatrix H of the QP
      *  problems when there is any change to the
      *  true function Hessian
      *
      *  */
-    virtual bool update_H(shared_ptr<const SpTripletMat> Hessian);
+    virtual void update_H(shared_ptr<const SpTripletMat> Hessian);
 
     /**
      * @brief Update the Matrix H of the QP problems
      * when there is any change to the Jacobian to the constraints.
      */
-    virtual bool update_A(shared_ptr<const SpTripletMat> Jacobian);
+    virtual void update_A(shared_ptr<const SpTripletMat> Jacobian);
 
 
     const shared_ptr<qpOASESInterface>& getQpInterface() const;
@@ -204,7 +204,7 @@ private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    virtual bool
+    virtual void
     allocate(SQPhotstart::Index_info nlp_info, SQPhotstart::QPType qptype);
 
     //@{

@@ -13,7 +13,6 @@
 #include <coin/IpOptionsList.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
-#include <sqphot/OptTest.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPhandler.hpp>
 #include <sqphot/LPhandler.hpp>
@@ -47,24 +46,25 @@ public:
     Algorithm();
 
     /** Default Destructor*/
-    virtual ~Algorithm();
+    ~Algorithm();
     //@}
 
     /** temporarily use Ipopt options*/
     //@{
     //
 
-    virtual SmartPtr<RegisteredOptions> getRoptions() {
+    SmartPtr<RegisteredOptions> getRoptions() {
         return roptions;
     }
 
-    virtual SmartPtr<OptionsList> getRoptions2() {
+    SmartPtr<OptionsList> getRoptions2() {
         return roptions2;
     }
 
-    virtual SmartPtr<Journalist> getJnlst() {
+    SmartPtr<Journalist> getJnlst() {
         return jnlst;
     }
+
     //@}
 
 
@@ -73,7 +73,7 @@ public:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    virtual bool Optimize(SmartPtr<Ipopt::TNLP> nlp);
+    virtual void Optimize(SmartPtr<Ipopt::TNLP> nlp);
 
     /** @name Set the corresponding option to the user-defined value */
     //@{
@@ -81,11 +81,21 @@ public:
     bool setOptions(const std::string& name, T value) {
         return false;
     };
-
+//@}
+//
+    /** @name Getters*/
+    //@{
     inline Exitflag getExitFlag() {
         return exitflag_;
     }
 
+    int* getActiveSetConstraints() const {
+        return NULL;
+    };
+
+    int* getActiveSetBounds() const {
+        return NULL;
+    };
 
     //@}
     /* Private methods*/
@@ -100,7 +110,7 @@ private:
     /**
      * @brief set the default option values
      */
-    bool setDefaultOption();
+    void setDefaultOption();
 
     /**
      * @brief This is the function that checks if the current point is optimal, and
@@ -112,7 +122,7 @@ private:
      *  function cannot be solved, it will assign _exitflag the	corresponding
      *  code according to the error type.
      */
-    virtual bool termination_check();
+    void termination_check();
 
     /**
      *  @brief This function initializes the objects required by the SQP Algorithm,
@@ -120,25 +130,35 @@ private:
      *  information for the first QP.
      *
      */
-    virtual bool initilization();
+    void initialization(SmartPtr<Ipopt::TNLP> nlp);
+
 
     /**
-     * @brief This function calculates the infeasibility measure for either trial
-     * point or
-     * current iterate x_k
+     * @brief This function calculates the infeasibility measure for  current
+     * iterate x_k
      *
-     * @param trial: true if the user are going to evaluate the infeasibility
-     * measure of
-     * the trial point _x_trial;
-     *	infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
-     *
-     * 	            false if the user are going to evaluate the infeasibility measure
-     * 	            of the current iterates _x_k
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
+    void cal_infea();
 
-    virtual bool infea_cal(bool trial);
+    /**
+     * @brief This function calculates the infeasibility measure for  current
+     * iterate x_k
+     *
+     *   infea_measure_trial = norm(-max(c_trial-cu,0),1)+norm(-min(c_trial-cl,0),1)
+     *
+     *
+     */
+    void cal_infea_trial();
+
+    /**
+     * @brief Calculate the trial point based on current search direction,
+     * x_trial = x_k+p_k,
+     *       and get the funcion value, constraints value, and infeasibility measure
+     *       at the trial point
+     */
+    void get_trial_point_info();;
 
     /**
      * @brief calculate the second order correction step and decide if accept the
@@ -148,7 +168,7 @@ private:
      *
      */
 
-    virtual bool second_order_correction();
+    void second_order_correction();
 
     /**
      *
@@ -165,7 +185,7 @@ private:
      * information by reading from nlp_ object. The corresponding flags of class
      * member QPinfoFlag_ will set to be true.
      */
-    virtual bool ratio_test();
+    void ratio_test();
 
     /**
      * @brief Update the trust region radius.
@@ -175,18 +195,18 @@ private:
      * hits the trust-region bounds.
      * If ratio<eta_c, the trust region radius will decrease by the parameter
      * gamma_c, to be gamma_c* delta_
-     * If ratio_test> eta_e and delta_= norm_p_k_ the trust-region radius will be
+     * If ratio > eta_e and delta_= norm_p_k_ the trust-region radius will be
      * increased by the parameter gamma_c.
      *
      * If trust region radius has changed, the corresponding flags will be set to be
      * true;
      */
-    virtual bool radius_update();
+    void update_radius();
 
     /**
      * @brief Update the penalty parameter
      */
-    virtual bool penalty_update();;
+    void update_penalty_parameter();
 
 
     /**@name Get the search direction from the LP/QP handler*/
@@ -202,7 +222,10 @@ private:
      * @param qphandler the QPhandler class object used for solving a QP subproblem with
      * specified QP information
      */
-    bool get_search_direction(shared_ptr<QPhandler> qphandler);
+
+    //TODO: delete the argument...
+    void get_search_direction();
+
 
     /**
      * @brief get the full search direction(including the slack variables) from the
@@ -211,8 +234,7 @@ private:
      * @param search_direction a Vector object which will be used to store the full
      * direction
      */
-    bool get_full_direction(shared_ptr<QPhandler> qphandler,
-                            shared_ptr<Vector> search_direction);
+    void get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction);
 
     /**
      * @brief get the full search direction(including the slack variables) from the
@@ -221,8 +243,7 @@ private:
      * @param search_direction a Vector object which will be used to store the full
      * direction
      */
-    bool get_full_direction(shared_ptr<LPhandler> lphandler,
-                            shared_ptr<Vector> search_direction);
+    void get_full_direction_LP(shared_ptr<Vector> search_direction);
 
     //@}
 
@@ -234,11 +255,11 @@ private:
     * member QPinfoFlag_
     */
 
-    bool setupQP();
+    void setupQP();
 
     /**
-     * @brief This function extracts the the Lagragian multipliers for constraints
-     * in NLP and copies it to the class member lambda_
+     * @brief This function extracts the Lagragian multipliers for constraints
+     * in NLP and copies it to the class member multiplier_cons_.
      *
      *   Note that the QP subproblem will return a multiplier for the constraints
      *   and the bound in a single vector, so we only take the first #constraints
@@ -248,7 +269,7 @@ private:
      * with specified QP information
      */
 
-    bool get_multipliers(shared_ptr<QPhandler> qphandler);
+    void get_multipliers();
 
     /**
      * @brief alloocate memory for class members.
@@ -258,7 +279,7 @@ private:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    bool allocate(SmartPtr<Ipopt::TNLP> nlp);
+    void allocate_memory(SmartPtr<Ipopt::TNLP> nlp);
 
     /**
      *
@@ -275,12 +296,49 @@ private:
      *
      * The same rules are also applied to the bound-constraints.
      */
-    bool ClassifyConstraintType();
+    void classify_constraints_types();
 
-    bool ClassifyErrorCode(const char* error = NULL);
+    void handle_error_code(const char* error = NULL);
 
 
+    /** @name Optimality Test */
+//@{
+    void IdentifyActiveSet();
 
+    bool Check_KKTConditions(double infea_measure = INF,
+                             bool isConstraintChanged = false,
+                             bool isPointChanged = false) ;
+
+    /**
+     * @brief Test the Second-order optimality conditions
+     */
+//    bool Check_SecondOrder() ;
+
+    /**
+     * @brief Check the Feasibility conditions;
+     */
+
+    bool Check_Feasibility(double infea_measure = INF) ;
+
+    /**
+     * @brief Check the sign of the multipliers
+     */
+    bool Check_Dual_Feasibility() ;
+
+
+    /**
+     * @brief Check the complementarity condition
+     *
+     */
+
+    bool Check_Complementarity() ;
+
+    /**
+     * @brief Check the Stationarity condition
+     */
+    bool Check_Stationarity() ;
+
+//@}
     /* public class members */
 private:
     Index nVar_; /**< number of variables*/
@@ -323,18 +381,21 @@ private:
                                                              the future*/
     Ipopt::SmartPtr<Ipopt::OptionsList> roptions2;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst;
-
+//TODO: change name to add underscore
     shared_ptr<Stats> stats;
     shared_ptr<QPhandler> myQP;
     shared_ptr<LPhandler> myLP;
     shared_ptr<Log> log;
-    shared_ptr<NLP_OptTest> nlp_opt_tester;
     Number norm_p_k_;/**< the infinity norm of p_k*/
     Number delta_;/**< trust-region radius*/
     Number rho_; /**< penalty parameter*/
     Number pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
     Number actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
+    int* Active_Set_bounds_;
+    int* Active_Set_constraints_;
+
     Exitflag exitflag_ = UNKNOWN;
+    OptimalityStatus opt_status;
     bool isaccept_; // is the new point accepted?
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
 };//END_OF_ALG_CLASS

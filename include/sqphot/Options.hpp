@@ -1,5 +1,4 @@
-/* Copyright (C) 2019
-* All Rights Reserved.
+/**All Rights Reserved.
 *
 * Authors: Xinyi Luo
 * Date:2019-05
@@ -88,3 +87,4 @@ public:
 };//ENDCLASS
 }
 #endif /* SQPHOTSTART_OPTIONS_HPP */
+
