@@ -46,6 +46,7 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
+	printf("hahaha");
     try {
         initialization(nlp);
     }
@@ -57,69 +58,69 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     /**
      * Main iteration
     //     */
-//    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
-//        setupQP();
-//
-//        try {
-//            myQP_->solveQP(stats_,
-//                           options);//solve the QP subproblem and update the stats_
-//        }
-//        catch (QP_NOT_OPTIMAL) {
-//            handle_error_code("QP NOT OPTIMAL");
-//            break;
-//        }
-//
-//        qp_obj_ = myQP_->GetObjective();
-//
-//        //get the search direction from the solution of the QPsubproblem
-//        get_search_direction();
-//
-//        //calculate the infinity norm of the search direction
-//        norm_p_k_ = p_k_->getInfNorm();
-//
-//        //Update the penalty parameter if necessary
-//        update_penalty_parameter();
-//
-//        get_trial_point_info();
-//
-//        ratio_test();
-//
-//        // Calculate the second-order-correction steps
-//        second_order_correction();
-//
-//        // Update the radius and the QP bounds if the radius has been changed
-//        stats_->iter_addone();
-//
-//        /* output some information to the console*/
-//
-//        if (options->printLevel > 1) {
-//            if (stats_->iter % 10 == 0)log_->print_header();
-//            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-//                                  delta_, rho_);
-//        }
-//        update_radius();
-//
-//        //check if the current iterates is optimal and decide to
-//        //exit the loop or not
-//        termination_check();
-//
-//        if (exitflag_ != UNKNOWN) {
-//            break;
-//        }
-//    }
-//
-////check if the current iterates getStatus before exiting
-//    if (stats_->iter == options->iter_max)
-//        exitflag_ = EXCEED_MAX_ITER;
-//
-//    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-//        termination_check();
-//    }
-//
-//    // print the final summary message to the console
-//    if (options->printLevel > 0)
-//        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-//                          infea_measure_, exitflag_);
+    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
+        setupQP();
+
+        try {
+            myQP_->solveQP(stats_,
+                           options);//solve the QP subproblem and update the stats_
+        }
+        catch (QP_NOT_OPTIMAL) {
+            handle_error_code("QP NOT OPTIMAL");
+            break;
+        }
+
+        qp_obj_ = myQP_->GetObjective();
+
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
+
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
+
+        //Update the penalty parameter if necessary
+        update_penalty_parameter();
+
+        get_trial_point_info();
+
+        ratio_test();
+
+        // Calculate the second-order-correction steps
+        second_order_correction();
+
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
+
+        /* output some information to the console*/
+
+        if (options->printLevel > 1) {
+            if (stats_->iter % 10 == 0)log_->print_header();
+            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+                                  delta_, rho_);
+        }
+        update_radius();
+
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        termination_check();
+
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+    }
+
+//check if the current iterates getStatus before exiting
+    if (stats_->iter == options->iter_max)
+        exitflag_ = EXCEED_MAX_ITER;
+
+    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+        termination_check();
+    }
+
+    // print the final summary message to the console
+    if (options->printLevel > 0)
+        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+                          infea_measure_, exitflag_);
 }
 
 
@@ -204,31 +205,31 @@ void Algorithm::get_trial_point_info() {
  *
  */
 void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
-//    allocate_memory(nlp); //allocate memory to class members
-//    nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
-//    nlp_->Get_starting_point(x_k_, multiplier_cons_);
-//    //shift starting point to satisfy the bound constraint
-//    nlp_->shift_starting_point(x_k_, x_l_, x_u_);
-//    nlp_->Eval_f(x_k_, obj_value_);
-//    nlp_->Eval_gradient(x_k_, grad_f_);
-//    nlp_->Eval_constraints(x_k_, c_k_);
-//    nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
-//    nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
-//    nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
-//    nlp_->Eval_Jacobian(x_k_, jacobian_);
-//    classify_constraints_types();
-//
-//    cal_infea(); //calculate the infeasibility measure for x_k
-//    // initializes QP objects*/
-//    myQP_->init(nlp_->nlp_info_);
-//    myLP_->init(nlp_->nlp_info_);
-//    norm_p_k_ = 0.0;
-//    if (options->printLevel > 1) {
-//        log_->print_header();
-//        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-//                              delta_,
-//                              rho_);
-//    }
+    allocate_memory(nlp); //allocate memory to class members
+    nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
+    nlp_->Get_starting_point(x_k_, multiplier_cons_);
+    //shift starting point to satisfy the bound constraint
+    nlp_->shift_starting_point(x_k_, x_l_, x_u_);
+    nlp_->Eval_f(x_k_, obj_value_);
+    nlp_->Eval_gradient(x_k_, grad_f_);
+    nlp_->Eval_constraints(x_k_, c_k_);
+    nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
+    nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
+    nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
+    nlp_->Eval_Jacobian(x_k_, jacobian_);
+    classify_constraints_types();
+
+    cal_infea(); //calculate the infeasibility measure for x_k
+    // initializes QP objects*/
+    myQP_->init(nlp_->nlp_info_);
+    myLP_->init(nlp_->nlp_info_);
+    norm_p_k_ = 0.0;
+    if (options->printLevel > 1) {
+        log_->print_header();
+        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+                              delta_,
+                              rho_);
+    }
 
 }
 
