@@ -60,10 +60,10 @@ void QPhandler::GetMultipliers(double* y_k) {
  *           it specifies which type of QP is going to be solved. It can be either LP,
  *           or QP, or SOC
  */
-void QPhandler::init(Index_info nlp_info) {
+void QPhandler::init(Index_info nlp_info):
+	nlp_info_(nlp_info)
+{
     allocate(nlp_info);
-    nlp_info_ = nlp_info;
-
 }
 
 /**
@@ -137,7 +137,7 @@ void QPhandler::update_constraints(double delta, shared_ptr<const Vector> x_l,
         qp_interface_->getLbA()->setValueAt(i, c_l->values()[i] - c_k->values()[i]);
         qp_interface_->getUbA()->setValueAt(i, c_u->values()[i] - c_k->values()[i]);
     }
-    for (int i = 0; i < nlp_info_.nVar; i++) {
+    for (int i = 0; i < nlp_info_.nVar; i++) 
         qp_interface_->getLb()->setValueAt(i, std::max(
                                                x_l->values()[i] - x_k->values()[i], -delta));
         qp_interface_->getUb()->setValueAt(i, std::min(
@@ -165,7 +165,7 @@ void QPhandler::update_penalty(double rho) {
  * @param grad              the gradient vector from NLP
  */
 void QPhandler::update_grad(shared_ptr<const Vector> grad) {
-    qp_interface_->getG()->assign(1, grad->Dim(), grad->values());
+    qp_interface_->getG()->assign(1, nlp_info_.nVar_, grad->values());
 }
 
 

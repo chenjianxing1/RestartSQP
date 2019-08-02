@@ -53,7 +53,7 @@ public:
     virtual void GetOptimalSolution(double* p_k);
 
 
-    virtual /**
+    /**
          *@brief Get the multipliers from the QPhandler_interface
          *
          * This is only an interface for user to avoid call
@@ -63,14 +63,14 @@ public:
          * the length equal to the size of multipliers of the QP
          * subproblem
          */
-    void GetMultipliers(double* y_k);
+    virtual void GetMultipliers(double* y_k);
 
     /**
      * @brief Get the objective value of the QP
      * @param qp_obj the reference to a double variable which will hold the
      * objective value of the qp problem
      */
-
+//TODO: get_objective_value()
     double GetObjective();
 
     /**
@@ -86,15 +86,16 @@ public:
      * 		for more details
      * @param qptype
      * 		it specifies which type of QP is going to be solved. It can be either
-     * 		QP, or SOC
+     * 		QP, or SC
      */
+    //TODO: 
     virtual void init(Index_info nlp_info);
 
     /**
      *
      * @brief setup the bounds for the QP subproblems
      * according to the information from current iterate
-     *
+     *
      * @param delta      trust region radius
      * @param x_k 	     current iterate point
      * @param c_k        current constraint value evaluated at x_k
@@ -155,6 +156,7 @@ public:
     * @brief This function updates the bounds on x if there is any changes to the
     * values of trust-region or the iterate
     */
+    //TODO: update bounds
     virtual void update_constraints(double delta,
                                     shared_ptr<const Vector> x_l,
                                     shared_ptr<const Vector> x_u,
@@ -180,7 +182,7 @@ public:
      */
     virtual void update_grad(shared_ptr<const Vector> grad);
 
-    /*  @brief Update the SparseMatrix H of the QP
+    /*  @brief Update the SparseMatrix H of the QP
      *  problems when there is any change to the
      *  true function Hessian
      *
@@ -229,7 +231,8 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     Index_info nlp_info_;
-    shared_ptr<qpOASESInterface> qp_interface_; /**<an interface to the standard QP
+    //TODO: add methods to base class
+    shared_ptr<QPSolverInterface> qp_interface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };
 
