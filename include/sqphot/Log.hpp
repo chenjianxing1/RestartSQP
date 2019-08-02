@@ -4,7 +4,7 @@
 * Authors: Xinyi Luo
 * Date:2019-06
 */
-//This is a simple log file for output temporarily
+//This is a simple log_ file for output temporarily
 #ifndef SQPHOTSTART_LOG_HPP
 #define SQPHOTSTART_LOG_HPP
 

@@ -7,7 +7,7 @@ namespace SQPhotstart {
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-bool qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
+void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     int nVar_QP = 2 * nlp_index_info.nCon + nlp_index_info.nVar;
     int nCon_QP = nlp_index_info.nCon;
     lbA_ = make_shared<Vector>(nCon_QP);
@@ -24,7 +24,6 @@ bool qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     //FIXME: the qpOASES does not accept any extra input
     qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
             (qpOASES::int_t) nCon_QP);
-    return true;
 }
 
 /**
@@ -47,7 +46,7 @@ qpOASESInterface::~qpOASESInterface() = default;
  * After the QP being solved, it updates the stats, adding the iteration
  * number used to solve the QP to the qp_iter in object stats
  */
-bool
+void
 qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
     H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(), H_->ColNum(),
                  H_->RowIndex(),
@@ -112,7 +111,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
 
         }
     } else
-	    //TODO:divide into more cases
+        //TODO:divide into more cases
         qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
@@ -122,10 +121,9 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
                         "the QP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
-    return true;
 }
 
-bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
+void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                                   options) {
 
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum(),
@@ -181,7 +179,6 @@ bool qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                         "the LP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
-    return true;
 
 }
 
@@ -218,35 +215,6 @@ inline double qpOASESInterface::get_obj_value() {
     return (double) (qp_->getObjVal());
 }
 
-/** Getters, extract private member information*/
-//@{
-shared_ptr<Vector>& qpOASESInterface::getLb() {
-    return lb_;
-}
-
-shared_ptr<Vector>& qpOASESInterface::getUb() {
-    return ub_;
-}
-
-shared_ptr<Vector>& qpOASESInterface::getLbA() {
-    return lbA_;
-}
-
-shared_ptr<Vector>& qpOASESInterface::getUbA() {
-    return ubA_;
-}
-
-shared_ptr<Vector>& qpOASESInterface::getG() {
-    return g_;
-}
-
-shared_ptr<qpOASESSparseMat>& qpOASESInterface::getH() {
-    return H_;
-}
-
-shared_ptr<qpOASESSparseMat>& qpOASESInterface::getA() {
-    return A_;
-}
 
 bool qpOASESInterface::get_status() {
     qpOASES::QProblemStatus finalStatus = qp_->getStatus();
@@ -282,11 +250,72 @@ bool qpOASESInterface::get_status() {
 }
 
 
-QPReturnType qpOASESInterface::status() {
+QPReturnType qpOASESInterface::getStatus() {
     return status_;
 }
-//@}
 
+//@}
+void qpOASESInterface::set_lb(int location, double value) {
+    lb_->setValueAt(location, value);
+}
+
+void qpOASESInterface::set_ub(int location, double value) {
+    ub_->setValueAt(location, value);
+}
+
+void qpOASESInterface::set_lbA(int location, double value) {
+    lbA_->setValueAt(location, value);
+}
+
+void qpOASESInterface::set_ubA(int location, double value) {
+    ubA_->setValueAt(location, value);
+}
+
+void qpOASESInterface::set_g(int location, double value) {
+    g_->setValueAt(location, value);
+}
+
+void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
+    H_->setStructure(rhs);
+}
+
+void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
+    H_->setMatVal(rhs);
+}
+
+void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
+                                       Identity2Info I_info) {
+    A_->setStructure(rhs, I_info);
+}
+
+void qpOASESInterface::set_A_values(
+    shared_ptr<const SQPhotstart::SpTripletMat> rhs, Identity2Info I_info) {
+
+    A_->setMatVal(rhs, I_info);
+}
+
+void qpOASESInterface::set_ub(shared_ptr<const Vector> rhs) {
+    ub_->copy_vector(rhs->values());
+}
+
+void qpOASESInterface::set_lb(shared_ptr<const Vector> rhs) {
+    lb_->copy_vector(rhs->values());
+
+}
+
+void qpOASESInterface::set_lbA(shared_ptr<const Vector> rhs) {
+    lbA_->copy_vector(rhs->values());
+
+}
+
+void qpOASESInterface::set_ubA(shared_ptr<const Vector> rhs) {
+    ubA_->copy_vector(rhs->values());
+
+}
+
+void qpOASESInterface::set_g(shared_ptr<const Vector> rhs) {
+    g_->copy_vector(rhs->values());
+}
 
 }//SQPHOTSTART
 

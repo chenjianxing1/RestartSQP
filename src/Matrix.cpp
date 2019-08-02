@@ -130,7 +130,7 @@ double SpTripletMat::infnorm() {
     //TODO: test it!
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     for(int i = 0; i<EntryNum_; i++) {
-        rowSums->addNumberAt(RowIndex()[i]-1,std::abs(MatVal_[i]));
+        rowSums->addNumberAt(RowIndex()[i]-1,abs(MatVal_[i]));
     }
 
     double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
@@ -143,7 +143,7 @@ double SpTripletMat::onenorm() {
 
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     for(int i = 0; i<EntryNum_; i++) {
-        colSums->addNumberAt(ColIndex()[i]-1,std::abs(MatVal_[i]));
+        colSums->addNumberAt(ColIndex()[i]-1,abs(MatVal_[i]));
     }
 
     double OneNorm = colSums->getInfNorm();//same as calculating the MAX of an array
@@ -404,10 +404,11 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 /**
  * @brief set the Matrix values to the matrix, convert from triplet format to
  * Harwell-Boeing Matrix format.
- * @param MatVal entry values(orders are not yet under permutation)
+ * @param rhs entry values(orders are not yet under permutation)
  * @param I_info the 2 identity matrices information
  */
-void qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
+void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
+                                 Identity2Info I_info) {
     //adding the value to the matrix
     if (isInitialised_ == false) {
         for (int i = 0; i < I_info.size; i++) {
@@ -419,7 +420,7 @@ void qpOASESSparseMat::setMatVal(const double* MatVal, Identity2Info I_info) {
 
     //assign each matrix entry to the corresponding position after permutation
     for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
-        MatVal_[order()[i]] = MatVal[i];
+        MatVal_[order()[i]] = rhs->MatVal()[i];
     }
 }
 

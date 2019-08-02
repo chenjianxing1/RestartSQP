@@ -23,6 +23,7 @@ using namespace std;
 namespace SQPhotstart {
 
 DECLARE_STD_EXCEPTION(QP_NOT_OPTIMAL);
+
 /**
  * @brief Base class for all standard QP solvers that use standard triplet matrix
  * form and dense vectors.
@@ -49,10 +50,8 @@ public:
      * overload this method to optimize a QP with the data specified, update the
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
-    virtual bool
-    optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
-        return false;
-    }
+    virtual void
+    optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
 
     /**
      * @brief Solve a regular LP with given data and options
@@ -60,10 +59,8 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
-    virtual bool
-    optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
-        return false;
-    }
+    virtual void
+    optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
 
     /**
      * @brief copy the optimal solution of the QP to the input pointer
@@ -93,27 +90,59 @@ public:
      * Return private class members info
      */
 
-    //@{
-    virtual shared_ptr<Vector>& getLb() = 0;
+    virtual void set_lb(int location, double value) = 0;
 
-    virtual shared_ptr<Vector>& getUb() = 0;
+    virtual void set_lb(shared_ptr<const Vector> rhs)=0;
 
-    virtual shared_ptr<Vector>& getLbA() = 0;
+    virtual void set_ub(int location, double value) = 0;
 
-    virtual shared_ptr<Vector>& getUbA() = 0;
+    virtual void set_ub(shared_ptr<const Vector> rhs)=0;
 
-    virtual shared_ptr<Vector>& getG() = 0;
-    //TODO: have a set function for everything 
-    //TODO: setBounds(i,value)
+    virtual void set_lbA(int location, double value) = 0;
+
+    virtual void set_lbA(shared_ptr<const Vector> rhs)=0;
+
+    virtual void set_ubA(int location, double value) = 0;
+
+    virtual void set_ubA(shared_ptr<const Vector> rhs)=0;
+
+    virtual void set_g(int location, double value) = 0;
+
+    virtual void set_g(shared_ptr<const Vector> rhs)=0;
+
+    virtual void set_H_structure(shared_ptr<const SpTripletMat> rhs) = 0;
+
+    virtual void set_H_values(shared_ptr<const SpTripletMat> rhs)=0;
+
+    virtual void set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info
+                                 I_info) = 0;
+
+    virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+                              I_info)=0;
+
+    virtual QPReturnType getStatus()=0;
+
+
+    virtual void copy_QP_info(shared_ptr<const QPSolverInterface> rhs)=0;
     //@}
 
-private:
+protected:
+    shared_ptr<Vector> lb_;  /**< lower bounds of x */
+    shared_ptr<Vector> ub_;  /**< upper bounds of x */
+    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
+    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
+    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
+    shared_ptr<Matrix> H_;/**< the Matrix object stores the QP data H in
+                                          * Harwell-Boeing Sparse Matrix format*/
+    shared_ptr<Matrix> A_;/**< the Matrix object stores the QP data A in
+                                          * Harwell-Boeing Sparse Matrix format*/
 
+private:
     /** Copy Constructor */
-    QPSolverInterface(const QPSolverInterface&);
+    QPSolverInterface(const QPSolverInterface &) ;
 
     /** Overloaded Equals Operator */
-    void operator=(const QPSolverInterface&);
+    void operator=(const QPSolverInterface &);
 };
 
 
@@ -134,25 +163,26 @@ public:
      * @param nlp_index_info the struct that stores simple nlp dimension info
      * @param qptype  is the problem to be solved QP or LP or SOC?
      */
-    qpOASESInterface(Index_info nlp_index_info, QPType qptype);    //number of constraints in the QP problem
+    qpOASESInterface(Index_info nlp_index_info,
+                     QPType qptype);    //number of constraints in the QP problem
 
 
-    bool optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
 
     /**
      * @brief optimize the LP problem whose objective and constraints are defined
      * in the class members.
      */
 
-    bool optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
 
     /**
-     * @brief copy the optimal solution of the QP to the input pointer
-     *
-     * @param x_optimal a pointer to an empty array with allocated memory equals to
-     * sizeof(double)*number_variables
-     *
-     */
+    * @brief copy the optimal solution of the QP to the input pointer
+    *
+    * @param x_optimal a pointer to an empty array with allocated memory equals to
+    * sizeof(double)*number_variables
+    *
+    */
 
     void get_optimal_solution(double* p_k) override;
 
@@ -176,23 +206,40 @@ public:
      * @brief get the final return status of the QP problem
      */
 
-    QPReturnType status();
+    QPReturnType getStatus() override ;
 
+    void copy_QP_info(shared_ptr<const QPSolverInterface> rhs) {}
 
+    /** @name Setters */
     //@{
-    shared_ptr<Vector>& getLb() override;
+    void set_lb(int location, double value)override ;
 
-    shared_ptr<Vector>& getUb() override;
+    void set_lb(shared_ptr<const Vector> rhs)override ;
 
-    shared_ptr<Vector>& getLbA() override;
+    void set_ub(int location, double value)override ;
 
-    shared_ptr<Vector>& getUbA() override;
+    void set_ub(shared_ptr<const Vector> rhs)override ;
 
-    shared_ptr<Vector>& getG() override;
+    void set_lbA(int location, double value) override ;
 
-    shared_ptr<qpOASESSparseMat>& getH();
+    void set_lbA(shared_ptr<const Vector> rhs)override ;
 
-    shared_ptr<qpOASESSparseMat>& getA();
+    void set_ubA(int location, double value) override ;
+
+    void set_ubA(shared_ptr<const Vector> rhs)override ;
+
+    void set_g(int location, double value) override ;
+
+    void set_g(shared_ptr<const Vector> rhs)override ;
+
+    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override ;
+
+    void set_H_values(shared_ptr<const SpTripletMat> rhs)override ;
+
+    void set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info)
+    override ;
+
+    void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override ;
 
     //@}
 
@@ -237,13 +284,13 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP or SOC?
      */
-    bool allocate(Index_info nlp_index_info, QPType qptype);
+    void allocate(Index_info nlp_index_info, QPType qptype);
 
     /** Copy Constructor */
-    qpOASESInterface(const qpOASESInterface&);
+    qpOASESInterface(const qpOASESInterface &);
 
     /** Overloaded Equals Operator */
-    void operator=(const qpOASESInterface&);
+    void operator=(const qpOASESInterface &);
 
 };
 }//SQPHOTSTART

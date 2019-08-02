@@ -9,6 +9,7 @@
 
 #include <sqphot/Types.hpp>
 #include <sqphot/Vector.hpp>
+#include <math.h>
 #include <algorithm>
 #include <vector>
 #include <memory>
@@ -242,10 +243,10 @@ public:
     /**
      * @brief set the Matrix values to the matrix, convert from triplet format to
      * Harwell-Boeing Matrix format.
-     * @param MatVal entry values(orders are not yet under permutation)
+     * @param rhs entry values(orders are not yet under permutation)
      * @param I_info the 2 identity matrices information
      */
-    virtual void setMatVal(const double* MatVal, Identity2Info I_info);
+    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
 
     virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 

@@ -58,11 +58,11 @@ public:
     }
 
     SmartPtr<OptionsList> getRoptions2() {
-        return roptions2;
+        return roptions2_;
     }
 
     SmartPtr<Journalist> getJnlst() {
-        return jnlst;
+        return jnlst_;
     }
 
     //@}
@@ -379,13 +379,12 @@ private:
     Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
                                                              it will replace options in
                                                              the future*/
-    Ipopt::SmartPtr<Ipopt::OptionsList> roptions2;
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst;
-//TODO: change name to add underscore
-    shared_ptr<Stats> stats;
-    shared_ptr<QPhandler> myQP;
-    shared_ptr<LPhandler> myLP;
-    shared_ptr<Log> log;
+    Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+    shared_ptr<Stats> stats_;
+    shared_ptr<QPhandler> myQP_;
+    shared_ptr<LPhandler> myLP_;
+    shared_ptr<Log> log_;
     Number norm_p_k_;/**< the infinity norm of p_k*/
     Number delta_;/**< trust-region radius*/
     Number rho_; /**< penalty parameter*/
@@ -395,7 +394,7 @@ private:
     int* Active_Set_constraints_;
 
     Exitflag exitflag_ = UNKNOWN;
-    OptimalityStatus opt_status;
+    OptimalityStatus opt_status_;
     bool isaccept_; // is the new point accepted?
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
 };//END_OF_ALG_CLASS

@@ -20,8 +20,8 @@ Algorithm::Algorithm() :
     bound_cons_type_(NULL) {
     setDefaultOption();
     //TODO: move to somewhere else
-    jnlst = new Ipopt::Journalist();
-    roptions2 = new Ipopt::OptionsList();
+    jnlst_ = new Ipopt::Journalist();
+    roptions2_ = new Ipopt::OptionsList();
 }
 
 /**
@@ -56,70 +56,70 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
     /**
      * Main iteration
-     */
-    while (stats->iter < options->iter_max && exitflag_ == UNKNOWN) {
-        setupQP();
-
-        try {
-            myQP->solveQP(stats,
-                          options);//solve the QP subproblem and update the stats
-        }
-        catch (QP_NOT_OPTIMAL) {
-            handle_error_code("QP NOT OPTIMAL");
-            break;
-        }
-
-        qp_obj_ = myQP->GetObjective();
-
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction();
-
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
-
-        //Update the penalty parameter if necessary
-        update_penalty_parameter();
-
-        get_trial_point_info();
-
-        ratio_test();
-
-        // Calculate the second-order-correction steps
-        second_order_correction();
-
-        // Update the radius and the QP bounds if the radius has been changed
-        stats->iter_addone();
-
-        /* output some information to the console*/
-
-        if (options->printLevel > 1) {
-            if (stats->iter % 10 == 0)log->print_header();
-            log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
-                                 delta_, rho_);
-        }
-        update_radius();
-
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        termination_check();
-
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-    }
-
-//check if the current iterates status before exiting
-    if (stats->iter == options->iter_max)
-        exitflag_ = EXCEED_MAX_ITER;
-
-    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-        termination_check();
-    }
-
-    // print the final summary message to the console
-    if (options->printLevel > 0)
-        log->print_final(stats->iter, stats->qp_iter, obj_value_, norm_p_k_,
-                         infea_measure_, exitflag_);
+    //     */
+//    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
+//        setupQP();
+//
+//        try {
+//            myQP_->solveQP(stats_,
+//                           options);//solve the QP subproblem and update the stats_
+//        }
+//        catch (QP_NOT_OPTIMAL) {
+//            handle_error_code("QP NOT OPTIMAL");
+//            break;
+//        }
+//
+//        qp_obj_ = myQP_->GetObjective();
+//
+//        //get the search direction from the solution of the QPsubproblem
+//        get_search_direction();
+//
+//        //calculate the infinity norm of the search direction
+//        norm_p_k_ = p_k_->getInfNorm();
+//
+//        //Update the penalty parameter if necessary
+//        update_penalty_parameter();
+//
+//        get_trial_point_info();
+//
+//        ratio_test();
+//
+//        // Calculate the second-order-correction steps
+//        second_order_correction();
+//
+//        // Update the radius and the QP bounds if the radius has been changed
+//        stats_->iter_addone();
+//
+//        /* output some information to the console*/
+//
+//        if (options->printLevel > 1) {
+//            if (stats_->iter % 10 == 0)log_->print_header();
+//            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+//                                  delta_, rho_);
+//        }
+//        update_radius();
+//
+//        //check if the current iterates is optimal and decide to
+//        //exit the loop or not
+//        termination_check();
+//
+//        if (exitflag_ != UNKNOWN) {
+//            break;
+//        }
+//    }
+//
+////check if the current iterates getStatus before exiting
+//    if (stats_->iter == options->iter_max)
+//        exitflag_ = EXCEED_MAX_ITER;
+//
+//    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+//        termination_check();
+//    }
+//
+//    // print the final summary message to the console
+//    if (options->printLevel > 0)
+//        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+//                          infea_measure_, exitflag_);
 }
 
 
@@ -147,21 +147,21 @@ void Algorithm::termination_check() {
     if (Check_Stationarity()) {
         Check_KKTConditions(infea_measure_);
 //FIXME: be more specific about users' options for the Optimality test..
-        if (opt_status.first_order_opt &&
+        if (opt_status_.first_order_opt &&
                 (options->testOption_NLP == TEST_ALL ||
                  options->testOption_NLP == TEST_1ST_ORDER)) {
             exitflag_ = OPTIMAL;
         } else {
             if (DEBUG) {
                 std::cout << "feasibility      "
-                          << opt_status.primal_feasibility << std::endl;
+                          << opt_status_.primal_feasibility << std::endl;
                 std::cout << "dual_feasibility "
-                          << opt_status.dual_feasibility
+                          << opt_status_.dual_feasibility
                           << std::endl;
-                std::cout << "stationarity     " << opt_status.stationarity
+                std::cout << "stationarity     " << opt_status_.stationarity
                           << std::endl;
                 std::cout << "complementarity  "
-                          << opt_status.complementarity
+                          << opt_status_.complementarity
                           << std::endl;
             }
 
@@ -169,13 +169,13 @@ void Algorithm::termination_check() {
     } else {
         Check_KKTConditions(infea_measure_);
         if (DEBUG) {
-            std::cout << "feasibility      " << opt_status.primal_feasibility
+            std::cout << "feasibility      " << opt_status_.primal_feasibility
                       << std::endl;
-            std::cout << "dual_feasibility " << opt_status.dual_feasibility
+            std::cout << "dual_feasibility " << opt_status_.dual_feasibility
                       << std::endl;
-            std::cout << "stationarity     " << opt_status.stationarity
+            std::cout << "stationarity     " << opt_status_.stationarity
                       << std::endl;
-            std::cout << "complementarity  " << opt_status.complementarity
+            std::cout << "complementarity  " << opt_status_.complementarity
                       << std::endl;
         }
 
@@ -204,31 +204,31 @@ void Algorithm::get_trial_point_info() {
  *
  */
 void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
-    allocate_memory(nlp); //allocate memory to class members
-    nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
-    nlp_->Get_starting_point(x_k_, multiplier_cons_);
-    //shift starting point to satisfy the bound constraint
-    nlp_->shift_starting_point(x_k_, x_l_, x_u_);
-    nlp_->Eval_f(x_k_, obj_value_);
-    nlp_->Eval_gradient(x_k_, grad_f_);
-    nlp_->Eval_constraints(x_k_, c_k_);
-    nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
-    nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
-    nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
-    nlp_->Eval_Jacobian(x_k_, jacobian_);
-    classify_constraints_types();
-
-    cal_infea(); //calculate the infeasibility measure for x_k
-    // initializes QP objects*/
-    myQP->init(nlp_->nlp_info_);
-    myLP->init(nlp_->nlp_info_);
-    norm_p_k_ = 0.0;
-    if (options->printLevel > 1) {
-        log->print_header();
-        log->print_main_iter(stats->iter, obj_value_, norm_p_k_, infea_measure_,
-                             delta_,
-                             rho_);
-    }
+//    allocate_memory(nlp); //allocate memory to class members
+//    nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
+//    nlp_->Get_starting_point(x_k_, multiplier_cons_);
+//    //shift starting point to satisfy the bound constraint
+//    nlp_->shift_starting_point(x_k_, x_l_, x_u_);
+//    nlp_->Eval_f(x_k_, obj_value_);
+//    nlp_->Eval_gradient(x_k_, grad_f_);
+//    nlp_->Eval_constraints(x_k_, c_k_);
+//    nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
+//    nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
+//    nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
+//    nlp_->Eval_Jacobian(x_k_, jacobian_);
+//    classify_constraints_types();
+//
+//    cal_infea(); //calculate the infeasibility measure for x_k
+//    // initializes QP objects*/
+//    myQP_->init(nlp_->nlp_info_);
+//    myLP_->init(nlp_->nlp_info_);
+//    norm_p_k_ = 0.0;
+//    if (options->printLevel > 1) {
+//        log_->print_header();
+//        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+//                              delta_,
+//                              rho_);
+//    }
 
 }
 
@@ -265,10 +265,10 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_,
                                          true);
     options = make_shared<Options>();
-    stats = make_shared<Stats>();
-    log = make_shared<Log>();
-    myQP = make_shared<QPhandler>();
-    myLP = make_shared<LPhandler>();
+    stats_ = make_shared<Stats>();
+    log_ = make_shared<Log>();
+    myQP_ = make_shared<QPhandler>();
+    myLP_ = make_shared<LPhandler>();
     delta_ = options->delta;
     rho_ = options->rho;
 
@@ -323,7 +323,7 @@ void Algorithm::cal_infea() {
 void Algorithm::get_search_direction() {
 
     double* tmp_p_k = new double[nVar_ + 2 * nCon_];
-    myQP->GetOptimalSolution(tmp_p_k);
+    myQP_->GetOptimalSolution(tmp_p_k);
     p_k_->copy_vector(tmp_p_k);
     if (options->penalty_update)
         infea_measure_model_ = oneNorm(tmp_p_k + nVar_, 2 * nCon_);
@@ -348,7 +348,7 @@ void Algorithm::get_multipliers() {
     double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
 
 
-    myQP->GetMultipliers(tmp_lambda);
+    myQP_->GetMultipliers(tmp_lambda);
 
     if (options->QPsolverChoice == "qpOASES") {
         //The qpOASES stores the multipliers of variables to the first (num_QP_var)
@@ -369,31 +369,31 @@ void Algorithm::get_multipliers() {
 
 void Algorithm::setupQP() {
 
-    if (stats->iter == 0) {
-        myQP->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
-        myQP->setup_g(grad_f_, rho_);
-        myQP->setup_A(jacobian_);
-        myQP->setup_H(hessian_);
+    if (stats_->iter == 0) {
+        myQP_->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
+        myQP_->setup_g(grad_f_, rho_);
+        myQP_->setup_A(jacobian_);
+        myQP_->setup_H(hessian_);
     } else {
         if (QPinfoFlag_.Update_A) {
-            myQP->update_A(jacobian_);
+            myQP_->update_A(jacobian_);
             QPinfoFlag_.Update_A = false;
         }
         if (QPinfoFlag_.Update_H) {
-            myQP->update_H(hessian_);
+            myQP_->update_H(hessian_);
             QPinfoFlag_.Update_H = false;
         }
         if (QPinfoFlag_.Update_constraints) {
-            myQP->update_constraints(delta_, x_l_, x_u_, c_k_, c_l_, c_u_, x_k_);
+            myQP_->update_bounds(delta_, x_l_, x_u_, c_k_, c_l_, c_u_, x_k_);
             QPinfoFlag_.Update_constraints = false;
         }
 
         if (QPinfoFlag_.Update_penalty) {
-            myQP->update_penalty(rho_);
+            myQP_->update_penalty(rho_);
             QPinfoFlag_.Update_penalty = false;
         }
         if (QPinfoFlag_.Update_grad) {
-            myQP->update_grad(grad_f_);
+            myQP_->update_grad(grad_f_);
             QPinfoFlag_.Update_grad = false;
         }
     }
@@ -539,92 +539,92 @@ void Algorithm::classify_constraints_types() {
  */
 void Algorithm::update_penalty_parameter() {
     if (options->penalty_update) {
-        if (infea_measure_model_ > options->penalty_update_tol) {
-            myLP->copy_QP_info(myQP); //copy part of the objective and bounds
-            // information from the QPhandler objects
-            try {
-                myLP->solveLP(stats, options);
-            }
-            catch (QP_NOT_OPTIMAL) {
-                handle_error_code("QP NOT OPTIMAL");
-            }
-
-
-            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
-
-            double rho_trial = rho_;//the temporary trial value for rho
-            //calculate the infea_measure of the LP
-            get_full_direction_LP(sol_tmp);
-            double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
-                                                 2 * nCon_);
-            if (infea_measure_infty <= options->penalty_update_tol) {
-                //try to increase the penalty parameter to a number such that the
-                // infeasibility measure of QP model with such penalty parameter
-                // becomes zero
-                while (infea_measure_model_ > options->penalty_update_tol) {
-                    if (rho_trial * 2 > options->rho_max) {
-                        break;
-                    }
-                    rho_trial *=options->increase_parm;  //increase rho
-                    stats->penalty_change_trial_addone();
-                    myQP->update_penalty(rho_trial);
-                    try {
-                        myQP->solveQP(stats, options);
-                    }
-                    catch (QP_NOT_OPTIMAL) {
-                        handle_error_code("QP NOT OPTIMAL");
-                    }
-                    //recalculate the infeasibility measure of the model by
-                    // calculating the one norm of the slack variables
-                    get_full_direction_QP(sol_tmp);
-                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-                                                   2 * nCon_);
-                }
-
-            } else {
-
-                while ((infea_measure_ - infea_measure_model_ <
-                        options->eps1 * (infea_measure_ - infea_measure_infty) &&
-                        (stats->penalty_change_trial < options->penalty_iter_max))) {
-                    if (rho_trial * 2 > options->rho_max) {
-                        break;
-                    }
-                    //try to increase the penalty parameter to a number such that
-                    // tme incurred reduction for the QP model is to a ratio to the
-                    // maximum possible reduction for current linear model.
-                    rho_trial*=options->increase_parm; //increase rho
-                    stats->penalty_change_trial_addone();
-                    myQP->update_penalty(rho_trial);
-
-                    try {
-                        myQP->solveQP(stats, options);
-                    }
-                    catch (QP_NOT_OPTIMAL) {
-                        handle_error_code("QP NOT OPTIMAL");
-                    }
-                    //recalculate the infeasibility measure of the model by
-                    // calculating the one norm of the slack variables
-                    get_full_direction_QP(sol_tmp);
-                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-                                                   2 * nCon_);
-
-                }
-            }
-            //if any change occurs
-            if (rho_trial > rho_) {
-                if (rho_trial * infea_measure_ - qp_obj_ >=
-                        options->eps2 * rho_trial *
-                        (infea_measure_ - infea_measure_model_)) {
-                    stats->penalty_change_Succ_addone();
-                    options->eps1 += (1 - options->eps1) * 0.1;
-                    p_k_->copy_vector(sol_tmp);
-                    rho_ = rho_trial;
-                    qp_obj_ = myQP->GetObjective();//update the qp_obj
-                } else {
-                    stats->penalty_change_Fail_addone();
-                }
-            }
-        }
+//        if (infea_measure_model_ > options->penalty_update_tol) {
+//            myLP_->copy_QP_info(myQP_); //copy part of the objective and bounds
+//            // information from the QPhandler objects
+//            try {
+//                myLP_->solveLP(stats_, options);
+//            }
+//            catch (QP_NOT_OPTIMAL) {
+//                handle_error_code("QP NOT OPTIMAL");
+//            }
+//
+//
+//            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
+//
+//            double rho_trial = rho_;//the temporary trial value for rho
+//            //calculate the infea_measure of the LP
+//            get_full_direction_LP(sol_tmp);
+//            double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
+//                                                 2 * nCon_);
+//            if (infea_measure_infty <= options->penalty_update_tol) {
+//                //try to increase the penalty parameter to a number such that the
+//                // infeasibility measure of QP model with such penalty parameter
+//                // becomes zero
+//                while (infea_measure_model_ > options->penalty_update_tol) {
+//                    if (rho_trial * 2 > options->rho_max) {
+//                        break;
+//                    }
+//                    rho_trial *=options->increase_parm;  //increase rho
+//                    stats_->penalty_change_trial_addone();
+//                    myQP_->update_penalty(rho_trial);
+//                    try {
+//                        myQP_->solveQP(stats_, options);
+//                    }
+//                    catch (QP_NOT_OPTIMAL) {
+//                        handle_error_code("QP NOT OPTIMAL");
+//                    }
+//                    //recalculate the infeasibility measure of the model by
+//                    // calculating the one norm of the slack variables
+//                    get_full_direction_QP(sol_tmp);
+//                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+//                                                   2 * nCon_);
+//                }
+//
+//            } else {
+//
+//                while ((infea_measure_ - infea_measure_model_ <
+//                        options->eps1 * (infea_measure_ - infea_measure_infty) &&
+//                        (stats_->penalty_change_trial < options->penalty_iter_max))) {
+//                    if (rho_trial * 2 > options->rho_max) {
+//                        break;
+//                    }
+//                    //try to increase the penalty parameter to a number such that
+//                    // tme incurred reduction for the QP model is to a ratio to the
+//                    // maximum possible reduction for current linear model.
+//                    rho_trial*=options->increase_parm; //increase rho
+//                    stats_->penalty_change_trial_addone();
+//                    myQP_->update_penalty(rho_trial);
+//
+//                    try {
+//                        myQP_->solveQP(stats_, options);
+//                    }
+//                    catch (QP_NOT_OPTIMAL) {
+//                        handle_error_code("QP NOT OPTIMAL");
+//                    }
+//                    //recalculate the infeasibility measure of the model by
+//                    // calculating the one norm of the slack variables
+//                    get_full_direction_QP(sol_tmp);
+//                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+//                                                   2 * nCon_);
+//
+//                }
+//            }
+//            //if any change occurs
+//            if (rho_trial > rho_) {
+//                if (rho_trial * infea_measure_ - qp_obj_ >=
+//                        options->eps2 * rho_trial *
+//                        (infea_measure_ - infea_measure_model_)) {
+//                    stats_->penalty_change_Succ_addone();
+//                    options->eps1 += (1 - options->eps1) * 0.1;
+//                    p_k_->copy_vector(sol_tmp);
+//                    rho_ = rho_trial;
+//                    qp_obj_ = myQP_->GetObjective();//update the qp_obj
+//                } else {
+//                    stats_->penalty_change_Fail_addone();
+//                }
+//            }
+//        }
     }
 }
 
@@ -740,11 +740,11 @@ void Algorithm::setDefaultOption() {
 
 void
 Algorithm::get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction) {
-    myQP->GetOptimalSolution(search_direction->values());
+    myQP_->GetOptimalSolution(search_direction->values());
 }
 
 void Algorithm::get_full_direction_LP(shared_ptr<Vector> search_direction) {
-    myLP->GetOptimalSolution(search_direction->values());
+    myLP_->GetOptimalSolution(search_direction->values());
 }
 
 
@@ -775,21 +775,21 @@ void Algorithm::second_order_correction() {
         shared_ptr<Vector> Htimesp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Htimesp);
         Htimesp->add_vector(grad_f_->values());
-        myQP->update_grad(Htimesp);
-        myQP->update_constraints(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
+        myQP_->update_grad(Htimesp);
+        myQP_->update_bounds(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
         norm_p_k_ = p_k_->getInfNorm();
 
         try {
-            myQP->solveQP(stats, options);
+            myQP_->solveQP(stats_, options);
         }
         catch (QP_NOT_OPTIMAL) {
             handle_error_code("QP NOT OPTIMAL");
         }
 
-        myQP->GetOptimalSolution(tmp_sol->values());
+        myQP_->GetOptimalSolution(tmp_sol->values());
         s_k->copy_vector(tmp_sol->values());
 
-        qp_obj_ = myQP->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
+        qp_obj_ = myQP_->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
         p_k_->add_vector(s_k->values());
         get_trial_point_info();
         ratio_test();
@@ -805,7 +805,7 @@ void Algorithm::second_order_correction() {
 void Algorithm::handle_error_code(const char* error) {
     if (error != NULL) {
         if (error == "QP NOT OPTIMAL") {
-            switch (myQP->GetStatus()) {
+            switch (myQP_->GetStatus()) {
             case QP_INFEASIBLE:
                 exitflag_ = QPERROR_INFEASIBLE;
 
@@ -830,13 +830,13 @@ void Algorithm::handle_error_code(const char* error) {
 bool Algorithm::Check_KKTConditions(double infea_measure, bool isConstraintChanged,
                                     bool isPointChanged) {
     IdentifyActiveSet();
-    opt_status.primal_feasibility = Check_Feasibility(infea_measure);
-    opt_status.complementarity = Check_Complementarity();
-    opt_status.dual_feasibility = Check_Dual_Feasibility();
-    opt_status.stationarity = Check_Stationarity();
-    if (opt_status.primal_feasibility && opt_status.dual_feasibility &&
-            opt_status.complementarity && opt_status.stationarity) {
-        opt_status.first_order_opt = true;
+    opt_status_.primal_feasibility = Check_Feasibility(infea_measure);
+    opt_status_.complementarity = Check_Complementarity();
+    opt_status_.dual_feasibility = Check_Dual_Feasibility();
+    opt_status_.stationarity = Check_Stationarity();
+    if (opt_status_.primal_feasibility && opt_status_.dual_feasibility &&
+            opt_status_.complementarity && opt_status_.stationarity) {
+        opt_status_.first_order_opt = true;
     }
 
     return true;
@@ -844,7 +844,7 @@ bool Algorithm::Check_KKTConditions(double infea_measure, bool isConstraintChang
 
 
 bool Algorithm::Check_Dual_Feasibility() {
-    if (opt_status.dual_feasibility) {
+    if (opt_status_.dual_feasibility) {
         return true;
     }
 //DEBUG
@@ -886,7 +886,7 @@ bool Algorithm::Check_Dual_Feasibility() {
 
 
 bool Algorithm::Check_Stationarity() {
-    if (opt_status.stationarity) return true;
+    if (opt_status_.stationarity) return true;
     shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
     // the difference of g-J^T y -\lambda
     jacobian_->transposed_times(multiplier_cons_, difference);
@@ -906,7 +906,7 @@ bool Algorithm::Check_Stationarity() {
 }
 
 bool Algorithm::Check_Feasibility(double infea_measure) {
-    if (opt_status.primal_feasibility || infea_measure < options->opt_prim_fea_tol) {
+    if (opt_status_.primal_feasibility || infea_measure < options->opt_prim_fea_tol) {
         return true;
     }
     return false;
@@ -936,20 +936,20 @@ void Algorithm::IdentifyActiveSet() {
         Active_Set_bounds_ = new int[nVar_]();
     for (int i = 0; i < nCon_; i++) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(c_u_->values()[i] - c_k_->values()[i]) <
+            if (abs(c_u_->values()[i] - c_k_->values()[i]) <
                     options->active_set_tol)
                 // consider adding another tolerance for identifying active set...
                 Active_Set_constraints_[i] = 1;
         } else if (cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+            if (abs(c_k_->values()[i] - c_l_->values()[i]) <
                     options->active_set_tol) {
                 // consider adding another tolerance for identifying active set...
                 Active_Set_constraints_[i] = -1;
             }
         } else if (cons_type_[i] == EQUAL) {
-            if ((std::abs(c_u_->values()[i] - c_k_->values()[i]) <
+            if ((abs(c_u_->values()[i] - c_k_->values()[i]) <
                     options->active_set_tol) &&
-                    (std::abs(c_k_->values()[i] - c_l_->values()[i]) <
+                    (abs(c_k_->values()[i] - c_l_->values()[i]) <
                      options->active_set_tol))
                 Active_Set_constraints_[i] = 99;
             else {
@@ -961,17 +961,17 @@ void Algorithm::IdentifyActiveSet() {
 
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(x_u_->values()[i] - x_k_->values()[i]) <
+            if (abs(x_u_->values()[i] - x_k_->values()[i]) <
                     options->active_set_tol)
                 Active_Set_bounds_[i] = 1;
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
+            if (abs(x_k_->values()[i] - x_l_->values()[i]) <
                     options->active_set_tol)
                 Active_Set_bounds_[i] = -1;
         } else if (bound_cons_type_[i] == EQUAL) {
-            if ((std::abs(x_u_->values()[i] - x_k_->values()[i]) <
+            if ((abs(x_u_->values()[i] - x_k_->values()[i]) <
                     options->active_set_tol) &&
-                    (std::abs(x_k_->values()[i] - x_l_->values()[i]) <
+                    (abs(x_k_->values()[i] - x_l_->values()[i]) <
                      options->active_set_tol))
                 Active_Set_bounds_[i] = 99; //TODO: use another number?
             else {
@@ -982,7 +982,7 @@ void Algorithm::IdentifyActiveSet() {
 }
 
 bool Algorithm::Check_Complementarity() {
-    if (opt_status.complementarity) return true;
+    if (opt_status_.complementarity) return true;
     if (DEBUG)
         if (CHECK_TERMINATION)
             if(CHECK_COMPLEMENTARITY) {
@@ -1009,15 +1009,15 @@ bool Algorithm::Check_Complementarity() {
     if (nCon_ > 0) {
         for (int i = 0; i < nCon_; i++) {
             if (cons_type_[i] == BOUNDED_ABOVE) {
-                if (std::abs(multiplier_cons_->values()[i] *
-                             (c_u_->values()[i] - c_k_->values()[i]))
+                if (abs(multiplier_cons_->values()[i] *
+                        (c_u_->values()[i] - c_k_->values()[i]))
                         > options->opt_compl_tol) {
 
                     return false;
                 }
             } else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (std::abs(multiplier_cons_->values()[i] *
-                             (c_k_->values()[i] - c_l_->values()[i]))
+                if (abs(multiplier_cons_->values()[i] *
+                        (c_k_->values()[i] - c_l_->values()[i]))
                         > options->opt_compl_tol) {
 
                     return false;
@@ -1032,14 +1032,14 @@ bool Algorithm::Check_Complementarity() {
     }
     for (int i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (std::abs(multiplier_vars_->values()[i] *
-                         (x_u_->values()[i] - x_k_->values()[i]))
+            if (abs(multiplier_vars_->values()[i] *
+                    (x_u_->values()[i] - x_k_->values()[i]))
                     > options->opt_compl_tol) {
                 return false;
             }
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (std::abs(multiplier_vars_->values()[i] *
-                         (x_k_->values()[i] - x_l_->values()[i]))
+            if (abs(multiplier_vars_->values()[i] *
+                    (x_k_->values()[i] - x_l_->values()[i]))
                     > options->opt_compl_tol) {
                 return false;
             }
