@@ -112,13 +112,14 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
 
         }
     } else
+	    //TODO:divide into more cases
         qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                       lb_->values(), ub_->values(), lbA_->values(), ubA_->values(),
                       nWSR, 0);
     if (!qp_->isSolved()) {
         get_status();
         THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                        "the LP problem didn't solved to optimality\n")
+                        "the QP problem didn't solved to optimality\n")
     }
     stats->qp_iter_addValue((int) nWSR);
     return true;

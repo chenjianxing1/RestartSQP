@@ -103,6 +103,8 @@ public:
     virtual shared_ptr<Vector>& getUbA() = 0;
 
     virtual shared_ptr<Vector>& getG() = 0;
+    //TODO: have a set function for everything 
+    //TODO: setBounds(i,value)
     //@}
 
 private:
