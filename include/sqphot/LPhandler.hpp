@@ -48,11 +48,18 @@ public:
                       shared_ptr<const Vector> x_u,
                       shared_ptr<const Vector> c_k,
                       shared_ptr<const Vector> c_l,
-                      shared_ptr<const Vector> c_u) override{};
+                      shared_ptr<const Vector> c_u) override{
+	    QPhandler::setup_bounds(delta,x_k,x_l,x_u,c_k,c_l,c_u);
+    };
 
-    void setup_g(double rho){};
+    void setup_g(double rho){
+    
+    };
 
-    void setup_A(shared_ptr<const SpTripletMat> jacobian) override{};
+
+    void setup_A(shared_ptr<const SpTripletMat> jacobian) override{
+	    QPhandler::setup_A(jacobian);
+    };
 
     /**
      * @brief Get the optimal solution from the QPsolverinterface
@@ -67,17 +74,25 @@ public:
     void update_delta(double delta,
                       shared_ptr<const Vector> x_l,
                       shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> x_k) override{};
+                      shared_ptr<const Vector> x_k) override{
+	   QPhandler::update_delta(delta,x_l,x_u,x_k);
+    };
 
     void update_bounds(double delta, shared_ptr<const Vector> x_l,
                        shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
                        shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                       shared_ptr<const Vector> c_k) override{};
+                       shared_ptr<const Vector> c_k) override{
+	    QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
+    };
 
-    void update_penalty(double rho) override{};
+    void update_penalty(double rho) override{
+	    QPhandler::update_penalty(rho);
+    };
 
 
-    void update_A(shared_ptr<const SpTripletMat> Jacobian) override{};
+    void update_A(shared_ptr<const SpTripletMat> Jacobian) override{
+    QPhandler::update_A(Jacobian);
+    };
 
     /**
      * @brief solve the QP subproblem according to the bounds setup before,
