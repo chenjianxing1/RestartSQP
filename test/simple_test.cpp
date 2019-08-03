@@ -21,11 +21,13 @@ int main(int argc, char** args) {
     std::cout << args[1]<<std::endl;
     printf("=====================================================================================\n");
     SmartPtr<MyNLP> nlp= new MyNLP();
+
     try {
         SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                                 alg.getRoptions2(),
                                                 args);
-//        alg.Optimize(ampl_tnlp);
+        alg.Optimize(ampl_tnlp);
+
 //	if(alg.getExitFlag()==OPTIMAL)
 // 		std::cout<<args[1]<<std::endl;
 

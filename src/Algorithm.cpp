@@ -18,7 +18,7 @@ DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
 Algorithm::Algorithm() :
     cons_type_(NULL),
     bound_cons_type_(NULL) {
-    setDefaultOption();
+    //setDefaultOption();
     //TODO: move to somewhere else
     jnlst_ = new Ipopt::Journalist();
     roptions2_ = new Ipopt::OptionsList();
@@ -56,70 +56,70 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
     /**
      * Main iteration
-    //     */
-//    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
-//        setupQP();
-//
-//        try {
-//            myQP_->solveQP(stats_,
-//                           options);//solve the QP subproblem and update the stats_
-//        }
-//        catch (QP_NOT_OPTIMAL) {
-//            handle_error_code("QP NOT OPTIMAL");
-//            break;
-//        }
-//
-//        qp_obj_ = myQP_->GetObjective();
-//
-//        //get the search direction from the solution of the QPsubproblem
-//        get_search_direction();
-//
-//        //calculate the infinity norm of the search direction
-//        norm_p_k_ = p_k_->getInfNorm();
-//
-//        //Update the penalty parameter if necessary
-//        update_penalty_parameter();
-//
-//        get_trial_point_info();
-//
-//        ratio_test();
-//
-//        // Calculate the second-order-correction steps
-//        second_order_correction();
-//
-//        // Update the radius and the QP bounds if the radius has been changed
-//        stats_->iter_addone();
-//
-//        /* output some information to the console*/
-//
-//        if (options->printLevel > 1) {
-//            if (stats_->iter % 10 == 0)log_->print_header();
-//            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-//                                  delta_, rho_);
-//        }
-//        update_radius();
-//
-//        //check if the current iterates is optimal and decide to
-//        //exit the loop or not
-//        termination_check();
-//
-//        if (exitflag_ != UNKNOWN) {
-//            break;
-//        }
-//    }
-//
-////check if the current iterates getStatus before exiting
-//    if (stats_->iter == options->iter_max)
-//        exitflag_ = EXCEED_MAX_ITER;
-//
-//    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-//        termination_check();
-//    }
-//
-//    // print the final summary message to the console
-//    if (options->printLevel > 0)
-//        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-//                          infea_measure_, exitflag_);
+     */
+    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
+        setupQP();
+
+        try {
+            myQP_->solveQP(stats_,
+                           options);//solve the QP subproblem and update the stats_
+        }
+        catch (QP_NOT_OPTIMAL) {
+            handle_error_code("QP NOT OPTIMAL");
+            break;
+        }
+
+        qp_obj_ = myQP_->GetObjective();
+
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
+
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
+
+        //Update the penalty parameter if necessary
+        update_penalty_parameter();
+
+        get_trial_point_info();
+
+        ratio_test();
+
+        // Calculate the second-order-correction steps
+        second_order_correction();
+
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
+
+        /* output some information to the console*/
+
+        if (options->printLevel > 1) {
+            if (stats_->iter % 10 == 0)log_->print_header();
+            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+                                  delta_, rho_);
+        }
+        update_radius();
+
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        termination_check();
+
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+    }
+
+//check if the current iterates getStatus before exiting
+    if (stats_->iter == options->iter_max)
+        exitflag_ = EXCEED_MAX_ITER;
+
+    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+        termination_check();
+    }
+
+    // print the final summary message to the console
+    if (options->printLevel > 0)
+        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+                          infea_measure_, exitflag_);
 }
 
 
