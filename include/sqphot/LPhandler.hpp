@@ -40,7 +40,19 @@ public:
     LPhandler();
 
     /** Default destructor */
-    ~LPhandler() override ;
+    ~LPhandler() override;
+
+    void setup_bounds(double delta,
+                      shared_ptr<const Vector> x_k,
+                      shared_ptr<const Vector> x_l,
+                      shared_ptr<const Vector> x_u,
+                      shared_ptr<const Vector> c_k,
+                      shared_ptr<const Vector> c_l,
+                      shared_ptr<const Vector> c_u) override{};
+
+    void setup_g(double rho){};
+
+    void setup_A(shared_ptr<const SpTripletMat> jacobian) override{};
 
     /**
      * @brief Get the optimal solution from the QPsolverinterface
@@ -49,9 +61,23 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    void GetOptimalSolution(double* p_k) override ;
+    void GetOptimalSolution(double* p_k) override;
 
 
+    void update_delta(double delta,
+                      shared_ptr<const Vector> x_l,
+                      shared_ptr<const Vector> x_u,
+                      shared_ptr<const Vector> x_k) override{};
+
+    void update_bounds(double delta, shared_ptr<const Vector> x_l,
+                       shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                       shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                       shared_ptr<const Vector> c_k) override{};
+
+    void update_penalty(double rho) override{};
+
+
+    void update_A(shared_ptr<const SpTripletMat> Jacobian) override{};
 
     /**
      * @brief solve the QP subproblem according to the bounds setup before,
@@ -61,20 +87,19 @@ public:
     void solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
 
-
 private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    void allocate(SQPhotstart::Index_info nlp_info) override ;
+    void allocate(SQPhotstart::Index_info nlp_info) override;
 
     /**free all the memory*/
 
     /** Copy Constructor */
-    LPhandler(const LPhandler&);
+    LPhandler(const LPhandler &);
 
     /** Overloaded Equals Operator */
-    void operator=(const LPhandler&);
+    void operator=(const LPhandler &);
     //@}
 
     /**public class member*/
@@ -90,8 +115,8 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     Index_info nlp_info_;
-    shared_ptr<qpOASESInterface> solverInterface_; //an interface to the standard LP
-
+    shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
+    UpdateFlags LPinfoFlag_;
     // solver specified by the user
     double lp_obj_;        // the optimal objectives from LPhandler
 };

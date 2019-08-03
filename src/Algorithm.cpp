@@ -46,7 +46,6 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
-	printf("hahaha");
     try {
         initialization(nlp);
     }
@@ -58,69 +57,69 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     /**
      * Main iteration
     //     */
-    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
-        setupQP();
-
-        try {
-            myQP_->solveQP(stats_,
-                           options);//solve the QP subproblem and update the stats_
-        }
-        catch (QP_NOT_OPTIMAL) {
-            handle_error_code("QP NOT OPTIMAL");
-            break;
-        }
-
-        qp_obj_ = myQP_->GetObjective();
-
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction();
-
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
-
-        //Update the penalty parameter if necessary
-        update_penalty_parameter();
-
-        get_trial_point_info();
-
-        ratio_test();
-
-        // Calculate the second-order-correction steps
-        second_order_correction();
-
-        // Update the radius and the QP bounds if the radius has been changed
-        stats_->iter_addone();
-
-        /* output some information to the console*/
-
-        if (options->printLevel > 1) {
-            if (stats_->iter % 10 == 0)log_->print_header();
-            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-                                  delta_, rho_);
-        }
-        update_radius();
-
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        termination_check();
-
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-    }
-
-//check if the current iterates getStatus before exiting
-    if (stats_->iter == options->iter_max)
-        exitflag_ = EXCEED_MAX_ITER;
-
-    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-        termination_check();
-    }
-
-    // print the final summary message to the console
-    if (options->printLevel > 0)
-        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-                          infea_measure_, exitflag_);
+//    while (stats_->iter < options->iter_max && exitflag_ == UNKNOWN) {
+//        setupQP();
+//
+//        try {
+//            myQP_->solveQP(stats_,
+//                           options);//solve the QP subproblem and update the stats_
+//        }
+//        catch (QP_NOT_OPTIMAL) {
+//            handle_error_code("QP NOT OPTIMAL");
+//            break;
+//        }
+//
+//        qp_obj_ = myQP_->GetObjective();
+//
+//        //get the search direction from the solution of the QPsubproblem
+//        get_search_direction();
+//
+//        //calculate the infinity norm of the search direction
+//        norm_p_k_ = p_k_->getInfNorm();
+//
+//        //Update the penalty parameter if necessary
+//        update_penalty_parameter();
+//
+//        get_trial_point_info();
+//
+//        ratio_test();
+//
+//        // Calculate the second-order-correction steps
+//        second_order_correction();
+//
+//        // Update the radius and the QP bounds if the radius has been changed
+//        stats_->iter_addone();
+//
+//        /* output some information to the console*/
+//
+//        if (options->printLevel > 1) {
+//            if (stats_->iter % 10 == 0)log_->print_header();
+//            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+//                                  delta_, rho_);
+//        }
+//        update_radius();
+//
+//        //check if the current iterates is optimal and decide to
+//        //exit the loop or not
+//        termination_check();
+//
+//        if (exitflag_ != UNKNOWN) {
+//            break;
+//        }
+//    }
+//
+////check if the current iterates getStatus before exiting
+//    if (stats_->iter == options->iter_max)
+//        exitflag_ = EXCEED_MAX_ITER;
+//
+//    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+//        termination_check();
+//    }
+//
+//    // print the final summary message to the console
+//    if (options->printLevel > 0)
+//        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+//                          infea_measure_, exitflag_);
 }
 
 
@@ -226,9 +225,7 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
     norm_p_k_ = 0.0;
     if (options->printLevel > 1) {
         log_->print_header();
-        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-                              delta_,
-                              rho_);
+        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,delta_,rho_);
     }
 
 }
@@ -245,10 +242,10 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     nlp_ = make_shared<SQPTNLP>(nlp);
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
-    cons_type_ = new ConstraintType[nCon_];
-    bound_cons_type_ = new ConstraintType[nVar_];
-    Active_Set_bounds_ = new int[nVar_];
-    Active_Set_constraints_ = new int[nCon_];
+    cons_type_ = new ConstraintType[nCon_]();
+    bound_cons_type_ = new ConstraintType[nVar_]();
+    Active_Set_bounds_ = new int[nVar_]();
+    Active_Set_constraints_ = new int[nCon_]();
     x_k_ = make_shared<Vector>(nVar_);
     x_trial_ = make_shared<Vector>(nVar_);
     p_k_ = make_shared<Vector>(nVar_);
@@ -384,9 +381,13 @@ void Algorithm::setupQP() {
             myQP_->update_H(hessian_);
             QPinfoFlag_.Update_H = false;
         }
-        if (QPinfoFlag_.Update_constraints) {
-            myQP_->update_bounds(delta_, x_l_, x_u_, c_k_, c_l_, c_u_, x_k_);
-            QPinfoFlag_.Update_constraints = false;
+        if (QPinfoFlag_.Update_bounds) {
+            myQP_->update_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
+            QPinfoFlag_.Update_bounds = false;
+        }
+        if(QPinfoFlag_.Update_delta){
+            myQP_->update_delta(delta_,x_l_,x_u_,x_k_);
+            QPinfoFlag_.Update_delta =false;
         }
 
         if (QPinfoFlag_.Update_penalty) {
@@ -494,14 +495,14 @@ void Algorithm::ratio_test() {
 void Algorithm::update_radius() {
     if (actual_reduction_ < options->eta_c * pred_reduction_) {
         delta_ = options->gamma_c * delta_;
-        QPinfoFlag_.Update_constraints = true;
+        QPinfoFlag_.Update_delta = true;
         //decrease the trust region radius. gamma_c is the parameter in options object
     } else {
         if (actual_reduction_ > options->
                 eta_e * pred_reduction_
                 && options->tol > (delta_ - norm_p_k_)) {
             delta_ = std::min(options->gamma_e * delta_, options->delta_max);
-            QPinfoFlag_.Update_constraints = true;
+            QPinfoFlag_.Update_delta= true;
         }
     }
 }
@@ -777,7 +778,7 @@ void Algorithm::second_order_correction() {
         hessian_->times(p_k_, Htimesp);
         Htimesp->add_vector(grad_f_->values());
         myQP_->update_grad(Htimesp);
-        myQP_->update_bounds(delta_, x_l_, x_u_, c_trial_, c_l_, c_u_, x_trial_);
+        myQP_->update_bounds(delta_, x_l_, x_u_, x_trial_, c_l_, c_u_, c_trial_);
         norm_p_k_ = p_k_->getInfNorm();
 
         try {

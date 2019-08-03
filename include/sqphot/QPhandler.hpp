@@ -104,13 +104,13 @@ public:
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    void setup_bounds(double delta,
-                      shared_ptr<const Vector> x_k,
-                      shared_ptr<const Vector> x_l,
-                      shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> c_k,
-                      shared_ptr<const Vector> c_l,
-                      shared_ptr<const Vector> c_u);
+    virtual void setup_bounds(double delta,
+                              shared_ptr<const Vector> x_k,
+                              shared_ptr<const Vector> x_l,
+                              shared_ptr<const Vector> x_u,
+                              shared_ptr<const Vector> c_k,
+                              shared_ptr<const Vector> c_l,
+                              shared_ptr<const Vector> c_u);
 
     /**
      * @brief This function sets up the object vector g
@@ -140,7 +140,7 @@ public:
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    void setup_A(shared_ptr<const SpTripletMat> jacobian);
+    virtual void setup_A(shared_ptr<const SpTripletMat> jacobian);
 
 
     /**
@@ -151,17 +151,19 @@ public:
     void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
 
+    virtual void update_delta(double delta,
+                              shared_ptr<const Vector> x_l,
+                              shared_ptr<const Vector> x_u,
+                              shared_ptr<const Vector> x_k);
+
     /**
     * @brief This function updates the bounds on x if there is any changes to the
     * values of trust-region or the iterate
     */
-    void update_bounds(double delta,
-                       shared_ptr<const Vector> x_l,
-                       shared_ptr<const Vector> x_u,
-                       shared_ptr<const Vector> c_k,
-                       shared_ptr<const Vector> c_l,
-                       shared_ptr<const Vector> c_u,
-                       shared_ptr<const Vector> x_k);
+    virtual void update_bounds(double delta, shared_ptr<const Vector> x_l,
+                               shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                               shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                               shared_ptr<const Vector> c_k);
 
 
     /**
@@ -170,7 +172,7 @@ public:
      *
      * @param rho		penalty parameter
      */
-    void update_penalty(double rho);
+    virtual void update_penalty(double rho);
 
     /**
      * @brief This function updates the vector g in the QP subproblem when there
@@ -191,7 +193,7 @@ public:
      * @brief Update the Matrix H of the QP problems
      * when there is any change to the Jacobian to the constraints.
      */
-    void update_A(shared_ptr<const SpTripletMat> Jacobian);
+    virtual void update_A(shared_ptr<const SpTripletMat> Jacobian);
 
     const shared_ptr<QPSolverInterface> &getQpInterface() const;
 
@@ -228,6 +230,7 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     Index_info nlp_info_;
+    UpdateFlags QPinfoFlag_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };

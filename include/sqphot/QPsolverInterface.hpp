@@ -122,8 +122,6 @@ public:
 
     virtual QPReturnType getStatus()=0;
 
-
-    virtual void copy_QP_info(shared_ptr<const QPSolverInterface> rhs)=0;
     //@}
 
 protected:
@@ -207,8 +205,6 @@ public:
      */
 
     QPReturnType getStatus() override ;
-
-    void copy_QP_info(shared_ptr<const QPSolverInterface> rhs) {}
 
     /** @name Setters */
     //@{
