@@ -18,7 +18,7 @@ DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
 Algorithm::Algorithm() :
     cons_type_(NULL),
     bound_cons_type_(NULL) {
-    setDefaultOption();
+//    setDefaultOption();
     //TODO: move to somewhere else
     jnlst_ = new Ipopt::Journalist();
     roptions2_ = new Ipopt::OptionsList();
