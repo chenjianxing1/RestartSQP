@@ -53,7 +53,7 @@ public:
     };
 
     void setup_g(double rho){
-    
+	QPhandler::setup_g(NULL,rho);    
     };
 
 

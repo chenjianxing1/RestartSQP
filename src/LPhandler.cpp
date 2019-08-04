@@ -41,8 +41,6 @@ void LPhandler::GetOptimalSolution(double* p_k) {
 void LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
                         shared_ptr<Options> options) {
     solverInterface_->optimizeLP(stats, options);
-    lp_obj_ = solverInterface_->get_obj_value();
-
 }
 
 

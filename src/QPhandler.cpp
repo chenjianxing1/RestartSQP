@@ -117,12 +117,19 @@ void QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
  * @param rho       Penalty Parameter
  */
 void QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
+	if(grad !=NULL){
     for(int i=0; i<nlp_info_.nVar+2* nlp_info_.nCon; i++)
         if(i<nlp_info_.nVar)
             solverInterface_->set_g(i,grad->values()[i]);
 
         else
             solverInterface_->set_g(i,rho);
+
+	}
+	else{
+		for(int i=nlp_info_.nVar; i<nlp_info_.nVar+2*nlp_info_.nCon; i++)
+			solverInterface_->set_g(i; rho);
+	}
 }
 
 
