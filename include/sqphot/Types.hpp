@@ -87,10 +87,11 @@ typedef struct {
 
 typedef struct {
     bool Update_A = false;
+    bool Update_delta = false;
     bool Update_H = false;
     bool Update_penalty = false;
     bool Update_grad = false;
-    bool Update_constraints = false;
+    bool Update_bounds= false;
 } UpdateFlags;
 
 }

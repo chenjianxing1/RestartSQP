@@ -36,12 +36,29 @@ namespace SQPhotstart {
 
 class LPhandler : public QPhandler {
 public:
-    /** Default constructor */
-    LPhandler();
+    LPhandler(Index_info nlp_info);
 
     /** Default destructor */
-    ~LPhandler() override ;
+    ~LPhandler() override;
 
+    void setup_bounds(double delta,
+                      shared_ptr<const Vector> x_k,
+                      shared_ptr<const Vector> x_l,
+                      shared_ptr<const Vector> x_u,
+                      shared_ptr<const Vector> c_k,
+                      shared_ptr<const Vector> c_l,
+                      shared_ptr<const Vector> c_u) override {
+        QPhandler::setup_bounds(delta,x_k,x_l,x_u,c_k,c_l,c_u);
+    };
+
+    void setup_g(double rho) {
+        QPhandler::setup_g(NULL,rho);
+    };
+
+
+    void setup_A(shared_ptr<const SpTripletMat> jacobian) override {
+        QPhandler::setup_A(jacobian);
+    };
 
     /**
      * @brief Get the optimal solution from the QPsolverinterface
@@ -50,58 +67,31 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    void GetOptimalSolution(double* p_k) override ;
+    void GetOptimalSolution(double* p_k) override;
 
 
-    /**
-     * @brief This function initializes all objects will be used in this class.
-     *
-     * @param nlp_info
-     * 		it contains the information about number of variables, number of
-     * 		constraints, number of elements in the Hessian and that of Jacobian.
-     * 		The definition of Index_info is in Types.hpp
-     * @param Constraint_type
-     * 		it specifies how the variables are bounded. Please check
-     * 		@ClassifyConstraintType in Algorithm.hpp
-     * 		for more details
-     */
-    void init(Index_info nlp_info) override ;
-
-    /**
-     *
-     * @brief setup the bounds for the QP subproblems according to the information
-     * from current iterate x_k
-     *
-     * @param delta      trust region radius
-     * @param x_k 	     current iterate point
-     * @param c_k        current constraint value evaluated at x_k
-     * @param x_l        the lower bounds for variables
-     * @param x_u        the upper bounds for variables
-     * @param c_l        the lower bounds for constraints
-     * @param c_u        the upper bounds for constraints
-     */
-    void setup_bounds(double delta,
-                      shared_ptr<const Vector> x_k,
+    void update_delta(double delta,
                       shared_ptr<const Vector> x_l,
                       shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> c_k,
-                      shared_ptr<const Vector> c_l,
-                      shared_ptr<const Vector> c_u) override;
+                      shared_ptr<const Vector> x_k) override {
+        QPhandler::update_delta(delta,x_l,x_u,x_k);
+    };
+
+    void update_bounds(double delta, shared_ptr<const Vector> x_l,
+                       shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                       shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                       shared_ptr<const Vector> c_k) override {
+        QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
+    };
+
+    void update_penalty(double rho) override {
+        QPhandler::update_penalty(rho);
+    };
 
 
-    /**
-     * @brief This function sets up the object vector g
-     * of the QP problem
-     *
-     * @param grad 	Gradient vector from nlp class
-     * @param rho  	Penalty Parameter
-     */
-    void setup_g(double rho);
-
-    /** @brief setup the matrix A for the QP subproblems according to the
-     * information from current iterate*/
-    void setup_A(shared_ptr<const SpTripletMat> jacobian) override;
-
+    void update_A(shared_ptr<const SpTripletMat> Jacobian) override {
+        QPhandler::update_A(Jacobian);
+    };
 
     /**
      * @brief solve the QP subproblem according to the bounds setup before,
@@ -110,74 +100,21 @@ public:
 
     void solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
-    /**
-     * @brief This function copies the information from another LPhandler object
-     * By default, it will copy the vectors of bounds matrix A information
-     *
-     * If the class member qptype_ ==LP, then it will not copy the Hessian, and the
-     * first half of the g)object
-     *
-     * @param a LPhandler object own a QPsolverInterface specific to QP.
-     */
-    void copy_QP_info(shared_ptr<const QPhandler> rhs);
-
-
-    /**
-     * @brief This function updates the bounds on x if there is any changes to the
-     * values of trust-region
-     * radius
-     *
-     * @param delta 	 trust region radius
-     * @param nVar 		 number of variables in NLP
-     */
-    void update_constraints(double delta, shared_ptr<const Vector> x_l,
-                            shared_ptr<const Vector> x_u, shared_ptr<const Vector> c_k,
-                            shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                            shared_ptr<const Vector> x_k) override; //the trust region radius
-
-
-
-
-    /**
-     * @brief This function updates the vector g in the
-     * QP subproblem when there are any change to the values
-     * of penalty parameter
-     *
-     * @param rho		penalty parameter
-     * @param nVar 		number of variables in NLP
-     */
-    void update_penalty(double rho) override;
-
-    /**
-     * @brief This function updates the vector g in the
-     * QP subproblem when there are any change to the values
-     * of gradient in NLP
-     *
-     * @param grad		the gradient vector from NLP
-     */
-    void update_grad(shared_ptr<const Vector> grad) override;
-
-
-    /**
-     * @brief Update the Matrix H of the QP problems
-     * when there is any change to the Jacobian to the constraints.
-     */
-    void update_A(shared_ptr<const SpTripletMat> Jacobian) override;
 
 private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    void allocate(SQPhotstart::Index_info nlp_info) override ;
 
-    /**free all the memory*/
-    virtual void freeMemory() {}
+    /** Default constructor */
+    LPhandler();
+
 
     /** Copy Constructor */
-    LPhandler(const LPhandler&);
+    LPhandler(const LPhandler &);
 
     /** Overloaded Equals Operator */
-    void operator=(const LPhandler&);
+    void operator=(const LPhandler &);
     //@}
 
     /**public class member*/
@@ -193,8 +130,8 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     Index_info nlp_info_;
-    shared_ptr<qpOASESInterface> lp_interface_; //an interface to the standard LP
-
+    shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
+    UpdateFlags LPinfoFlag_;
     // solver specified by the user
     double lp_obj_;        // the optimal objectives from LPhandler
 };

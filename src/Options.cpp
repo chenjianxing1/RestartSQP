@@ -18,7 +18,7 @@ Options::~Options() {
 
 int Options::setToDefault() {
     iter_max = 100;
-    printLevel = 1;
+    printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
     QPsolverChoice = "qpOASES";
     LPsolverChoice = "qpOASES";
@@ -43,7 +43,7 @@ int Options::setToDefault() {
     rho = 10;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
-    increase_parm = 1.1;
+    increase_parm = 2;
     rho_max = 1.0e8;
     penalty_iter_max = 10;
     eps1 = 0.3;

@@ -22,6 +22,8 @@
 
 using namespace std;
 namespace SQPhotstart {
+#define MAX(a,b) (a>b)? a :b
+#define ABS(a) MAX(a,-a)
 /*Print a matrix with given size*/
 void print_matrix(Number* M, Index length, Index width);
 

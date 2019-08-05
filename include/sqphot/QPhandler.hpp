@@ -10,6 +10,9 @@
 #include <sqphot/SQPTNLP.hpp>
 
 namespace SQPhotstart {
+/** Forward Declaration */
+class LPhandler;
+
 /**
  *
  * This is a class for setting up and solving the SQP
@@ -33,12 +36,10 @@ namespace SQPhotstart {
  * QP solvers that users choose. The interface will pre
  * -process the data required by individual solver.
  */
-
 class QPhandler {
 public:
-    /** Default constructor */
-    QPhandler();
 
+    QPhandler(Index_info nlp_info);
     /** Default destructor */
     virtual ~QPhandler();
 
@@ -53,7 +54,7 @@ public:
     virtual void GetOptimalSolution(double* p_k);
 
 
-    virtual /**
+    /**
          *@brief Get the multipliers from the QPhandler_interface
          *
          * This is only an interface for user to avoid call
@@ -63,32 +64,14 @@ public:
          * the length equal to the size of multipliers of the QP
          * subproblem
          */
-    void GetMultipliers(double* y_k);
+    virtual void GetMultipliers(double* y_k);
 
     /**
      * @brief Get the objective value of the QP
      * @param qp_obj the reference to a double variable which will hold the
      * objective value of the qp problem
      */
-
     double GetObjective();
-
-    /**
-     * @brief This function initializes all objects will be used in this class.
-     *
-     * @param nlp_info
-     * 		it contains the information about number of variables, number of
-     * 		constraints, number of elements in the Hessian and that of Jacobian.
-     * 		The definition of Index_info is in Types.hpp
-     * @param Constraint_type
-     * 		it specifies how the variables are bounded. Please check
-     * 		@ClassifyConstraintType in Algorithm.hpp
-     * 		for more details
-     * @param qptype
-     * 		it specifies which type of QP is going to be solved. It can be either
-     * 		QP, or SOC
-     */
-    virtual void init(Index_info nlp_info);
 
     /**
      *
@@ -135,7 +118,7 @@ public:
      * @return
      */
 
-    virtual void setup_H(shared_ptr<const SpTripletMat> hessian);
+    void setup_H(shared_ptr<const SpTripletMat> hessian);
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
@@ -147,21 +130,22 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    void
-    solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
+    void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
+
+    virtual void update_delta(double delta,
+                              shared_ptr<const Vector> x_l,
+                              shared_ptr<const Vector> x_u,
+                              shared_ptr<const Vector> x_k);
 
     /**
     * @brief This function updates the bounds on x if there is any changes to the
     * values of trust-region or the iterate
     */
-    virtual void update_constraints(double delta,
-                                    shared_ptr<const Vector> x_l,
-                                    shared_ptr<const Vector> x_u,
-                                    shared_ptr<const Vector> c_k,
-                                    shared_ptr<const Vector> c_l,
-                                    shared_ptr<const Vector> c_u,
-                                    shared_ptr<const Vector> x_k);
+    virtual void update_bounds(double delta, shared_ptr<const Vector> x_l,
+                               shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                               shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                               shared_ptr<const Vector> c_k);
 
 
     /**
@@ -178,14 +162,14 @@ public:
      *
      * @param grad		the gradient vector from NLP
      */
-    virtual void update_grad(shared_ptr<const Vector> grad);
+    void update_grad(shared_ptr<const Vector> grad);
 
-    /*  @brief Update the SparseMatrix H of the QP
+    /*  @brief Update the SparseMatrix H of the QP
      *  problems when there is any change to the
      *  true function Hessian
      *
      *  */
-    virtual void update_H(shared_ptr<const SpTripletMat> Hessian);
+    void update_H(shared_ptr<const SpTripletMat> Hessian);
 
     /**
      * @brief Update the Matrix H of the QP problems
@@ -193,22 +177,18 @@ public:
      */
     virtual void update_A(shared_ptr<const SpTripletMat> Jacobian);
 
-
-    const shared_ptr<qpOASESInterface>& getQpInterface() const;
+    const shared_ptr<QPSolverInterface> &getQpInterface() const;
 
 
     inline QPReturnType GetStatus() {
-        return (qp_interface_->status());
+        return (solverInterface_->getStatus());
     }
 
 private:
-    /**
-     * @brief allocate memory to class members except QP objects
-     * */
-    virtual void
-    allocate(SQPhotstart::Index_info nlp_info);
-
     //@{
+
+    /** Default constructor */
+    QPhandler();
     /** Copy Constructor */
     QPhandler(const QPhandler&);
 
@@ -228,8 +208,9 @@ private:
 private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    Index_info nlp_info_;
-    shared_ptr<qpOASESInterface> qp_interface_; /**<an interface to the standard QP
+    const Index_info nlp_info_;
+    UpdateFlags QPinfoFlag_;
+    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };
 
