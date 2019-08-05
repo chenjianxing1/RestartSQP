@@ -383,6 +383,7 @@ void Algorithm::setupQP() {
         if (QPinfoFlag_.Update_bounds) {
             myQP_->update_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
             QPinfoFlag_.Update_bounds = false;
+            QPinfoFlag_.Update_delta = false;
         } else if (QPinfoFlag_.Update_delta) {
             myQP_->update_delta(delta_, x_l_, x_u_, x_k_);
             QPinfoFlag_.Update_delta = false;
@@ -393,9 +394,9 @@ void Algorithm::setupQP() {
             myQP_->update_penalty(rho_);
             QPinfoFlag_.Update_penalty = false;
         }
-        if (QPinfoFlag_.Update_grad) {
+        if (QPinfoFlag_.Update_g) {
             myQP_->update_grad(grad_f_);
-            QPinfoFlag_.Update_grad = false;
+            QPinfoFlag_.Update_g = false;
         }
     }
 }
@@ -474,7 +475,7 @@ void Algorithm::ratio_test() {
         QPinfoFlag_.Update_A = true;
         QPinfoFlag_.Update_H = true;
         QPinfoFlag_.Update_bounds = true;
-        QPinfoFlag_.Update_grad = true;
+        QPinfoFlag_.Update_g = true;
         isaccept_ = true;    //no need to calculate the SOC direction
     } else {
         isaccept_ = false;
@@ -561,7 +562,6 @@ void Algorithm::update_penalty_parameter() {
             double rho_trial = rho_;//the temporary trial value for rho
             //calculate the infea_measure of the LP
             get_full_direction_LP(sol_tmp);
-//                sol_tmp->print("sol_tmp_lp");
             double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
                                                  2 * nCon_);
             log_->print_penalty_update(stats_->penalty_change_trial, rho_trial,
@@ -608,7 +608,6 @@ void Algorithm::update_penalty_parameter() {
                     rho_trial *= options->increase_parm; //increase rho
                     stats_->penalty_change_trial_addone();
                     myQP_->update_penalty(rho_trial);
-//                        myQP_->getQpInterface()->getG()->print("g");
 
                     try {
                         myQP_->solveQP(stats_, options);
@@ -621,7 +620,6 @@ void Algorithm::update_penalty_parameter() {
                     get_full_direction_QP(sol_tmp);
                     infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                    2 * nCon_);
-//                        sol_tmp->print("sol_tmp_qp");
 
                     log_->print_penalty_update(stats_->penalty_change_trial,
                                                rho_trial, infea_measure_model_,

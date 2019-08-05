@@ -209,7 +209,6 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;
-    UpdateFlags updateFlag_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };

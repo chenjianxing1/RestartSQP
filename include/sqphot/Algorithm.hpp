@@ -223,7 +223,6 @@ private:
      * specified QP information
      */
 
-    //TODO: delete the argument...
     void get_search_direction();
 
 

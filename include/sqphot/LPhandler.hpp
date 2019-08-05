@@ -129,7 +129,6 @@ private:
     Identity2Info I_info_A;
     Index_info nlp_info_;
     shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
-    UpdateFlags updateFlag_;
     bool isAinitialised = false;//TODO: delete it later
 };
 

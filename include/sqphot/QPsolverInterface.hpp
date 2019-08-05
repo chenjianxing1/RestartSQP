@@ -264,8 +264,11 @@ private:
      * @brief get the final return status of the QP problem
      */
 
+    void reset_flags();
+
     bool get_status();
 
+    UpdateFlags data_change_flags;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
