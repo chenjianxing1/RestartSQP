@@ -41,24 +41,19 @@ public:
     /** Default destructor */
     ~LPhandler() override;
 
-    void setup_bounds(double delta,
-                      shared_ptr<const Vector> x_k,
-                      shared_ptr<const Vector> x_l,
-                      shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> c_k,
-                      shared_ptr<const Vector> c_l,
-                      shared_ptr<const Vector> c_u) override {
-        QPhandler::setup_bounds(delta,x_k,x_l,x_u,c_k,c_l,c_u);
-    };
-
-    void setup_g(double rho) {
-        QPhandler::setup_g(NULL,rho);
-    };
+    void set_bounds(double delta,
+                    shared_ptr<const Vector> x_k,
+                    shared_ptr<const Vector> x_l,
+                    shared_ptr<const Vector> x_u,
+                    shared_ptr<const Vector> c_k,
+                    shared_ptr<const Vector> c_l,
+                    shared_ptr<const Vector> c_u) override;
 
 
-    void setup_A(shared_ptr<const SpTripletMat> jacobian) override {
-        QPhandler::setup_A(jacobian);
-    };
+    void set_g(double rho);;
+
+
+    void set_A(shared_ptr<const SpTripletMat> jacobian) override;
 
     /**
      * @brief Get the optimal solution from the QPsolverinterface
@@ -74,23 +69,25 @@ public:
                       shared_ptr<const Vector> x_l,
                       shared_ptr<const Vector> x_u,
                       shared_ptr<const Vector> x_k) override {
-        QPhandler::update_delta(delta,x_l,x_u,x_k);
-    };
+//        QPhandler::update_delta(delta,x_l,x_u,x_k);
+    }
+
+    const shared_ptr<QPSolverInterface>& getSolverInterface() const;;
 
     void update_bounds(double delta, shared_ptr<const Vector> x_l,
                        shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
                        shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
                        shared_ptr<const Vector> c_k) override {
-        QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
+//        QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
     };
 
     void update_penalty(double rho) override {
-        QPhandler::update_penalty(rho);
+//        QPhandler::update_penalty(rho);
     };
 
 
     void update_A(shared_ptr<const SpTripletMat> Jacobian) override {
-        QPhandler::update_A(Jacobian);
+//        QPhandler::update_A(Jacobian);
     };
 
     /**
@@ -128,12 +125,12 @@ private:
 
 private:
     //bounds that can be represented as vectors
+
     Identity2Info I_info_A;
     Index_info nlp_info_;
     shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
-    UpdateFlags LPinfoFlag_;
-    // solver specified by the user
-    double lp_obj_;        // the optimal objectives from LPhandler
+    UpdateFlags updateFlag_;
+    bool isAinitialised = false;//TODO: delete it later
 };
 
 

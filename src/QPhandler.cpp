@@ -61,12 +61,12 @@ void QPhandler::GetMultipliers(double* y_k) {
  * @param c_l        the lower bounds for constraints
  * @param c_u        the upper bounds for constraints
  */
-void QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
-                             shared_ptr<const Vector> x_l,
-                             shared_ptr<const Vector> x_u,
-                             shared_ptr<const Vector> c_k,
-                             shared_ptr<const Vector> c_l,
-                             shared_ptr<const Vector> c_u) {
+void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_k,
+                           shared_ptr<const Vector> x_l,
+                           shared_ptr<const Vector> x_u,
+                           shared_ptr<const Vector> c_k,
+                           shared_ptr<const Vector> c_l,
+                           shared_ptr<const Vector> c_u) {
 
     for (int i = 0; i < nlp_info_.nCon; i++) {
         solverInterface_->set_lbA(i,c_l->values()[i] - c_k->values()[i]);
@@ -96,20 +96,16 @@ void QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
  * @param grad      Gradient vector from nlp class
  * @param rho       Penalty Parameter
  */
-void QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
-    if(grad !=NULL) {
-        for(int i=0; i<nlp_info_.nVar+2* nlp_info_.nCon; i++)
-            if(i<nlp_info_.nVar)
-                solverInterface_->set_g(i,grad->values()[i]);
+void QPhandler::set_g(shared_ptr<const Vector> grad, double rho) {
+    for(int i=0; i<nlp_info_.nVar+2* nlp_info_.nCon; i++)
+        if(i<nlp_info_.nVar)
+            solverInterface_->set_g(i,grad->values()[i]);
 
-            else
-                solverInterface_->set_g(i,rho);
+        else
+            solverInterface_->set_g(i,rho);
 
-    }
-    else {
-        for(int i=nlp_info_.nVar; i<nlp_info_.nVar+2*nlp_info_.nCon; i++)
-            solverInterface_->set_g(i, rho);
-    }
+
+
 }
 
 
@@ -175,7 +171,7 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad) {
  * @param hessian the Lagragian hessian evaluated at x_k and lambda_k from nlp
  * readers.
  */
-void QPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
+void QPhandler::set_H(shared_ptr<const SpTripletMat> hessian) {
     solverInterface_->set_H_structure(hessian);
     solverInterface_->set_H_values(hessian);
 
@@ -186,7 +182,7 @@ void QPhandler::setup_H(shared_ptr<const SpTripletMat> hessian) {
  * The matrix A in QP problem will be concatenate as [J I -I]
  * @param jacobian  the Matrix object for Jacobian from c(x)
  */
-void QPhandler::setup_A(shared_ptr<const SpTripletMat> jacobian) {
+void QPhandler::set_A(shared_ptr<const SpTripletMat> jacobian) {
 
     I_info_A.irow1 = 1;
     I_info_A.irow2 = 1;

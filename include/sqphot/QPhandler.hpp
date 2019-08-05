@@ -86,13 +86,13 @@ public:
      * @param c_l        the lower bounds for constraints
      * @param c_u        the upper bounds for constraints
      */
-    virtual void setup_bounds(double delta,
-                              shared_ptr<const Vector> x_k,
-                              shared_ptr<const Vector> x_l,
-                              shared_ptr<const Vector> x_u,
-                              shared_ptr<const Vector> c_k,
-                              shared_ptr<const Vector> c_l,
-                              shared_ptr<const Vector> c_u);
+    virtual void set_bounds(double delta,
+                            shared_ptr<const Vector> x_k,
+                            shared_ptr<const Vector> x_l,
+                            shared_ptr<const Vector> x_u,
+                            shared_ptr<const Vector> c_k,
+                            shared_ptr<const Vector> c_l,
+                            shared_ptr<const Vector> c_u);
 
     /**
      * @brief This function sets up the object vector g
@@ -101,7 +101,7 @@ public:
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
-    void setup_g(shared_ptr<const Vector> grad, double rho);
+    void set_g(shared_ptr<const Vector> grad, double rho);
 
     /**
      * Set up the H for the first time in the QP
@@ -118,11 +118,11 @@ public:
      * @return
      */
 
-    void setup_H(shared_ptr<const SpTripletMat> hessian);
+    void set_H(shared_ptr<const SpTripletMat> hessian);
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    virtual void setup_A(shared_ptr<const SpTripletMat> jacobian);
+    virtual void set_A(shared_ptr<const SpTripletMat> jacobian);
 
 
     /**
@@ -209,7 +209,7 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;
-    UpdateFlags QPinfoFlag_;
+    UpdateFlags updateFlag_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard QP
                                                          solver specified by the user*/
 };

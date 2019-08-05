@@ -19,17 +19,37 @@
 
 
 namespace SQPhotstart {
-
+class SpTripletMat;
 class Matrix {
 
 public:
+
+
     /** Default constructor*/
-    Matrix() {};
+    Matrix()=default;
 
     /** Default destructor*/
-    virtual ~Matrix() {};
+    virtual ~Matrix() = default;
 
     virtual void print() const = 0;
+
+    virtual void print_full(const char* name = NULL) const = 0;
+
+//    virtual int RowNum() const = 0;
+//
+//    virtual int ColNum() const = 0;
+//
+//    virtual int* RowIndex() = 0;
+//
+//    virtual int* ColIndex() = 0;
+//
+//    virtual double* MatVal() = 0;
+//
+//    virtual void setStructure(std::shared_ptr<const SpTripletMat> rhs) = 0;
+
+
+private:
+
 
 };
 
@@ -67,17 +87,6 @@ public:
     //@}
 
     /**
-     * @brief allocate the data to the class members
-     *
-     * @param RowIndex the row index of a entry in a matrix, starting from 1
-     * @param ColIndex the column index of a entry in a matrix, starting from 1
-     * @param MatVal   the entry value corresponding to (RowIndex,ColIndex)
-     *
-     */
-
-    void setMatrix(Index* RowIndex, Index* ColIndex, Number* MatVal) {}
-
-    /**
      *@brief print the sparse matrix in triplet form
      */
     void print() const override;
@@ -86,7 +95,7 @@ public:
     /**
      * @brief print the sparse matrix in the sense form
      */
-    void print_full(const char* name = NULL	) const ;
+    void print_full(const char* name =NULL) const override ;
     /**
      * @brief Times a matrix with a vector p, the pointer to the matrix-vector
      * product  will be stored in the class member of another Vector class object
@@ -274,6 +283,7 @@ public:
      */
     void print() const override;
 
+    void print_full(const char* name = NULL) const override {};
 
     /**
      * @brief make a deep copy of a matrix information

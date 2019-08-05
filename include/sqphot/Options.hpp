@@ -77,7 +77,7 @@ public:
     double eps2;
     double rho;
     double increase_parm;
-    int rho_max;
+    double rho_max;
     int penalty_iter_max;
 
     //int update_method

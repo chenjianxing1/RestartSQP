@@ -157,7 +157,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
             qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
             break;
         }
-        if(DEBUG) {
+        if (DEBUG) {
 //TODO: add this part to debug
         }
         qp_->setOptions(qp_options);
@@ -317,6 +317,34 @@ void qpOASESInterface::set_ubA(shared_ptr<const Vector> rhs) {
 
 void qpOASESInterface::set_g(shared_ptr<const Vector> rhs) {
     g_->copy_vector(rhs->values());
+}
+
+const shared_ptr<Vector>& qpOASESInterface::getLb() const {
+    return lb_;
+}
+
+const shared_ptr<Vector>& qpOASESInterface::getUb() const {
+    return ub_;
+}
+
+const shared_ptr<Vector>& qpOASESInterface::getLbA() const {
+    return lbA_;
+}
+
+const shared_ptr<Vector>& qpOASESInterface::getUbA() const {
+    return ubA_;
+}
+
+const shared_ptr<Vector>& qpOASESInterface::getG() const {
+    return g_;
+}
+
+const shared_ptr<Matrix>& qpOASESInterface::getH() const {
+    return H_;
+}
+
+const shared_ptr<Matrix>& qpOASESInterface::getA() const {
+    return A_;
 }
 
 }//SQPHOTSTART

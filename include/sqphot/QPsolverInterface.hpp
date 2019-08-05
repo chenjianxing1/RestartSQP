@@ -40,6 +40,19 @@ public:
     /** Default constructor*/
     QPSolverInterface() {}
 
+    virtual const shared_ptr<Vector>& getLb() const = 0;
+
+    virtual const shared_ptr<Vector>& getUb() const = 0;
+
+    virtual const shared_ptr<Vector>& getLbA() const =0;
+
+    virtual const shared_ptr<Vector>& getUbA() const =0;
+
+    virtual const shared_ptr<Vector>& getG() const = 0;
+
+    virtual const shared_ptr<Matrix>& getH() const = 0;
+
+    virtual const shared_ptr<Matrix>& getA() const =0;
 
     /** Default destructor*/
     virtual ~QPSolverInterface() {}
@@ -124,17 +137,6 @@ public:
 
     //@}
 
-protected:
-    shared_ptr<Vector> lb_;  /**< lower bounds of x */
-    shared_ptr<Vector> ub_;  /**< upper bounds of x */
-    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
-    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
-    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
-    shared_ptr<Matrix> H_;/**< the Matrix object stores the QP data H in
-                                          * Harwell-Boeing Sparse Matrix format*/
-    shared_ptr<Matrix> A_;/**< the Matrix object stores the QP data A in
-                                          * Harwell-Boeing Sparse Matrix format*/
-
 private:
     /** Copy Constructor */
     QPSolverInterface(const QPSolverInterface &) ;
@@ -155,6 +157,20 @@ class qpOASESInterface : public QPSolverInterface {
 public:
 
     virtual ~qpOASESInterface();
+
+    const shared_ptr<Vector>& getLb() const override;
+
+    const shared_ptr<Vector>& getUb() const override ;
+
+    const shared_ptr<Vector>& getLbA() const override ;
+
+    const shared_ptr<Vector>& getUbA() const override ;
+
+    const shared_ptr<Vector>& getG() const override ;
+
+    const shared_ptr<Matrix>& getH() const override ;
+
+    const shared_ptr<Matrix>& getA() const override ;
 
     /**
      * @brief Constructor which also initializes the qpOASES SQProblem objects
