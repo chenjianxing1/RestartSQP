@@ -115,9 +115,14 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
                       lb_->values(), ub_->values(), lbA_->values(),
                       ubA_->values(),
                       nWSR);
+
     } else {
-        qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
-                      ubA_->values(), nWSR);
+        qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                      lb_->values(), ub_->values(), lbA_->values(),
+                      ubA_->values(),
+                      nWSR);
+//        qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
+//                      ubA_->values(), nWSR);
     }
     reset_flags();
 
@@ -184,8 +189,14 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                           ubA_->values(),
                           nWSR, 0);
         } else {
-            qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
-                          ubA_->values(), nWSR, 0);
+
+            qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(),
+                          nWSR, 0);
+//            qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
+//                          ubA_->values(), nWSR, 0);
+//
         }
         reset_flags();
         if (!qp_->isSolved()) {
