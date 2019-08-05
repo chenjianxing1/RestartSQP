@@ -16,18 +16,20 @@ using namespace SQPhotstart;
 
 int main(int argc, char** args) {
     Algorithm alg;
-    printf("\n=====================================================================================\n");
-    printf( "	Solving Problem ");
-    std::cout << args[1]<<std::endl;
-    printf("=====================================================================================\n");
+    //printf("\n=====================================================================================\n");
+    //printf( "	Solving Problem ");
+    //std::cout << args[1]<<std::endl;
+    //printf("=====================================================================================\n");
     SmartPtr<MyNLP> nlp= new MyNLP();
     try {
         SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                                 alg.getRoptions2(),
                                                 args);
         alg.Optimize(ampl_tnlp);
-//	if(alg.getExitFlag()==OPTIMAL)
-// 		std::cout<<args[1]<<std::endl;
+	if(alg.getExitFlag()==OPTIMAL)
+ 		std::cout<<args[1]<<std::endl;
+	else
+		std::cout<<std::endl;
 
     }
     catch(...) {
