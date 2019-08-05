@@ -302,7 +302,7 @@ private:
      */
     void classify_constraints_types();
 
-    void handle_error_code(const char* error = NULL);
+    void handle_error(const char* error = NULL);
 
 
     /** @name Optimality Test */

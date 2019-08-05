@@ -98,11 +98,30 @@ public:
             printf("Exitflag:                                                   %23s\n",
                    "CONVERGE_TO_NONOPTIMAL");
             break;
+
+        case QPERROR_PREPARINGAUXILIARYQP:
+
+            printf("Exitflag:                                                   %23s\n",
+                   "QPERROR_PREPARINGAUXILIARYQP");
+            break;
+        case QPERROR_AUXILIARYQPSOLVED:
+            printf("Exitflag:                                                   %23s\n",
+                   "QPERROR_AUXILIARYQPSOLVED");
+            break;
+        case QPERROR_PERFORMINGHOMOTOPY  :
+            printf("Exitflag:                                                   %23s\n",
+                   "QPERROR_PERFORMINGHOMOTOPY");
+            break;
+        case QPERROR_HOMOTOPYQPSOLVED    :
+            printf("Exitflag:                                                   %23s\n",
+                   "QPERROR_HOMOTOPYQPSOLVED");
+            break;
         case UNKNOWN :
             printf("Exitflag:                                                   %23s\n",
                    "UNKNOWN ERROR");
 
             break;
+
         }
 
         printf("Iterations:                                                 %23i\n",

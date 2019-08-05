@@ -266,7 +266,7 @@ private:
 
     void reset_flags();
 
-    bool get_status();
+    void get_status();
 
     UpdateFlags data_change_flags;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES

@@ -29,6 +29,10 @@ enum QPReturnType {
     QP_EXCEED_MAX_ITER = 1,
     QP_INFEASIBLE = -2,
     QP_UNBOUNDED = -3,
+    QP_PREPARINGAUXILIARYQP = -6,
+    QP_AUXILIARYQPSOLVED = -7,
+    QP_PERFORMINGHOMOTOPY = -8,
+    QP_HOMOTOPYQPSOLVED = -9,
     QP_UNKNOWN_ERROR = 99
 };
 
@@ -50,6 +54,10 @@ enum Exitflag {
     QPERROR_UNBOUNDED = -3, //QP solver error: unbounded QP
     QPERROR_EXCEED_MAX_ITER = -4,//QP solver error: Exceed maximum iteration,
     QPERROR_NOTINITIALISED = -5,
+    QPERROR_PREPARINGAUXILIARYQP = -6,
+    QPERROR_AUXILIARYQPSOLVED = -7,
+    QPERROR_PERFORMINGHOMOTOPY = -8,
+    QPERROR_HOMOTOPYQPSOLVED = -9,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.
     UNKNOWN = -99//unknown error
 };
