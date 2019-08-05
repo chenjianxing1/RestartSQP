@@ -38,9 +38,8 @@ class LPhandler;
  */
 class QPhandler {
 public:
-    /** Default constructor */
-    QPhandler();
 
+    QPhandler(Index_info nlp_info);
     /** Default destructor */
     virtual ~QPhandler();
 
@@ -75,27 +74,10 @@ public:
     double GetObjective();
 
     /**
-     * @brief This function initializes all objects will be used in this class.
-     *
-     * @param nlp_info
-     * 		it contains the information about number of variables, number of
-     * 		constraints, number of elements in the Hessian and that of Jacobian.
-     * 		The definition of Index_info is in Types.hpp
-     * @param Constraint_type
-     * 		it specifies how the variables are bounded. Please check
-     * 		@ClassifyConstraintType in Algorithm.hpp
-     * 		for more details
-     * @param qptype
-     * 		it specifies which type of QP is going to be solved. It can be either
-     * 		QP, or SC
-     */
-    void init(Index_info nlp_info);
-
-    /**
      *
      * @brief setup the bounds for the QP subproblems
      * according to the information from current iterate
-     *
+     *
      * @param delta      trust region radius
      * @param x_k 	     current iterate point
      * @param c_k        current constraint value evaluated at x_k
@@ -203,13 +185,10 @@ public:
     }
 
 private:
-    /**
-     * @brief allocate memory to class members except QP objects
-     * */
-    virtual void
-    allocate(SQPhotstart::Index_info nlp_info);
-
     //@{
+
+    /** Default constructor */
+    QPhandler();
     /** Copy Constructor */
     QPhandler(const QPhandler&);
 
@@ -229,7 +208,7 @@ private:
 private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    Index_info nlp_info_;
+    const Index_info nlp_info_;
     UpdateFlags QPinfoFlag_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard QP
                                                          solver specified by the user*/

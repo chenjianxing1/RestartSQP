@@ -220,9 +220,6 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
     classify_constraints_types();
 
     cal_infea(); //calculate the infeasibility measure for x_k
-    // initializes QP objects*/
-    myQP_->init(nlp_->nlp_info_);
-    myLP_->init(nlp_->nlp_info_);
     norm_p_k_ = 0.0;
     if (options->printLevel > 1) {
         log_->print_header();
@@ -266,8 +263,8 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     options = make_shared<Options>();
     stats_ = make_shared<Stats>();
     log_ = make_shared<Log>();
-    myQP_ = make_shared<QPhandler>();
-    myLP_ = make_shared<LPhandler>();
+    myQP_ = make_shared<QPhandler>(nlp_->nlp_info_);
+    myLP_ = make_shared<LPhandler>(nlp_->nlp_info_);
     delta_ = options->delta;
     rho_ = options->rho;
 
@@ -386,7 +383,7 @@ void Algorithm::setupQP() {
             myQP_->update_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
             QPinfoFlag_.Update_bounds = false;
         }
-        if(QPinfoFlag_.Update_delta){
+        if(QPinfoFlag_.Update_delta) {
             myQP_->update_delta(delta_,x_l_,x_u_,x_k_);
             QPinfoFlag_.Update_delta =false;
         }
@@ -402,6 +399,11 @@ void Algorithm::setupQP() {
     }
 }
 
+void Algorithm::setupLP() {
+    myLP_->setup_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
+    myLP_->setup_g(rho_);
+    myLP_->setup_A(jacobian_);
+}
 
 /**
  *
@@ -542,92 +544,91 @@ void Algorithm::classify_constraints_types() {
  */
 void Algorithm::update_penalty_parameter() {
     if (options->penalty_update) {
-//        if (infea_measure_model_ > options->penalty_update_tol) {
-//            myLP_->copy_QP_info(myQP_); //copy part of the objective and bounds
-//            // information from the QPhandler objects
-//            try {
-//                myLP_->solveLP(stats_, options);
-//            }
-//            catch (QP_NOT_OPTIMAL) {
-//                handle_error_code("QP NOT OPTIMAL");
-//            }
-//
-//
-//            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
-//
-//            double rho_trial = rho_;//the temporary trial value for rho
-//            //calculate the infea_measure of the LP
-//            get_full_direction_LP(sol_tmp);
-//            double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
-//                                                 2 * nCon_);
-//            if (infea_measure_infty <= options->penalty_update_tol) {
-//                //try to increase the penalty parameter to a number such that the
-//                // infeasibility measure of QP model with such penalty parameter
-//                // becomes zero
-//                while (infea_measure_model_ > options->penalty_update_tol) {
-//                    if (rho_trial * 2 > options->rho_max) {
-//                        break;
-//                    }
-//                    rho_trial *=options->increase_parm;  //increase rho
-//                    stats_->penalty_change_trial_addone();
-//                    myQP_->update_penalty(rho_trial);
-//                    try {
-//                        myQP_->solveQP(stats_, options);
-//                    }
-//                    catch (QP_NOT_OPTIMAL) {
-//                        handle_error_code("QP NOT OPTIMAL");
-//                    }
-//                    //recalculate the infeasibility measure of the model by
-//                    // calculating the one norm of the slack variables
-//                    get_full_direction_QP(sol_tmp);
-//                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-//                                                   2 * nCon_);
-//                }
-//
-//            } else {
-//
-//                while ((infea_measure_ - infea_measure_model_ <
-//                        options->eps1 * (infea_measure_ - infea_measure_infty) &&
-//                        (stats_->penalty_change_trial < options->penalty_iter_max))) {
-//                    if (rho_trial * 2 > options->rho_max) {
-//                        break;
-//                    }
-//                    //try to increase the penalty parameter to a number such that
-//                    // tme incurred reduction for the QP model is to a ratio to the
-//                    // maximum possible reduction for current linear model.
-//                    rho_trial*=options->increase_parm; //increase rho
-//                    stats_->penalty_change_trial_addone();
-//                    myQP_->update_penalty(rho_trial);
-//
-//                    try {
-//                        myQP_->solveQP(stats_, options);
-//                    }
-//                    catch (QP_NOT_OPTIMAL) {
-//                        handle_error_code("QP NOT OPTIMAL");
-//                    }
-//                    //recalculate the infeasibility measure of the model by
-//                    // calculating the one norm of the slack variables
-//                    get_full_direction_QP(sol_tmp);
-//                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-//                                                   2 * nCon_);
-//
-//                }
-//            }
-//            //if any change occurs
-//            if (rho_trial > rho_) {
-//                if (rho_trial * infea_measure_ - qp_obj_ >=
-//                        options->eps2 * rho_trial *
-//                        (infea_measure_ - infea_measure_model_)) {
-//                    stats_->penalty_change_Succ_addone();
-//                    options->eps1 += (1 - options->eps1) * 0.1;
-//                    p_k_->copy_vector(sol_tmp);
-//                    rho_ = rho_trial;
-//                    qp_obj_ = myQP_->GetObjective();//update the qp_obj
-//                } else {
-//                    stats_->penalty_change_Fail_addone();
-//                }
-//            }
-//        }
+        if (infea_measure_model_ > options->penalty_update_tol) {
+            setupLP();
+
+            try {
+                myLP_->solveLP(stats_, options);
+            }
+            catch (QP_NOT_OPTIMAL) {
+                handle_error_code("QP NOT OPTIMAL");
+            }//TODO: change it to LP not optimal
+
+            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
+
+            double rho_trial = rho_;//the temporary trial value for rho
+            //calculate the infea_measure of the LP
+            get_full_direction_LP(sol_tmp);
+            sol_tmp->print("sol_LP");
+            double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_, 2 * nCon_);
+            if (infea_measure_infty <= options->penalty_update_tol) {
+                //try to increase the penalty parameter to a number such that the
+                // infeasibility measure of QP model with such penalty parameter
+                // becomes zero
+                while (infea_measure_model_ > options->penalty_update_tol) {
+                    if (rho_trial * 2 > options->rho_max) {
+                        break;
+                    }
+                    rho_trial *=options->increase_parm;  //increase rho
+                    stats_->penalty_change_trial_addone();
+                    myQP_->update_penalty(rho_trial);
+                    try {
+                        myQP_->solveQP(stats_, options);
+                    }
+                    catch (QP_NOT_OPTIMAL) {
+                        handle_error_code("QP NOT OPTIMAL");
+                    }
+                    //recalculate the infeasibility measure of the model by
+                    // calculating the one norm of the slack variables
+                    get_full_direction_QP(sol_tmp);
+                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+                                                   2 * nCon_);
+                }
+
+            } else {
+
+                while ((infea_measure_ - infea_measure_model_ <
+                        options->eps1 * (infea_measure_ - infea_measure_infty) &&
+                        (stats_->penalty_change_trial < options->penalty_iter_max))) {
+                    if (rho_trial * 2 > options->rho_max) {
+                        break;
+                    }
+                    //try to increase the penalty parameter to a number such that
+                    // tme incurred reduction for the QP model is to a ratio to the
+                    // maximum possible reduction for current linear model.
+                    rho_trial*=options->increase_parm; //increase rho
+                    stats_->penalty_change_trial_addone();
+                    myQP_->update_penalty(rho_trial);
+
+                    try {
+                        myQP_->solveQP(stats_, options);
+                    }
+                    catch (QP_NOT_OPTIMAL) {
+                        handle_error_code("QP NOT OPTIMAL");
+                    }
+                    //recalculate the infeasibility measure of the model by
+                    // calculating the one norm of the slack variables
+                    get_full_direction_QP(sol_tmp);
+                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+                                                   2 * nCon_);
+
+                }
+            }
+            //if any change occurs
+            if (rho_trial > rho_) {
+                if (rho_trial * infea_measure_ - qp_obj_ >=
+                        options->eps2 * rho_trial *
+                        (infea_measure_ - infea_measure_model_)) {
+                    stats_->penalty_change_Succ_addone();
+                    options->eps1 += (1 - options->eps1) * 0.1;
+                    p_k_->copy_vector(sol_tmp);
+                    rho_ = rho_trial;
+                    qp_obj_ = myQP_->GetObjective();//update the qp_obj
+                } else {
+                    stats_->penalty_change_Fail_addone();
+                }
+            }
+        }
     }
 }
 

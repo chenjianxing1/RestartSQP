@@ -36,8 +36,7 @@ namespace SQPhotstart {
 
 class LPhandler : public QPhandler {
 public:
-    /** Default constructor */
-    LPhandler();
+    LPhandler(Index_info nlp_info);
 
     /** Default destructor */
     ~LPhandler() override;
@@ -48,17 +47,17 @@ public:
                       shared_ptr<const Vector> x_u,
                       shared_ptr<const Vector> c_k,
                       shared_ptr<const Vector> c_l,
-                      shared_ptr<const Vector> c_u) override{
-	    QPhandler::setup_bounds(delta,x_k,x_l,x_u,c_k,c_l,c_u);
+                      shared_ptr<const Vector> c_u) override {
+        QPhandler::setup_bounds(delta,x_k,x_l,x_u,c_k,c_l,c_u);
     };
 
-    void setup_g(double rho){
-	QPhandler::setup_g(NULL,rho);    
+    void setup_g(double rho) {
+        QPhandler::setup_g(NULL,rho);
     };
 
 
-    void setup_A(shared_ptr<const SpTripletMat> jacobian) override{
-	    QPhandler::setup_A(jacobian);
+    void setup_A(shared_ptr<const SpTripletMat> jacobian) override {
+        QPhandler::setup_A(jacobian);
     };
 
     /**
@@ -74,24 +73,24 @@ public:
     void update_delta(double delta,
                       shared_ptr<const Vector> x_l,
                       shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> x_k) override{
-	   QPhandler::update_delta(delta,x_l,x_u,x_k);
+                      shared_ptr<const Vector> x_k) override {
+        QPhandler::update_delta(delta,x_l,x_u,x_k);
     };
 
     void update_bounds(double delta, shared_ptr<const Vector> x_l,
                        shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
                        shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                       shared_ptr<const Vector> c_k) override{
-	    QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
+                       shared_ptr<const Vector> c_k) override {
+        QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
     };
 
-    void update_penalty(double rho) override{
-	    QPhandler::update_penalty(rho);
+    void update_penalty(double rho) override {
+        QPhandler::update_penalty(rho);
     };
 
 
-    void update_A(shared_ptr<const SpTripletMat> Jacobian) override{
-    QPhandler::update_A(Jacobian);
+    void update_A(shared_ptr<const SpTripletMat> Jacobian) override {
+        QPhandler::update_A(Jacobian);
     };
 
     /**
@@ -106,9 +105,10 @@ private:
     /**
      * @brief allocate memory to class members except QP objects
      * */
-    void allocate(SQPhotstart::Index_info nlp_info) override;
 
-    /**free all the memory*/
+    /** Default constructor */
+    LPhandler();
+
 
     /** Copy Constructor */
     LPhandler(const LPhandler &);

@@ -8,12 +8,14 @@
 #include <sqphot/LPhandler.hpp>
 
 namespace SQPhotstart {
-/**
- * Default constructor
- */
 
-LPhandler::LPhandler() {};
+LPhandler::LPhandler(Index_info nlp_info):
+    QPhandler(nlp_info),
+    nlp_info_(nlp_info)
+{
 
+    solverInterface_ = make_shared<qpOASESInterface>(nlp_info,LP);
+}
 /**
  *Default destructor
  */
@@ -29,7 +31,6 @@ LPhandler::~LPhandler() {
  */
 void LPhandler::GetOptimalSolution(double* p_k) {
     solverInterface_->get_optimal_solution(p_k);
-
 }
 
 
@@ -44,28 +45,6 @@ void LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats,
 }
 
 
-/**
- * @brief This function initializes all class members which
- * will be used in _qp_interface
- *
- * @param nlp_info
- *          it contains the information about number
- *          of variables, number of constraints, number of
- *          elements in the Hessian and that of
- *          Jacobian. The definition of Index_info is
- *          in Types.hpp
- * @param Variable_type
- *          it specifies how the variables are bounded.
- *          Please check @ClassifyConstraintType in Algorithm.hpp
- *          for more details
- * @param qptype
- *          it specifies which type of QP is going to
- *          be solved. It can be either LP, or QP, or SOC
- */
-void LPhandler::allocate(SQPhotstart::Index_info nlp_info) {
-    solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP);
-
-}
 
 
 } // namespace SQPhotstart

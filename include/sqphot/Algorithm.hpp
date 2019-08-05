@@ -255,8 +255,13 @@ private:
     * member QPinfoFlag_
     */
 
+
     void setupQP();
 
+    /**
+     * @brief This function will setup the data for the LP subproblem
+     */
+    void setupLP();
     /**
      * @brief This function extracts the Lagragian multipliers for constraints
      * in NLP and copies it to the class member multiplier_cons_.

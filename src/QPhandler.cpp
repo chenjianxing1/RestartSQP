@@ -8,11 +8,11 @@
 
 
 namespace SQPhotstart {
-/**
- * Default constructor
- *
- */
-QPhandler::QPhandler() {}
+QPhandler::QPhandler(Index_info nlp_info):
+    nlp_info_(nlp_info) {
+    solverInterface_ = make_shared<qpOASESInterface>(nlp_info,QP);
+
+}
 
 /**
  *Default destructor
@@ -45,26 +45,6 @@ void QPhandler::GetMultipliers(double* y_k) {
 }
 
 
-/**
- * This function initializes all objects will be used in this class.
- *
- * @param nlp_info
- *          it contains the information about number of variables, number of
- *          constraints,  number of elements in the Hessian and that of Jacobian. The
- *          definition of Index_info is in Types.hpp
- * @param Constraint_type
- *          it specifies how the variables are bounded. Please check
- *           @ClassifyConstraintType in Algorithm.hpp
- *          for more details
- * @param qptype
- *           it specifies which type of QP is going to be solved. It can be either LP,
- *           or QP, or SOC
- */
-void QPhandler::init(Index_info nlp_info)
-{
-    nlp_info_=nlp_info;
-    allocate(nlp_info);
-}
 
 /**
  * Setup the bounds for the QP subproblems according to the information from current
@@ -117,19 +97,19 @@ void QPhandler::setup_bounds(double delta, shared_ptr<const Vector> x_k,
  * @param rho       Penalty Parameter
  */
 void QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
-	if(grad !=NULL){
-    for(int i=0; i<nlp_info_.nVar+2* nlp_info_.nCon; i++)
-        if(i<nlp_info_.nVar)
-            solverInterface_->set_g(i,grad->values()[i]);
+    if(grad !=NULL) {
+        for(int i=0; i<nlp_info_.nVar+2* nlp_info_.nCon; i++)
+            if(i<nlp_info_.nVar)
+                solverInterface_->set_g(i,grad->values()[i]);
 
-        else
-            solverInterface_->set_g(i,rho);
+            else
+                solverInterface_->set_g(i,rho);
 
-	}
-	else{
-		for(int i=nlp_info_.nVar; i<nlp_info_.nVar+2*nlp_info_.nCon; i++)
-			solverInterface_->set_g(i; rho);
-	}
+    }
+    else {
+        for(int i=nlp_info_.nVar; i<nlp_info_.nVar+2*nlp_info_.nCon; i++)
+            solverInterface_->set_g(i, rho);
+    }
 }
 
 
@@ -137,12 +117,12 @@ void QPhandler::setup_g(shared_ptr<const Vector> grad, double rho) {
  * @brief This function updates the constraint if there is any changes to
  * the iterates
  */
-    void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
-                                  shared_ptr<const Vector> x_u,
-                                  shared_ptr<const Vector> x_k,
-                                  shared_ptr<const Vector> c_l,
-                                  shared_ptr<const Vector> c_u,
-                                  shared_ptr<const Vector> c_k) {
+void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
+                              shared_ptr<const Vector> x_u,
+                              shared_ptr<const Vector> x_k,
+                              shared_ptr<const Vector> c_l,
+                              shared_ptr<const Vector> c_u,
+                              shared_ptr<const Vector> c_k) {
     for (int i = 0; i < nlp_info_.nCon; i++) {
         solverInterface_->set_lbA(i,c_l->values()[i] - c_k->values()[i]);
         solverInterface_->set_ubA(i,c_u->values()[i] - c_k->values()[i]);
@@ -231,28 +211,6 @@ double QPhandler::GetObjective() {
     return solverInterface_->get_obj_value();
 }
 
-/**
- * This function initializes all class members which
- * will be used in _qp_interface
- *
- * @param nlp_info
- *          it contains the information about number
- *          of variables, number of constraints, number of
- *          elements in the Hessian and that of
- *          Jacobian. The definition of Index_info is
- *          in Types.hpp
- * @param Variable_type
- *          it specifies how the variables are bounded.
- *          Please check @ClassifyConstraintType in Algorithm.hpp
- *          for more details
- * @param qptype
- *          it specifies which type of QP is going to
- *          be solved. It can be either LP, or QP, or SOC
- */
-void
-QPhandler::allocate(SQPhotstart::Index_info nlp_info) {
-    solverInterface_ = make_shared<qpOASESInterface>(nlp_info,QP);
-}
 
 void QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian) {
     solverInterface_->set_H_values(Hessian);
@@ -266,18 +224,18 @@ const shared_ptr<QPSolverInterface> &QPhandler::getQpInterface() const {
     return solverInterface_;
 }
 
-    void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
-                                 shared_ptr<const Vector> x_u,
-                                 shared_ptr<const Vector> x_k) {
+void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
+                             shared_ptr<const Vector> x_u,
+                             shared_ptr<const Vector> x_k) {
 
-        for (int i = 0; i < nlp_info_.nVar; i++) {
-            solverInterface_->set_lb(i,std::max(
-                    x_l->values()[i] - x_k->values()[i], -delta));
-            solverInterface_->set_ub(i,std::min(
-                    x_u->values()[i] - x_k->values()[i], delta));
-        }
-
+    for (int i = 0; i < nlp_info_.nVar; i++) {
+        solverInterface_->set_lb(i,std::max(
+                                     x_l->values()[i] - x_k->values()[i], -delta));
+        solverInterface_->set_ub(i,std::min(
+                                     x_u->values()[i] - x_k->values()[i], delta));
     }
+
+}
 
 
 } // namespace SQPhotstart

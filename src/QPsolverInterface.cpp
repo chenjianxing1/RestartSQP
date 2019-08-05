@@ -157,7 +157,9 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
             qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
             break;
         }
-
+        if(DEBUG) {
+//TODO: add this part to debug
+        }
         qp_->setOptions(qp_options);
         qp_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
                   ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
