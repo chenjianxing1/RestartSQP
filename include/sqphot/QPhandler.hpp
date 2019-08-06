@@ -1,4 +1,3 @@
-
 #ifndef SQPHOTSTART_QP_HPP_
 #define SQPHOTSTART_QP_HPP_
 

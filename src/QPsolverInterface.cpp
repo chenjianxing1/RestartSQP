@@ -74,7 +74,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
 
     if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
         qpOASES::Options qp_options;
-
+	    qp_options.setToReliable();
         //setup the printlevel of q
         switch (options->qpPrintLevel) {
         case 0:
@@ -381,6 +381,8 @@ void qpOASESInterface::set_g(shared_ptr<const Vector> rhs) {
     g_->copy_vector(rhs->values());
 }
 
+#if DEBUG
+#if GET_QPOASES_MEMBERS
 const shared_ptr<Vector>& qpOASESInterface::getLb() const {
     return lb_;
 }
@@ -400,15 +402,8 @@ const shared_ptr<Vector>& qpOASESInterface::getUbA() const {
 const shared_ptr<Vector>& qpOASESInterface::getG() const {
     return g_;
 }
-
-const shared_ptr<Matrix>& qpOASESInterface::getH() const {
-    return H_;
-}
-
-const shared_ptr<Matrix>& qpOASESInterface::getA() const {
-    return A_;
-}
-
+#endif
+#endif
 
 void qpOASESInterface::reset_flags() {
     data_change_flags.Update_A = false;

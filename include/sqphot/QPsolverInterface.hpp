@@ -39,7 +39,8 @@ class QPSolverInterface {
 public:
     /** Default constructor*/
     QPSolverInterface() {}
-
+#if DEBUG
+#if GET_QPOASES_MEMBERS
     virtual const shared_ptr<Vector>& getLb() const = 0;
 
     virtual const shared_ptr<Vector>& getUb() const = 0;
@@ -50,10 +51,10 @@ public:
 
     virtual const shared_ptr<Vector>& getG() const = 0;
 
-    virtual const shared_ptr<Matrix>& getH() const = 0;
 
-    virtual const shared_ptr<Matrix>& getA() const =0;
 
+#endif
+#endif
     /** Default destructor*/
     virtual ~QPSolverInterface() {}
 
@@ -157,7 +158,8 @@ class qpOASESInterface : public QPSolverInterface {
 public:
 
     virtual ~qpOASESInterface();
-
+#if DEBUG
+#if GET_QPOASES_MEMBERS
     const shared_ptr<Vector>& getLb() const override;
 
     const shared_ptr<Vector>& getUb() const override ;
@@ -168,10 +170,8 @@ public:
 
     const shared_ptr<Vector>& getG() const override ;
 
-    const shared_ptr<Matrix>& getH() const override ;
-
-    const shared_ptr<Matrix>& getA() const override ;
-
+#endif 
+#endif
     /**
      * @brief Constructor which also initializes the qpOASES SQProblem objects
      * @param nlp_index_info the struct that stores simple nlp dimension info

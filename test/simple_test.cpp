@@ -27,10 +27,10 @@ int main(int argc, char** args) {
                                                 alg.getRoptions2(),
                                                 args);
         alg.Optimize(ampl_tnlp);
-//	if(alg.getExitFlag()==OPTIMAL)
-// 		std::cout<<args[1]<<std::endl;
-//	else
-//		std::cout<<std::endl;
+	if(alg.getExitFlag()==OPTIMAL)
+ 		std::cout<<args[1]<<std::endl;
+	else
+		std::cout<<std::endl;
 
     }
     catch(...) {
