@@ -23,7 +23,8 @@
 #define CHECK_INFEA_CAL false
 #define CHECK_QP_SOLVER false
 #define CHECK_NLP_READER false
-#define CHECK_QP_INFEASIBILITY true
+#define CHECK_QP_INFEASIBILITY false
+#define PRINT_OUT_QP_WITH_ERROR true
 #endif
 
 #endif /* __SQPDEBUG_HPP */

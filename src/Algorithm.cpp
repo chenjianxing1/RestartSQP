@@ -154,30 +154,34 @@ void Algorithm::termination_check() {
             exitflag_ = OPTIMAL;
         } else {
             if (DEBUG) {
-                std::cout << "feasibility      "
-                          << opt_status_.primal_feasibility << std::endl;
-                std::cout << "dual_feasibility "
-                          << opt_status_.dual_feasibility
-                          << std::endl;
-                std::cout << "stationarity     " << opt_status_.stationarity
-                          << std::endl;
-                std::cout << "complementarity  "
-                          << opt_status_.complementarity
-                          << std::endl;
+                if (CHECK_TERMINATION) {
+                    std::cout << "feasibility      "
+                              << opt_status_.primal_feasibility << std::endl;
+                    std::cout << "dual_feasibility "
+                              << opt_status_.dual_feasibility
+                              << std::endl;
+                    std::cout << "stationarity     " << opt_status_.stationarity
+                              << std::endl;
+                    std::cout << "complementarity  "
+                              << opt_status_.complementarity
+                              << std::endl;
+                }
             }
 
         }
     } else {
         Check_KKTConditions(infea_measure_);
         if (DEBUG) {
-            std::cout << "feasibility      " << opt_status_.primal_feasibility
-                      << std::endl;
-            std::cout << "dual_feasibility " << opt_status_.dual_feasibility
-                      << std::endl;
-            std::cout << "stationarity     " << opt_status_.stationarity
-                      << std::endl;
-            std::cout << "complementarity  " << opt_status_.complementarity
-                      << std::endl;
+            if (CHECK_TERMINATION) {
+                std::cout << "feasibility      " << opt_status_.primal_feasibility
+                          << std::endl;
+                std::cout << "dual_feasibility " << opt_status_.dual_feasibility
+                          << std::endl;
+                std::cout << "stationarity     " << opt_status_.stationarity
+                          << std::endl;
+                std::cout << "complementarity  " << opt_status_.complementarity
+                          << std::endl;
+            }
         }
 
     }

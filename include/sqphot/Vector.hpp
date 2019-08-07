@@ -148,6 +148,17 @@ public:
         values_ = rhs.values_;
     }
 
+    void write_to_file(FILE* file_to_write, const char* const name) {
+        fprintf(file_to_write,"real_t %s[] = {",name);
+        for(int i = 0; i<Dim(); i++) {
+            if (i % 10 == 0&& i>1)
+                fprintf(file_to_write, "\n");
+            if(i ==Dim()-1)
+                fprintf(file_to_write, "%10e};\n\n", values_[i]);
+            else
+                fprintf(file_to_write, "%10e, ", values_[i]);
+        }
+    }
 private:
 
     /** Default Constructor*/

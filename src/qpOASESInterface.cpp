@@ -1,5 +1,5 @@
 
-#include <sqphot/QPsolverInterface.hpp>
+#include <sqphot/qpOASESInterface.hpp>
 
 namespace SQPhotstart {
 /**
@@ -23,8 +23,8 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
         H_ = make_shared<qpOASESSparseMat>(nVar_QP, nVar_QP, true);
     }
     //FIXME: the qpOASES does not accept any extra input
-    qp_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
-            (qpOASES::int_t) nCon_QP);
+    solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
+              (qpOASES::int_t) nCon_QP);
 }
 
 /**
@@ -32,7 +32,7 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype):
+qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype) :
     status_(UNSOLVED) {
     allocate(nlp_index_info, qptype);
 }
@@ -74,7 +74,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
 
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
         qpOASES::Options qp_options;
-	    qp_options.setToReliable();
+        qp_options.setToReliable();
         //setup the printlevel of q
         switch (options->qpPrintLevel) {
         case 0:
@@ -98,57 +98,44 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         }
 
 
-        qp_->setOptions(qp_options);
+        solver_->setOptions(qp_options);
 
-        qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
-                  ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
-        if (qp_->isSolved())
+        solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
+                      ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
+        if (solver_->isSolved())
             firstQPsolved_ = true;
         else {
             obtain_status();
-
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n")
-
+            handler_error(QP, stats, options);
         }
     } else if (data_change_flags_.Update_H || data_change_flags_.Update_A) {
-        qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
-                      lb_->values(), ub_->values(), lbA_->values(),
-                      ubA_->values(),
-                      nWSR);
+        solver_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(),
+                          nWSR);
 
     } else {
-        qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
-                      lb_->values(), ub_->values(), lbA_->values(),
-                      ubA_->values(),
-                      nWSR);
-//        qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
+        solver_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(),
+                          nWSR);
+//        solver_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
 //                      ubA_->values(), nWSR);
     }
     reset_flags();
 
-    if (!qp_->isSolved()) {
-        //TODO:create another method for handling errors
+    stats->qp_iter_addValue((int) nWSR);
+    if (!solver_->isSolved()) {
         obtain_status();
-        if (status_ == QPERROR_UNBOUNDED||status_==QPERROR_INFEASIBLE) {
-            qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
-                      ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
-            obtain_status();
-            stats->qp_iter_addValue((int) nWSR);
-            if (!qp_->isSolved())
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n");
-        } else
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n");
+        handler_error(QP, stats, options);
     }
-        stats->qp_iter_addValue((int) nWSR);
 }
 
 void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                                   options) {
 
-    A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(), A_->ColNum(),
+    A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
+                 A_->ColNum(),
                  A_->RowIndex(),
                  A_->ColIndex(),
                  A_->MatVal());
@@ -156,7 +143,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
     qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
 
     if (!firstQPsolved_) {//if haven't solve any LP before then initialize the
-                         //  first qp
+        //  first qp
         qpOASES::Options qp_options;
         //setup the printlevel of qpOASES
         switch (options->qpPrintLevel) {
@@ -180,40 +167,39 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
             break;
         }
         if (DEBUG) {
-//TODO: add this part to debug
+
         }
-        qp_->setOptions(qp_options);
-        qp_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
-                  ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
-        if (qp_->isSolved())
+        solver_->setOptions(qp_options);
+        solver_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
+                      ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
+        if (solver_->isSolved())
             firstQPsolved_ = true;
         else {
             obtain_status();
-            THROW_EXCEPTION(LP_NOT_OPTIMAL,
-                            "the LP problem didn't solved to optimality\n")
+            handler_error(LP, stats, options);
         }
 
     } else {
         if (data_change_flags_.Update_H || data_change_flags_.Update_A) {
-            qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
-                          lb_->values(), ub_->values(), lbA_->values(),
-                          ubA_->values(),
-                          nWSR, 0);
+            solver_->hotstart(0, g_->values(), A_qpOASES_.get(),
+                              lb_->values(), ub_->values(), lbA_->values(),
+                              ubA_->values(),
+                              nWSR, 0);
         } else {
 
-            qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
-                          lb_->values(), ub_->values(), lbA_->values(),
-                          ubA_->values(),
-                          nWSR, 0);
-//            qp_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
+            solver_->hotstart(0, g_->values(), A_qpOASES_.get(),
+                              lb_->values(), ub_->values(), lbA_->values(),
+                              ubA_->values(),
+                              nWSR, 0);
+//            solver_->hotstart(g_->values(), lb_->values(), ub_->values(), lbA_->values(),
 //                          ubA_->values(), nWSR, 0);
 //
         }
         reset_flags();
-        if (!qp_->isSolved()) {
+        if (!solver_->isSolved()) {
             obtain_status();
-            THROW_EXCEPTION(LP_NOT_OPTIMAL,
-                            "the LP problem didn't solved to optimality\n")
+            handler_error(QP, stats, options);
+
 
         }
         stats->qp_iter_addValue((int) nWSR);
@@ -229,7 +215,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
 * sizeof(double)*(num_variable+num_constraint)
 */
 inline void qpOASESInterface::get_multipliers(double* y_k) {
-    qp_->getDualSolution(y_k);
+    solver_->getDualSolution(y_k);
 }
 
 /**
@@ -240,7 +226,7 @@ inline void qpOASESInterface::get_multipliers(double* y_k) {
  *
  */
 inline void qpOASESInterface::get_optimal_solution(double* p_k) {
-    qp_->getPrimalSolution(p_k);
+    solver_->getPrimalSolution(p_k);
 }
 
 
@@ -252,16 +238,15 @@ inline void qpOASESInterface::get_optimal_solution(double* p_k) {
 
 
 inline double qpOASESInterface::get_obj_value() {
-    return (double) (qp_->getObjVal());
+    return (double) (solver_->getObjVal());
 }
 
-
 void qpOASESInterface::obtain_status() {
-    qpOASES::QProblemStatus finalStatus = qp_->getStatus();
+    qpOASES::QProblemStatus finalStatus = solver_->getStatus();
 
-    if (qp_->isInfeasible()) {
+    if (solver_->isInfeasible()) {
         status_ = QP_INFEASIBLE;
-    } else if (qp_->isUnbounded()) {
+    } else if (solver_->isUnbounded()) {
         status_ = QP_UNBOUNDED;
     } else
         switch (finalStatus) {
@@ -410,9 +395,67 @@ void qpOASESInterface::reset_flags() {
     data_change_flags_.Update_bounds = false;
 }
 
-void qpOASESInterface::handler_error() {
+void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
+                                     shared_ptr<Options> options) {
 
+    if (qptype == LP) {
+        if (status_ == QPERROR_UNBOUNDED || status_ == QPERROR_INFEASIBLE) {
+            qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+            solver_->init(0, g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR, 0);
+            obtain_status();
+            stats->qp_iter_addValue((int) nWSR);
+            if (!solver_->isSolved()) {
+                if (DEBUG)
+                    if (PRINT_OUT_QP_WITH_ERROR) {
+                        WriteQPDataToFile("test");
+                    }
 
+                THROW_EXCEPTION(LP_NOT_OPTIMAL,
+                                "the QP problem didn't solved to optimality\n")
+            }
+        } else {
+            if (PRINT_OUT_QP_WITH_ERROR) {
+                WriteQPDataToFile("test");
+            }
+            THROW_EXCEPTION(LP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
+        }
+    } else {
+//        H_->print();
+//        A_->print();
+//        A_qpOASES_->print("A");
+//        lb_->print("lb");
+//        ub_->print("ub");
+//        lbA_->print("lbA");
+//        ubA_->print("ubA");
+//        g_->print("g");
+        if (status_ == QPERROR_UNBOUNDED || status_ == QPERROR_INFEASIBLE) {
+            qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+            solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR, 0);
+            obtain_status();
+            stats->qp_iter_addValue((int) nWSR);
+            if (!solver_->isSolved())
+                if (DEBUG) {
+                    if (PRINT_OUT_QP_WITH_ERROR) {
+                        WriteQPDataToFile("test");
+                    }
+                    THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                                    "the QP problem didn't solved to optimality\n")
+                }
+        } else {
+            if (DEBUG)
+                if (PRINT_OUT_QP_WITH_ERROR) {
+                    WriteQPDataToFile("test");
+                }
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
+        }
+    }
 }
+
 }//SQPHOTSTART
 

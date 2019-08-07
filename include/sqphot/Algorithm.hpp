@@ -343,7 +343,10 @@ private:
     bool Check_Stationarity() ;
 
 //@}
-    /* public class members */
+
+
+
+    /* private class members */
 private:
     Index nVar_; /**< number of variables*/
     Index nCon_; /**< number of constraints*/

@@ -5,7 +5,7 @@
 #include <qpOASES.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>
-#include <sqphot/QPsolverInterface.hpp>
+#include <sqphot/qpOASESInterface.hpp>
 #include <sqphot/SQPTNLP.hpp>
 
 namespace SQPhotstart {

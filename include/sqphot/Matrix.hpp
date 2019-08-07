@@ -20,13 +20,14 @@
 
 namespace SQPhotstart {
 class SpTripletMat;
+
 class Matrix {
 
 public:
 
 
     /** Default constructor*/
-    Matrix()=default;
+    Matrix() = default;
 
     /** Default destructor*/
     virtual ~Matrix() = default;
@@ -34,6 +35,7 @@ public:
     virtual void print() const = 0;
 
     virtual void print_full(const char* name = NULL) const = 0;
+
 
 //    virtual int RowNum() const = 0;
 //
@@ -49,11 +51,11 @@ public:
 
 
 private:
-        /** Copy Constructor */
-        Matrix(const Matrix&);
+    /** Copy Constructor */
+    Matrix(const Matrix&);
 
-        /** Overloaded Equals Operator */
-        void operator=(const Matrix&);
+    /** Overloaded Equals Operator */
+    void operator=(const Matrix&);
 
 
 };
@@ -98,14 +100,15 @@ public:
     /**
      * @brief print the sparse matrix in the sense form
      */
-    void print_full(const char* name =NULL) const override ;
+    void print_full(const char* name = NULL) const override;
+
     /**
      * @brief Times a matrix with a vector p, the pointer to the matrix-vector
      * product  will be stored in the class member of another Vector class object
      * called "result"
      * */
     virtual void times(std::shared_ptr<const Vector> p,
-                       std::shared_ptr<Vector> result) const ;
+                       std::shared_ptr<Vector> result) const;
 
     /**
      * @brief Times the matrix transpose with a vector p, the pointer to the matrix-vector
@@ -259,7 +262,8 @@ public:
      * @param rhs entry values(orders are not yet under permutation)
      * @param I_info the 2 identity matrices information
      */
-    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
+    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs, Identity2Info
+                           I_info);
 
     virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 
@@ -348,6 +352,36 @@ public:
     };
     //@}
 
+    void write_to_file(FILE* file_to_write, const char* const name) {
+        fprintf(file_to_write, "sparse_int_t %s_jc[] = \n{", name);
+        int i;
+        for (i = 0; i < ColNum_ + 1; i++) {
+            if (i % 10 == 0 && i > 1)
+                fprintf(file_to_write, "\n");
+            if (i == ColNum_)
+                fprintf(file_to_write, "%i};\n\n", ColIndex_[i]);
+            else
+                fprintf(file_to_write, "%i, ", ColIndex_[i]);
+        }
+        fprintf(file_to_write, "sparse_int_t %s_ir[] = \n{", name);
+        for (i = 0; i < EntryNum_; i++) {
+            if (i % 10 == 0 && i > 1)
+                fprintf(file_to_write, "\n");
+            if (i == EntryNum_ - 1)
+                fprintf(file_to_write, "%i};\n\n", RowIndex_[i]);
+            else
+                fprintf(file_to_write, "%i, ", RowIndex_[i]);
+        }
+        fprintf(file_to_write, "real_t %s_val[] = \n{", name);
+        for (i = 0; i < EntryNum_; i++) {
+            if (i % 10 == 0 && i > 1)
+                fprintf(file_to_write, "\n");
+            if (i == EntryNum_ - 1)
+                fprintf(file_to_write, "%10e};\n\n", MatVal_[i]);
+            else
+                fprintf(file_to_write, "%10e, ", MatVal_[i]);
+        }
+    }
     /**Private methods*/
 private:
 
@@ -362,6 +396,17 @@ private:
 
     /** Overloaded Equals Operator */
     void operator=(const qpOASESSparseMat&);
+
+    void set_zero() {
+        for (int i = 0; i < EntryNum_; i++) {
+            MatVal_[i] = 0;
+            RowIndex_[i] = 0;
+            order_[i] = i;
+        }
+        for (int i = 0; i < ColNum_ + 1; i++) {
+            ColIndex_[i] = 0;
+        }
+    }
 
     /**
      * This is part of qpOASESMatrixAdapter

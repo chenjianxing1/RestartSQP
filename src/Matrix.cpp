@@ -57,15 +57,16 @@ void SpTripletMat::print_full(const char* name) const {
     }
     auto dense_matrix = new double[RowNum_ * ColNum_]();
 
-    for(int i = 0; i < EntryNum_; i++) {
-        dense_matrix[ColNum_*(RowIndex_[i]-1)+ColIndex_[i]-1] = MatVal_[i];
-        if(isSymmetric_&& RowIndex_[i]!=ColIndex_[i])
-            dense_matrix[ColNum_*(ColIndex_[i]-1)+RowIndex_[i]-1] = MatVal_[i];
+    for (int i = 0; i < EntryNum_; i++) {
+        dense_matrix[ColNum_ * (RowIndex_[i] - 1) + ColIndex_[i] - 1] = MatVal_[i];
+        if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
+            dense_matrix[ColNum_ * (ColIndex_[i] - 1) + RowIndex_[i] -
+                         1] = MatVal_[i];
     }
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-            printf( "%10f  ", dense_matrix[i * ColNum_ + j]);
+            printf("%10f  ", dense_matrix[i * ColNum_ + j]);
         }
         std::cout << std::endl;
     }
@@ -129,8 +130,8 @@ void SpTripletMat::times(std::shared_ptr<const Vector> p,
 double SpTripletMat::InfNorm() {
     //TODO: test it!
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
-    for(int i = 0; i<EntryNum_; i++) {
-        rowSums->addNumberAt(RowIndex()[i]-1,abs(MatVal_[i]));
+    for (int i = 0; i < EntryNum_; i++) {
+        rowSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
     }
 
     double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
@@ -142,8 +143,8 @@ double SpTripletMat::InfNorm() {
 double SpTripletMat::OneNorm() {
 
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
-    for(int i = 0; i<EntryNum_; i++) {
-        colSums->addNumberAt(ColIndex()[i]-1,abs(MatVal_[i]));
+    for (int i = 0; i < EntryNum_; i++) {
+        colSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
     }
 
     double OneNorm = colSums->getInfNorm();//same as calculating the MAX of an array
@@ -276,6 +277,7 @@ qpOASESSparseMat::~qpOASESSparseMat() {
  */
 void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                                     Identity2Info I_info) {
+    set_zero();
     assert(isInitialised_ == false);
     int counter = 0; // the counter for recording the index location
     std::vector<std::tuple<int, int, int>> sorted_index_info;
@@ -301,29 +303,24 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),
               tuple_sort_rule);
+//        rhs->print();
     //copy the order information back
-
     for (int i = 0; i < EntryNum_; i++) {
         RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
         order_[i] = std::get<2>(sorted_index_info[i]);
-        if (i < EntryNum_ - 1) {
-            if (std::get<1>(sorted_index_info[i]) <
-                    std::get<1>(sorted_index_info[i + 1])) {
-                ColIndex_[std::get<1>(sorted_index_info[i])] = i + 1;
-            }
+//            if (i < EntryNum_ - 1) {
+//                if (std::get<1>(sorted_index_info[i]) < std::get<1>(sorted_index_info[i +
+//                                                                                      1])) {
+        for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
+            ColIndex_[j]++;
         }
-
-        int j = ColNum_;
-        while (j > 1 && ColIndex_[j] == 0) {
-            ColIndex_[j] = EntryNum_;
-            if (ColIndex_[j - 1] == EntryNum_)
-                break;
-            else
-                j--;
-
-        }
+//                }
+//            }
     }
+//        print();
+    ColIndex_[ColNum_] = EntryNum_;
     sorted_index_info.clear();
+
 }
 
 
@@ -339,6 +336,7 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 *
 */
 void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
+    set_zero();
     assert(isInitialised_ == false);
     int counter = 0; // the counter for recording the index location
     std::vector<std::tuple<int, int, int>> sorted_index_info;
@@ -396,7 +394,6 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
         }
     }
-
     sorted_index_info.clear();
 }
 
@@ -408,8 +405,7 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
  * @param I_info the 2 identity matrices information
  */
 void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
-                                 Identity2Info I_info) {
-    //adding the value to the matrix
+                                 Identity2Info I_info) {                       //adding the value to the matrix
     if (isInitialised_ == false) {
         for (int i = 0; i < I_info.size; i++) {
             MatVal_[EntryNum_ - i - 1] = -1;
