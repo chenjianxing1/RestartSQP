@@ -32,7 +32,7 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype) :
+qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype):
     status_(UNSOLVED) {
     allocate(nlp_index_info, qptype);
 }
@@ -72,7 +72,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     }
     qpOASES::int_t nWSR = options->qp_maxiter;
 
-    if (!firstQPsolved) {//if haven't solve any QP before then initialize the first QP
+    if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
         qpOASES::Options qp_options;
 	    qp_options.setToReliable();
         //setup the printlevel of q
@@ -103,15 +103,15 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                   ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
         if (qp_->isSolved())
-            firstQPsolved = true;
+            firstQPsolved_ = true;
         else {
-            get_status();
+            obtain_status();
 
             THROW_EXCEPTION(QP_NOT_OPTIMAL,
                             "the QP problem didn't solved to optimality\n")
 
         }
-    } else if (data_change_flags.Update_H || data_change_flags.Update_A) {
+    } else if (data_change_flags_.Update_H || data_change_flags_.Update_A) {
         qp_->hotstart(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                       lb_->values(), ub_->values(), lbA_->values(),
                       ubA_->values(),
@@ -128,11 +128,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     reset_flags();
 
     if (!qp_->isSolved()) {
-        get_status();
+        //TODO:create another method for handling errors
+        obtain_status();
         if (status_ == QPERROR_UNBOUNDED||status_==QPERROR_INFEASIBLE) {
             qp_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
-            get_status();
+            obtain_status();
+            stats->qp_iter_addValue((int) nWSR);
             if (!qp_->isSolved())
                 THROW_EXCEPTION(QP_NOT_OPTIMAL,
                                 "the QP problem didn't solved to optimality\n");
@@ -140,7 +142,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
             THROW_EXCEPTION(QP_NOT_OPTIMAL,
                             "the QP problem didn't solved to optimality\n");
     }
-    stats->qp_iter_addValue((int) nWSR);
+        stats->qp_iter_addValue((int) nWSR);
 }
 
 void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
@@ -153,8 +155,8 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
 
     qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
 
-    if (!firstQPsolved) {//if haven't solve any LP before then initialize the
-        //  first qp
+    if (!firstQPsolved_) {//if haven't solve any LP before then initialize the
+                         //  first qp
         qpOASES::Options qp_options;
         //setup the printlevel of qpOASES
         switch (options->qpPrintLevel) {
@@ -184,15 +186,15 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         qp_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
                   ub_->values(), lbA_->values(), ubA_->values(), nWSR, 0);
         if (qp_->isSolved())
-            firstQPsolved = true;
+            firstQPsolved_ = true;
         else {
-            get_status();
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+            obtain_status();
+            THROW_EXCEPTION(LP_NOT_OPTIMAL,
                             "the LP problem didn't solved to optimality\n")
         }
 
     } else {
-        if (data_change_flags.Update_H || data_change_flags.Update_A) {
+        if (data_change_flags_.Update_H || data_change_flags_.Update_A) {
             qp_->hotstart(0, g_->values(), A_qpOASES_.get(),
                           lb_->values(), ub_->values(), lbA_->values(),
                           ubA_->values(),
@@ -209,8 +211,8 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         }
         reset_flags();
         if (!qp_->isSolved()) {
-            get_status();
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+            obtain_status();
+            THROW_EXCEPTION(LP_NOT_OPTIMAL,
                             "the LP problem didn't solved to optimality\n")
 
         }
@@ -254,7 +256,7 @@ inline double qpOASESInterface::get_obj_value() {
 }
 
 
-void qpOASESInterface::get_status() {
+void qpOASESInterface::obtain_status() {
     qpOASES::QProblemStatus finalStatus = qp_->getStatus();
 
     if (qp_->isInfeasible()) {
@@ -268,59 +270,53 @@ void qpOASESInterface::get_status() {
             break;
         case qpOASES::QPS_PREPARINGAUXILIARYQP:
             status_ = QP_PREPARINGAUXILIARYQP;
-//                    printf("QPS_PREPARINGAUXILIARYQP\n");
             break;
         case qpOASES::QPS_AUXILIARYQPSOLVED:
             status_ = QP_AUXILIARYQPSOLVED;
-//                    printf( "QPS_AUXILIARYQPSOLVED\n");
             break;
         case qpOASES::QPS_PERFORMINGHOMOTOPY:
             status_ = QP_PERFORMINGHOMOTOPY;
-//                    printf( "QPS_PERFORMINGHOMOTOPY\n");
             break;
         case qpOASES::QPS_HOMOTOPYQPSOLVED:
             status_ = QP_HOMOTOPYQPSOLVED;
-//                    printf("QPS_HOMOTOPYQPSOLVED\n");
             break;
         }
 
-
-    ;
 }
 
 
-QPReturnType qpOASESInterface::getStatus() {
+QPReturnType qpOASESInterface::get_status() {
     return status_;
 }
 
 //@}
 void qpOASESInterface::set_lb(int location, double value) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     lb_->setValueAt(location, value);
 }
 
 void qpOASESInterface::set_ub(int location, double value) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     ub_->setValueAt(location, value);
 }
 
 void qpOASESInterface::set_lbA(int location, double value) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     lbA_->setValueAt(location, value);
 }
 
 void qpOASESInterface::set_ubA(int location, double value) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     ubA_->setValueAt(location, value);
 }
 
 void qpOASESInterface::set_g(int location, double value) {
-    if (firstQPsolved && !data_change_flags.Update_g)
-        data_change_flags.Update_g = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_g)
+        data_change_flags_.Update_g = true;
     g_->setValueAt(location, value);
 }
 
@@ -329,8 +325,8 @@ void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 }
 
 void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_H)
-        data_change_flags.Update_H = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_H)
+        data_change_flags_.Update_H = true;
     H_->setMatVal(rhs);
 }
 
@@ -342,42 +338,42 @@ void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
 void qpOASESInterface::set_A_values(
     shared_ptr<const SQPhotstart::SpTripletMat> rhs, Identity2Info I_info) {
 
-    if (firstQPsolved && !data_change_flags.Update_A)
-        data_change_flags.Update_A = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_A)
+        data_change_flags_.Update_A = true;
 
     A_->setMatVal(rhs, I_info);
 }
 
 void qpOASESInterface::set_ub(shared_ptr<const Vector> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     ub_->copy_vector(rhs->values());
 }
 
 void qpOASESInterface::set_lb(shared_ptr<const Vector> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     lb_->copy_vector(rhs->values());
 
 }
 
 void qpOASESInterface::set_lbA(shared_ptr<const Vector> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     lbA_->copy_vector(rhs->values());
 
 }
 
 void qpOASESInterface::set_ubA(shared_ptr<const Vector> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_bounds)
-        data_change_flags.Update_bounds = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_bounds)
+        data_change_flags_.Update_bounds = true;
     ubA_->copy_vector(rhs->values());
 
 }
 
 void qpOASESInterface::set_g(shared_ptr<const Vector> rhs) {
-    if (firstQPsolved && !data_change_flags.Update_g)
-        data_change_flags.Update_g = true;
+    if (firstQPsolved_ && !data_change_flags_.Update_g)
+        data_change_flags_.Update_g = true;
     g_->copy_vector(rhs->values());
 }
 
@@ -406,12 +402,17 @@ const shared_ptr<Vector>& qpOASESInterface::getG() const {
 #endif
 
 void qpOASESInterface::reset_flags() {
-    data_change_flags.Update_A = false;
-    data_change_flags.Update_delta = false;
-    data_change_flags.Update_H = false;
-    data_change_flags.Update_penalty = false;
-    data_change_flags.Update_g = false;
-    data_change_flags.Update_bounds = false;
+    data_change_flags_.Update_A = false;
+    data_change_flags_.Update_delta = false;
+    data_change_flags_.Update_H = false;
+    data_change_flags_.Update_penalty = false;
+    data_change_flags_.Update_g = false;
+    data_change_flags_.Update_bounds = false;
+}
+
+void qpOASESInterface::handler_error() {
+
+
 }
 }//SQPHOTSTART
 

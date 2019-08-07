@@ -180,7 +180,7 @@ public:
 
 
     inline QPReturnType GetStatus() {
-        return (solverInterface_->getStatus());
+        return (solverInterface_->get_status());
     }
 
 private:

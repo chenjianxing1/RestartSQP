@@ -109,7 +109,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         }
     }
 
-//check if the current iterates getStatus before exiting
+//check if the current iterates get_status before exiting
     if (stats_->iter == options->iter_max)
         exitflag_ = EXCEED_MAX_ITER;
 
@@ -553,8 +553,8 @@ void Algorithm::update_penalty_parameter() {
             try {
                 myLP_->solveLP(stats_, options);
             }
-            catch (QP_NOT_OPTIMAL) {
-                handle_error("QP NOT OPTIMAL");
+            catch (LP_NOT_OPTIMAL) {
+                handle_error("LP NOT OPTIMAL");
             }//TODO: change it to LP not optimal
 
             shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
@@ -823,7 +823,8 @@ void Algorithm::second_order_correction() {
 
 void Algorithm::handle_error(const char* error) {
     if (error != NULL) {
-        if (error == "QP NOT OPTIMAL") {
+        //TODO: modify this part
+        if (error == "QP NOT OPTIMAL"||error=="LP NOT OPTIMAL") {
             switch (myQP_->GetStatus()) {
             case QP_INFEASIBLE:
                 exitflag_ = QPERROR_INFEASIBLE;

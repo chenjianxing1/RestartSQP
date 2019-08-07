@@ -126,7 +126,7 @@ void SpTripletMat::times(std::shared_ptr<const Vector> p,
 }
 
 
-double SpTripletMat::infnorm() {
+double SpTripletMat::InfNorm() {
     //TODO: test it!
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     for(int i = 0; i<EntryNum_; i++) {
@@ -139,7 +139,7 @@ double SpTripletMat::infnorm() {
 }
 
 
-double SpTripletMat::onenorm() {
+double SpTripletMat::OneNorm() {
 
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     for(int i = 0; i<EntryNum_; i++) {

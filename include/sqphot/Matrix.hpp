@@ -49,6 +49,11 @@ public:
 
 
 private:
+        /** Copy Constructor */
+        Matrix(const Matrix&);
+
+        /** Overloaded Equals Operator */
+        void operator=(const Matrix&);
 
 
 };
@@ -59,10 +64,8 @@ typedef struct {
     int irow1 = 0;
     int jcol1 = 0;
     int size = 0;
-    double scaling_factor1 = 1.0;
     int irow2 = 0;
     int jcol2 = 0;
-    double scaling_factor2 = -1.0;
 } Identity2Info;
 
 /**
@@ -117,14 +120,14 @@ public:
      *
      * @return the calculated one-norm
      */
-    double onenorm();
+    double OneNorm();
 
     /**
      * @brief calculate the infinity norm of the matrix
      *
      * @return the calculated inf-norm
      */
-    double infnorm();;
+    double InfNorm();
 
     /**
      *@brief make a deep copy of a matrix information
@@ -202,6 +205,7 @@ private:
 
     /** Overloaded Equals Operator */
     void operator=(const SpTripletMat&);
+
     /** Private Class Members*/
 
 
@@ -274,9 +278,6 @@ public:
     void setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
 
     void setStructure(std::shared_ptr<const SpTripletMat> rhs);
-
-
-    void updateMatVal(const double* MatVal) {}
 
     /**
      * @brief print the matrix information
