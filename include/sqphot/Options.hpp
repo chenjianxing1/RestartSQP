@@ -47,11 +47,11 @@ public:
     double gamma_e;
     double delta;
     double delta_max;
+    double delta_min;
     //@}
 
     /** optimality test parameters */
     //@{
-    TestOption testOption_NLP;
     bool auto_gen_tol = false;
     double active_set_tol;
     double opt_tol;
@@ -63,7 +63,7 @@ public:
 
     /**QPsolver options */
     //@{
-    TestOption testOption_QP;
+
     int qp_maxiter;
     int lp_maxiter;
     int qpPrintLevel;

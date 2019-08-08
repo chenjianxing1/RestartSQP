@@ -116,6 +116,15 @@ public:
             printf("Exitflag:                                                   %23s\n",
                    "QPERROR_HOMOTOPYQPSOLVED");
             break;
+        case TRUST_REGION_TOO_SMALL:
+            printf("Exitflag:                                                   %23s\n",
+                   "TRUST_REGION_TOO_SMALL");
+            break;
+            
+        case STEP_LARGER_THAN_TRUST_REGION:
+            printf("Exitflag:                                                   %23s\n",
+                   "STEP_LARGER_THAN_TRUST_REGION");
+            break;
         case UNKNOWN :
             printf("Exitflag:                                                   %23s\n",
                    "UNKNOWN ERROR");

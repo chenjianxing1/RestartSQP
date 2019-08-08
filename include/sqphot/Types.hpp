@@ -10,17 +10,17 @@
 /* Declaration of all non-built in types (except for classes) */
 namespace SQPhotstart {
 
-
-enum TestOption {
-    NO_TEST = -99,
-    TEST_1ST_ORDER = 1,
-    TEST_2ND_ORDER = 2,
-    TEST_STATIONARITY = -1,
-    TEST_COMPLEMENTARITY = -2,
-    TEST_FEASIBILITY = -3,
-    TEST_DUAL_FEASIBILITY = -4,
-    TEST_ALL = 0
-};
+//
+//enum TestOption {
+//    NO_TEST = -99,
+//    TEST_1ST_ORDER = 1,
+//    TEST_2ND_ORDER = 2,
+//    TEST_STATIONARITY = -1,
+//    TEST_COMPLEMENTARITY = -2,
+//    TEST_FEASIBILITY = -3,
+//    TEST_DUAL_FEASIBILITY = -4,
+//    TEST_ALL = 0
+//};
 
 enum QPReturnType {
     UNSOLVED = -99,
@@ -45,19 +45,21 @@ enum QPType {
 
 
 enum Exitflag {
-    OPTIMAL = 0,
-    INVALID_NLP = 3,
-    CONVERGE_TO_NONOPTIMAL = 2,
-    EXCEED_MAX_ITER = 1,//exceeds the maximum number of iteration
-    QPERROR_INTERNAL_ERROR = -1,//QP solver internal error
-    QPERROR_INFEASIBLE = -2,//QP solver error: conclude QP formulation infeasible
-    QPERROR_UNBOUNDED = -3, //QP solver error: unbounded QP
-    QPERROR_EXCEED_MAX_ITER = -4,//QP solver error: Exceed maximum iteration,
-    QPERROR_NOTINITIALISED = -5,
-    QPERROR_PREPARINGAUXILIARYQP = -6,
-    QPERROR_AUXILIARYQPSOLVED = -7,
-    QPERROR_PERFORMINGHOMOTOPY = -8,
-    QPERROR_HOMOTOPYQPSOLVED = -9,
+    OPTIMAL ,
+    INVALID_NLP ,
+    CONVERGE_TO_NONOPTIMAL ,
+    EXCEED_MAX_ITER ,//exceeds the maximum number of iteration
+    QPERROR_INTERNAL_ERROR ,//QP solver internal error
+    QPERROR_INFEASIBLE,//QP solver error: conclude QP formulation infeasible
+    QPERROR_UNBOUNDED , //QP solver error: unbounded QP
+    QPERROR_EXCEED_MAX_ITER ,//QP solver error: Exceed maximum iteration,
+    QPERROR_NOTINITIALISED ,
+    QPERROR_PREPARINGAUXILIARYQP, 
+    QPERROR_AUXILIARYQPSOLVED, 
+    QPERROR_PERFORMINGHOMOTOPY, 
+    QPERROR_HOMOTOPYQPSOLVED,
+    TRUST_REGION_TOO_SMALL,
+    STEP_LARGER_THAN_TRUST_REGION,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.
     UNKNOWN = -99//unknown error
 };

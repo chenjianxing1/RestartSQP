@@ -30,8 +30,8 @@ int Options::setToDefault() {
     gamma_c = 0.5;
     gamma_e = 2;
     delta = 1;
+    delta_min = 1.0e-16;
     delta_max = 1.0e10;
-    testOption_NLP = TEST_ALL;
     active_set_tol = 1.0e-5;
     opt_tol = 1.0e-3;
     opt_compl_tol = 1.0e-4;
