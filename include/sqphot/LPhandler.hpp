@@ -1,14 +1,13 @@
 #ifndef SQPHOTSTART_LPHANDLER_HPP_
 #define SQPHOTSTART_LPHANDLER_HPP_
 
-#include <sqphot/QPhandler.hpp>
-#include <sqphot/Utils.hpp>
 #include <qpOASES.hpp>
-#include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>
-#include <sqphot/qpOASESInterface.hpp>
-
+#include <sqphot/QPhandler.hpp>
 #include <sqphot/SQPTNLP.hpp>
+#include <sqphot/Stats.hpp>
+#include <sqphot/Utils.hpp>
+#include <sqphot/qpOASESInterface.hpp>
 
 namespace SQPhotstart {
 /**
@@ -36,7 +35,13 @@ namespace SQPhotstart {
  */
 
 class LPhandler : public QPhandler {
+
+    ///////////////////////////////////////////////////////////
+    //                      PUBLIC METHODS                   //
+    ///////////////////////////////////////////////////////////
+
 public:
+
     LPhandler(Index_info nlp_info);
 
     /** Default destructor */
@@ -99,6 +104,10 @@ public:
     void solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
 
+    ///////////////////////////////////////////////////////////
+    //                      PRIVATE METHODS                  //
+    ///////////////////////////////////////////////////////////
+
 private:
     /**
      * @brief allocate memory to class members except QP objects
@@ -113,9 +122,13 @@ private:
 
     /** Overloaded Equals Operator */
     void operator=(const LPhandler &);
-    //@}
 
-    /**public class member*/
+
+
+
+    ///////////////////////////////////////////////////////////
+    //                      PRIVATE METHOD                   //
+    ///////////////////////////////////////////////////////////
 
     /** QP problem will be in the following form
      * min 1/2x^T H x+ g^Tx
@@ -123,14 +136,13 @@ private:
      *      lb  <=   x <= ub.
      *
      */
-
 private:
-    //bounds that can be represented as vectors
 
+    //bounds that can be represented as vectors
     Identity2Info I_info_A;
     Index_info nlp_info_;
-    shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
     bool isAinitialised = false;//TODO: delete it later
+    shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
 };
 
 

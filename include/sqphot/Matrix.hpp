@@ -7,22 +7,29 @@
 #ifndef SQPHOTSTART_MATRIX_HPP_
 #define SQPHOTSTART_MATRIX_HPP_
 
+#include <algorithm>
+#include <cassert>
+#include <math.h>
+#include <memory>
+#include <qpOASES.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Vector.hpp>
-#include <math.h>
-#include <algorithm>
-#include <vector>
-#include <memory>
 #include <tuple>
-#include <cassert>
-#include <qpOASES.hpp>
-
+#include <vector>
 
 namespace SQPhotstart {
 class SpTripletMat;
 
+/**
+ *@brief
+ * This is a virtual base class...
+ *
+ */
 class Matrix {
 
+///////////////////////////////////////////////////////////
+//                     PUBLIC  METHODS                   //
+///////////////////////////////////////////////////////////
 public:
 
 
@@ -32,23 +39,19 @@ public:
     /** Default destructor*/
     virtual ~Matrix() = default;
 
+//    virtual double* MatVal() = 0;
+//    virtual int ColNum() const = 0;
+//    virtual int RowNum() const = 0;
+//    virtual int* ColIndex() = 0;
+//    virtual int* RowIndex() = 0;
+//
     virtual void print() const = 0;
 
     virtual void print_full(const char* name = NULL) const = 0;
 
-
-//    virtual int RowNum() const = 0;
-//
-//    virtual int ColNum() const = 0;
-//
-//    virtual int* RowIndex() = 0;
-//
-//    virtual int* ColIndex() = 0;
-//
-//    virtual double* MatVal() = 0;
-//
-//    virtual void setStructure(std::shared_ptr<const SpTripletMat> rhs) = 0;
-
+///////////////////////////////////////////////////////////
+//                     PRIVATE  METHODS                  //
+///////////////////////////////////////////////////////////
 
 private:
     /** Copy Constructor */
@@ -57,8 +60,9 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const Matrix&);
 
-
 };
+
+/** Forward Declaration*/
 
 class qpOASESSparseMat;
 
@@ -138,7 +142,8 @@ public:
     virtual void copy(std::shared_ptr<const SpTripletMat> rhs);;
 
 
-    /**Extract Matrix info*/
+    /**@name Extract Matrix info*/
+    //@{
     inline int ColNum() const {
         return ColNum_;
     }
@@ -189,12 +194,16 @@ public:
 
     bool isSymmetric() const;
 
-    inline void setOrderAt(int location, int order_to_assign);
+    //@}
 
     inline void setMatValAt(int location, int value_to_assign);
 
+    inline void setOrderAt(int location, int order_to_assign);
 
-    /** Private Method */
+
+///////////////////////////////////////////////////////////
+//                     PRIVATE  METHODS                  //
+///////////////////////////////////////////////////////////
 private:
     /** Default constructor*/
 
@@ -209,19 +218,21 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const SpTripletMat&);
 
-    /** Private Class Members*/
 
+///////////////////////////////////////////////////////////
+//                     PRIVATE  MEMBERS                  //
+///////////////////////////////////////////////////////////
 
 private:
+    bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal data will
+                        only be stored for once*/
     double* MatVal_;  /**< the entry data of a matrix */
-    int* order_;    /**< the corresponding original position of a matrix entry */
-    int* RowIndex_;/**< the row number of a matrix entry */
-    int* ColIndex_;/**< the column number of a matrix entry */
     int ColNum_;    /**< the number columns of a matrix */
-    int RowNum_;    /**< the number of rows of a matrix */
     int EntryNum_;  /**< number of non-zero entries in  matrix */
-    bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal data
-                             * will only be stored for once*/
+    int RowNum_;    /**< the number of rows of a matrix */
+    int* ColIndex_;/**< the column number of a matrix entry */
+    int* RowIndex_;/**< the row number of a matrix entry */
+    int* order_;    /**< the corresponding original position of a matrix entry */
 
 };
 
@@ -382,7 +393,11 @@ public:
                 fprintf(file_to_write, "%10e, ", MatVal_[i]);
         }
     }
-    /**Private methods*/
+
+///////////////////////////////////////////////////////////
+//                     PRIVATE  METHODS                  //
+///////////////////////////////////////////////////////////
+
 private:
 
     /**Default constructor*/
@@ -424,18 +439,20 @@ private:
         }
     }
 
-    /** Private members*/
 
+///////////////////////////////////////////////////////////
+//                     PRIVATE  MEMBERS                  //
+///////////////////////////////////////////////////////////
 private:
-    qpOASES::sparse_int_t* RowIndex_;
-    qpOASES::sparse_int_t* ColIndex_;
-    qpOASES::real_t* MatVal_;
-    int* order_;
-    int RowNum_;
-    int ColNum_;
-    int EntryNum_;
     bool isInitialised_;
     bool isSymmetric_;
+    int ColNum_;
+    int EntryNum_;
+    int RowNum_;
+    int* order_;
+    qpOASES::real_t* MatVal_;
+    qpOASES::sparse_int_t* ColIndex_;
+    qpOASES::sparse_int_t* RowIndex_;
 };
 
 

@@ -39,6 +39,9 @@ namespace SQPhotstart {
  *
  */
 class Algorithm {
+    ///////////////////////////////////////////////////////////
+    //                      PUBLIC METHODS                   //
+    ///////////////////////////////////////////////////////////
 public:
     /** @name constructor/destructor*/
     //@{
@@ -75,14 +78,23 @@ public:
      */
     virtual void Optimize(SmartPtr<Ipopt::TNLP> nlp);
 
+    /**
+     * @brief ReOptimize a problem by hotstarting from the old optimal solution
+     *
+     * TO BE IMPLEMENTED
+     */
+
+    virtual void ReOptimize(SmartPtr<Ipopt::TNLP> nlp) {}
+
+
     /** @name Set the corresponding option to the user-defined value */
     //@{
     template<typename T>
     bool setOptions(const std::string& name, T value) {
         return false;
     };
-//@}
-//
+    //@}
+
     /** @name Getters*/
     //@{
     inline Exitflag getExitFlag() {
@@ -98,7 +110,10 @@ public:
     };
 
     //@}
-    /* Private methods*/
+
+    ///////////////////////////////////////////////////////////
+    //                      PRIVATE METHODS                  //
+    ///////////////////////////////////////////////////////////
 private:
 
     /** Copy Constructor */
@@ -210,7 +225,6 @@ private:
 
 
     /**@name Get the search direction from the LP/QP handler*/
-
     //@{
     /**
      * @brief This function extracts the search direction for NLP from the QP subproblem
@@ -247,19 +261,19 @@ private:
     //@}
 
     /**
-    * @brief This function will set up the data for the QP subproblem
-    *
-    * It will initialize all the data at once at the beginning of the Algorithm. After
-    * that, the data in the QP problem will be updated according to the class
-    * member QPinfoFlag_
-    */
-
+     * @brief This function will set up the data for the QP subproblem
+     *
+     * It will initialize all the data at once at the beginning of the Algorithm. After
+     * that, the data in the QP problem will be updated according to the class
+     * member QPinfoFlag_
+     */
 
     void setupQP();
 
     /**
      * @brief This function will setup the data for the LP subproblem
      */
+
     void setupLP();
     /**
      * @brief This function extracts the Lagragian multipliers for constraints
@@ -302,21 +316,26 @@ private:
      */
     void classify_constraints_types();
 
+
     void handle_error(const char* error = NULL);
 
 
     /** @name Optimality Test */
-//@{
+    //@{
     void IdentifyActiveSet();
 
-    bool Check_KKTConditions(double infea_measure = INF,
-                             bool isConstraintChanged = false,
-                             bool isPointChanged = false) ;
+    /**
+     * @brief
+     * @param infea_measure
+     * @param isConstraintChanged
+     * @param isPointChanged
+     * @return
+     */
+    bool Check_KKTConditions(double infea_measure);
 
     /**
      * @brief Test the Second-order optimality conditions
      */
-//    bool Check_SecondOrder() ;
 
     /**
      * @brief Check the Feasibility conditions;
@@ -342,68 +361,64 @@ private:
      */
     bool Check_Stationarity() ;
 
-//@}
+    //@}
 
 
-
-    /* private class members */
+    ///////////////////////////////////////////////////////////
+    //              PRIVATE CLASS MEMBERS                    //
+    ///////////////////////////////////////////////////////////
 private:
-    Index nVar_; /**< number of variables*/
+
+    ConstraintType* bound_cons_type_;/**< the variables type, it can be either
+                                               *bounded, bounded above,bounded below, or
+                                               *unbounded*/
+    ConstraintType* cons_type_; /**<the constraints type, it can be either
+                                          *bounded,bounded above,bounded below, or unbounded*/
+    Exitflag exitflag_ = UNKNOWN;
     Index nCon_; /**< number of constraints*/
-    shared_ptr<SQPTNLP> nlp_;
-    shared_ptr<Vector> multiplier_cons_;/**< multiplier for constraints*/
-    shared_ptr<Vector> multiplier_vars_;/**< multipliers for variables*/
-    shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
+    Index nVar_; /**< number of variables*/
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+    Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
+    Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions;
+    Number actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
+    Number delta_;/**< trust-region radius*/
     Number infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
     Number infea_measure_model_; /**< the one norm of all slack variables in the QP */
-    Number obj_value_;/**<the objective corresponding to the x_k*/
-    shared_ptr<Vector> x_k_; /**< current iterate point*/
-    shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
-
-    Number infea_measure_trial_;/**< the measure of infeasibility evaluated at
-                                     * x_trial*/
-    Number obj_value_trial_;/**<the objective corresponding to the x_trial*/
-    Number qp_obj_;/**< the objective value of current qp*/
-    shared_ptr<Vector> x_trial_;/**< the trial point from the search direction,
-                                     * x_trial = x_k+p_k*/
-    shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
-
-    shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
-    shared_ptr<Vector> c_u_; /* the upper constraints vector*/
-    shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
-    shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
-    shared_ptr<Vector> p_k_; /* search direction at x_k*/
-    shared_ptr<SpTripletMat> hessian_;/**< the SparseMatrix object for hessain of
-                                       * f(x)-sum_{i=1}^m lambda_i c_i(x)*/
-    shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian from
-                                        * c(x)*/
-    ConstraintType* cons_type_; /**<the constraints type, it can be either bounded,
-                                     * bounded above,bounded below, or unbounded*/
-    ConstraintType* bound_cons_type_;/**< the variables type, it can be either
-                                          * bounded, bounded above,bounded below, or
-                                          * unbounded*/
-    shared_ptr<Options> options;/**< the default options used for now. */
-    Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions; /**FIXME put here for testing.
-                                                             it will replace options in
-                                                             the future*/
-    Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    shared_ptr<Stats> stats_;
-    shared_ptr<QPhandler> myQP_;
-    shared_ptr<LPhandler> myLP_;
-    shared_ptr<Log> log_;
+    Number infea_measure_trial_;/**< the measure of infeasibility evaluated at x_trial*/
     Number norm_p_k_;/**< the infinity norm of p_k*/
-    Number delta_;/**< trust-region radius*/
-    Number rho_; /**< penalty parameter*/
+    Number obj_value_;/**<the objective corresponding to the x_k*/
+    Number obj_value_trial_;/**<the objective corresponding to the x_trial*/
     Number pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
-    Number actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
+    Number qp_obj_;/**< the objective value of current qp*/
+    Number rho_; /**< penalty parameter*/
+    OptimalityStatus opt_status_;
+    UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
+    bool isaccept_; // is the new point accepted?
     int* Active_Set_bounds_;
     int* Active_Set_constraints_;
-
-    Exitflag exitflag_ = UNKNOWN;
-    OptimalityStatus opt_status_;
-    bool isaccept_; // is the new point accepted?
-    UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
+    shared_ptr<LPhandler> myLP_;
+    shared_ptr<Log> log_;
+    shared_ptr<Options> options_;/**< the default options used for now. */
+    shared_ptr<QPhandler> myQP_;
+    shared_ptr<SQPTNLP> nlp_;
+    shared_ptr<SpTripletMat> hessian_;/**< the SparseMatrix object for hessain
+                                                *of  f(x)-sum_{i=1}^m lambda_i c_i(x)*/
+    shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian
+                                                 *from c(x)*/
+    shared_ptr<Stats> stats_;
+    shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
+    shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
+    shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
+    shared_ptr<Vector> c_u_; /* the upper constraints vector*/
+    shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
+    shared_ptr<Vector> multiplier_cons_;/**< multiplier for constraints*/
+    shared_ptr<Vector> multiplier_vars_;/**< multipliers for variables*/
+    shared_ptr<Vector> p_k_; /* search direction at x_k*/
+    shared_ptr<Vector> x_k_; /**< current iterate point*/
+    shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
+    shared_ptr<Vector> x_trial_;/**< the trial point from the search direction
+                                          *x_trial = x_k+p_k*/
+    shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
 };//END_OF_ALG_CLASS
 
 

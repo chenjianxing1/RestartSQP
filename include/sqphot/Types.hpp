@@ -45,18 +45,18 @@ enum QPType {
 
 
 enum Exitflag {
-    OPTIMAL ,
-    INVALID_NLP ,
-    CONVERGE_TO_NONOPTIMAL ,
-    EXCEED_MAX_ITER ,//exceeds the maximum number of iteration
-    QPERROR_INTERNAL_ERROR ,//QP solver internal error
+    OPTIMAL,
+    INVALID_NLP,
+    CONVERGE_TO_NONOPTIMAL,
+    EXCEED_MAX_ITER, //exceeds the maximum number of iteration
+    QPERROR_INTERNAL_ERROR, //QP solver internal error
     QPERROR_INFEASIBLE,//QP solver error: conclude QP formulation infeasible
-    QPERROR_UNBOUNDED , //QP solver error: unbounded QP
-    QPERROR_EXCEED_MAX_ITER ,//QP solver error: Exceed maximum iteration,
-    QPERROR_NOTINITIALISED ,
-    QPERROR_PREPARINGAUXILIARYQP, 
-    QPERROR_AUXILIARYQPSOLVED, 
-    QPERROR_PERFORMINGHOMOTOPY, 
+    QPERROR_UNBOUNDED,  //QP solver error: unbounded QP
+    QPERROR_EXCEED_MAX_ITER, //QP solver error: Exceed maximum iteration,
+    QPERROR_NOTINITIALISED,
+    QPERROR_PREPARINGAUXILIARYQP,
+    QPERROR_AUXILIARYQPSOLVED,
+    QPERROR_PERFORMINGHOMOTOPY,
     QPERROR_HOMOTOPYQPSOLVED,
     TRUST_REGION_TOO_SMALL,
     STEP_LARGER_THAN_TRUST_REGION,

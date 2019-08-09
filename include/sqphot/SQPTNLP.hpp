@@ -42,7 +42,7 @@ public:
 
     /*
      * @brief Get the starting point from the NLP object.
-     * TODO: add options to enable user to choose if to use default input or not
+     * TODO: add options_ to enable user to choose if to use default input or not
      */
     virtual bool
     Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0);

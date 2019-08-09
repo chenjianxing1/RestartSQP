@@ -120,7 +120,7 @@ public:
             printf("Exitflag:                                                   %23s\n",
                    "TRUST_REGION_TOO_SMALL");
             break;
-            
+
         case STEP_LARGER_THAN_TRUST_REGION:
             printf("Exitflag:                                                   %23s\n",
                    "STEP_LARGER_THAN_TRUST_REGION");

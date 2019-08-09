@@ -47,6 +47,7 @@ int Options::setToDefault() {
     rho_max = 1.0e8;
     penalty_iter_max = 200;
     eps1 = 0.3;
+    eps1_change_parm = 0.1;
     eps2 = 1.0e-6;
     EnablePertubation = false;
     lp_maxiter = 100;

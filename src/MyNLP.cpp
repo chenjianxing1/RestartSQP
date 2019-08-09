@@ -56,7 +56,7 @@ bool MyNLP::get_bounds_info(Index n, Number* x_l, Number* x_u,
     // x2 has no upper or lower bound, so we set them to
     // a large negative and a large positive number.
     // The value that is interpretted as -/+infinity can be
-    // set in the options, but it defaults to -/+1e19
+    // set in the options_, but it defaults to -/+1e19
     x_l[1] = -1.0e19;
     x_u[1] = +1.0e19;
 

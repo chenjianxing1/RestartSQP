@@ -42,7 +42,8 @@ before_install:
 script:
 - make -j5
 - cd ..
-- ./test/runtest.sh
+- ./test/run_1_70.sh
+- ./test/run71_end.sh
 - ./get_code_cov.sh
 
 after_success:

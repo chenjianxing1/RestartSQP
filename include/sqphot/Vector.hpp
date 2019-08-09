@@ -103,10 +103,6 @@ public:
     /** calculate the infinity norm of the member _vector*/
     double getInfNorm() const;
 
-//    Vector operator+(const Vector& rhs);
-//
-//    const Vector operator-(const Vector& rhs);
-
     double times(Vector& rhs);
 
 
