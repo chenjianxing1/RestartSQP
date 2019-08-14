@@ -10,8 +10,10 @@
 #include <qpsolver.h>
 #include <sqphot/QPsolverInterface.hpp>
 
+
 namespace SQPhotstart {
-class QOREInterface : public QPSolverInterface {
+class QOREInterface :
+    public QPSolverInterface {
 
 public:
 
@@ -32,9 +34,9 @@ public:
 #endif
 #endif
 
-    QOREInterface(Index_info nlp_info) {
 
-    };
+    QOREInterface(Index_info nlp_info);;
+
 
     /** Default destructor*/
     ~QOREInterface() {}
@@ -84,10 +86,9 @@ public:
     void get_multipliers(double* y_optimal) override {}
 
 
-    /**
-     * Return private class members info
-     */
-//@{
+
+    /** @name Setters */
+    //@{
     void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {};
 
 
@@ -146,15 +147,15 @@ private:
 
 
 private:
-    shared_ptr<QoreProblem> qp_;
+    QoreProblem* qp_;
     shared_ptr<Vector> lb_;
     shared_ptr<Vector> ub_;
-
-
+    shared_ptr<Vector> g_;
 };
+
+
+
 }
-
-
 
 
 #endif

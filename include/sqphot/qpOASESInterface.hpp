@@ -166,9 +166,9 @@ private:
     shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
     shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
     shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
-    shared_ptr<qpOASESSparseMat> H_;/**< the Matrix object stores the QP data H in
+    shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
                                           * Harwell-Boeing Sparse Matrix format*/
-    shared_ptr<qpOASESSparseMat> A_;/**< the Matrix object stores the QP data A in
+    shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
     QPMatrixType old_QP_matrix_status_ = UNDEFINED;

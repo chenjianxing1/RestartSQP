@@ -24,28 +24,29 @@ using namespace std;
 namespace SQPhotstart {
 #define MAX(a,b) (a>b)? a :b
 #define ABS(a) MAX(a,-a)
-/*Print a matrix with given size*/
-void print_matrix(Number* M, Index length, Index width);
 
-const Number INF = 1.0e19;
+/*Print a matrix with given size*/
+void print_matrix(double* M, int length, int width);
+
+const double INF = 1.0e19;
 
 /* check if x is finite*/
-bool isFinite(Number* x, Index length);
+bool isFinite(double* x, int length);
 
 /* Calculate the one norm of a n-dimension vector x*/
-Number oneNorm(const Number* x, Index n);
+double oneNorm(const double* x, int n);
 
 
 /* Calculate the infinity norm of a n-dimension vector x*/
-Number infNorm(const Number* x, Index n);
+double infNorm(const double* x, int n);
 
-ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound);
+ConstraintType classify_single_constraint(double lower_bound, double upper_bound);
 
 
 
 //debug tool print things out
 template<typename T>
-inline void print_(char* name, T* vec, Index length) {
+inline void print_(char* name, T* vec, int length) {
     printf(" %s is \n", name);
     for (int i = 0; i < length; i++) {
         std::cout << vec[i] << std::endl;

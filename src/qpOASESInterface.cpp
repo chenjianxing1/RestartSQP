@@ -19,11 +19,11 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     lb_ = make_shared<Vector>(nVar_QP);
     ub_ = make_shared<Vector>(nVar_QP);
     g_ = make_shared<Vector>(nVar_QP);
-    A_ = make_shared<qpOASESSparseMat>(
+    A_ = make_shared<SpHbMat>(
              nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
 
     if (qptype != LP) {
-        H_ = make_shared<qpOASESSparseMat>(nVar_QP, nVar_QP, true);
+        H_ = make_shared<SpHbMat>(nVar_QP, nVar_QP, true);
     }
 
     //FIXME: the qpOASES does not accept any extra input

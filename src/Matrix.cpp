@@ -19,7 +19,7 @@ SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric) :
     //do nothing unless any data is to be assigned
     RowIndex_ = new int[nnz]();
     ColIndex_ = new int[nnz]();
-    MatVal_ = new Number[nnz]();
+    MatVal_ = new double[nnz]();
     order_ = new int[nnz]();
     //initialize the order to 0:N-1
     for (int i = 0; i < nnz; i++) {
@@ -205,7 +205,7 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
 /**
  * qpOASESSparseMatrix
  */
-void qpOASESSparseMat::print() const {
+void SpHbMat::print() const {
 
     std::cout << "ColIndex: ";
     for (int i = 0; i < ColNum_ + 1; i++)
@@ -235,8 +235,8 @@ void qpOASESSparseMat::print() const {
 
 
 /** Default constructor*/
-qpOASESSparseMat::qpOASESSparseMat(int RowNum, int ColNum, bool
-                                   isSymmetric) :
+SpHbMat::SpHbMat(int RowNum, int ColNum, bool
+                 isSymmetric) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
@@ -259,7 +259,7 @@ qpOASESSparseMat::qpOASESSparseMat(int RowNum, int ColNum, bool
  * @param RowNum: number of rows of a matrix
  * @param ColNum: number of columns of a matrix
  */
-qpOASESSparseMat::qpOASESSparseMat(int nnz, int RowNum, int ColNum) :
+SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
@@ -283,7 +283,7 @@ qpOASESSparseMat::qpOASESSparseMat(int nnz, int RowNum, int ColNum) :
 /**
  *Default destructor
  */
-qpOASESSparseMat::~qpOASESSparseMat() {
+SpHbMat::~SpHbMat() {
 
     freeMemory();
 }
@@ -301,8 +301,8 @@ qpOASESSparseMat::~qpOASESSparseMat() {
  * @param I_info the information of 2 identity sub matrices.
  *
  */
-void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
-                                    Identity2Info I_info) {
+void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
+                           Identity2Info I_info) {
 
     set_zero();
     assert(isInitialised_ == false);
@@ -356,7 +356,7 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 * (in a different sparse matrix representations)
 *
 */
-void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
+void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
     set_zero();
     assert(isInitialised_ == false);
@@ -417,8 +417,8 @@ void qpOASESSparseMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
  * @param rhs entry values(orders are not yet under permutation)
  * @param I_info the 2 identity matrices information
  */
-void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
-                                 Identity2Info I_info) {                       //adding the value to the matrix
+void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
+                        Identity2Info I_info) {                       //adding the value to the matrix
     if (isInitialised_ == false) {
         for (int i = 0; i < I_info.size; i++) {
             MatVal_[EntryNum_ - i - 1] = -1;
@@ -434,7 +434,7 @@ void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
 }
 
 
-void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
+void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
 
     int j = 0;
     for (int i = 0; i < rhs->EntryNum(); i++) {
@@ -451,7 +451,7 @@ void qpOASESSparseMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
 /**
 * Free all memory allocated
 */
-void qpOASESSparseMat::freeMemory() {
+void SpHbMat::freeMemory() {
 
     delete[] ColIndex_;
     ColIndex_ = NULL;
@@ -464,7 +464,7 @@ void qpOASESSparseMat::freeMemory() {
 }
 
 
-void qpOASESSparseMat::copy(std::shared_ptr<const qpOASESSparseMat> rhs) {
+void SpHbMat::copy(std::shared_ptr<const SpHbMat> rhs) {
 
     assert(EntryNum_ == rhs->EntryNum());
     assert(RowNum_ == rhs->RowNum());
@@ -477,6 +477,39 @@ void qpOASESSparseMat::copy(std::shared_ptr<const qpOASESSparseMat> rhs) {
 
     for (int i = 0; i < ColNum_ + 1; i++) {
         ColIndex_[i] = rhs->ColIndex()[i];
+    }
+}
+
+
+void SpHbMat::write_to_file(FILE* file_to_write, const char* const name) {
+
+    fprintf(file_to_write, "sparse_int_t %s_jc[] = \n{", name);
+    int i;
+    for (i = 0; i < ColNum_ + 1; i++) {
+        if (i % 10 == 0 && i > 1)
+            fprintf(file_to_write, "\n");
+        if (i == ColNum_)
+            fprintf(file_to_write, "%i};\n\n", ColIndex_[i]);
+        else
+            fprintf(file_to_write, "%i, ", ColIndex_[i]);
+    }
+    fprintf(file_to_write, "sparse_int_t %s_ir[] = \n{", name);
+    for (i = 0; i < EntryNum_; i++) {
+        if (i % 10 == 0 && i > 1)
+            fprintf(file_to_write, "\n");
+        if (i == EntryNum_ - 1)
+            fprintf(file_to_write, "%i};\n\n", RowIndex_[i]);
+        else
+            fprintf(file_to_write, "%i, ", RowIndex_[i]);
+    }
+    fprintf(file_to_write, "real_t %s_val[] = \n{", name);
+    for (i = 0; i < EntryNum_; i++) {
+        if (i % 10 == 0 && i > 1)
+            fprintf(file_to_write, "\n");
+        if (i == EntryNum_ - 1)
+            fprintf(file_to_write, "%10e};\n\n", MatVal_[i]);
+        else
+            fprintf(file_to_write, "%10e, ", MatVal_[i]);
     }
 }
 

@@ -320,47 +320,6 @@ private:
     void handle_error(const char* error = NULL);
 
 
-    /** @name Optimality Test */
-    //@{
-    void IdentifyActiveSet();
-
-    /**
-     * @brief
-     * @param infea_measure
-     * @param isConstraintChanged
-     * @param isPointChanged
-     * @return
-     */
-    bool Check_KKTConditions(double infea_measure);
-
-    /**
-     * @brief Test the Second-order optimality conditions
-     */
-
-    /**
-     * @brief Check the Feasibility conditions;
-     */
-
-    bool Check_Feasibility(double infea_measure = INF) ;
-
-    /**
-     * @brief Check the sign of the multipliers
-     */
-    bool Check_Dual_Feasibility() ;
-
-
-    /**
-     * @brief Check the complementarity condition
-     *
-     */
-
-    bool Check_Complementarity() ;
-
-    /**
-     * @brief Check the Stationarity condition
-     */
-    bool Check_Stationarity() ;
-
     //@}
 
 
@@ -394,8 +353,8 @@ private:
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
-    int* Active_Set_bounds_;
-    int* Active_Set_constraints_;
+    ActiveType* Active_Set_bounds_;
+    ActiveType* Active_Set_constraints_;
     shared_ptr<LPhandler> myLP_;
     shared_ptr<Log> log_;
     shared_ptr<Options> options_;/**< the default options used for now. */

@@ -39,8 +39,7 @@ enum QPReturnType {
 
 enum QPType {
     LP = 1,/** solving a linear program*/
-    SOC = 2,/** solving second order correction**/
-    QP = 3/**solving a regular qp subproblem **/
+    QP = 2/**solving a regular qp subproblem **/
 };
 
 
@@ -73,17 +72,18 @@ enum ConstraintType {
     UNBOUNDED = 0
 };
 
-
-/** Type of all numbers */
-typedef double Number;
-/** Type of all indices of vectors, matrices etc */
-typedef int Index;
+enum ActiveType {
+    ACTIVE_ABOVE = 1,
+    ACTIVE_BELOW = -1,
+    ACTIVE_BOTH_SIDE = -99,
+    INACTIVE = 0
+};
 
 typedef struct {
-    Index nCon;
-    Index nVar;
-    Index nnz_jac_g;
-    Index nnz_h_lag;
+    int  nCon;
+    int  nVar;
+    int  nnz_jac_g;
+    int  nnz_h_lag;
 } Index_info;
 
 typedef struct {

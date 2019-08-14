@@ -10,7 +10,7 @@
 namespace SQPhotstart {
 
 DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
-
+DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
 
 /**
  * Default Constructor
@@ -23,6 +23,11 @@ Algorithm::Algorithm() :
 
     setDefaultOption();
     jnlst_ = new Ipopt::Journalist();
+    auto jnal1=jnlst_->AddFileJournal("./","testbla",J_WARNING);
+    va_list vp;
+
+    jnal1->SetAllPrintLevels(J_ALL);
+    jnal1->Printf(J_MAIN,J_WARNING,"what????",vp);
     roptions2_ = new Ipopt::OptionsList();
 }
 
@@ -100,18 +105,23 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
         //check if the current iterates is optimal and decide to
         //exit the loop or not
-        termination_check();
-
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-
         if (options_->printLevel > 1) {
             if (stats_->iter % 10 == 0)log_->print_header();
             log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
                                   delta_, rho_);
         }
-        update_radius();
+
+        termination_check();
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+
+        try {
+            update_radius();
+        }
+        catch(SMALL_TRUST_REGION) {
+            break;
+        }
 
     }
 
@@ -142,8 +152,8 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 void Algorithm::termination_check() {
     //FIXME: not sure if it is better to use the new multiplier or the old one
 
+    int i;
     get_multipliers();
-
 
     if (DEBUG) {
         if (CHECK_TERMINATION) {
@@ -154,31 +164,258 @@ void Algorithm::termination_check() {
         }
     }
 
-    Check_KKTConditions(infea_measure_);
+    /**-------------------------------------------------------**/
+    /**               Check the KKT conditions                **/
+    /**-------------------------------------------------------**/
 
-    if (opt_status_.first_order_opt)
-        exitflag_ = OPTIMAL;
-    else {
+    /**-------------------------------------------------------**/
+    /**                    Identify Active Set                **/
+    /**-------------------------------------------------------**/
 
-        if (norm_p_k_ > delta_ + options_->tol)
-            exitflag_ = STEP_LARGER_THAN_TRUST_REGION;
-        //if it is not optimal
-        if (DEBUG) {
-            if (CHECK_TERMINATION) {
-                std::cout << "feasibility      "
-                          << opt_status_.primal_feasibility << std::endl;
-                std::cout << "dual_feasibility "
-                          << opt_status_.dual_feasibility
-                          << std::endl;
-                std::cout << "stationarity     " << opt_status_.stationarity
-                          << std::endl;
-                std::cout << "complementarity  "
-                          << opt_status_.complementarity
-                          << std::endl;
+    if (Active_Set_constraints_ == NULL)
+        Active_Set_constraints_ = new ActiveType[nCon_];
+    if (Active_Set_bounds_ == NULL)
+        Active_Set_bounds_ = new ActiveType[nVar_];
+
+    for (i = 0; i < nCon_; i++) {
+        if (cons_type_[i] == BOUNDED_ABOVE) {
+            if (abs(c_u_->values()[i] - c_k_->values()[i]) <
+                    options_->active_set_tol)
+                Active_Set_constraints_[i] = ACTIVE_ABOVE;
+        }
+        else if (cons_type_[i] == BOUNDED_BELOW) {
+            if (abs(c_k_->values()[i] - c_l_->values()[i]) <
+                    options_->active_set_tol) {
+                Active_Set_constraints_[i] =ACTIVE_BELOW;
             }
         }
+        else if (cons_type_[i] == EQUAL) {
+            if ((abs(c_u_->values()[i] - c_k_->values()[i]) <
+                    options_->active_set_tol) &&
+                    (abs(c_k_->values()[i] - c_l_->values()[i]) <
+                     options_->active_set_tol))
+                Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
+        }
+        else {
+            Active_Set_constraints_[i] = INACTIVE;
+        }
+    }
+
+
+
+    for (i = 0; i < nVar_; i++) {
+        if (bound_cons_type_[i] == BOUNDED_ABOVE) {
+            if (abs(x_u_->values()[i] - x_k_->values()[i]) <
+                    options_->active_set_tol)
+                Active_Set_bounds_[i] = ACTIVE_ABOVE;
+        }
+        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
+            if (abs(x_k_->values()[i] - x_l_->values()[i]) <
+                    options_->active_set_tol)
+                Active_Set_bounds_[i] = ACTIVE_BELOW;
+        }
+        else if (bound_cons_type_[i] == EQUAL) {
+            if ((abs(x_u_->values()[i] - x_k_->values()[i]) <
+                    options_->active_set_tol) &&
+                    (abs(x_k_->values()[i] - x_l_->values()[i]) <
+                     options_->active_set_tol))
+                Active_Set_bounds_[i] = ACTIVE_BOTH_SIDE;
+        } else {
+            Active_Set_bounds_[i] = INACTIVE;
+        }
+    }
+    /**-------------------------------------------------------**/
+    /**                    Primal Feasibility                 **/
+    /**-------------------------------------------------------**/
+
+
+    if (infea_measure_ < options_->opt_prim_fea_tol) {
+        opt_status_.primal_feasibility = true;
+    }
+    else
+        opt_status_.primal_feasibility = false;
+
+    /**-------------------------------------------------------**/
+    /**                    Dual Feasibility                   **/
+    /**-------------------------------------------------------**/
+
+    //DEBUG
+    //std::cout << "The bound_cons_type_[i] is "<<std::endl;
+    //    for (int i = 0; i <nVar_; i++) {
+    //	    std::cout <<bound_cons_type_[i]<< "    ";
+    //    }
+    //    std::cout << std::endl;
+    //
+    //    multiplier_vars_->print("multiplier_var");
+    //	std::cout << "The cons_type_[i] is " <<std::endl;
+    //    for (int i = 0; i <nCon_; i++) {
+    //	    std::cout <<cons_type_[i]<< "    ";
+    //    }
+    //    std::cout << std::endl;
+    //    multiplier_cons_->print("multiplier_cons_");
+    //DEBUG_END
+    i = 0;
+    opt_status_.dual_feasibility = true;
+    while(i<nVar_ && opt_status_.dual_feasibility) {
+        if (bound_cons_type_[i] == BOUNDED_ABOVE &&
+                multiplier_vars_->values()[i] > options_->opt_dual_fea_tol) {
+            opt_status_.dual_feasibility = false;
+        }
+        else if (bound_cons_type_[i] == BOUNDED_BELOW &&
+                 multiplier_vars_->values()[i] < -options_->opt_dual_fea_tol) {
+            opt_status_.dual_feasibility = false;
+        }
+        i++;
+    }
+
+    i = 0;
+    while(i<nCon_ && opt_status_.dual_feasibility) {
+        if (cons_type_[i] == BOUNDED_ABOVE &&
+                multiplier_cons_->values()[i] > options_->opt_dual_fea_tol) {
+            opt_status_.dual_feasibility = false;
+        }
+        else if (cons_type_[i] == BOUNDED_BELOW &&
+                 multiplier_cons_->values()[i] < -options_->opt_dual_fea_tol) {
+            opt_status_.dual_feasibility = false;
+        }
+        i++;
+    }
+
+    /**-------------------------------------------------------**/
+    /**                    Complemtarity                      **/
+    /**-------------------------------------------------------**/
+
+#if DEBUG
+    if (CHECK_TERMINATION)
+        if (CHECK_COMPLEMENTARITY) {
+            c_u_->print("c_u");
+            c_l_->print("c_l");
+            c_k_->print("c_k");
+            multiplier_cons_->print("multiplier_cons_");
+            x_u_->print("x_u");
+            x_l_->print("x_l");
+            x_k_->print("x_k");
+            multiplier_vars_->print("multiplier_vars_");
+
+            std::cout << "bound_cons_type_[i]" << std::endl;
+            for (int i = 0; i < nVar_; i++) {
+                std::cout << bound_cons_type_[i] << std::endl;
+
+            }
+            std::cout << "cons_type_[i]" << std::endl;
+            for (int i = 0; i < nCon_; i++) {
+                std::cout << cons_type_[i] << std::endl;
+            }
+        }
+#endif
+
+    i = 0;
+    opt_status_.complementarity = true;
+    while(i<nCon_&& opt_status_.complementarity) {
+        if (cons_type_[i] == BOUNDED_ABOVE) {
+            if (abs(multiplier_cons_->values()[i] *
+                    (c_u_->values()[i] - c_k_->values()[i]))
+                    > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        else if (cons_type_[i] == BOUNDED_BELOW) {
+            if (abs(multiplier_cons_->values()[i] *
+                    (c_k_->values()[i] - c_l_->values()[i]))
+                    > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        else if (cons_type_[i] == UNBOUNDED) {
+            if (multiplier_cons_->values()[i] > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        i++;
+    }
+
+    i= 0;
+    while(i<nVar_&& opt_status_.complementarity) {
+        if (bound_cons_type_[i] == BOUNDED_ABOVE) {
+            if (abs(multiplier_vars_->values()[i] *
+                    (x_u_->values()[i] - x_k_->values()[i]))
+                    > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
+            if (abs(multiplier_vars_->values()[i] *
+                    (x_k_->values()[i] - x_l_->values()[i]))
+                    > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        else if (bound_cons_type_[i] == UNBOUNDED) {
+            if (multiplier_vars_->values()[i] > options_->opt_compl_tol) {
+                opt_status_.complementarity = false;
+            }
+        }
+        i++;
+    }
+
+
+    /**-------------------------------------------------------**/
+    /**                    Stationarity                       **/
+    /**-------------------------------------------------------**/
+
+    shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
+    // the difference of g-J^T y -\lambda
+    jacobian_->transposed_times(multiplier_cons_, difference);
+    difference->add_vector(multiplier_vars_->values());
+    difference->add_vector(multiplier_vars_->values());
+    difference->subtract_vector(grad_f_->values());
+
+#if DEBUG
+    if (CHECK_TERMINATION) {
+        difference->print("Stationarity Gap");
+    }
+#endif
+
+    if (difference->getInfNorm() > options_->opt_tol) {
+        opt_status_.stationarity = false;
+    }
+    else {
+        opt_status_.stationarity = true;
+    }
+
+
+    /**-------------------------------------------------------**/
+    /**             Decide if x_k is optimal                  **/
+    /**-------------------------------------------------------**/
+
+
+    if (opt_status_.primal_feasibility && opt_status_.dual_feasibility &&
+            opt_status_.complementarity && opt_status_.stationarity) {
+        opt_status_.first_order_opt = true;
+        exitflag_ = OPTIMAL;
+    } else {
+        if (norm_p_k_ > delta_ + options_->tol) {
+            exitflag_ = STEP_LARGER_THAN_TRUST_REGION;
+        }
+        //if it is not optimal
+#if DEBUG
+        if (CHECK_TERMINATION) {
+            std::cout << "feasibility      "
+                      << opt_status_.primal_feasibility << std::endl;
+            std::cout << "dual_feasibility "
+                      << opt_status_.dual_feasibility
+                      << std::endl;
+            std::cout << "stationarity     " << opt_status_.stationarity
+                      << std::endl;
+            std::cout << "complementarity  "
+                      << opt_status_.complementarity
+                      << std::endl;
+        }
+#endif
+
     }
 }
+
 
 
 void Algorithm::get_trial_point_info() {
@@ -248,10 +485,10 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
 
-    cons_type_ = new ConstraintType[nCon_]();
-    bound_cons_type_ = new ConstraintType[nVar_]();
-    Active_Set_bounds_ = new int[nVar_]();
-    Active_Set_constraints_ = new int[nCon_]();
+    cons_type_ = new ConstraintType[nCon_];
+    bound_cons_type_ = new ConstraintType[nVar_];
+    Active_Set_bounds_ = new ActiveType[nVar_];
+    Active_Set_constraints_ = new ActiveType[nCon_];
 
     x_k_ = make_shared<Vector>(nVar_);
     x_trial_ = make_shared<Vector>(nVar_);
@@ -360,15 +597,11 @@ void Algorithm::get_multipliers() {
 
     double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
 
-
     myQP_->GetMultipliers(tmp_lambda);
-
-    if (options_->QPsolverChoice == "qpOASES") {
-        //The qpOASES stores the multipliers of variables to the first (num_QP_var)
-        //position and multipliers of constraints to the last (num_QP_nCon) position
-        multiplier_cons_->copy_vector(tmp_lambda + 2 * nCon_ + nVar_);
-        multiplier_vars_->copy_vector(tmp_lambda);
-    }
+    //The qpOASES stores the multipliers of variables to the first (num_QP_var)
+    //position and multipliers of constraints to the last (num_QP_nCon) position
+    multiplier_cons_->copy_vector(tmp_lambda + 2 * nCon_ + nVar_);
+    multiplier_vars_->copy_vector(tmp_lambda);
     delete[] tmp_lambda;
 }
 
@@ -460,8 +693,8 @@ void Algorithm::ratio_test() {
     using namespace std;
 
 
-    Number P1x = obj_value_ + rho_ * infea_measure_;
-    Number P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
+    double P1x = obj_value_ + rho_ * infea_measure_;
+    double  P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
     actual_reduction_ = P1x - P1_x_trial;
     pred_reduction_ = rho_ * infea_measure_ - qp_obj_;
@@ -539,7 +772,6 @@ void Algorithm::ratio_test() {
  * If trust region radius has changed, the corresponding flags will be set to be
  * true;
  */
-DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
 
 
 void Algorithm::update_radius() {
@@ -554,18 +786,18 @@ void Algorithm::update_radius() {
                 eta_e * pred_reduction_
                 && options_->tol > (delta_ - norm_p_k_)) {
             delta_ = std::min(options_->gamma_e * delta_, options_->delta_max);
-
-            //if the trust-region becomes too small, throw the error message
-
-            if (delta_ < options_->delta_min) {
-                exitflag_ = TRUST_REGION_TOO_SMALL;
-//                    jnlst_->Printf(J_WARNING,J_MAIN,
-//                            "Trust-region is too small!");
-                THROW_EXCEPTION(SMALL_TRUST_REGION, "The trust region is smaller than"
-                                "the user-defined minimum value");
-            }
             QPinfoFlag_.Update_delta = true;
         }
+    }
+
+    //if the trust-region becomes too small, throw the error message
+
+    if (delta_ < options_->delta_min) {
+        exitflag_ = TRUST_REGION_TOO_SMALL;
+//                    jnlst_->Printf(J_WARNING,J_MAIN,
+//                            "Trust-region is too small!");
+        THROW_EXCEPTION(SMALL_TRUST_REGION, "The trust region is smaller than"
+                        "the user-defined minimum value");
     }
 }
 
@@ -851,7 +1083,6 @@ Algorithm::get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_directio
 
 
 void Algorithm::get_full_direction_LP(shared_ptr<Vector> search_direction) {
-
     myLP_->GetOptimalSolution(search_direction->values());
 }
 
@@ -949,248 +1180,6 @@ void Algorithm::handle_error(const char* error) {
     }
 }
 
-
-bool Algorithm::Check_KKTConditions(double infea_measure) {
-
-    IdentifyActiveSet();
-    opt_status_.primal_feasibility = Check_Feasibility(infea_measure);
-    opt_status_.complementarity = Check_Complementarity();
-    opt_status_.dual_feasibility = Check_Dual_Feasibility();
-    opt_status_.stationarity = Check_Stationarity();
-    if (opt_status_.primal_feasibility && opt_status_.dual_feasibility &&
-            opt_status_.complementarity && opt_status_.stationarity) {
-        opt_status_.first_order_opt = true;
-    }
-
-    return true;
-}
-
-
-bool Algorithm::Check_Dual_Feasibility() {
-
-    if (opt_status_.dual_feasibility) {
-        return true;
-    }
-    //DEBUG
-    //std::cout << "The bound_cons_type_[i] is "<<std::endl;
-    //    for (int i = 0; i <nVar_; i++) {
-    //	    std::cout <<bound_cons_type_[i]<< "    ";
-    //    }
-    //    std::cout << std::endl;
-    //
-    //    multiplier_vars_->print("multiplier_var");
-    //	std::cout << "The cons_type_[i] is " <<std::endl;
-    //    for (int i = 0; i <nCon_; i++) {
-    //	    std::cout <<cons_type_[i]<< "    ";
-    //    }
-    //    std::cout << std::endl;
-    //    multiplier_cons_->print("multiplier_cons_");
-    //DEBUG_END
-    for (int i = 0; i < nVar_; i++) {
-        if (bound_cons_type_[i] == BOUNDED_ABOVE &&
-                multiplier_vars_->values()[i] > options_->opt_dual_fea_tol) {
-            return false;
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW &&
-                 multiplier_vars_->values()[i] < -options_->opt_dual_fea_tol) {
-            return false;
-        }
-    }
-    for (int i = 0; i < nCon_; i++) {
-        if (cons_type_[i] == BOUNDED_ABOVE &&
-                multiplier_cons_->values()[i] > options_->opt_dual_fea_tol) {
-            return false;
-        }
-        else if (cons_type_[i] == BOUNDED_BELOW &&
-                 multiplier_cons_->values()[i] < -options_->opt_dual_fea_tol) {
-            return false;
-        }
-    }
-    return true;
-
-}
-
-
-bool Algorithm::Check_Stationarity() {
-
-    if (opt_status_.stationarity) return true;
-    shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
-    // the difference of g-J^T y -\lambda
-    jacobian_->transposed_times(multiplier_cons_, difference);
-    difference->add_vector(multiplier_vars_->values());
-    difference->add_vector(multiplier_vars_->values());
-    difference->subtract_vector(grad_f_->values());
-    if (DEBUG) {
-        if (CHECK_TERMINATION) {
-            difference->print("Stationarity Gap");
-        }
-    }
-    if (difference->getInfNorm() < options_->opt_tol) {
-        return true;
-    }
-
-    return false;
-}
-
-
-bool Algorithm::Check_Feasibility(double infea_measure) {
-
-    if (opt_status_.primal_feasibility || infea_measure < options_->opt_prim_fea_tol) {
-        return true;
-    }
-    return false;
-
-}
-
-//void NLP_OptTest::setActiveSetConstraints(int* activeSetConstraints) {
-//    Active_Set_constraints_ = activeSetConstraints;
-//}
-//
-//void NLP_OptTest::setActiveSetBounds(int* activeSetBounds) {
-//    Active_Set_bounds_ = activeSetBounds;
-//}
-//
-//int* NLP_OptTest::getActiveSetConstraints() const {
-//    return Active_Set_constraints_;
-//}
-//
-//int* NLP_OptTest::getActiveSetBounds() const {
-//    return Active_Set_bounds_;
-//}
-
-void Algorithm::IdentifyActiveSet() {
-
-    if (Active_Set_constraints_ == NULL)
-        Active_Set_constraints_ = new int[nCon_]();
-    if (Active_Set_bounds_ == NULL)
-        Active_Set_bounds_ = new int[nVar_]();
-    for (int i = 0; i < nCon_; i++) {
-        if (cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(c_u_->values()[i] - c_k_->values()[i]) <
-                    options_->active_set_tol)
-                // consider adding another tolerance for identifying active set...
-                Active_Set_constraints_[i] = 1;
-        }
-        else if (cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(c_k_->values()[i] - c_l_->values()[i]) <
-                    options_->active_set_tol) {
-                // consider adding another tolerance for identifying active set...
-                Active_Set_constraints_[i] = -1;
-            }
-        }
-        else if (cons_type_[i] == EQUAL) {
-            if ((abs(c_u_->values()[i] - c_k_->values()[i]) <
-                    options_->active_set_tol) &&
-                    (abs(c_k_->values()[i] - c_l_->values()[i]) <
-                     options_->active_set_tol))
-                Active_Set_constraints_[i] = 99;
-        }
-    }
-
-
-
-    for (int i = 0; i < nVar_; i++) {
-        if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(x_u_->values()[i] - x_k_->values()[i]) <
-                    options_->active_set_tol)
-                Active_Set_bounds_[i] = 1;
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(x_k_->values()[i] - x_l_->values()[i]) <
-                    options_->active_set_tol)
-                Active_Set_bounds_[i] = -1;
-        }
-        else if (bound_cons_type_[i] == EQUAL) {
-            if ((abs(x_u_->values()[i] - x_k_->values()[i]) <
-                    options_->active_set_tol) &&
-                    (abs(x_k_->values()[i] - x_l_->values()[i]) <
-                     options_->active_set_tol))
-                Active_Set_bounds_[i] = 99; //TODO: use another number?
-            else {
-                //TODO: Print out warning message
-            }
-        }
-    }
-}
-
-
-bool Algorithm::Check_Complementarity() {
-
-    if (opt_status_.complementarity) return true;
-    if (DEBUG)
-        if (CHECK_TERMINATION)
-            if (CHECK_COMPLEMENTARITY) {
-                c_u_->print("c_u");
-                c_l_->print("c_l");
-                c_k_->print("c_k");
-                multiplier_cons_->print("multiplier_cons_");
-                x_u_->print("x_u");
-                x_l_->print("x_l");
-                x_k_->print("x_k");
-                multiplier_vars_->print("multiplier_vars_");
-
-                std::cout << "bound_cons_type_[i]" << std::endl;
-                for (int i = 0; i < nVar_; i++) {
-                    std::cout << bound_cons_type_[i] << std::endl;
-
-                }
-                std::cout << "cons_type_[i]" << std::endl;
-                for (int i = 0; i < nCon_; i++) {
-                    std::cout << cons_type_[i] << std::endl;
-                }
-            }
-
-    if (nCon_ > 0) {
-        for (int i = 0; i < nCon_; i++) {
-            if (cons_type_[i] == BOUNDED_ABOVE) {
-                if (abs(multiplier_cons_->values()[i] *
-                        (c_u_->values()[i] - c_k_->values()[i]))
-                        > options_->opt_compl_tol) {
-
-                    return false;
-                }
-            }
-            else if (cons_type_[i] == BOUNDED_BELOW) {
-                if (abs(multiplier_cons_->values()[i] *
-                        (c_k_->values()[i] - c_l_->values()[i]))
-                        > options_->opt_compl_tol) {
-
-                    return false;
-                }
-            }
-            else if (cons_type_[i] == UNBOUNDED) {
-                if (multiplier_cons_->values()[i] > options_->opt_compl_tol) {
-                    return false;
-                }
-            }
-        }
-
-    }
-    for (int i = 0; i < nVar_; i++) {
-        if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(multiplier_vars_->values()[i] *
-                    (x_u_->values()[i] - x_k_->values()[i]))
-                    > options_->opt_compl_tol) {
-                return false;
-            }
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(multiplier_vars_->values()[i] *
-                    (x_k_->values()[i] - x_l_->values()[i]))
-                    > options_->opt_compl_tol) {
-                return false;
-            }
-        }
-        else if (bound_cons_type_[i] == UNBOUNDED) {
-            if (multiplier_vars_->values()[i] > options_->opt_compl_tol) {
-                return false;
-            }
-        }
-    }
-
-
-    return true;
-}
 
 
 }//END_NAMESPACE_SQPHOTSTART

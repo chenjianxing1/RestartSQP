@@ -7,7 +7,7 @@
 #include <sqphot/Utils.hpp>
 namespace SQPhotstart {
 
-void print_matrix(Number *M, Index length, Index width) {
+void print_matrix(double *M, int length, int width) {
     for (int row = 0; row < length; row++) {
         for (int col = 0; col < width; col++) {
             std::cout << M[row * width + col] << " ";
@@ -17,7 +17,7 @@ void print_matrix(Number *M, Index length, Index width) {
 }
 
 
-bool isFinite(Number *x, Index length) {
+bool isFinite(double *x, int length) {
     for (int i = 0; i < length; i++) {
         if (x[i] < INF && x[i] > -INF) {
             return true;
@@ -26,7 +26,7 @@ bool isFinite(Number *x, Index length) {
     return false;
 }
 
-ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound) {
+ConstraintType classify_single_constraint(double lower_bound, double upper_bound) {
     if(lower_bound>-INF && upper_bound<INF) {
         if ((upper_bound-lower_bound)<1.0e-8) {
             return EQUAL;
@@ -45,8 +45,8 @@ ConstraintType classify_single_constraint(Number lower_bound, Number upper_bound
 }
 
 
-Number oneNorm(const Number* x, Index n) {
-    Number sum = 0;
+double oneNorm(const double* x, int n) {
+    double sum = 0;
     for (int i = 0; i < n; i++) {
         if (x[i] < 0)sum -= x[i];
         else sum += x[i];
@@ -54,10 +54,10 @@ Number oneNorm(const Number* x, Index n) {
     return sum;
 }
 
-Number infNorm(const Number* x, Index n) {
-    Number infnorm = 0;
+double infNorm(const double* x, int n) {
+    double infnorm = 0;
     for (int i = 0; i < n; i++) {
-        Number absxk;
+        double absxk;
         if (x[i] < 0) absxk = -x[i];
         else absxk = x[i];
         if (absxk > infnorm) infnorm = absxk;

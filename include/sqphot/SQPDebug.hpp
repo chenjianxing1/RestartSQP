@@ -24,7 +24,7 @@
 #define CHECK_QP_SOLVER false
 #define CHECK_NLP_READER false
 #define CHECK_QP_INFEASIBILITY false
-#define PRINT_OUT_QP_WITH_ERROR true
+#define PRINT_OUT_QP_WITH_ERROR false
 #endif
 
 #endif /* __SQPDEBUG_HPP */
