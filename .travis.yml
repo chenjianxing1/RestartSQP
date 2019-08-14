@@ -38,13 +38,12 @@ before_install:
 - echo $IPOPT_ROOT_DIR
   #- ls lib
 - cd ../../../
-- mkdir build && cd build && cmake -DIpopt=ON ..
+- mkdir build && cd build && cmake -DIpopt=ON -DCov=ON ..
 script:
 - make -j5
 - cd ..
 - ./test/run_1_70.sh
 - ./test/run71_end.sh
 - ./get_code_cov.sh
-
 after_success:
 - bash <(curl -s https://codecov.io/bash) -t ec5f6253-3c2f-4e2f-be8e-bf208702ad71
