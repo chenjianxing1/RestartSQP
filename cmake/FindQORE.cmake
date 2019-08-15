@@ -5,7 +5,7 @@ message("Looking for QORE in ${QORE_ROOT_DIR}")
 find_path(QORE_INCLUDE_DIR2
 	NAMES qpsolver.h 
 	HINTS /usr/local/include
-	HINTS ${QORE_ROOT_DIR}
+	HINTS ${QORE_ROOT_DIR}/QPSOLVER/include
 	)
 MESSAGE(STATUS "QORE_INCLUDE_DIR2 = ${QORE_INCLUDE_DIR2}") 
 find_path(QPPRESOLVER_INCLUDE_DIR
