@@ -67,76 +67,76 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     /**
      * Main iteration
      */
-    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-        setupQP();
-        try {
-            myQP_->solveQP(stats_,
-                           options_);//solve the QP subproblem and update the stats_
-        }
-        catch (QP_NOT_OPTIMAL) {
-            handle_error("QP NOT OPTIMAL");
-            break;
-        }
+    //while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+    //    setupQP();
+    //    try {
+    //        myQP_->solveQP(stats_,
+    //                       options_);//solve the QP subproblem and update the stats_
+    //    }
+    //    catch (QP_NOT_OPTIMAL) {
+    //        handle_error("QP NOT OPTIMAL");
+    //        break;
+    //    }
 
-        qp_obj_ = myQP_->GetObjective();
+    //    qp_obj_ = myQP_->GetObjective();
 
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction();
+    //    //get the search direction from the solution of the QPsubproblem
+    //    get_search_direction();
 
-        //Update the penalty parameter if necessary
+    //    //Update the penalty parameter if necessary
 
-        update_penalty_parameter();
+    //    update_penalty_parameter();
 
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
+    //    //calculate the infinity norm of the search direction
+    //    norm_p_k_ = p_k_->getInfNorm();
 
 
-        get_trial_point_info();
+    //    get_trial_point_info();
 
-        ratio_test();
+    //    ratio_test();
 
-        // Calculate the second-order-correction steps
-        second_order_correction();
+    //    // Calculate the second-order-correction steps
+    //    second_order_correction();
 
-        // Update the radius and the QP bounds if the radius has been changed
-        stats_->iter_addone();
+    //    // Update the radius and the QP bounds if the radius has been changed
+    //    stats_->iter_addone();
 
-        /* output some information to the console*/
+    //    /* output some information to the console*/
 
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        if (options_->printLevel > 1) {
-            if (stats_->iter % 10 == 0)log_->print_header();
-            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-                                  delta_, rho_);
-        }
+    //    //check if the current iterates is optimal and decide to
+    //    //exit the loop or not
+    //    if (options_->printLevel > 1) {
+    //        if (stats_->iter % 10 == 0)log_->print_header();
+    //        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+    //                              delta_, rho_);
+    //    }
 
-        termination_check();
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
+    //    termination_check();
+    //    if (exitflag_ != UNKNOWN) {
+    //        break;
+    //    }
 
-        try {
-            update_radius();
-        }
-        catch(SMALL_TRUST_REGION) {
-            break;
-        }
+    //    try {
+    //        update_radius();
+    //    }
+    //    catch(SMALL_TRUST_REGION) {
+    //        break;
+    //    }
 
-    }
+    //}
 
     //check if the current iterates get_status before exiting
-    if (stats_->iter == options_->iter_max)
-        exitflag_ = EXCEED_MAX_ITER;
+    //if (stats_->iter == options_->iter_max)
+    //    exitflag_ = EXCEED_MAX_ITER;
 
-    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-        termination_check();
-    }
+    //if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+    //    termination_check();
+    //}
 
-    // print the final summary message to the console
-    if (options_->printLevel > 0)
-        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-                          infea_measure_, exitflag_);
+    //// print the final summary message to the console
+    //if (options_->printLevel > 0)
+    //    log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+                          //infea_measure_, exitflag_);
 }
 
 
