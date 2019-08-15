@@ -211,7 +211,7 @@ private:
 public:
     shared_ptr<qpOASES::SQProblem> solver_;// the qpOASES object used for solving a qp
 
-    
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////

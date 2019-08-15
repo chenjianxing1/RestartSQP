@@ -136,7 +136,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     //// print the final summary message to the console
     //if (options_->printLevel > 0)
     //    log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-                          //infea_measure_, exitflag_);
+    //infea_measure_, exitflag_);
 }
 
 

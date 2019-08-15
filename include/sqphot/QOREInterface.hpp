@@ -7,7 +7,7 @@
 #ifndef __SQPHOTSTART_QOREINTERFACE_HPP__
 #define __SQPHOTSTART_QOREINTERFACE_HPP__
 
-extern "C"{
+extern "C" {
 #include "qpsolver.h"
 }
 #include <sqphot/QPsolverInterface.hpp>
@@ -63,7 +63,7 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
-    void optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override; 
+    void optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
 
     /**@name Getters */
     //@{
@@ -96,7 +96,7 @@ public:
 
     //@}
     //
-    
+
     /** @name Setters */
     //@{
     void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {};
@@ -163,7 +163,7 @@ private:
 
     /** Overloaded Equals Operator */
     void operator=(const QOREInterface&);
-    
+
     void setQP_options(shared_ptr<Options> options);
 
     /**
