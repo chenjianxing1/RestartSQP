@@ -7,7 +7,9 @@
 #ifndef __SQPHOTSTART_QOREINTERFACE_HPP__
 #define __SQPHOTSTART_QOREINTERFACE_HPP__
 
-#include <qpsolver.h>
+extern "C"{
+#include "qpsolver.h"
+}
 #include <sqphot/QPsolverInterface.hpp>
 
 

@@ -24,7 +24,7 @@ if(ADD_QPOASES)
  add_dependencies(sqphotstart QPOASES)
 endif(ADD_QPOASES)
 
-target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${IPOPT_LIBRARIES} ${QPOASES_LIBRARIES})
+target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${IPOPT_LIBRARIES} ${QPOASES_LIBRARIES} ${QORE_LIBRARIES})
 if(Cov)
   set_target_properties(sqphotstart
   PROPERTIES

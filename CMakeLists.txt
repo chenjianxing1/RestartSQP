@@ -20,6 +20,8 @@ option(Ipopt "Link to IPOPT libraries" ON)
 option(Cplex "Link to CPLEX libraries" OFF)
 
 
+option(Qore "Link to QORE libraries" ON)
+
 # Find Ipopt.
 if (Ipopt)
 	message(STATUS "Enable IPOPT")
@@ -71,6 +73,18 @@ if (Eigen)
   include_directories(${EIGEN_INCLUDE_DIR})
 endif()
 
+
+#QORE
+if(Qore)
+	message(STATUS "Enable QORE")
+	add_definitions(-DUSE_QORE)
+	find_package(QORE)
+	if(QORE_FOUND)
+		message("-- Found QORE: ${QORE_INCLUDE_DIRS}") 
+		set(LIBS ${LIBS} ${QORE_LIBRARIES})
+		MESSAGE(STATUS "QORE_LIBRARIES = ${QORE_LIBRARIES}")
+	endif (QORE_FOUND)
+endif(Qore)
 # QPOASES
 set(QPOASES_VERSION 3.2.1)
 find_package(QPOASES)
@@ -88,11 +102,10 @@ else(QPOASES_FOUND)
 endif (QPOASES_FOUND)
 
 
-
 include_directories(${QPOASES_INCLUDE_DIR1})
 include_directories(${QPOASES_INCLUDE_DIR2})
 include_directories(${THIRDPARTY_INSTALL_PATH}/include)
-
+include_directories(${QORE_INCLUDE_DIR})
 
 set(LIBS ${LIBS} ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/lib/Release ${PROJECT_SOURCE_DIR}/lib/Debug)
 # Compiler options

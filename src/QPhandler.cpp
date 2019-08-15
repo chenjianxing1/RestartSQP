@@ -13,10 +13,10 @@ DECLARE_STD_EXCEPTION(INVALID_QP_SOLVER_CHOICE);
 QPhandler::QPhandler(Index_info nlp_info, const char* const QPsolverChoice) :
     nlp_info_(nlp_info) {
     //if(strcmp(QPsolverChoice,"qpOASES")==0) {
-    solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP);
+    //solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP);
     //}
     //else if(strcmp(QPsolverChoice,"QORE")==0) {
-    //  solverInterface_ = make_shared<QOREInterface>(nlp_info);
+     solverInterface_ = make_shared<QOREInterface>(nlp_info);
     //}
     //else {
     //   THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
