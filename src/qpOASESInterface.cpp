@@ -1,4 +1,9 @@
-
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:    2019-07
+ */
 #include <sqphot/qpOASESInterface.hpp>
 
 
@@ -191,11 +196,11 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
 
 
 /**
-* @brief copy the multipliers of the QP to the input pointer
-*
-* @param y_k   a pointer to an array with allocated memory equals to
-* sizeof(double)*(num_variable+num_constraint)
-*/
+ * @brief copy the multipliers of the QP to the input pointer
+ *
+ * @param y_k   a pointer to an array with allocated memory equals to
+ * sizeof(double)*(num_variable+num_constraint)
+ */
 inline void qpOASESInterface::get_multipliers(double* y_k) {
 
     solver_->getDualSolution(y_k);

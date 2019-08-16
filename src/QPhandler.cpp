@@ -16,7 +16,7 @@ QPhandler::QPhandler(Index_info nlp_info, const char* const QPsolverChoice) :
     //solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP);
     //}
     //else if(strcmp(QPsolverChoice,"QORE")==0) {
-     solverInterface_ = make_shared<QOREInterface>(nlp_info);
+    solverInterface_ = make_shared<QOREInterface>(nlp_info,QP);
     //}
     //else {
     //   THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")

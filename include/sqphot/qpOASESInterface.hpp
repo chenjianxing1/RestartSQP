@@ -1,3 +1,9 @@
+/* Copyright (C) 2019
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:    2019-07
+ */
 
 #ifndef __QPOASES_INTERFACE_HPP__
 #define __QPOASES_INTERFACE_HPP__
@@ -19,6 +25,10 @@ enum QPMatrixType {
 
 class qpOASESInterface :
     public QPSolverInterface {
+
+    ///////////////////////////////////////////////////////////
+    //                      PUBLIC METHODS                   //
+    ///////////////////////////////////////////////////////////
 public:
 
     /** Defualt Destructor */
@@ -145,36 +155,10 @@ public:
     void WriteQPDataToFile(const char* const filename);
     //@}
 
-public:
-    shared_ptr<qpOASES::SQProblem> solver_;// the qpOASES object used for solving a qp
 
-
-private:
-
-    UpdateFlags data_change_flags_;
-    shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
-                                                       * taken in, it only contains the
-                                                       * pointers to array stored in
-                                                       * the class members of H_*/
-
-    shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
-                                                       * taken in, it only contains the
-                                                       * pointers to array stored in
-                                                       * the class members of A_*/
-    shared_ptr<Vector> lb_;  /**< lower bounds of x */
-    shared_ptr<Vector> ub_;  /**< upper bounds of x */
-    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
-    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
-    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
-    shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
-                                          * Harwell-Boeing Sparse Matrix format*/
-    shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
-                                          * Harwell-Boeing Sparse Matrix format*/
-    bool firstQPsolved_ = false; /**< if the first QP has been solved? */
-    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
-    QPMatrixType new_QP_matrix_status_ = UNDEFINED;
-    QPReturnType status_;
-
+    ///////////////////////////////////////////////////////////
+    //                      PRIVATE METHODS                  //
+    ///////////////////////////////////////////////////////////
 private:
 
     /** default constructor*/
@@ -218,6 +202,44 @@ private:
 
     /** Overloaded Equals Operator */
     void operator=(const qpOASESInterface&);
+
+    ///////////////////////////////////////////////////////////
+    //                      PUBLIC MEMBERS                   //
+    ///////////////////////////////////////////////////////////
+    //FIXME: move it to private..
+    //make it public temporarily
+public:
+    shared_ptr<qpOASES::SQProblem> solver_;// the qpOASES object used for solving a qp
+
+
+    ///////////////////////////////////////////////////////////
+    //                      PRIVATE MEMBERS                  //
+    ///////////////////////////////////////////////////////////
+private:
+
+    UpdateFlags data_change_flags_;
+    shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
+                                                       * taken in, it only contains the
+                                                       * pointers to array stored in
+                                                       * the class members of H_*/
+
+    shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
+                                                       * taken in, it only contains the
+                                                       * pointers to array stored in
+                                                       * the class members of A_*/
+    shared_ptr<Vector> lb_;  /**< lower bounds of x */
+    shared_ptr<Vector> ub_;  /**< upper bounds of x */
+    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
+    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
+    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
+    shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
+                                          * Harwell-Boeing Sparse Matrix format*/
+    shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
+                                          * Harwell-Boeing Sparse Matrix format*/
+    bool firstQPsolved_ = false; /**< if the first QP has been solved? */
+    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
+    QPMatrixType new_QP_matrix_status_ = UNDEFINED;
+    QPReturnType status_;
 
 };
 }
