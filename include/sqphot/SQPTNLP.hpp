@@ -10,7 +10,7 @@
 #include <memory>
 #include <sqphot/Utils.hpp>
 #include <sqphot/MyNLP.hpp>
-#include <coin/IpTNLP.hpp>
+#include <IpTNLP.hpp>
 #include <sqphot/Vector.hpp>
 #include <sqphot/Matrix.hpp>
 

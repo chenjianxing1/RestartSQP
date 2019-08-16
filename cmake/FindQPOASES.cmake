@@ -4,33 +4,20 @@ if(QPOASES_ROOT_DIR)
  message("Looking for QPOASES in ${QPOASES_ROOT_DIR}")
 else(QPOASES_ROOT_DIR)
  message("QPOASES_ROOT_DIR not provided.")
- message("Looking for QPOASES in ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/include")
 endif(QPOASES_ROOT_DIR)
 
 find_path(QPOASES_INCLUDE_DIR
   NAMES qpOASES.hpp
-  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/include
   HINTS /usr/local/include
   HINTS /usr/include
-  HINTS ${THIRDPARTY_INSTALL_PATH}/include
+  HINTS ${QPOASES_ROOT_DIR}/include
 )
 
 
-if(APPLE)
 find_library(QPOASES_LIBRARY 
-  libqpOASES.dylib
-  HINTS /usr/local/lib
-  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/bin
-  HINTS ${QPOASES_ROOT_DIR}/bin
+  qpOASES
+  HINTS ${QPOASES_ROOT_DIR}/build/libs
 )
-elseif(UNIX)
-find_library(QPOASES_LIBRARY 
-  libqpOASES.so
-  HINTS /usr/local/lib
-  HINTS ${PROJECT_SOURCE_DIR}/ThirdParty/qpOASES-${QPOASES_VERSION}/bin
-  HINTS ${QPOASES_ROOT_DIR}/bin
-)
-endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(QPOASES DEFAULT_MSG QPOASES_LIBRARY QPOASES_INCLUDE_DIR)

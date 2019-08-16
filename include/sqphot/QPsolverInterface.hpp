@@ -8,7 +8,7 @@
 
 #include <memory>
 #include <vector>
-#include <coin/IpException.hpp>
+#include <IpException.hpp>
 #include <sqphot/Vector.hpp>
 #include <sqphot/Utils.hpp>
 #include <sqphot/Matrix.hpp>

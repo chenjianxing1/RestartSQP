@@ -22,15 +22,6 @@ option(Cplex "Link to CPLEX libraries" OFF)
 
 option(Qore "Link to QORE libraries" ON)
 
-# Find Ipopt.
-if (Ipopt)
-	message(STATUS "Enable IPOPT")
-	add_definitions(-DUSE_IPOPT)
-	find_package(IPOPT REQUIRED)
-	include_directories(${IPOPT_INCLUDE_DIRS}/..)
-	set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
-endif()
-
 # Find gurobi?
 if (Gurobi)
     message(STATUS "Enable GUROBI")
@@ -85,6 +76,7 @@ if(Qore)
 		MESSAGE(STATUS "QORE_LIBRARIES = ${QORE_LIBRARIES}")
 	endif (QORE_FOUND)
 endif(Qore)
+
 # QPOASES
 set(QPOASES_VERSION 3.2.1)
 find_package(QPOASES)
@@ -107,21 +99,31 @@ include_directories(${QPOASES_INCLUDE_DIR2})
 include_directories(${THIRDPARTY_INSTALL_PATH}/include)
 include_directories(${QORE_INCLUDE_DIR})
 
+# Find Ipopt.
+if (Ipopt)
+	message(STATUS "Enable IPOPT")
+	add_definitions(-DUSE_IPOPT)
+	find_package(IPOPT REQUIRED)
+	include_directories(${IPOPT_INCLUDE_DIRS}/..)
+	set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
+endif()
+
 set(LIBS ${LIBS} ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/lib/Release ${PROJECT_SOURCE_DIR}/lib/Debug)
 # Compiler options
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
 
 # Build options
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/Release)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-set(CMAKE_BUILD_TYPE "Release")
-if (Debug)
-set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/Debug)
-endif()
+#set(CMAKE_BUILD_TYPE "Release")
+#if (Debug)
+#set(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/Debug)
+#endif()
 
 if(Cov)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")

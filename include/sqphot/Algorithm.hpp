@@ -8,9 +8,9 @@
 #define SQPHOTSTART_ALG_HPP_
 
 #include <sqphot/SQPDebug.hpp>
-#include <coin/IpTNLP.hpp>
-#include <coin/IpRegOptions.hpp>
-#include <coin/IpOptionsList.hpp>
+#include <IpTNLP.hpp>
+#include <IpRegOptions.hpp>
+#include <IpOptionsList.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Options.hpp>

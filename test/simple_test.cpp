@@ -4,9 +4,9 @@
 #include <sqphot/MyNLP.hpp>
 #include <sqphot/Algorithm.hpp>
 #include <sqphot/Utils.hpp>
-#include <coin/IpTNLP.hpp>
-#include <coin/AmplTNLP.hpp>
-#include <coin/IpIpoptApplication.hpp>
+#include <IpTNLP.hpp>
+#include <AmplTNLP.hpp>
+#include <IpIpoptApplication.hpp>
 #include <stdio.h>
 #include <string.h>
 
