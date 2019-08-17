@@ -24,7 +24,9 @@ if(ADD_QPOASES)
  add_dependencies(sqphotstart QPOASES)
 endif(ADD_QPOASES)
 
-target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${QPOASES_LIBRARIES} ${QORE_LIBRARIES} ${IPOPT_LDFLAGS})
+target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${QPOASES_LIBRARIES} ${QORE_LIBRARIES}) # ${IPOPT_LDFLAGS})
+#set(CMAKE_EXE_LINKER_FLAGS "${IPOPT_LDFLAGS}")
+
 if(Cov)
   set_target_properties(sqphotstart
   PROPERTIES

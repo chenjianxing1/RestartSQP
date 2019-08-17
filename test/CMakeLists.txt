@@ -22,5 +22,10 @@ find_library(ASL_LIBRARY
 #file(GLOB AMPLTNLP_OBJ ${AMPLSOLVER_DIR}/AmplTNLP.o ${AMPLSOLVER_DIR}/.libs/AmplTNLP.o)
 #message("AMPLTNLP_OBJ = ${AMPLTNLP_OBJ}")
 
+string(REPLACE ";" " " MY_LD_FLAGS "${IPOPT_LDFLAGS}")
+#message(${LD_FLAGS})
+##set(CMAKE_EXE_LINKER_FLAGS "${LD_FLAGS}")
+
 #target_link_libraries(simple_test sqphotstart ${IPOPT_LDFLAGS} ${AMPLTNLP_OBJ})
-target_link_libraries(simple_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY})
+target_link_libraries(simple_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${MY_LD_FLAGS})
+

@@ -105,7 +105,7 @@ if (Ipopt)
 	add_definitions(-DUSE_IPOPT)
 	find_package(IPOPT REQUIRED)
 	include_directories(${IPOPT_INCLUDE_DIRS}/..)
-	set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
+	set(LIBS ${LIBS}) # ${IPOPT_LIBRARIES})
 endif()
 
 set(LIBS ${LIBS} ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/lib/Release ${PROJECT_SOURCE_DIR}/lib/Debug)
