@@ -8,6 +8,7 @@ message("*** RIGHT NOW, WE NEED TO SET THE ENVIRONMENT VARIABLE PGK_SEARCH_PATH 
 message("Type: export PKG_CONFIG_PATH=${CMAKE_PREFIX_PATH}:$PKG_CONFIG_PATH")
 pkg_check_modules(IPOPT REQUIRED ipopt)
 message("*** Make sure your environment variable LD_LIBRARY_PATH includes $IPOPTDIR/lib")
+
 mark_as_advanced(IPOPT_LDFLAGS IPOPT_INCLUDE_DIR)
 
 #####################################
@@ -32,6 +33,7 @@ find_library(IPOPT_LIBRARY
 	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
 	HINTS ${IPOPT_ROOT_DIR}/lib
 )
+
 find_library(IPOPT_LIBRARY2 
 	libcoinasl.dylib
 	HINTS /usr/local/lib

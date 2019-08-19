@@ -105,10 +105,10 @@ if (Ipopt)
 	add_definitions(-DUSE_IPOPT)
 	find_package(IPOPT REQUIRED)
 	include_directories(${IPOPT_INCLUDE_DIRS}/..)
-	set(LIBS ${LIBS}) # ${IPOPT_LIBRARIES})
+	set(LIBS ${LIBS} ${IPOPT_LDFLAGS})
 endif()
 
-set(LIBS ${LIBS} ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/lib/Release ${PROJECT_SOURCE_DIR}/lib/Debug)
+#set(LIBS ${LIBS} ${PROJECT_BINARY_DIR}/lib)
 # Compiler options
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
 

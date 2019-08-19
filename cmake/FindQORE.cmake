@@ -1,4 +1,4 @@
-set(QORE_ROOT_DIR "$ENV{QORE_ROOT_DIR}" CACHE PATH "IPOPT root directory.")
+set(QORE_ROOT_DIR "$ENV{QORE_ROOT_DIR}" CACHE PATH "QORE root directory.")
 message("Looking for QORE in ${QORE_ROOT_DIR}")
 
 
@@ -26,42 +26,42 @@ find_library(QORE_LIBRARY
 	libqore.dylib
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
-	HINTS ${QORE_ROOT_DIR}/lib
+	HINTS ${QORE_ROOT_DIR}/build/lib
 )
-find_library(QORE_LIBRARY2 
-	libblas.dylib
-	HINTS /usr/local/lib
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-	HINTS ${QORE_ROOT_DIR}/lib
-)
+#find_library(QORE_LIBRARY2 
+#	libblas.dylib
+#	HINTS /usr/local/lib
+#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+#	HINTS ${QORE_ROOT_DIR}/lib
+#)
 
-find_library(QORE_LIBRARY3 
-	liblapack.dylib
-	HINTS /usr/local/lib
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-	HINTS ${QORE_ROOT_DIR}/lib
-)
+#find_library(QORE_LIBRARY3 
+#	liblapack.dylib
+#	HINTS /usr/local/lib
+#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+#	HINTS ${QORE_ROOT_DIR}/lib
+#)
 
 elseif(UNIX)
 find_library(QORE_LIBRARY 
 	libqore.so
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
-	HINTS ${QORE_ROOT_DIR}/lib
+	HINTS ${QORE_ROOT_DIR}/build//lib
 )
-find_library(QORE_LIBRARY2 
-	libblas.so
-	HINTS /usr/local/lib
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-	HINTS ${QORE_ROOT_DIR}/lib
-)
+#find_library(QORE_LIBRARY2 
+#	libblas.so
+#	HINTS /usr/local/lib
+#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+#	HINTS ${QORE_ROOT_DIR}/lib
+#)
 
-find_library(QORE_LIBRARY3 
-	liblapack.so
-	HINTS /usr/local/lib
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-	HINTS ${QORE_ROOT_DIR}/lib
-)
+#find_library(QORE_LIBRARY3 
+#	liblapack.so
+#	HINTS /usr/local/lib
+#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+#	HINTS ${QORE_ROOT_DIR}/lib
+#)
 
 
 endif()
