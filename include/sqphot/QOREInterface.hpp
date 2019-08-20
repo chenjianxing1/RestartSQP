@@ -10,6 +10,7 @@
 extern "C" {
 #include "qpsolver.h"
 }
+
 #include <sqphot/QPsolverInterface.hpp>
 
 
@@ -109,38 +110,29 @@ public:
     };
 
 
-    void set_g(int location, double value) override {
-        g_->setValueAt(location,value);
-    };
+    void set_g(int location, double value) override;;
 
 
     void set_g(shared_ptr<const Vector> rhs) override {};
 
 
-    void set_lb(int location, double value) override {
-        lb_->setValueAt(location, value);
-    };
+    void set_lb(int location, double value) override;;
 
 
     void set_lb(shared_ptr<const Vector> rhs) override {
     };
 
 
-    void set_ub(int location, double value) override {
-
-        ub_->setValueAt(location, value);
-
-    };
-
+    void set_ub(int location, double value) override;;
 
     void set_ub(shared_ptr<const Vector> rhs) override {};
 
     void set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                         Identity2Info I_info) override {};
+                         Identity2Info I_info) override;;
 
 
     void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
-                      I_info) override {};
+                      I_info) override;;
 
 
 
@@ -151,8 +143,6 @@ public:
 
 
     void set_lbA(shared_ptr<const Vector> rhs) override {};
-
-
 
 
     void set_ubA(int location, double value) override {};
@@ -171,11 +161,11 @@ private:
     QOREInterface();
 
     /** Copy Constructor */
-    QOREInterface(const QOREInterface&);
+    QOREInterface(const QOREInterface &);
 
 
     /** Overloaded Equals Operator */
-    void operator=(const QOREInterface&);
+    void operator=(const QOREInterface &);
 
 
     void setQP_options(shared_ptr<Options> options);
@@ -207,7 +197,6 @@ private:
     shared_ptr<Vector> y_qp_;
     int rv_;//temporarily placed here, for recording the return value from the solver
 };
-
 
 
 }

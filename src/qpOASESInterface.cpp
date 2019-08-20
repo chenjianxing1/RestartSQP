@@ -7,6 +7,7 @@
 #include <sqphot/qpOASESInterface.hpp>
 
 
+
 namespace SQPhotstart {
 /**
  * @brief Allocate memory for the class members

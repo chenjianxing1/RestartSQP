@@ -90,7 +90,7 @@ public:
     /** @name Set the corresponding option to the user-defined value */
     //@{
     template<typename T>
-    bool setOptions(const std::string& name, T value) {
+    bool setOptions(const std::string &name, T value) {
         return false;
     };
     //@}
@@ -117,10 +117,10 @@ public:
 private:
 
     /** Copy Constructor */
-    Algorithm(const Algorithm&);
+    Algorithm(const Algorithm &);
 
     /** Overloaded Equals Operator */
-    void operator=(const Algorithm&);
+    void operator=(const Algorithm &);
 
     /**
      * @brief set the default option values
@@ -258,6 +258,8 @@ private:
      */
     void get_full_direction_LP(shared_ptr<Vector> search_direction);
 
+
+    void get_obj_QP();
     //@}
 
     /**
@@ -275,6 +277,7 @@ private:
      */
 
     void setupLP();
+
     /**
      * @brief This function extracts the Lagragian multipliers for constraints
      * in NLP and copies it to the class member multiplier_cons_.

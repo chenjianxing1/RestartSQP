@@ -170,7 +170,6 @@ void QPhandler::set_g(shared_ptr<const Vector> grad, double rho) {
  */
 void QPhandler::set_H(shared_ptr<const SpTripletMat> hessian) {
 
-
     solverInterface_->set_H_structure(hessian);
     solverInterface_->set_H_values(hessian);
 
@@ -183,19 +182,13 @@ void QPhandler::set_H(shared_ptr<const SpTripletMat> hessian) {
  * @param jacobian  the Matrix object for Jacobian from c(x)
  */
 void QPhandler::set_A(shared_ptr<const SpTripletMat> jacobian) {
-
-    if(QPsolverChoice_==QPOASES_QP) {
-        I_info_A.irow1 = 1;
-        I_info_A.irow2 = 1;
-        I_info_A.jcol1 = nlp_info_.nVar + 1;
-        I_info_A.jcol2 = nlp_info_.nVar + nlp_info_.nCon + 1;
-        I_info_A.size = nlp_info_.nCon;
-
-        solverInterface_->set_A_structure(jacobian, I_info_A);
-        solverInterface_->set_A_values(jacobian, I_info_A);
-    }
-    else if(QPsolverChoice_== QORE_QP) {
-    }
+    I_info_A.irow1 = 1;
+    I_info_A.irow2 = 1;
+    I_info_A.jcol1 = nlp_info_.nVar + 1;
+    I_info_A.jcol2 = nlp_info_.nVar + nlp_info_.nCon + 1;
+    I_info_A.size = nlp_info_.nCon;
+    solverInterface_->set_A_structure(jacobian, I_info_A);
+    solverInterface_->set_A_values(jacobian, I_info_A);
 }
 
 

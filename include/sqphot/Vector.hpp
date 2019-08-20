@@ -7,9 +7,7 @@
 #ifndef SQPHOTSTART_VECTOR_HPP
 #define SQPHOTSTART_VECTOR_HPP
 
-#include <memory>
-#include <iostream>
-#include <cassert>
+#include <sqphot/Utils.hpp>
 
 namespace SQPhotstart {
 
@@ -31,8 +29,12 @@ public:
 
 
     void swp(double* rhs) {
-        assert(isAllocated()==false);
+        assert(isAllocated() == false);
         this->values_ = rhs;
+        printf("rhs is\n");
+        for (int i = 0; i < size_; i++) {
+            std::cout << rhs[i] << std::endl;
+        }
     }
 
     void free() {
@@ -48,16 +50,16 @@ public:
     Vector(int vector_size, const double* vector_value);
 
 
-    void allocate_memory(int size= 0) {
-        isAllocated_= true;
-        if(size==0) {
+    void allocate_memory(int size = 0) {
+        isAllocated_ = true;
+        if (size == 0) {
             values_ = new double[size_]();
-        }
-        else {
-            assert(size ==size_);
+        } else {
+            assert(size == size_);
             values_ = new double[size]();
         }
     }
+
     /** Default destructor*/
     virtual ~Vector();
 
@@ -67,7 +69,11 @@ public:
     void assign(int Location, int subvector_size, const double* subvector);
 
     inline void setValueAt(int location, double value) {
-        values_[location] = value;
+        if(value>INF)
+            values_[location] = INF;
+        else
+            values_[location] = value;
+
     }
 
     /** assign a sub-vector with a specific size to the class member vector at a specific location.
@@ -162,17 +168,17 @@ public:
      * @brief copy constructor
      * @param rhs
      */
-    void operator=(const Vector& rhs) {
+    void operator=(const Vector &rhs) {
         size_ = rhs.size_;
         values_ = rhs.values_;
     }
 
     void write_to_file(FILE* file_to_write, const char* const name) {
-        fprintf(file_to_write,"real_t %s[] = {",name);
-        for(int i = 0; i<Dim(); i++) {
-            if (i % 10 == 0&& i>1)
+        fprintf(file_to_write, "real_t %s[] = {", name);
+        for (int i = 0; i < Dim(); i++) {
+            if (i % 10 == 0 && i > 1)
                 fprintf(file_to_write, "\n");
-            if(i ==Dim()-1)
+            if (i == Dim() - 1)
                 fprintf(file_to_write, "%10e};\n\n", values_[i]);
             else
                 fprintf(file_to_write, "%10e, ", values_[i]);
@@ -182,6 +188,7 @@ public:
     bool isAllocated() {
         return isAllocated_;
     }
+
 private:
 
     /** Default Constructor*/

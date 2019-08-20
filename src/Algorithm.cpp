@@ -69,63 +69,63 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     /**
      * Main iteration
      */
-    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-        setupQP();
-        try {
-            myQP_->solveQP(stats_,
-                           options_);//solve the QP subproblem and update the stats_
-        }
-        catch (QP_NOT_OPTIMAL) {
-            handle_error("QP NOT OPTIMAL");
-            break;
-        }
-
-        qp_obj_ = myQP_->GetObjective();
-
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction();
-
-        //Update the penalty parameter if necessary
-
-        update_penalty_parameter();
-
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
-
-
-        get_trial_point_info();
-
-        ratio_test();
-
-        // Calculate the second-order-correction steps
-        second_order_correction();
-
-        // Update the radius and the QP bounds if the radius has been changed
-        stats_->iter_addone();
-
-        /* output some information to the console*/
-
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        if (options_->printLevel > 1) {
-            if (stats_->iter % 10 == 0)log_->print_header();
-            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-                                  delta_, rho_);
-        }
-
-        termination_check();
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-
-        try {
-            update_radius();
-        }
-        catch (SMALL_TRUST_REGION) {
-            break;
-        }
-
+//    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+    setupQP();
+    try {
+        myQP_->solveQP(stats_,
+                       options_);//solve the QP subproblem and update the stats_
     }
+    catch (QP_NOT_OPTIMAL) {
+        handle_error("QP NOT OPTIMAL");
+//            break;
+    }
+
+
+    //get the search direction from the solution of the QPsubproblem
+    get_search_direction();
+
+    get_obj_QP();
+
+    //Update the penalty parameter if necessary
+
+    update_penalty_parameter();
+
+    //calculate the infinity norm of the search direction
+    norm_p_k_ = p_k_->getInfNorm();
+
+    get_trial_point_info();
+
+    ratio_test();
+
+    // Calculate the second-order-correction steps
+    second_order_correction();
+
+    // Update the radius and the QP bounds if the radius has been changed
+    stats_->iter_addone();
+
+    /* output some information to the console*/
+
+    //check if the current iterates is optimal and decide to
+    //exit the loop or not
+    if (options_->printLevel > 1) {
+        if (stats_->iter % 10 == 0)log_->print_header();
+        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+                              delta_, rho_);
+    }
+
+    termination_check();
+    if (exitflag_ != UNKNOWN) {
+//            break;
+    }
+
+    try {
+        update_radius();
+    }
+    catch (SMALL_TRUST_REGION) {
+//            break;
+    }
+
+//    }
 
     //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)
@@ -562,6 +562,7 @@ void Algorithm::get_search_direction() {
     if (p_k_->isAllocated())
         p_k_->free();
     p_k_->swp(myQP_->GetOptimalSolution());
+
     if (options_->penalty_update)
         infea_measure_model_ = oneNorm(p_k_->values() + nVar_, 2 * nCon_);
     //FIXME:calculate somewhere else?
@@ -1152,6 +1153,21 @@ void Algorithm::handle_error(const char* error) {
         } else if (strcmp(error, "INVALID NLP") == 0) {
             exitflag_ = INVALID_NLP;
         }
+    }
+}
+
+void Algorithm::get_obj_QP() {
+    if (options_->QPsolverChoice == QPOASES_QP)
+        qp_obj_ = myQP_->GetObjective();
+    else if (options_->QPsolverChoice == QORE_QP) {
+        shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
+        hessian_->times(p_k_, Hp);//H*p_k
+        p_k_->print("p_k");
+        Hp->print("hp");
+        qp_obj_ = 0;
+        std::cout<<0.5*p_k_->times(Hp);
+        qp_obj_ += 0.5*p_k_->times(Hp) + p_k_->times(grad_f_) + infea_measure_model_;
+        printf("QP obj is %10e", qp_obj_);
     }
 }
 
