@@ -33,8 +33,8 @@ public:
 
     /**solver choice*/
     //@{
-    const char* QPsolverChoice;
-    const char* LPsolverChoice;
+    QPSolver QPsolverChoice;
+    LPSolver LPsolverChoice;
 
     //@}
 

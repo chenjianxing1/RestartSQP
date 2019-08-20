@@ -10,7 +10,7 @@
 namespace SQPhotstart {
 
 LPhandler::LPhandler(Index_info nlp_info) :
-    QPhandler(nlp_info, nullptr),
+    QPhandler(nlp_info, QORE_QP),//TODO: modify it
     nlp_info_(nlp_info) {
     solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP);
 }

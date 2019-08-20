@@ -44,7 +44,7 @@ class QPhandler {
     ///////////////////////////////////////////////////////////
 public:
 
-    QPhandler(Index_info nlp_info, const char* const QPsolverChoice);
+    QPhandler(Index_info nlp_info, QPSolver QPsolverChoice);
 
 
     /** Default destructor */
@@ -236,6 +236,7 @@ private:
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
 private:
+    QPSolver QPsolverChoice_;
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;

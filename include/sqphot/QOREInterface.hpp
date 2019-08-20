@@ -74,7 +74,7 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    void get_optimal_solution(double* x_optimal) override {}
+    void get_optimal_solution(double* x_optimal) override;
 
 
     /**
@@ -82,7 +82,7 @@ public:
      *
      * @return the objective function value of the QP problem
      */
-    double get_obj_value() override {}
+    double get_obj_value() override;
 
 
     /**
@@ -90,7 +90,7 @@ public:
      *
      * @param y_k   a pointer to an array with allocated memory
      */
-    void get_multipliers(double* y_optimal) override {}
+    void get_multipliers(double* y_optimal) override;
 
     QPReturnType get_status() override {};
 
@@ -171,7 +171,7 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate(Index_info nlp_info, QPType qptype);
+    int allocate(Index_info nlp_info, QPType qptype);
 
 
 
@@ -189,6 +189,7 @@ private:
     shared_ptr<Vector> g_;
     shared_ptr<Vector> lb_;
     shared_ptr<Vector> ub_;
+    int rv_;//temporarily placed here, for recording the return value from the solver
 };
 
 
