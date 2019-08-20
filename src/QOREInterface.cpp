@@ -13,7 +13,7 @@ QOREInterface::QOREInterface(Index_info nlp_info, QPType qptype) :
     firstQPsolved_(false),
     qp_(0),
     nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
-    nConstr_QP_(nlp_info.nCon + nlp_info.nVar) {
+    nConstr_QP_(nlp_info.nCon) {
     rv_ = allocate(nlp_info, qptype);
     assert(rv_ == QPSOLVER_OK);
 
@@ -56,7 +56,7 @@ int QOREInterface::allocate(Index_info nlp_info, QPType qptype) {
     g_ = make_shared<Vector>(nVar_QP_);
     A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_);
     H_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_);
-    x_qp_ = make_shared<Vector>(nVar_QP_);
+    x_qp_ = make_shared<Vector>(nVar_QP_+nConstr_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
     int returnvalue;
     if (qptype != LP) {
@@ -74,6 +74,7 @@ int QOREInterface::allocate(Index_info nlp_info, QPType qptype) {
 double* QOREInterface::get_optimal_solution() {
     rv_=QPGetDblVector(qp_,"primalsol",x_qp_->values());
     assert(rv_==QPSOLVER_OK);
+    x_qp_->print("x_qp_");
     return x_qp_->values();
 }
 
@@ -86,6 +87,7 @@ double QOREInterface::get_obj_value() {
 double* QOREInterface::get_multipliers() {
     rv_=QPGetDblVector(qp_,"dualsol",y_qp_->values());
     assert(rv_==QPSOLVER_OK);
+    y_qp_->print("y_qp_");
     return y_qp_->values();
 }
 

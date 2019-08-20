@@ -17,20 +17,29 @@ DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
  * Default Constructor
  */
 Algorithm::Algorithm() :
-    Active_Set_constraints_(NULL),
-    Active_Set_bounds_(NULL),
-    cons_type_(NULL),
-    bound_cons_type_(NULL) {
+	Active_Set_constraints_(NULL),
+	Active_Set_bounds_(NULL),
+	cons_type_(NULL),
+	bound_cons_type_(NULL),
+	norm_p_k_(0),
+	obj_value_(0),
+	obj_value_trial_(0),
+	pred_reduction_(0),
+	qp_obj_(0),
+	rho_(0),
+	actual_reduction_(0),
+	delta_(0),
+	infea_measure_(0),
+	infea_measure_model_(0)
+	{
+		jnlst_ = new Ipopt::Journalist();
+		auto jnal1 = jnlst_->AddFileJournal("./", "testbla", J_WARNING);
+		va_list vp;
 
-    setDefaultOption();
-    jnlst_ = new Ipopt::Journalist();
-    auto jnal1 = jnlst_->AddFileJournal("./", "testbla", J_WARNING);
-    va_list vp;
-
-    jnal1->SetAllPrintLevels(J_ALL);
-    jnal1->Printf(J_MAIN, J_WARNING, "what????", vp);
-    roptions2_ = new Ipopt::OptionsList();
-}
+		jnal1->SetAllPrintLevels(J_ALL);
+		jnal1->Printf(J_MAIN, J_WARNING, "what????", vp);
+		roptions2_ = new Ipopt::OptionsList();
+	}
 
 
 /**
@@ -63,13 +72,14 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     }
     catch (...) { //TODO: be more specific
         handle_error("INVALID NLP");
+
     }
 
 
     /**
      * Main iteration
      */
-//    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
     setupQP();
     try {
         myQP_->solveQP(stats_,
@@ -77,7 +87,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
     }
     catch (QP_NOT_OPTIMAL) {
         handle_error("QP NOT OPTIMAL");
-//            break;
+            break;
     }
 
 
@@ -115,17 +125,17 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
     termination_check();
     if (exitflag_ != UNKNOWN) {
-//            break;
+            break;
     }
 
     try {
         update_radius();
     }
     catch (SMALL_TRUST_REGION) {
-//            break;
+            break;
     }
 
-//    }
+    }
 
     //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)
@@ -135,10 +145,10 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         termination_check();
     }
 
-    //// print the final summary message to the console
-    //if (options_->printLevel > 0)
-    //    log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-    //infea_measure_, exitflag_);
+    // print the final summary message to the console
+    if (options_->printLevel > 0)
+        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
+    infea_measure_, exitflag_);
 }
 
 
@@ -482,8 +492,7 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     x_trial_ = make_shared<Vector>(nVar_);
     p_k_ = make_shared<Vector>(nVar_);
     multiplier_cons_ = make_shared<Vector>(nCon_);
-    multiplier_vars_ = make_shared<Vector>(nVar_,
-                                           false);//does not allocate memory for now
+    multiplier_vars_ = make_shared<Vector>(nVar_);
     c_k_ = make_shared<Vector>(nCon_);
     c_trial_ = make_shared<Vector>(nCon_);
     x_l_ = make_shared<Vector>(nVar_);
@@ -582,10 +591,14 @@ void Algorithm::get_search_direction() {
  */
 
 void Algorithm::get_multipliers() {
-    if (multiplier_vars_->isAllocated())
-        multiplier_vars_->free();
-
-    multiplier_vars_->swp(myQP_->GetMultipliers());
+//    if (multiplier_cons_->isAllocated())
+//        multiplier_cons_->free();
+if(options_->QPsolverChoice == QORE_QP){
+    multiplier_cons_->copy_vector(myQP_->GetMultipliers()+nVar_+2*nCon_);
+    multiplier_cons_->print("multiplier_cons");
+    multiplier_vars_->copy_vector(myQP_->GetMultipliers());
+    multiplier_vars_->print("multiplier_vars");
+}
 }
 
 
@@ -1162,12 +1175,10 @@ void Algorithm::get_obj_QP() {
     else if (options_->QPsolverChoice == QORE_QP) {
         shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Hp);//H*p_k
+	hessian_->print();
         p_k_->print("p_k");
-        Hp->print("hp");
-        qp_obj_ = 0;
-        std::cout<<0.5*p_k_->times(Hp);
-        qp_obj_ += 0.5*p_k_->times(Hp) + p_k_->times(grad_f_) + infea_measure_model_;
-        printf("QP obj is %10e", qp_obj_);
+        Hp->print("hp");	
+        qp_obj_ = 0.5*p_k_->times(Hp) + p_k_->times(grad_f_) + infea_measure_model_*rho_;
     }
 }
 

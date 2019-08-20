@@ -31,10 +31,6 @@ public:
     void swp(double* rhs) {
         assert(isAllocated() == false);
         this->values_ = rhs;
-        printf("rhs is\n");
-        for (int i = 0; i < size_; i++) {
-            std::cout << rhs[i] << std::endl;
-        }
     }
 
     void free() {
@@ -68,6 +64,7 @@ public:
      * */
     void assign(int Location, int subvector_size, const double* subvector);
 
+    //TODO:put it into QORE Interface
     inline void setValueAt(int location, double value) {
         if(value>INF)
             values_[location] = INF;
