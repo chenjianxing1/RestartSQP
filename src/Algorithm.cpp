@@ -10,6 +10,7 @@
 namespace SQPhotstart {
 
 DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
+
 DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
 
 /**
@@ -23,11 +24,11 @@ Algorithm::Algorithm() :
 
     setDefaultOption();
     jnlst_ = new Ipopt::Journalist();
-    auto jnal1=jnlst_->AddFileJournal("./","testbla",J_WARNING);
+    auto jnal1 = jnlst_->AddFileJournal("./", "testbla", J_WARNING);
     va_list vp;
 
     jnal1->SetAllPrintLevels(J_ALL);
-    jnal1->Printf(J_MAIN,J_WARNING,"what????",vp);
+    jnal1->Printf(J_MAIN, J_WARNING, "what????", vp);
     roptions2_ = new Ipopt::OptionsList();
 }
 
@@ -58,7 +59,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
 
     try {
         initialization(nlp);
-//        printf("Algorithm initialization ends!\n");
+        printf("Algorithm initialization ends!\n");
     }
     catch (...) { //TODO: be more specific
         handle_error("INVALID NLP");
@@ -120,7 +121,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         try {
             update_radius();
         }
-        catch(SMALL_TRUST_REGION) {
+        catch (SMALL_TRUST_REGION) {
             break;
         }
 
@@ -183,25 +184,21 @@ void Algorithm::termination_check() {
             if (abs(c_u_->values()[i] - c_k_->values()[i]) <
                     options_->active_set_tol)
                 Active_Set_constraints_[i] = ACTIVE_ABOVE;
-        }
-        else if (cons_type_[i] == BOUNDED_BELOW) {
+        } else if (cons_type_[i] == BOUNDED_BELOW) {
             if (abs(c_k_->values()[i] - c_l_->values()[i]) <
                     options_->active_set_tol) {
-                Active_Set_constraints_[i] =ACTIVE_BELOW;
+                Active_Set_constraints_[i] = ACTIVE_BELOW;
             }
-        }
-        else if (cons_type_[i] == EQUAL) {
+        } else if (cons_type_[i] == EQUAL) {
             if ((abs(c_u_->values()[i] - c_k_->values()[i]) <
                     options_->active_set_tol) &&
                     (abs(c_k_->values()[i] - c_l_->values()[i]) <
                      options_->active_set_tol))
                 Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
-        }
-        else {
+        } else {
             Active_Set_constraints_[i] = INACTIVE;
         }
     }
-
 
 
     for (i = 0; i < nVar_; i++) {
@@ -209,13 +206,11 @@ void Algorithm::termination_check() {
             if (abs(x_u_->values()[i] - x_k_->values()[i]) <
                     options_->active_set_tol)
                 Active_Set_bounds_[i] = ACTIVE_ABOVE;
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
+        } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
             if (abs(x_k_->values()[i] - x_l_->values()[i]) <
                     options_->active_set_tol)
                 Active_Set_bounds_[i] = ACTIVE_BELOW;
-        }
-        else if (bound_cons_type_[i] == EQUAL) {
+        } else if (bound_cons_type_[i] == EQUAL) {
             if ((abs(x_u_->values()[i] - x_k_->values()[i]) <
                     options_->active_set_tol) &&
                     (abs(x_k_->values()[i] - x_l_->values()[i]) <
@@ -232,8 +227,7 @@ void Algorithm::termination_check() {
 
     if (infea_measure_ < options_->opt_prim_fea_tol) {
         opt_status_.primal_feasibility = true;
-    }
-    else
+    } else
         opt_status_.primal_feasibility = false;
 
     /**-------------------------------------------------------**/
@@ -257,26 +251,24 @@ void Algorithm::termination_check() {
     //DEBUG_END
     i = 0;
     opt_status_.dual_feasibility = true;
-    while(i<nVar_ && opt_status_.dual_feasibility) {
+    while (i < nVar_ && opt_status_.dual_feasibility) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE &&
                 multiplier_vars_->values()[i] > options_->opt_dual_fea_tol) {
             opt_status_.dual_feasibility = false;
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW &&
-                 multiplier_vars_->values()[i] < -options_->opt_dual_fea_tol) {
+        } else if (bound_cons_type_[i] == BOUNDED_BELOW &&
+                   multiplier_vars_->values()[i] < -options_->opt_dual_fea_tol) {
             opt_status_.dual_feasibility = false;
         }
         i++;
     }
 
     i = 0;
-    while(i<nCon_ && opt_status_.dual_feasibility) {
+    while (i < nCon_ && opt_status_.dual_feasibility) {
         if (cons_type_[i] == BOUNDED_ABOVE &&
                 multiplier_cons_->values()[i] > options_->opt_dual_fea_tol) {
             opt_status_.dual_feasibility = false;
-        }
-        else if (cons_type_[i] == BOUNDED_BELOW &&
-                 multiplier_cons_->values()[i] < -options_->opt_dual_fea_tol) {
+        } else if (cons_type_[i] == BOUNDED_BELOW &&
+                   multiplier_cons_->values()[i] < -options_->opt_dual_fea_tol) {
             opt_status_.dual_feasibility = false;
         }
         i++;
@@ -312,22 +304,20 @@ void Algorithm::termination_check() {
 
     i = 0;
     opt_status_.complementarity = true;
-    while(i<nCon_&& opt_status_.complementarity) {
+    while (i < nCon_ && opt_status_.complementarity) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
             if (abs(multiplier_cons_->values()[i] *
                     (c_u_->values()[i] - c_k_->values()[i]))
                     > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
-        }
-        else if (cons_type_[i] == BOUNDED_BELOW) {
+        } else if (cons_type_[i] == BOUNDED_BELOW) {
             if (abs(multiplier_cons_->values()[i] *
                     (c_k_->values()[i] - c_l_->values()[i]))
                     > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
-        }
-        else if (cons_type_[i] == UNBOUNDED) {
+        } else if (cons_type_[i] == UNBOUNDED) {
             if (multiplier_cons_->values()[i] > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
@@ -335,23 +325,21 @@ void Algorithm::termination_check() {
         i++;
     }
 
-    i= 0;
-    while(i<nVar_&& opt_status_.complementarity) {
+    i = 0;
+    while (i < nVar_ && opt_status_.complementarity) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
             if (abs(multiplier_vars_->values()[i] *
                     (x_u_->values()[i] - x_k_->values()[i]))
                     > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
-        }
-        else if (bound_cons_type_[i] == BOUNDED_BELOW) {
+        } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
             if (abs(multiplier_vars_->values()[i] *
                     (x_k_->values()[i] - x_l_->values()[i]))
                     > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
-        }
-        else if (bound_cons_type_[i] == UNBOUNDED) {
+        } else if (bound_cons_type_[i] == UNBOUNDED) {
             if (multiplier_vars_->values()[i] > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
@@ -379,8 +367,7 @@ void Algorithm::termination_check() {
 
     if (difference->getInfNorm() > options_->opt_tol) {
         opt_status_.stationarity = false;
-    }
-    else {
+    } else {
         opt_status_.stationarity = true;
     }
 
@@ -418,7 +405,6 @@ void Algorithm::termination_check() {
 }
 
 
-
 void Algorithm::get_trial_point_info() {
 
     x_trial_->copy_vector(x_k_->values());//make a deep copy
@@ -449,6 +435,7 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
 
     nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
     nlp_->Get_starting_point(x_k_, multiplier_cons_);
+
     //shift starting point to satisfy the bound constraint
     nlp_->shift_starting_point(x_k_, x_l_, x_u_);
     nlp_->Eval_f(x_k_, obj_value_);
@@ -495,7 +482,8 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     x_trial_ = make_shared<Vector>(nVar_);
     p_k_ = make_shared<Vector>(nVar_);
     multiplier_cons_ = make_shared<Vector>(nCon_);
-    multiplier_vars_ = make_shared<Vector>(nVar_);
+    multiplier_vars_ = make_shared<Vector>(nVar_,
+                                           false);//does not allocate memory for now
     c_k_ = make_shared<Vector>(nCon_);
     c_trial_ = make_shared<Vector>(nCon_);
     x_l_ = make_shared<Vector>(nVar_);
@@ -571,14 +559,12 @@ void Algorithm::cal_infea() {
  * specified QP information
  */
 void Algorithm::get_search_direction() {
-
-    double* tmp_p_k = new double[nVar_ + 2 * nCon_];
-    myQP_->GetOptimalSolution(tmp_p_k);
-    p_k_->copy_vector(tmp_p_k);
+    if (p_k_->isAllocated())
+        p_k_->free();
+    p_k_->swp(myQP_->GetOptimalSolution());
     if (options_->penalty_update)
-        infea_measure_model_ = oneNorm(tmp_p_k + nVar_, 2 * nCon_);
+        infea_measure_model_ = oneNorm(p_k_->values() + nVar_, 2 * nCon_);
     //FIXME:calculate somewhere else?
-    delete[] tmp_p_k;
 }
 
 
@@ -595,15 +581,10 @@ void Algorithm::get_search_direction() {
  */
 
 void Algorithm::get_multipliers() {
+    if (multiplier_vars_->isAllocated())
+        multiplier_vars_->free();
 
-    double* tmp_lambda = new double[nVar_ + 3 * nCon_]();
-
-    myQP_->GetMultipliers(tmp_lambda);
-    //The qpOASES stores the multipliers of variables to the first (num_QP_var)
-    //position and multipliers of constraints to the last (num_QP_nCon) position
-    multiplier_cons_->copy_vector(tmp_lambda + 2 * nCon_ + nVar_);
-    multiplier_vars_->copy_vector(tmp_lambda);
-    delete[] tmp_lambda;
+    multiplier_vars_->swp(myQP_->GetMultipliers());
 }
 
 
@@ -624,8 +605,7 @@ void Algorithm::setupQP() {
         myQP_->set_g(grad_f_, rho_);
         myQP_->set_A(jacobian_);
         myQP_->set_H(hessian_);
-    }
-    else {
+    } else {
         if ((!QPinfoFlag_.Update_g) && (!QPinfoFlag_.Update_H) &&
                 (!QPinfoFlag_.Update_A)
                 && (!QPinfoFlag_.Update_bounds) && (!QPinfoFlag_.Update_delta) &&
@@ -644,8 +624,7 @@ void Algorithm::setupQP() {
             myQP_->update_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
             QPinfoFlag_.Update_bounds = false;
             QPinfoFlag_.Update_delta = false;
-        }
-        else if (QPinfoFlag_.Update_delta) {
+        } else if (QPinfoFlag_.Update_delta) {
             myQP_->update_delta(delta_, x_l_, x_u_, x_k_);
             QPinfoFlag_.Update_delta = false;
         }
@@ -693,7 +672,7 @@ void Algorithm::ratio_test() {
 
 
     double P1x = obj_value_ + rho_ * infea_measure_;
-    double  P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
+    double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
     actual_reduction_ = P1x - P1_x_trial;
     pred_reduction_ = rho_ * infea_measure_ - qp_obj_;
@@ -750,8 +729,7 @@ void Algorithm::ratio_test() {
         QPinfoFlag_.Update_g = true;
 
         isaccept_ = true;    //no need to calculate the SOC direction
-    }
-    else {
+    } else {
         isaccept_ = false;
     }
 
@@ -779,8 +757,7 @@ void Algorithm::update_radius() {
         delta_ = options_->gamma_c * delta_;
         QPinfoFlag_.Update_delta = true;
         //decrease the trust region radius. gamma_c is the parameter in options_ object
-    }
-    else {
+    } else {
         if (actual_reduction_ > options_->
                 eta_e * pred_reduction_
                 && options_->tol > (delta_ - norm_p_k_)) {
@@ -898,11 +875,11 @@ void Algorithm::update_penalty_parameter() {
                                                infea_measure_infty);
                 }
 
-            }
-            else {
+            } else {
                 while ((infea_measure_ - infea_measure_model_ <
                         options_->eps1 * (infea_measure_ - infea_measure_infty) &&
-                        (stats_->penalty_change_trial < options_->penalty_iter_max))) {
+                        (stats_->penalty_change_trial <
+                         options_->penalty_iter_max))) {
 
                     if (rho_trial * 2 >= options_->rho_max) {
                         break;
@@ -943,7 +920,8 @@ void Algorithm::update_penalty_parameter() {
                         (infea_measure_ - infea_measure_model_)) {
                     stats_->penalty_change_Succ_addone();
 
-                    options_->eps1 += (1 - options_->eps1) * options_->eps1_change_parm;
+                    options_->eps1 +=
+                        (1 - options_->eps1) * options_->eps1_change_parm;
 
                     //use the new solution as the search direction
                     p_k_->copy_vector(sol_tmp);
@@ -951,8 +929,7 @@ void Algorithm::update_penalty_parameter() {
                     rho_ = rho_trial; //update to the class variable
 
                     qp_obj_ = myQP_->GetObjective();//update the qp_obj
-                }
-                else {
+                } else {
 
                     stats_->penalty_change_Fail_addone();
                     infea_measure_model_ = infea_measure_model_tmp;
@@ -1076,13 +1053,12 @@ void Algorithm::setDefaultOption() {
 
 void
 Algorithm::get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction) {
-
-    myQP_->GetOptimalSolution(search_direction->values());
+    search_direction->swp(myQP_->GetOptimalSolution());
 }
 
 
 void Algorithm::get_full_direction_LP(shared_ptr<Vector> search_direction) {
-    myLP_->GetOptimalSolution(search_direction->values());
+    search_direction->swp(myLP_->GetOptimalSolution());
 }
 
 
@@ -1127,8 +1103,8 @@ void Algorithm::second_order_correction() {
         catch (QP_NOT_OPTIMAL) {
             handle_error("QP NOT OPTIMAL");
         }
-
-        myQP_->GetOptimalSolution(tmp_sol->values());
+//TODO rewrite
+//        myQP_->GetOptimalSolution();
         s_k->copy_vector(tmp_sol->values());
 
         qp_obj_ = myQP_->GetObjective() + (qp_obj_tmp - rho_ * infea_measure_model_);
@@ -1148,7 +1124,8 @@ void Algorithm::second_order_correction() {
 void Algorithm::handle_error(const char* error) {
 
     if (error != NULL) {
-        if (strcmp(error, "QP NOT OPTIMAL")==0|| strcmp(error, "LP NOT OPTIMAL")==0) {
+        if (strcmp(error, "QP NOT OPTIMAL") == 0 ||
+                strcmp(error, "LP NOT OPTIMAL") == 0) {
             switch (myQP_->GetStatus()) {
             case QP_INFEASIBLE:
                 exitflag_ = QPERROR_INFEASIBLE;
@@ -1172,13 +1149,11 @@ void Algorithm::handle_error(const char* error) {
                 exitflag_ = QPERROR_PREPARINGAUXILIARYQP;
                 break;
             }
-        }
-        else if (strcmp(error,"INVALID NLP") == 0) {
+        } else if (strcmp(error, "INVALID NLP") == 0) {
             exitflag_ = INVALID_NLP;
         }
     }
 }
-
 
 
 }//END_NAMESPACE_SQPHOTSTART

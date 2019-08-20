@@ -41,8 +41,8 @@ QPhandler::~QPhandler() {}
  * @param p_k       the pointer to an empty array with the length equal to the size
  *                  of the QP subproblem
  */
-void QPhandler::GetOptimalSolution(double* p_k) {
-    solverInterface_->get_optimal_solution(p_k);
+double* QPhandler::GetOptimalSolution() {
+    return solverInterface_->get_optimal_solution();
 
 }
 
@@ -55,9 +55,8 @@ void QPhandler::GetOptimalSolution(double* p_k) {
  * @param y_k       the pointer to an empty array with the length equal to the size of
  * multipliers of the QP subproblem
  */
-void QPhandler::GetMultipliers(double* y_k) {
-
-    solverInterface_->get_multipliers(y_k);
+double*  QPhandler::GetMultipliers() {
+    return solverInterface_->get_multipliers();
 
 }
 

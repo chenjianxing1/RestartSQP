@@ -34,11 +34,16 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options>)
     assert(rv_==QPSOLVER_OK);
     QPSetInt(qp_,"prtfreq", 0);
     if(!firstQPsolved_) {
-        rv_=QPOptimize(qp_,lb_->values(),ub_->values(),g_->values(),0,0);// FIXME:the last two should be the pointer to x and y(optimal sol and multiplier)
+        rv_=QPOptimize(qp_,lb_->values(),ub_->values(),g_->values(),x_qp_->values(),
+                       y_qp_->values());//
         firstQPsolved_ = true;
     }
     else
-        rv_=QPOptimize(qp_,lb_->values(),ub_->values(),g_->values(),0,0);// FIXME:the last two should be the pointer to x and y(optimal sol and multiplier)
+        rv_=QPOptimize(qp_,lb_->values(),ub_->values(),g_->values(),x_qp_->values(),
+                       y_qp_->values());
+    lb_->print("lb_");
+    ub_->print("ub_");
+    g_->print("g");
     assert(rv_==QPSOLVER_OK);
 
 }
@@ -59,6 +64,8 @@ int QOREInterface::allocate(Index_info nlp_info, QPType qptype) {
     g_ = make_shared<Vector>(nVar_QP_);
     A_= make_shared<SpHbMat>(nnz_g_QP,nConstr_QP_,nVar_QP_);
     H_= make_shared<SpHbMat>(nnz_g_QP,nConstr_QP_,nVar_QP_);
+    x_qp_ = make_shared<Vector>(nVar_QP_);
+    y_qp_ = make_shared<Vector>(nConstr_QP_);
     int returnvalue;
     if(qptype!=LP) {
         returnvalue =QPNew(&qp_, nVar_QP_,nConstr_QP_,nnz_g_QP,
@@ -71,20 +78,23 @@ int QOREInterface::allocate(Index_info nlp_info, QPType qptype) {
     return returnvalue;
 }
 
-void QOREInterface::get_optimal_solution(double* x_optimal) {
-    rv_ = QPGetDblVector(qp_,"primalsol", x_optimal);
-    assert(rv_==QPSOLVER_OK);
+double* QOREInterface::get_optimal_solution() {
+
+    return x_qp_->values();
 }
 
 double QOREInterface::get_obj_value() {
-
+//    std::cout<<(&qp_)<<std::endl;
+//    shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
+//    H_->times(x_qp_,Hx);
+//    return 0.5*(x_qp_->times(Hx))+g_->times(x_qp_);
 }
 
 
-void QOREInterface::get_multipliers(double* y_optimal) {
-    rv_ = QPGetDblVector(qp_,"dualsol", y_optimal);
-    assert(rv_==QPSOLVER_OK);
+double* QOREInterface::get_multipliers() {
+    return x_qp_->values();
 }
+
 
 }//SQP_HOTSTART
 

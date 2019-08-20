@@ -127,8 +127,7 @@ void SpTripletMat::times(std::shared_ptr<const Vector> p,
                                     [RowIndex_[i] - 1]);
             }
         }
-    }
-    else {
+    } else {
         result->set_zeros(); //set all entries to be 0
         for (int i = 0; i < EntryNum_; i++) {
             result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
@@ -190,8 +189,7 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
 
     if (isSymmetric_) {
         times(p, result);
-    }
-    else {
+    } else {
         result->set_zeros(); //set all entries to be 0
         for (int i = 0; i < EntryNum_; i++) {
             result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
@@ -513,6 +511,13 @@ void SpHbMat::write_to_file(FILE* file_to_write, const char* const name) {
     }
 }
 
+void
+SpHbMat::times(std::shared_ptr<const Vector> p,
+               std::shared_ptr<Vector> result) const {
+
+}
+
 
 }//END_OF_NAMESPACE
+
 

@@ -28,8 +28,8 @@ LPhandler::~LPhandler() {
  *This is only an interface for user to avoid call interface directly.
  * @param p_k       the pointer to an empty array with the length equal to the size of the QP subproblem
  */
-void LPhandler::GetOptimalSolution(double* p_k) {
-    solverInterface_->get_optimal_solution(p_k);
+double* LPhandler::GetOptimalSolution() {
+    return solverInterface_->get_optimal_solution();
 }
 
 
@@ -87,7 +87,7 @@ void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_k,
 
 }
 
-const shared_ptr<QPSolverInterface>& LPhandler::getSolverInterface() const {
+const shared_ptr<QPSolverInterface> &LPhandler::getSolverInterface() const {
     return solverInterface_;
 }
 

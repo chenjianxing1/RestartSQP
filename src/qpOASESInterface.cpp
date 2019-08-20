@@ -26,6 +26,8 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     g_ = make_shared<Vector>(nVar_QP);
     A_ = make_shared<SpHbMat>(
              nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
+    x_qp_ = make_shared<Vector>(nVar_QP);
+    y_qp_ = make_shared<Vector>(nCon_QP+nVar_QP);
 
     if (qptype != LP) {
         H_ = make_shared<SpHbMat>(nVar_QP, nVar_QP, true);
@@ -147,6 +149,8 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
         if (solver_->isSolved()) {
             firstQPsolved_ = true;
+            solver_->getPrimalSolution(x_qp_->values());
+            solver_->getDualSolution(y_qp_->values());
         }
         else {
             obtain_status();
@@ -201,9 +205,9 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
  * @param y_k   a pointer to an array with allocated memory equals to
  * sizeof(double)*(num_variable+num_constraint)
  */
-inline void qpOASESInterface::get_multipliers(double* y_k) {
+inline double* qpOASESInterface::get_multipliers() {
 
-    solver_->getDualSolution(y_k);
+    return y_qp_->values();
 }
 
 
@@ -214,9 +218,8 @@ inline void qpOASESInterface::get_multipliers(double* y_k) {
  * sizeof(double)*number_variables
  *
  */
-inline void qpOASESInterface::get_optimal_solution(double* p_k) {
-
-    solver_->getPrimalSolution(p_k);
+inline double* qpOASESInterface::get_optimal_solution() {
+    return x_qp_->values();
 }
 
 

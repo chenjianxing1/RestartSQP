@@ -79,7 +79,7 @@ public:
     *
     */
 
-    void get_optimal_solution(double* p_k) override;
+    double* get_optimal_solution() override;
 
 
     /**
@@ -88,7 +88,7 @@ public:
      * @param y_k   a pointer to an array with allocated memory equals to
      * sizeof(double)*(num_variable+num_constraint)
      */
-    void get_multipliers(double* y_k) override;
+    double* get_multipliers() override;
 
 
     /**
@@ -209,13 +209,13 @@ private:
     //FIXME: move it to private..
     //make it public temporarily
 public:
-    shared_ptr<qpOASES::SQProblem> solver_;// the qpOASES object used for solving a qp
-
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
 private:
+
+
 
     UpdateFlags data_change_flags_;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
@@ -223,10 +223,13 @@ private:
                                                        * pointers to array stored in
                                                        * the class members of H_*/
 
+    shared_ptr<qpOASES::SQProblem> solver_;/**< the qpOASES object used for solving a qp*/
     shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
                                                        * the class members of A_*/
+    shared_ptr<Vector> x_qp_; /** the qp solution */
+    shared_ptr<Vector> y_qp_; /** the multiplier corresponding to the optimal solution */
     shared_ptr<Vector> lb_;  /**< lower bounds of x */
     shared_ptr<Vector> ub_;  /**< upper bounds of x */
     shared_ptr<Vector> lbA_; /**< lower bounds of Ax */

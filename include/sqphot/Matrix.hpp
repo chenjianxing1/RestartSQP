@@ -344,6 +344,8 @@ public:
     void print_full(const char* name = NULL) const override {};
 
 
+    void times(std::shared_ptr<const Vector> p,
+               std::shared_ptr<Vector> result) const;;
     /**
      * @brief make a deep copy of a matrix information
      */

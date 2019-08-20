@@ -74,7 +74,7 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    void get_optimal_solution(double* x_optimal) override;
+    double* get_optimal_solution() override;
 
 
     /**
@@ -90,7 +90,7 @@ public:
      *
      * @param y_k   a pointer to an array with allocated memory
      */
-    void get_multipliers(double* y_optimal) override;
+    double* get_multipliers() override;
 
     QPReturnType get_status() override {};
 
@@ -99,25 +99,38 @@ public:
 
     /** @name Setters */
     //@{
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {};
+    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
+        H_->setStructure(rhs);
+    };
 
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {};
+    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
+        H_->setMatVal(rhs);
+    };
 
 
-    void set_g(int location, double value) override {};
+    void set_g(int location, double value) override {
+        g_->setValueAt(location,value);
+    };
 
 
     void set_g(shared_ptr<const Vector> rhs) override {};
 
 
-    void set_lb(int location, double value) override {};
+    void set_lb(int location, double value) override {
+        lb_->setValueAt(location, value);
+    };
 
 
-    void set_lb(shared_ptr<const Vector> rhs) override {};
+    void set_lb(shared_ptr<const Vector> rhs) override {
+    };
 
 
-    void set_ub(int location, double value) override {};
+    void set_ub(int location, double value) override {
+
+        ub_->setValueAt(location, value);
+
+    };
 
 
     void set_ub(shared_ptr<const Vector> rhs) override {};
@@ -164,6 +177,7 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const QOREInterface&);
 
+
     void setQP_options(shared_ptr<Options> options);
 
     /**
@@ -189,6 +203,8 @@ private:
     shared_ptr<Vector> g_;
     shared_ptr<Vector> lb_;
     shared_ptr<Vector> ub_;
+    shared_ptr<Vector> x_qp_;
+    shared_ptr<Vector> y_qp_;
     int rv_;//temporarily placed here, for recording the return value from the solver
 };
 

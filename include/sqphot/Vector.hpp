@@ -27,7 +27,19 @@ public:
      * Default constructor
      * @name initialize the size of the vector and allocate the memory to the array
      */
-    Vector(int vector_size);
+    Vector(int vector_size, bool allocate = true);
+
+
+    void swp(double* rhs) {
+        assert(isAllocated()==false);
+        this->values_ = rhs;
+    }
+
+    void free() {
+        delete[] values_;
+        values_ = NULL;
+        isAllocated_ = false;
+    }
 
     /**
      * constructor that initializes the _size and make a deep copy from vector_value to
@@ -35,6 +47,17 @@ public:
      */
     Vector(int vector_size, const double* vector_value);
 
+
+    void allocate_memory(int size= 0) {
+        isAllocated_= true;
+        if(size==0) {
+            values_ = new double[size_]();
+        }
+        else {
+            assert(size ==size_);
+            values_ = new double[size]();
+        }
+    }
     /** Default destructor*/
     virtual ~Vector();
 
@@ -103,7 +126,7 @@ public:
     /** calculate the infinity norm of the member _vector*/
     double getInfNorm() const;
 
-    double times(Vector& rhs);
+    double times(std::shared_ptr<Vector> rhs);
 
 
     const double* negative_of_values() const {
@@ -155,6 +178,10 @@ public:
                 fprintf(file_to_write, "%10e, ", values_[i]);
         }
     }
+
+    bool isAllocated() {
+        return isAllocated_;
+    }
 private:
 
     /** Default Constructor*/
@@ -166,6 +193,7 @@ private:
     //        /** Overloaded Equals Operator */
     //        void operator=(const Vector &);
 private:
+    bool isAllocated_;
     int size_; /* the size of an vector*/
     double* values_;/*the array stored vector information*/
 };

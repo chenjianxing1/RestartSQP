@@ -58,7 +58,7 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual void GetOptimalSolution(double* p_k);
+    virtual double* GetOptimalSolution();
 
 
     /**
@@ -71,7 +71,7 @@ public:
      * the length equal to the size of multipliers of the QP
      * subproblem
      */
-    virtual void GetMultipliers(double* y_k);
+    virtual double* GetMultipliers();
 
 
     /**

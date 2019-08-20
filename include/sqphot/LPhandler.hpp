@@ -68,7 +68,7 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    void GetOptimalSolution(double* p_k) override;
+    double* GetOptimalSolution() override;
 
 
     void update_delta(double delta,

@@ -85,7 +85,7 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    virtual void get_optimal_solution(double* x_optimal) = 0;
+    virtual double* get_optimal_solution() = 0;
 
     /**
      *@brief get the objective value from the QP solvers
@@ -100,7 +100,7 @@ public:
      *
      * @param y_k   a pointer to an array with allocated memory
      */
-    virtual void get_multipliers(double* y_optimal) = 0;
+    virtual double* get_multipliers() = 0;
 
 
     /**

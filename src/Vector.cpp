@@ -13,13 +13,15 @@ namespace SQPhotstart {
  * @name initialize the size of the vector and allocate
  * the memory to the array
  */
-Vector::Vector(int vector_size)
+Vector::Vector(int vector_size, bool allocate)
     :
     size_(vector_size),
     values_(NULL)
 {
-    values_ = new double[size_]();
+    if(allocate)
+        allocate_memory();
 }
+
 
 /**
  * constructor that initializes the size of the vector
@@ -31,14 +33,14 @@ Vector::Vector(int vector_size, const double *vector_value)
     size_(vector_size),
     values_(NULL)
 {
-    values_ = new double[size_]();
+    allocate_memory();
     std::copy(vector_value, vector_value+size_,values_);
 }
 
 /** Default destructor*/
 Vector::~Vector() {
-    delete[] values_;
-    values_ = NULL;
+    if(isAllocated())
+        free();
 }
 
 
@@ -176,10 +178,10 @@ void Vector::set_zeros() {
 //}
 
 
-double Vector::times(Vector& rhs) {
+double Vector::times(std::shared_ptr <Vector> rhs) {
     double product = 0;
     for(int i = 0; i<size_; i++) {
-        product+=values_[i]*rhs.values()[i];
+        product+=values_[i]*rhs->values()[i];
     }
     return product;
 }
