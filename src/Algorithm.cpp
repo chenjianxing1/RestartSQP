@@ -112,7 +112,6 @@ Algorithm::~Algorithm() {
         log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
                               delta_, rho_);
     }
-    if(norm_p_k_<1.0e-7)
     termination_check();
     if (exitflag_ != UNKNOWN) {
             break;
@@ -560,7 +559,7 @@ void Algorithm::get_search_direction() {
     p_k_->copy_vector(myQP_->GetOptimalSolution());
 
     if (options_->penalty_update)
-        infea_measure_model_ = oneNorm(p_k_->values() + nVar_, 2 * nCon_);
+        infea_measure_model_ = oneNorm(myQP_->GetOptimalSolution() + nVar_, 2 * nCon_);
     //FIXME:calculate somewhere else?
 }
 
@@ -680,7 +679,7 @@ void Algorithm::ratio_test() {
 
 #if DEBUG
 #if CHECK_TR_ALG
-    cut << endl;
+    cout << endl;
     cout << "---------------------------------------------------------\n";
     cout << "       The actual reduction is " << actual_reduction_ << endl;
     cout << "       The pred reduction is" << pred_reduction_ << endl;
@@ -708,8 +707,14 @@ void Algorithm::ratio_test() {
 #endif
 #endif
 
+#if 0
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_)
-            && actual_reduction_ >= -options_->tol) {
+            && actual_reduction_ >= -options_->tol) 
+#else
+	    assert(pred_reduction_>0);
+    if (actual_reduction_ >= (options_->eta_s * pred_reduction_) )
+#endif
+		    {
         //succesfully update
         //copy information already calculated from the trial point
         infea_measure_ = infea_measure_trial_;

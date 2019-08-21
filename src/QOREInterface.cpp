@@ -42,9 +42,9 @@ namespace SQPhotstart {
             firstQPsolved_ = true;
             assert(rv_ == QPSOLVER_OK);
             rv_ = QPGetInt(qp_, "status", &status_);
-            if (status_ != QPSOLVER_OPTIMAL)
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
+            if (status_ != QPSOLVER_OPTIMAL){}
+                //THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                  //              "the QP problem didn't solved to optimality\n")
 
         } else {
             //TODO:monitor the data changes.
@@ -52,9 +52,9 @@ namespace SQPhotstart {
                              0, 0);//TODO: does not update primal-dual sol here
             assert(rv_ == QPSOLVER_OK);
             rv_ = QPGetInt(qp_, "status", &status_);
-            if (status_ != QPSOLVER_OPTIMAL)
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
+            if (status_ != QPSOLVER_OPTIMAL){}
+               // THROW_EXCEPTION(QP_NOT_OPTIMAL,
+               //                 "the QP problem didn't solved to optimality\n")
 
         }
         assert(rv_ == QPSOLVER_OK);
