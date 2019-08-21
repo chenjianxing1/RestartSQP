@@ -52,6 +52,14 @@ public:
     ~Algorithm();
     //@}
 
+    /**
+     *  @brief This function initializes the objects required by the SQP Algorithm,
+     *  copies some parameters required by the algorithm, obtains the function
+     *  information for the first QP.
+     *
+     */
+    void initialization(SmartPtr<Ipopt::TNLP> nlp);
+
     /** temporarily use Ipopt options*/
     //@{
     //
@@ -76,7 +84,7 @@ public:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    virtual void Optimize(SmartPtr<Ipopt::TNLP> nlp);
+    virtual void Optimize();
 
     /**
      * @brief ReOptimize a problem by hotstarting from the old optimal solution
@@ -101,13 +109,6 @@ public:
         return exitflag_;
     }
 
-    int* getActiveSetConstraints() const {
-        return NULL;
-    };
-
-    int* getActiveSetBounds() const {
-        return NULL;
-    };
 
     //@}
 
@@ -139,13 +140,6 @@ private:
      */
     void termination_check();
 
-    /**
-     *  @brief This function initializes the objects required by the SQP Algorithm,
-     *  copies some parameters required by the algorithm, obtains the function
-     *  information for the first QP.
-     *
-     */
-    void initialization(SmartPtr<Ipopt::TNLP> nlp);
 
 
     /**

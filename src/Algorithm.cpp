@@ -64,19 +64,9 @@ Algorithm::~Algorithm() {
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
-
-    try {
-        initialization(nlp);
-        printf("Algorithm initialization ends!\n");
-    }
-    catch (...) { //TODO: be more specific
-        handle_error("INVALID NLP");
-
-    }
-
-
+    void Algorithm::Optimize() {
     /**
+     *
      * Main iteration
      */
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
@@ -122,7 +112,7 @@ void Algorithm::Optimize(SmartPtr<Ipopt::TNLP> nlp) {
         log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
                               delta_, rho_);
     }
-
+    if(norm_p_k_<1.0e-7)
     termination_check();
     if (exitflag_ != UNKNOWN) {
             break;
@@ -366,7 +356,6 @@ void Algorithm::termination_check() {
     // the difference of g-J^T y -\lambda
     jacobian_->transposed_times(multiplier_cons_, difference);
     difference->add_vector(multiplier_vars_->values());
-    difference->add_vector(multiplier_vars_->values());
     difference->subtract_vector(grad_f_->values());
 
 #if DEBUG
@@ -568,9 +557,7 @@ void Algorithm::cal_infea() {
  * specified QP information
  */
 void Algorithm::get_search_direction() {
-    if (p_k_->isAllocated())
-        p_k_->free();
-    p_k_->swp(myQP_->GetOptimalSolution());
+    p_k_->copy_vector(myQP_->GetOptimalSolution());
 
     if (options_->penalty_update)
         infea_measure_model_ = oneNorm(p_k_->values() + nVar_, 2 * nCon_);
@@ -594,10 +581,9 @@ void Algorithm::get_multipliers() {
 //    if (multiplier_cons_->isAllocated())
 //        multiplier_cons_->free();
 if(options_->QPsolverChoice == QORE_QP){
+
     multiplier_cons_->copy_vector(myQP_->GetMultipliers()+nVar_+2*nCon_);
-    multiplier_cons_->print("multiplier_cons");
     multiplier_vars_->copy_vector(myQP_->GetMultipliers());
-    multiplier_vars_->print("multiplier_vars");
 }
 }
 
@@ -1067,12 +1053,13 @@ void Algorithm::setDefaultOption() {
 
 void
 Algorithm::get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction) {
-    search_direction->swp(myQP_->GetOptimalSolution());
+    //Can also swp the pointer...
+    search_direction->copy_vector(myQP_->GetOptimalSolution());
 }
 
 
 void Algorithm::get_full_direction_LP(shared_ptr<Vector> search_direction) {
-    search_direction->swp(myLP_->GetOptimalSolution());
+    search_direction->copy_vector(myLP_->GetOptimalSolution());
 }
 
 
@@ -1137,7 +1124,7 @@ void Algorithm::second_order_correction() {
 
 void Algorithm::handle_error(const char* error) {
 
-    if (error != NULL) {
+    if (error != nullptr) {
         if (strcmp(error, "QP NOT OPTIMAL") == 0 ||
                 strcmp(error, "LP NOT OPTIMAL") == 0) {
             switch (myQP_->GetStatus()) {
@@ -1175,9 +1162,6 @@ void Algorithm::get_obj_QP() {
     else if (options_->QPsolverChoice == QORE_QP) {
         shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Hp);//H*p_k
-	hessian_->print();
-        p_k_->print("p_k");
-        Hp->print("hp");	
         qp_obj_ = 0.5*p_k_->times(Hp) + p_k_->times(grad_f_) + infea_measure_model_*rho_;
     }
 }

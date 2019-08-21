@@ -93,7 +93,7 @@ public:
      */
     double* get_multipliers() override;
 
-    QPReturnType get_status() override {};
+    QPReturnType get_status() override;;
 
     //@}
     //
@@ -175,7 +175,7 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    int allocate(Index_info nlp_info, QPType qptype);
+    void allocate_memory(Index_info nlp_info, QPType qptype);
 
 
 
@@ -183,7 +183,7 @@ private:
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
 private:
-    QPReturnType status_;
+    int status_;
     QoreProblem* qp_;
     bool firstQPsolved_ = false;
     int nConstr_QP_;
