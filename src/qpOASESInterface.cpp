@@ -85,14 +85,26 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
 
-        if (solver_->isSolved())
+        if (solver_->isSolved()) {
             firstQPsolved_ = true;
+        }
         else {
             obtain_status();
             handler_error(QP, stats, options);
         }
     }
     else {
+        if (DEBUG) {
+            if (CHECK_QP_INFEASIBILITY) {
+                A_qpOASES_->print("A_");
+                H_qpOASES_->print("H");
+                g_->print("g");
+                lb_->print("lb_");
+                ub_->print("ub_");
+                lbA_->print("lbA_");
+                ubA_->print("ubA_");
+            }
+        }
         get_Matrix_change_status();
         if (new_QP_matrix_status_ == UNDEFINED) {
             assert(old_QP_matrix_status_ != UNDEFINED);
@@ -132,6 +144,8 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
 
     stats->qp_iter_addValue((int) nWSR);
 
+    solver_->getPrimalSolution(x_qp_->values());
+    solver_->getDualSolution(y_qp_->values());
     if (!solver_->isSolved()) {
         obtain_status();
         handler_error(QP, stats, options);
@@ -150,8 +164,6 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
         if (solver_->isSolved()) {
             firstQPsolved_ = true;
-            solver_->getPrimalSolution(x_qp_->values());
-            solver_->getDualSolution(y_qp_->values());
         }
         else {
             obtain_status();
@@ -191,6 +203,8 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
             }
         }
         reset_flags();
+        solver_->getPrimalSolution(x_qp_->values());
+        solver_->getDualSolution(y_qp_->values());
         if (!solver_->isSolved()) {
             obtain_status();
             handler_error(LP, stats, options);
@@ -220,6 +234,7 @@ inline double* qpOASESInterface::get_multipliers() {
  *
  */
 inline double* qpOASESInterface::get_optimal_solution() {
+//    x_qp_->print("x_qp_");
     return x_qp_->values();
 }
 

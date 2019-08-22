@@ -177,7 +177,7 @@ private:
      */
     void allocate_memory(Index_info nlp_info, QPType qptype);
 
-
+    void WriteQPDataToFile(const char* const filename);
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //

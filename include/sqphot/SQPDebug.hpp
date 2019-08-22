@@ -10,15 +10,15 @@
 #ifndef __SQPDEBUG_HPP__
 #define __SQPDEBUG_HPP__
 
-#define DEBUG true
+#define DEBUG false
 
-#define CHECK_LINEAR_ALGEBRA true
+#define CHECK_LINEAR_ALGEBRA false
 
 
 #ifdef DEBUG
 #define CHECK_TERMINATION false 
 #define  CHECK_COMPLEMENTARITY false
-#define CHECK_TR_ALG true //check trust region algorithm
+#define CHECK_TR_ALG false //check trust region algorithm
 #define CHECK_SOC false
 #define CHECK_INFEA_CAL false
 #define CHECK_QP_SOLVER false

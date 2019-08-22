@@ -17,29 +17,29 @@ DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
  * Default Constructor
  */
 Algorithm::Algorithm() :
-	Active_Set_constraints_(NULL),
-	Active_Set_bounds_(NULL),
-	cons_type_(NULL),
-	bound_cons_type_(NULL),
-	norm_p_k_(0),
-	obj_value_(0),
-	obj_value_trial_(0),
-	pred_reduction_(0),
-	qp_obj_(0),
-	rho_(0),
-	actual_reduction_(0),
-	delta_(0),
-	infea_measure_(0),
-	infea_measure_model_(0)
-	{
-		jnlst_ = new Ipopt::Journalist();
-		auto jnal1 = jnlst_->AddFileJournal("./", "testbla", J_WARNING);
-		va_list vp;
+    Active_Set_constraints_(NULL),
+    Active_Set_bounds_(NULL),
+    cons_type_(NULL),
+    bound_cons_type_(NULL),
+    norm_p_k_(0),
+    obj_value_(0),
+    obj_value_trial_(0),
+    pred_reduction_(0),
+    qp_obj_(0),
+    rho_(0),
+    actual_reduction_(0),
+    delta_(0),
+    infea_measure_(0),
+    infea_measure_model_(0)
+{
+    jnlst_ = new Ipopt::Journalist();
+    auto jnal1 = jnlst_->AddFileJournal("./", "testbla", J_WARNING);
+    va_list vp;
 
-		jnal1->SetAllPrintLevels(J_ALL);
-		jnal1->Printf(J_MAIN, J_WARNING, "what????", vp);
-		roptions2_ = new Ipopt::OptionsList();
-	}
+    jnal1->SetAllPrintLevels(J_ALL);
+    jnal1->Printf(J_MAIN, J_WARNING, "what????", vp);
+    roptions2_ = new Ipopt::OptionsList();
+}
 
 
 /**
@@ -64,65 +64,65 @@ Algorithm::~Algorithm() {
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-    void Algorithm::Optimize() {
+void Algorithm::Optimize() {
     /**
      *
      * Main iteration
      */
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-    setupQP();
-    try {
-        myQP_->solveQP(stats_,
-                       options_);//solve the QP subproblem and update the stats_
-    }
-    catch (QP_NOT_OPTIMAL) {
-        handle_error("QP NOT OPTIMAL");
+        setupQP();
+        try {
+            myQP_->solveQP(stats_,
+                           options_);//solve the QP subproblem and update the stats_
+        }
+        catch (QP_NOT_OPTIMAL) {
+            handle_error("QP NOT OPTIMAL");
             break;
-    }
+        }
 
 
-    //get the search direction from the solution of the QPsubproblem
-    get_search_direction();
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
 
-    get_obj_QP();
+        get_obj_QP();
 
-    //Update the penalty parameter if necessary
+        //Update the penalty parameter if necessary
 
-    update_penalty_parameter();
+        update_penalty_parameter();
 
-    //calculate the infinity norm of the search direction
-    norm_p_k_ = p_k_->getInfNorm();
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
 
-    get_trial_point_info();
+        get_trial_point_info();
 
-    ratio_test();
+        ratio_test();
 
-    // Calculate the second-order-correction steps
-    second_order_correction();
+        // Calculate the second-order-correction steps
+        second_order_correction();
 
-    // Update the radius and the QP bounds if the radius has been changed
-    stats_->iter_addone();
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
 
-    /* output some information to the console*/
+        /* output some information to the console*/
 
-    //check if the current iterates is optimal and decide to
-    //exit the loop or not
-    if (options_->printLevel > 1) {
-        if (stats_->iter % 10 == 0)log_->print_header();
-        log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
-                              delta_, rho_);
-    }
-    termination_check();
-    if (exitflag_ != UNKNOWN) {
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        if (options_->printLevel > 1) {
+            if (stats_->iter % 10 == 0)log_->print_header();
+            log_->print_main_iter(stats_->iter, obj_value_, norm_p_k_, infea_measure_,
+                                  delta_, rho_);
+        }
+        termination_check();
+        if (exitflag_ != UNKNOWN) {
             break;
-    }
+        }
 
-    try {
-        update_radius();
-    }
-    catch (SMALL_TRUST_REGION) {
+        try {
+            update_radius();
+        }
+        catch (SMALL_TRUST_REGION) {
             break;
-    }
+        }
 
     }
 
@@ -137,7 +137,7 @@ Algorithm::~Algorithm() {
     // print the final summary message to the console
     if (options_->printLevel > 0)
         log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-    infea_measure_, exitflag_);
+                          infea_measure_, exitflag_);
 }
 
 
@@ -381,6 +381,7 @@ void Algorithm::termination_check() {
         exitflag_ = OPTIMAL;
     } else {
         if (norm_p_k_ > delta_ + options_->tol) {
+
             exitflag_ = STEP_LARGER_THAN_TRUST_REGION;
         }
         //if it is not optimal
@@ -503,7 +504,6 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
 
     delta_ = options_->delta;
     rho_ = options_->rho;
-    norm_p_k_ = 0.0;
 }
 
 
@@ -557,6 +557,7 @@ void Algorithm::cal_infea() {
  */
 void Algorithm::get_search_direction() {
     p_k_->copy_vector(myQP_->GetOptimalSolution());
+//    p_k_->print("p_k");
 
     if (options_->penalty_update)
         infea_measure_model_ = oneNorm(myQP_->GetOptimalSolution() + nVar_, 2 * nCon_);
@@ -579,11 +580,16 @@ void Algorithm::get_search_direction() {
 void Algorithm::get_multipliers() {
 //    if (multiplier_cons_->isAllocated())
 //        multiplier_cons_->free();
-if(options_->QPsolverChoice == QORE_QP){
+    if(options_->QPsolverChoice == QORE_QP) {
 
-    multiplier_cons_->copy_vector(myQP_->GetMultipliers()+nVar_+2*nCon_);
-    multiplier_vars_->copy_vector(myQP_->GetMultipliers());
-}
+        multiplier_cons_->copy_vector(myQP_->GetMultipliers()+nVar_+2*nCon_);
+        multiplier_vars_->copy_vector(myQP_->GetMultipliers());
+    }
+    else if(options_->QPsolverChoice==QPOASES_QP){
+            multiplier_cons_->copy_vector(myQP_->GetMultipliers() + 2 * nCon_ + nVar_);
+        multiplier_vars_->copy_vector(myQP_->GetMultipliers());
+    }
+
 }
 
 
@@ -707,14 +713,14 @@ void Algorithm::ratio_test() {
 #endif
 #endif
 
-#if 0
+#if 1
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_)
-            && actual_reduction_ >= -options_->tol) 
+            && actual_reduction_ >= -options_->tol) {
 #else
-	    assert(pred_reduction_>0);
-    if (actual_reduction_ >= (options_->eta_s * pred_reduction_) )
+    assert(pred_reduction_>0);
+    if (actual_reduction_ >= (options_->eta_s * pred_reduction_) ) {
 #endif
-		    {
+
         //succesfully update
         //copy information already calculated from the trial point
         infea_measure_ = infea_measure_trial_;
@@ -1162,6 +1168,7 @@ void Algorithm::handle_error(const char* error) {
 }
 
 void Algorithm::get_obj_QP() {
+
     if (options_->QPsolverChoice == QPOASES_QP)
         qp_obj_ = myQP_->GetObjective();
     else if (options_->QPsolverChoice == QORE_QP) {
