@@ -317,6 +317,7 @@ private:
     void handle_error(const char* error = NULL);
 
 
+    void print_final_statsitics();
     //@}
 
 
@@ -347,11 +348,11 @@ private:
     Number pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
     Number qp_obj_;/**< the objective value of current qp*/
     Number rho_; /**< penalty parameter*/
+    ActiveType* Active_Set_bounds_;
+    ActiveType* Active_Set_constraints_;
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
-    ActiveType* Active_Set_bounds_;
-    ActiveType* Active_Set_constraints_;
     shared_ptr<LPhandler> myLP_;
     shared_ptr<Log> log_;
     shared_ptr<Options> options_;/**< the default options used for now. */
@@ -376,10 +377,10 @@ private:
                                           *x_trial = x_k+p_k*/
 
     shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
-#if DEBUG
     std::string tmp_address_;
-//    Ipopt::SmartPtr<Ipopt::Journal> nlp_termination_jrnl_;
-#endif
+    Ipopt::EJournalLevel jnrl_level_;
+
+
 };//END_OF_ALG_CLASS
 
 

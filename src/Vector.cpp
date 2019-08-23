@@ -62,17 +62,19 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
 }
 
 /** print the vector*/
-void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const {
+void Vector::print(const char* name, Ipopt::SmartPtr <Ipopt::Journalist> jnlst,
+                   Ipopt::EJournalCategory category,
+                   Ipopt::EJournalLevel level) const {
     if (name != nullptr)
-        jnlst->Printf(Ipopt::J_VECTOR, Ipopt::J_DBG, name);
-    jnlst->Printf(Ipopt::J_VECTOR, Ipopt::J_DBG, " =: \n");
+        jnlst->Printf(level, category, name);
+    jnlst->Printf(level, category, " =: \n");
 
     for (int i = 0; i < size_; i++) {
         if (i == 0)
-            jnlst->Printf(Ipopt::J_VECTOR, Ipopt::J_DBG, "{ ");
-        jnlst->Printf(Ipopt::J_VECTOR, Ipopt::J_DBG, "%10e ", values_[i]);
+            jnlst->Printf(level, category, "{ ");
+        jnlst->Printf(level, category, "%10e ", values_[i]);
     }
-    jnlst->Printf(Ipopt::J_VECTOR, Ipopt::J_DBG, "}\n\n");
+    jnlst->Printf(level, category, "}\n\n");
 }
 
 /* add all the element in the array by a number*/

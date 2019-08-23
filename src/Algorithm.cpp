@@ -32,6 +32,11 @@ Algorithm::Algorithm() :
     infea_measure_(0),
     infea_measure_model_(0) {
     jnlst_ = new Ipopt::Journalist();
+#if DEBUG
+    jnrl_level_= Ipopt::J_INSUPPRESSIBLE;
+#else
+    jnrl_level_ = Ipopt::J_SUMMARY;
+#endif
     roptions2_ = new Ipopt::OptionsList();
 }
 
@@ -92,18 +97,17 @@ void Algorithm::Optimize() {
 
         // Update the radius and the QP bounds if the radius has been changed
         stats_->iter_addone();
-
         /* output some information to the console*/
 
         //check if the current iterates is optimal and decide to
         //exit the loop or not
-//            if (options_->printLevel > 2) {
-//                if (stats_->iter % 10 == 0) {
-//                    jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
-//                    jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
-//                }
-//                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
-//            }
+        if (options_->printLevel >= 2) {
+            if (stats_->iter % 10 == 0) {
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
+            }
+            jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
+        }
         termination_check();
         if (exitflag_ != UNKNOWN) {
             break;
@@ -128,8 +132,8 @@ void Algorithm::Optimize() {
 
     // print the final summary message to the console
     if (options_->printLevel > 0)
-        log_->print_final(stats_->iter, stats_->qp_iter, obj_value_, norm_p_k_,
-                          infea_measure_, exitflag_);
+        print_final_statsitics();
+    jnlst_->FlushBuffer();
 }
 
 
@@ -147,30 +151,6 @@ void Algorithm::termination_check() {
 
     int i;
     get_multipliers();
-
-#if DEBUG
-#if CHECK_TERMINATION
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG,
-                   DOUBLE_DIVIDER);
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG, "           Iteration  %i", stats_->iter);
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG, DOUBLE_DIVIDER);
-    grad_f_->print("grad_f", jnlst_);
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG, SINGLE_DIVIDER);
-    c_u_->print("c_u", jnlst_);
-    c_l_->print("c_l", jnlst_);
-    c_k_->print("c_k", jnlst_);
-    multiplier_cons_->print("multiplier_cons", jnlst_);
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG, SINGLE_DIVIDER);
-    x_u_->print("x_u", jnlst_);
-    x_l_->print("x_l", jnlst_);
-    x_k_->print("x_k", jnlst_);
-    multiplier_vars_->print("multiplier_vars", jnlst_);
-    jnlst_->Printf(J_LAST_LEVEL, J_DBG, SINGLE_DIVIDER);
-    jacobian_->print_full("jacobian", jnlst_);
-    hessian_->print_full("hessian", jnlst_);
-#endif
-#endif
-
     /**-------------------------------------------------------**/
     /**               Check the KKT conditions                **/
     /**-------------------------------------------------------**/
@@ -269,11 +249,6 @@ void Algorithm::termination_check() {
     /**                    Complemtarity                      **/
     /**-------------------------------------------------------**/
 
-#if DEBUG
-#if CHECK_TERMINATION
-
-#endif
-#endif
 
     i = 0;
     opt_status_.complementarity = true;
@@ -306,6 +281,7 @@ void Algorithm::termination_check() {
                     > options_->opt_compl_tol) {
                 opt_status_.complementarity = false;
             }
+
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
             if (abs(multiplier_vars_->values()[i] *
                     (x_k_->values()[i] - x_l_->values()[i]))
@@ -331,11 +307,6 @@ void Algorithm::termination_check() {
     difference->add_vector(multiplier_vars_->values());
     difference->subtract_vector(grad_f_->values());
 
-#if DEBUG
-#if CHECK_TERMINATION
-    difference->print("Stationarity Gap", jnlst_);
-#endif
-#endif
 
     if (difference->getInfNorm() > options_->opt_tol) {
         opt_status_.stationarity = false;
@@ -359,18 +330,44 @@ void Algorithm::termination_check() {
         }
         //if it is not optimal
 #if DEBUG
+        EJournalLevel debug_print_level = options_->debug_print_level;
+        SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
+        if (IsNull(debug_jrnl)) {
+            debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", J_ITERSUMMARY);
+        }
+        debug_jrnl->SetAllPrintLevels(debug_print_level);
+        debug_jrnl->SetPrintLevel(J_DBG, J_ALL);
         if (CHECK_TERMINATION) {
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, SINGLE_DIVIDER);
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "Feasibility      ");
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "%i\n",
+            jnlst_->Printf(J_DETAILED, J_DBG,
+                           DOUBLE_DIVIDER);
+            jnlst_->Printf(J_DETAILED, J_DBG, "           Iteration  %i\n", stats_->iter);
+            jnlst_->Printf(J_DETAILED, J_DBG, DOUBLE_DIVIDER);
+            grad_f_->print("grad_f", jnlst_, J_DBG, J_WARNING);
+            jnlst_->Printf(J_DETAILED, J_DBG, SINGLE_DIVIDER);
+            c_u_->print("c_u", jnlst_, J_DBG, J_WARNING);
+            c_l_->print("c_l", jnlst_, J_DBG, J_WARNING);
+            c_k_->print("c_k", jnlst_, J_DBG, J_WARNING);
+            multiplier_cons_->print("multiplier_cons", jnlst_, J_DBG, J_WARNING);
+            jnlst_->Printf(J_DETAILED, J_DBG, SINGLE_DIVIDER);
+            x_u_->print("x_u", jnlst_, J_DBG, J_WARNING);
+            x_l_->print("x_l", jnlst_, J_DBG, J_WARNING);
+            x_k_->print("x_k", jnlst_, J_DBG, J_WARNING);
+            multiplier_vars_->print("multiplier_vars", jnlst_, J_DBG, J_WARNING);
+            jnlst_->Printf(J_DETAILED, J_DBG, SINGLE_DIVIDER);
+            jacobian_->print_full("jacobian", jnlst_);
+            hessian_->print_full("hessian", jnlst_);
+            difference->print("stationarity gap", jnlst_,J_DBG,J_DETAILED);
+            jnlst_->Printf(J_DETAILED, J_DBG, SINGLE_DIVIDER);
+            jnlst_->Printf(J_DETAILED, J_DBG, "Feasibility      ");
+            jnlst_->Printf(J_DETAILED, J_DBG, "%i\n",
                            opt_status_.primal_feasibility);
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "Dual Feasibility ");
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "%i\n", opt_status_.dual_feasibility);
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "Stationarity     ");
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "%i\n", opt_status_.stationarity);
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "Complementarity  ");
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, "%i\n", opt_status_.complementarity);
-            jnlst_->Printf(J_LAST_LEVEL, J_DBG, SINGLE_DIVIDER);
+            jnlst_->Printf(J_DETAILED, J_DBG, "Dual Feasibility ");
+            jnlst_->Printf(J_DETAILED, J_DBG, "%i\n", opt_status_.dual_feasibility);
+            jnlst_->Printf(J_DETAILED, J_DBG, "Stationarity     ");
+            jnlst_->Printf(J_DETAILED, J_DBG, "%i\n", opt_status_.stationarity);
+            jnlst_->Printf(J_DETAILED, J_DBG, "Complementarity  ");
+            jnlst_->Printf(J_DETAILED, J_DBG, "%i\n", opt_status_.complementarity);
+            jnlst_->Printf(J_DETAILED, J_DBG, SINGLE_DIVIDER);
         }
 #endif
 
@@ -425,29 +422,34 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
     /*                      JOURNAL INIT                   */
     /*-----------------------------------------------------*/
 
-    tmp_address_ = "";
-//        jnlst_->AddFileJournal(tmp_address_, "../../output/nlp_iter_summary",
-//                               J_ITERSUMMARY);
+
+    SmartPtr<Journal> stdout_jrnl =
+        jnlst_->AddFileJournal("console", "stdout", J_ITERSUMMARY);
+    stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
 #if DEBUG
-    jnlst_->AddFileJournal(tmp_address_,
-                           "../../output/nlp_termination", J_LAST_LEVEL);
-    jnlst_->AddFileJournal(tmp_address_,
-                           "../../output/trust_region_test", J_DETAILED);
-    jnlst_->AddFileJournal(tmp_address_,
-                           "../../output/qp_summary", J_MOREDETAILED);
-    jnlst_->AddFileJournal(tmp_address_,
-                           "../../output/unsolved_qp", J_ERROR);
+    SmartPtr<Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", J_ITERSUMMARY);
+
+    debug_jrnl->SetPrintLevel(J_DBG, J_ALL);
+    auto tr_jrnl =jnlst_->AddFileJournal("trust-region","trust_region.out",
+                                         J_DETAILED);
+    tr_jrnl->SetPrintLevel(J_DBG,J_DETAILED);
 #endif
 
     /*-----------------------------------------------------*/
     /*                      OUTPUT                         */
     /*-----------------------------------------------------*/
-//        if (options_->printLevel > 1) {
-//            jnlst_->Printf(J_ITERSUMMARY, J_INITIALIZATION, DOUBLE_LONG_DIVIDER);
-//            jnlst_->Printf(J_ITERSUMMARY, J_INITIALIZATION, STANDARD_HEADER);
-//            jnlst_->Printf(J_ITERSUMMARY, J_INITIALIZATION, DOUBLE_LONG_DIVIDER);
-//            jnlst_->Printf(J_ITERSUMMARY, J_INITIALIZATION, STANDARD_OUTPUT);
-//        }
+    if (options_->printLevel > 1) {
+        SmartPtr<Journal> stdout_jrnl = jnlst_->GetJournal("console");
+        if (IsValid(stdout_jrnl)) {
+            // Set printlevel for stdout
+            stdout_jrnl->SetAllPrintLevels(options_->print_level);
+            stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
+        }
+        jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
+        jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
+        jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
+        jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
+    }
 
 }
 
@@ -680,6 +682,15 @@ void Algorithm::ratio_test() {
 
 #if DEBUG
 #if CHECK_TR_ALG
+    SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
+    if (IsNull(debug_jrnl)) {
+        debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", J_ITERSUMMARY);
+    }
+    debug_jrnl->SetAllPrintLevels(debug_print_level);
+    debug_jrnl->SetPrintLevel(J_DBG, J_ALL);
+
+
+
     cout << endl;
     cout << "---------------------------------------------------------\n";
     cout << "       The actual reduction is " << actual_reduction_ << endl;
@@ -776,7 +787,7 @@ void Algorithm::update_radius() {
 
     if (delta_ < options_->delta_min) {
         exitflag_ = TRUST_REGION_TOO_SMALL;
-//                    jnlst_->Printf(J_WARNING,J_MAIN,
+//                    jnlst_->Printf(J_WARNING,jnrl_category_,
 //                            "Trust-region is too small!");
         THROW_EXCEPTION(SMALL_TRUST_REGION, "The trust region is smaller than"
                         "the user-defined minimum value");
@@ -1174,6 +1185,111 @@ void Algorithm::get_obj_QP() {
     }
 }
 
+
+void Algorithm::print_final_statsitics() {
+
+    SmartPtr<Journal> stdout_jrnl = jnlst_->GetJournal("console");
+    if (IsValid(stdout_jrnl)) {
+        // Set printlevel for stdout
+        stdout_jrnl->SetAllPrintLevels(options_->print_level);
+        stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
+    }
+
+
+    jnlst_->Printf(J_SUMMARY,J_MAIN,DOUBLE_LONG_DIVIDER);
+    switch (exitflag_) {
+    case OPTIMAL:
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "OPTIMAL");
+        break;
+    case INVALID_NLP :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "INVALID_NLP");
+        break;
+    case EXCEED_MAX_ITER :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "EXCEED_MAX_ITER");
+        break;
+    case QPERROR_INTERNAL_ERROR :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QP_INTERNAL_ERROR");
+        break;
+    case QPERROR_INFEASIBLE :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QP_INFEASIBLE");
+        break;
+    case QPERROR_UNBOUNDED :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QP_UNBOUNDED");
+        break;
+    case QPERROR_EXCEED_MAX_ITER :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QP_EXCEED_MAX_ITER");
+        break;
+    case QPERROR_NOTINITIALISED :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QP_NOTINITIALISED");
+        break;
+    case AUXINPUT_NOT_OPTIMAL :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "AUXINPUT_NOT_OPTIMAL");
+        break;
+    case CONVERGE_TO_NONOPTIMAL :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "CONVERGE_TO_NONOPTIMAL");
+        break;
+
+    case QPERROR_PREPARINGAUXILIARYQP:
+
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QPERROR_PREPARINGAUXILIARYQP");
+        break;
+    case QPERROR_AUXILIARYQPSOLVED:
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QPERROR_AUXILIARYQPSOLVED");
+        break;
+    case QPERROR_PERFORMINGHOMOTOPY  :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QPERROR_PERFORMINGHOMOTOPY");
+        break;
+    case QPERROR_HOMOTOPYQPSOLVED    :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "QPERROR_HOMOTOPYQPSOLVED");
+        break;
+    case TRUST_REGION_TOO_SMALL:
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "TRUST_REGION_TOO_SMALL");
+        break;
+
+    case STEP_LARGER_THAN_TRUST_REGION:
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "STEP_LARGER_THAN_TRUST_REGION");
+        break;
+    case UNKNOWN :
+        jnlst_->Printf(J_SUMMARY,J_MAIN,"Exitflag:                                                   %23s\n",
+                       "UNKNOWN ERROR");
+
+        break;
+
+    }
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"Number of Variables                                         %23i\n",
+                   nVar_);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"Number of Constraints                                       %23i\n",
+                   nCon_);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"Iterations:                                                 %23i\n",
+                   stats_->iter);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"QP Solver Iterations:                                       %23i\n",
+                   stats_->qp_iter);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"Final Objectives:                                           %23e\n",
+                   obj_value_);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"||p_k||                                                     %23e\n",
+                   norm_p_k_);
+    jnlst_->Printf(J_SUMMARY,J_MAIN,"||c_k||                                                     %23e\n",
+                   infea_measure_);
+
+    jnlst_->Printf(J_SUMMARY,J_MAIN,DOUBLE_LONG_DIVIDER);
+
+}
 
 }//END_NAMESPACE_SQPHOTSTART
 

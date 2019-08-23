@@ -72,8 +72,9 @@ public:
     void assign_n(int Location, int subvector_size, double scaling_factor);
 
     /** print the vector*/
-    void print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst =
-                   nullptr) const;
+    void print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst= nullptr,
+               Ipopt::EJournalCategory category = Ipopt::J_DBG,  Ipopt::EJournalLevel
+               level=Ipopt::J_NONE) const;
 
 
     /* add all the element in the array by a number*/

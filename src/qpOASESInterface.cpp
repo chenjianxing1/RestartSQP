@@ -70,13 +70,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
         if (DEBUG) {
             if (CHECK_QP_INFEASIBILITY) {
-                A_qpOASES_->print("A_");
-                H_qpOASES_->print("H");
-                g_->print("g", jnlst_);;
-                lb_->print("lb_", jnlst_);;
-                ub_->print("ub_", jnlst_);;
-                lbA_->print("lbA_", jnlst_);;
-                ubA_->print("ubA_", jnlst_);;
+//                A_qpOASES_->print("A_");
+//                H_qpOASES_->print("H");
+//                g_->print("g", jnlst_, J_DBG, J_WARNING);;
+//                lb_->print("lb_", jnlst_, J_DBG, J_WARNING);;
+//                ub_->print("ub_", jnlst_, J_DBG, J_WARNING);;
+//                lbA_->print("lbA_", jnlst_, J_DBG, J_WARNING);;
+//                ubA_->print("ubA_", jnlst_, J_DBG, J_WARNING);;
             }
         }
 
@@ -96,13 +96,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     else {
         if (DEBUG) {
             if (CHECK_QP_INFEASIBILITY) {
-                A_qpOASES_->print("A_");
-                H_qpOASES_->print("H");
-                g_->print("g", jnlst_);;
-                lb_->print("lb_", jnlst_);;
-                ub_->print("ub_", jnlst_);;
-                lbA_->print("lbA_", jnlst_);;
-                ubA_->print("ubA_", jnlst_);;
+//                A_qpOASES_->print("A_");
+//                H_qpOASES_->print("H");
+//                g_->print("g", jnlst_, J_DBG, J_WARNING);;
+//                lb_->print("lb_", jnlst_, J_DBG, J_WARNING);;
+//                ub_->print("ub_", jnlst_, J_DBG, J_WARNING);;
+//                lbA_->print("lbA_", jnlst_, J_DBG, J_WARNING);;
+//                ubA_->print("ubA_", jnlst_, J_DBG, J_WARNING);;
             }
         }
         get_Matrix_change_status();

@@ -8,6 +8,7 @@
 
 #include <string>
 #include <sqphot/Types.hpp>
+#include <IpJournalist.hpp>
 
 namespace SQPhotstart {
 class Options {
@@ -86,6 +87,8 @@ public:
     double rho_max;
     int penalty_iter_max;
     //@}
+    Ipopt::EJournalLevel debug_print_level = Ipopt::J_ITERSUMMARY;
+    Ipopt::EJournalLevel print_level = Ipopt::J_ITERSUMMARY;
 };//ENDCLASS
 }
 #endif /* SQPHOTSTART_OPTIONS_HPP */
