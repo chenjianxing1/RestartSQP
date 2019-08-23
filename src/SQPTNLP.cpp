@@ -124,16 +124,6 @@ SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambd
     nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nCon,
                  lambda->values(), true,
                  nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
-    if (DEBUG) {
-        if (CHECK_NLP_READER) {
-            cout << endl;
-            cout << "---------------------------------------------------------\n";
-            lambda->print("multiplier");
-            Hessian->print_full("hessian");
-            cout << "---------------------------------------------------------\n";
-            cout << endl;
-        }
-    }
 
     return true;
 }

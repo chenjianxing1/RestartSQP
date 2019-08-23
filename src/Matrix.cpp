@@ -40,7 +40,8 @@ SpTripletMat::~SpTripletMat() {
  *@name print the sparse matrix in triplet form
  */
 //@{
-void SpTripletMat::print() const {
+void
+SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jrnl) const {
 
     std::cout << "Row Column Entry Order" << std::endl;
     for (int i = 0; i < EntryNum_; i++) {
@@ -55,10 +56,14 @@ void SpTripletMat::print() const {
  *@name print the sparse matrix in dense form
  */
 //@{
-void SpTripletMat::print_full(const char* name) const {
+void SpTripletMat::print_full(const char* name,
+                              Ipopt::SmartPtr<Ipopt::Journalist>
+                              jnlst) const {
+    char mat_val[99];
 
-    if (name != NULL) {
-        std::cout << name << " is" << std::endl;
+    if (name != nullptr) {
+//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
+//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
     }
     auto dense_matrix = new double[RowNum_ * ColNum_]();
 
@@ -71,11 +76,12 @@ void SpTripletMat::print_full(const char* name) const {
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-            printf("%10f  ", dense_matrix[i * ColNum_ + j]);
+            sprintf(mat_val, "%f  ",dense_matrix[i*ColNum()+j]);
+//                jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
         }
-        std::cout << std::endl;
+//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
     }
-    std::cout << std::endl;
+//        jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
     delete[] dense_matrix;
 }
 //@}
@@ -203,7 +209,7 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
 /**
  * qpOASESSparseMatrix
  */
-void SpHbMat::print() const {
+void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const {
 
     std::cout << "ColIndex: ";
     for (int i = 0; i < ColNum_ + 1; i++)
@@ -514,6 +520,11 @@ void SpHbMat::write_to_file(FILE* file_to_write, const char* const name) {
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const {
+
+}
+
+void
+SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const {
 
 }
 

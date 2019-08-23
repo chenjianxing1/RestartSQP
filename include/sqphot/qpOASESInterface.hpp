@@ -7,6 +7,7 @@
 
 #ifndef __QPOASES_INTERFACE_HPP__
 #define __QPOASES_INTERFACE_HPP__
+
 #include <sqphot/QPsolverInterface.hpp>
 
 
@@ -197,11 +198,11 @@ private:
 
 
     /** Copy Constructor */
-    qpOASESInterface(const qpOASESInterface&);
+    qpOASESInterface(const qpOASESInterface &);
 
 
     /** Overloaded Equals Operator */
-    void operator=(const qpOASESInterface&);
+    void operator=(const qpOASESInterface &);
 
     ///////////////////////////////////////////////////////////
     //                      PUBLIC MEMBERS                   //
@@ -216,7 +217,6 @@ public:
 private:
 
 
-
     UpdateFlags data_change_flags_;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
@@ -228,22 +228,22 @@ private:
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
                                                        * the class members of A_*/
+    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
+    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
+    shared_ptr<Vector> lb_;  /**< lower bounds of x */
+    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
+    shared_ptr<Vector> ub_;  /**< upper bounds of x */
     shared_ptr<Vector> x_qp_; /** the qp solution */
     shared_ptr<Vector> y_qp_; /** the multiplier corresponding to the optimal solution */
-    shared_ptr<Vector> lb_;  /**< lower bounds of x */
-    shared_ptr<Vector> ub_;  /**< upper bounds of x */
-    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
-    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
-    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
     shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
                                           * Harwell-Boeing Sparse Matrix format*/
     shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
-    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
     QPMatrixType new_QP_matrix_status_ = UNDEFINED;
+    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
     QPReturnType status_;
-
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 };
 }
 #endif

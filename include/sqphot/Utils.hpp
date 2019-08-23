@@ -10,21 +10,22 @@
 #include <iostream>
 #include <memory>
 #include <cstdio>
+#include <stdio.h>
 #include <vector>
 #include <stdlib.h>
 #include <assert.h>
 #include <iterator>
 #include <string>
 #include <algorithm>
-
+#include <IpTNLP.hpp>
 #include <sqphot/SQPDebug.hpp>
+#include <sqphot/MessageHandling.hpp>
 #include <sqphot/Types.hpp>
 
 using namespace std;
 namespace SQPhotstart {
 #define MAX(a,b) (a>b)? a :b
 #define ABS(a) MAX(a,-a)
-
 /*Print a matrix with given size*/
 void print_matrix(double* M, int length, int width);
 

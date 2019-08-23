@@ -18,7 +18,7 @@ Options::~Options() {
 
 int Options::setToDefault() {
     iter_max = 300;
-    printLevel = 0;
+    printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
     QPsolverChoice = QPOASES_QP;
     LPsolverChoice = QPOASES_LP;

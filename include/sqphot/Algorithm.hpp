@@ -374,7 +374,12 @@ private:
     shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
     shared_ptr<Vector> x_trial_;/**< the trial point from the search direction
                                           *x_trial = x_k+p_k*/
+
     shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
+#if DEBUG
+    std::string tmp_address_;
+//    Ipopt::SmartPtr<Ipopt::Journal> nlp_termination_jrnl_;
+#endif
 };//END_OF_ALG_CLASS
 
 

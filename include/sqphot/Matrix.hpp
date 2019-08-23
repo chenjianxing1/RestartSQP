@@ -11,7 +11,9 @@
 #include <cassert>
 #include <math.h>
 #include <memory>
+#include <IpJournalist.hpp>
 #include <qpOASES.hpp>
+#include <IpTNLP.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Vector.hpp>
 #include <tuple>
@@ -44,10 +46,17 @@ public:
     virtual ~Matrix() = default;
 
 
-    virtual void print() const = 0;
+    virtual void
+    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst
+          = nullptr)
+    const = 0;
 
 
-    virtual void print_full(const char* name = NULL) const = 0;
+    virtual void
+    print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist>
+               jnlst = nullptr)
+    const
+        = 0;
 
 ///////////////////////////////////////////////////////////
 //                     PRIVATE  METHODS                  //
@@ -55,11 +64,11 @@ public:
 
 private:
     /** Copy Constructor */
-    Matrix(const Matrix&);
+    Matrix(const Matrix &);
 
 
     /** Overloaded Equals Operator */
-    void operator=(const Matrix&);
+    void operator=(const Matrix &);
 
 };
 
@@ -100,13 +109,15 @@ public:
     /**
      *@brief print the sparse matrix in triplet form
      */
-    void print() const override;
+    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const override;
 
 
     /**
      * @brief print the sparse matrix in the sense form
      */
-    void print_full(const char* name = NULL) const override;
+    void print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist>
+                    jnlst =
+                        nullptr) const override;
 
 
     /**
@@ -247,11 +258,11 @@ private:
 
 
     /** Copy Constructor */
-    SpTripletMat(const SpTripletMat&);
+    SpTripletMat(const SpTripletMat &);
 
 
     /** Overloaded Equals Operator */
-    void operator=(const SpTripletMat&);
+    void operator=(const SpTripletMat &);
 
 
 ///////////////////////////////////////////////////////////
@@ -338,14 +349,21 @@ public:
     /**
      * @brief print the matrix information
      */
-    void print() const override;
+    void
+    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr)
+    const
+    override;
 
 
-    void print_full(const char* name = NULL) const override {};
+    void print_full(const char* name = nullptr,
+                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst =
+                        nullptr) const
+    override;
 
 
     void times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const;;
+
     /**
      * @brief make a deep copy of a matrix information
      */
@@ -450,11 +468,11 @@ private:
 
 
     /** Copy Constructor */
-    SpHbMat(const SpHbMat&);
+    SpHbMat(const SpHbMat &);
 
 
     /** Overloaded Equals Operator */
-    void operator=(const SpHbMat&);
+    void operator=(const SpHbMat &);
 
 
     void set_zero() {
