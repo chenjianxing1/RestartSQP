@@ -17,14 +17,15 @@
 
 #ifdef DEBUG
 #define CHECK_TERMINATION true
-#define  CHECK_COMPLEMENTARITY true
 #define CHECK_TR_ALG false //check trust region algorithm
 #define CHECK_SOC false
 #define CHECK_INFEA_CAL false
 #define CHECK_QP_SOLVER false
 #define CHECK_NLP_READER false
+#define PRINT_QP_DATA false
 #define CHECK_QP_INFEASIBILITY false
-#define PRINT_OUT_QP_WITH_ERROR false
+#define GET_QP_INTERFACE_MEMBERS false
+#define PRINT_OUT_QP_WITH_ERROR true
 #endif
 
 #endif /* __SQPDEBUG_HPP */

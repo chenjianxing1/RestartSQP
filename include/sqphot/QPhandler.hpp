@@ -44,9 +44,9 @@ class QPhandler {
     ///////////////////////////////////////////////////////////
 public:
 
-    QPhandler(Index_info nlp_info, QPSolver QPsolverChoice);
 
-
+    QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+              Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
     /** Default destructor */
     virtual ~QPhandler();
 

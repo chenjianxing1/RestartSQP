@@ -62,9 +62,8 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
 }
 
 /** print the vector*/
-void Vector::print(const char* name, Ipopt::SmartPtr <Ipopt::Journalist> jnlst,
-                   Ipopt::EJournalCategory category,
-                   Ipopt::EJournalLevel level) const {
+void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                   Ipopt::EJournalLevel level, Ipopt::EJournalCategory category) const {
     if (name != nullptr)
         jnlst->Printf(level, category, name);
     jnlst->Printf(level, category, " =: \n");

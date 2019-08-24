@@ -37,7 +37,7 @@ public:
 
 
 #if DEBUG
-#if GET_QPOASES_MEMBERS
+#if GET_QP_INTERFACE_MEMBERS
     const shared_ptr<Vector>& getLb() const override;
 
     const shared_ptr<Vector>& getUb() const override ;
@@ -153,7 +153,10 @@ public:
     set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override;
 
 
-    void WriteQPDataToFile(const char* const filename);
+    void WriteQPDataToFile(
+        Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+        Ipopt::EJournalLevel level,
+        Ipopt::EJournalCategory category);
     //@}
 
 

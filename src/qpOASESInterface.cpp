@@ -72,11 +72,11 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
             if (CHECK_QP_INFEASIBILITY) {
 //                A_qpOASES_->print("A_");
 //                H_qpOASES_->print("H");
-//                g_->print("g", jnlst_, J_DBG, J_WARNING);;
-//                lb_->print("lb_", jnlst_, J_DBG, J_WARNING);;
-//                ub_->print("ub_", jnlst_, J_DBG, J_WARNING);;
-//                lbA_->print("lbA_", jnlst_, J_DBG, J_WARNING);;
-//                ubA_->print("ubA_", jnlst_, J_DBG, J_WARNING);;
+//                g_->print("g", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                lb_->print("lb_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                ub_->print("ub_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                lbA_->print("lbA_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                ubA_->print("ubA_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
             }
         }
 
@@ -98,11 +98,11 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
             if (CHECK_QP_INFEASIBILITY) {
 //                A_qpOASES_->print("A_");
 //                H_qpOASES_->print("H");
-//                g_->print("g", jnlst_, J_DBG, J_WARNING);;
-//                lb_->print("lb_", jnlst_, J_DBG, J_WARNING);;
-//                ub_->print("ub_", jnlst_, J_DBG, J_WARNING);;
-//                lbA_->print("lbA_", jnlst_, J_DBG, J_WARNING);;
-//                ubA_->print("ubA_", jnlst_, J_DBG, J_WARNING);;
+//                g_->print("g", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                lb_->print("lb_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                ub_->print("ub_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                lbA_->print("lbA_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
+//                ubA_->print("ubA_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
             }
         }
         get_Matrix_change_status();
@@ -467,24 +467,26 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
             stats->qp_iter_addValue((int) nWSR);
 
             if (!solver_->isSolved()) {
-                if (DEBUG) {
-                    if (PRINT_OUT_QP_WITH_ERROR) {
-                        WriteQPDataToFile("test");
-                    }
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+                WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
+#endif
+#endif
 
-                    THROW_EXCEPTION(LP_NOT_OPTIMAL,
-                                    "the QP problem didn't solved to optimality\n")
-                }
-            }
-            else {
-                if (PRINT_OUT_QP_WITH_ERROR) {
-                    WriteQPDataToFile("test");
-                }
                 THROW_EXCEPTION(LP_NOT_OPTIMAL,
                                 "the QP problem didn't solved to optimality\n")
             }
-
         }
+        else {
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+            WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
+#endif
+#endif
+            THROW_EXCEPTION(LP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
+        }
+
     }
     else {
         if (true) {
@@ -496,21 +498,22 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
             old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
             stats->qp_iter_addValue((int) nWSR);
             if (!solver_->isSolved()) {
-                if (DEBUG) {
-                    if (PRINT_OUT_QP_WITH_ERROR) {
-                        WriteQPDataToFile("test");
-                    }
-                }
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+                WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
+#endif
+#endif
                 THROW_EXCEPTION(QP_NOT_OPTIMAL,
                                 "the QP problem didn't solved to optimality\n")
 
             }
         }
         else {
-            if (DEBUG)
-                if (PRINT_OUT_QP_WITH_ERROR) {
-                    WriteQPDataToFile("test");
-                }
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+            WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
+#endif
+#endif
             THROW_EXCEPTION(QP_NOT_OPTIMAL,
                             "the QP problem didn't solved to optimality\n")
         }
@@ -548,18 +551,19 @@ void qpOASESInterface::setQP_options(shared_ptr<Options> options) {
 }
 
 
-void qpOASESInterface::WriteQPDataToFile(const char* const filename) {
+void qpOASESInterface::WriteQPDataToFile(
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+    Ipopt::EJournalLevel level,
+    Ipopt::EJournalCategory category) {
 
 #if DEBUG
-    FILE* file;
-    file = fopen(filename,"w");
-    lb_->write_to_file(file,"lb");
-    ub_->write_to_file(file,"ub");
-    lbA_->write_to_file(file,"lbA");
-    ubA_->write_to_file(file,"ubA");
-    g_->write_to_file(file,"g");
-    A_->write_to_file(file,"A");
-    H_->write_to_file(file,"H");
+    lb_->write_to_file("lb",jnlst,level,category,QPOASES_QP);
+    ub_->write_to_file("ub",jnlst,level,category,QPOASES_QP);
+    lbA_->write_to_file("lbA",jnlst,level,category,QPOASES_QP);
+    ubA_->write_to_file("ubA",jnlst,level,category,QPOASES_QP);
+    g_->write_to_file("g",jnlst,level,category,QPOASES_QP);
+    A_->write_to_file("a",jnlst,level,category,QPOASES_QP);
+    H_->write_to_file("h",jnlst,level,category,QPOASES_QP);
 #endif
 
 }

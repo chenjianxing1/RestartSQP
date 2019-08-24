@@ -9,12 +9,17 @@
 
 namespace SQPhotstart {
 
-QOREInterface::QOREInterface(Index_info nlp_info, QPType qptype) :
+QOREInterface::QOREInterface(Index_info nlp_info,
+                             QPType qptype,
+                             shared_ptr<const Options> options,
+                             Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+    jnlst_(jnlst),
     firstQPsolved_(false),
     qp_(0),
     nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
     nConstr_QP_(nlp_info.nCon) {
     allocate_memory(nlp_info, qptype);
+
 
 }
 
@@ -43,31 +48,33 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options>) {
         assert(rv_ == QPSOLVER_OK);
         rv_ = QPGetInt(qp_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
-            if (DEBUG) {
-                if (PRINT_OUT_QP_WITH_ERROR) {
-                    WriteQPDataToFile("test");
-                }
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
-            }
+
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+            WriteQPDataToFile(jnlst_,Ipopt::J_LAST_LEVEL, Ipopt::J_USER1);
+#endif
+#endif
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
         }
-    } else {
+    }
+    else {
         //TODO:monitor the data changes.
         rv_ = QPOptimize(qp_, lb_->values(), ub_->values(), g_->values(),
                          0, 0);//TODO: does not update primal-dual sol here
         assert(rv_ == QPSOLVER_OK);
         rv_ = QPGetInt(qp_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
-            if (DEBUG) {
-                if (PRINT_OUT_QP_WITH_ERROR) {
-                    WriteQPDataToFile("test");
-                }
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
-            }
-
-
+#if DEBUG
+#if PRINT_OUT_QP_WITH_ERROR
+            WriteQPDataToFile(jnlst_,Ipopt::J_LAST_LEVEL, Ipopt::J_USER1);
+#endif
+#endif
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+                            "the QP problem didn't solved to optimality\n")
         }
+
+
     }
     assert(rv_ == QPSOLVER_OK);
 
@@ -141,8 +148,8 @@ double* QOREInterface::get_optimal_solution() {
 }
 
 double QOREInterface::get_obj_value() {
-//FIXME: QORE does not have existing emthod to return the qp obj, now it is calculated
-// in Algorithm class for QOREInterface...
+    //FIXME: QORE does not have existing emthod to return the qp obj, now it is calculated
+    // in Algorithm class for QOREInterface...
 }
 
 
@@ -206,17 +213,26 @@ QPReturnType QOREInterface::get_status() {
 
 
 
-void QOREInterface::WriteQPDataToFile(const char* const filename) {
+void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                                      Ipopt::EJournalLevel level,
+                                      Ipopt::EJournalCategory category) {
+
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
+    if (IsNull(QPdata_jrnl)) {
+        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
+                                           Ipopt::J_WARNING);
+    }
+    QPdata_jrnl->SetAllPrintLevels(level);
+    QPdata_jrnl->SetPrintLevel(category,level);
 
 #if DEBUG
-    FILE* file;
-    file = fopen(filename,"w");
-    lb_->write_to_file(file,"lb");
-    ub_->write_to_file(file,"ub");
-    g_->write_to_file(file,"g");
-    A_->write_to_file(file,"A");
-    H_->write_to_file(file,"H");
+    lb_->write_to_file("lb",jnlst,level,category,QORE_QP);
+    ub_->write_to_file("ub",jnlst,level,category,QORE_QP);
+    g_->write_to_file("g",jnlst,level,category,QORE_QP);
+    A_->write_to_file("A",jnlst,level,category,QORE_QP);
+    H_->write_to_file("H",jnlst,level,category,QORE_QP);
 #endif
+    jnlst->DeleteAllJournals();
 
 }
 

@@ -24,7 +24,7 @@ class QOREInterface :
 public:
 
 #if DEBUG
-#if GET_QPOASES_MEMBERS
+#if GET_QP_MEMBERS
 
     const shared_ptr<Vector>& getG() const override {};
 
@@ -41,7 +41,11 @@ public:
 #endif
 
     /**Constructor*/
-    QOREInterface(Index_info nlp_info, QPType qptype);
+
+    QOREInterface(Index_info nlp_info,
+                  QPType qptype,
+                  shared_ptr<const Options> options,
+                  Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
 
     /** Default destructor*/
@@ -149,7 +153,7 @@ public:
 
 
     void set_ubA(shared_ptr<const Vector> rhs) override {};
-//@}
+    //@}
 
     //@}
 
@@ -177,7 +181,9 @@ private:
      */
     void allocate_memory(Index_info nlp_info, QPType qptype);
 
-    void WriteQPDataToFile(const char* const filename);
+    void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                           Ipopt::EJournalLevel level,
+                           Ipopt::EJournalCategory category);
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
@@ -195,6 +201,7 @@ private:
     shared_ptr<Vector> ub_;
     shared_ptr<Vector> x_qp_;
     shared_ptr<Vector> y_qp_;
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
 };
 

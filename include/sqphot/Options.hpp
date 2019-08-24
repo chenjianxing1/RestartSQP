@@ -87,7 +87,7 @@ public:
     double rho_max;
     int penalty_iter_max;
     //@}
-    Ipopt::EJournalLevel debug_print_level = Ipopt::J_ITERSUMMARY;
+    Ipopt::EJournalLevel debug_print_level = Ipopt::J_ALL;
     Ipopt::EJournalLevel print_level = Ipopt::J_ITERSUMMARY;
 };//ENDCLASS
 }

@@ -42,7 +42,8 @@ class LPhandler : public QPhandler {
 
 public:
 
-    LPhandler(Index_info nlp_info);
+    LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+              Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
     /** Default destructor */
     ~LPhandler() override;

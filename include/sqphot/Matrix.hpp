@@ -45,16 +45,20 @@ public:
     /** Default destructor*/
     virtual ~Matrix() = default;
 
-
+    /**
+     * @brief Print Matrix. If matrix is sparse, then print it in sparse form.
+     */
     virtual void
-    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst
-          = nullptr)
+    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+          Ipopt::EJournalLevel level = Ipopt::J_ALL, Ipopt::EJournalCategory category
+          =Ipopt::J_DBG)
     const = 0;
 
 
     virtual void
-    print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist>
-               jnlst = nullptr)
+    print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+               Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
+               category=Ipopt:: J_DBG)
     const
         = 0;
 
@@ -109,15 +113,17 @@ public:
     /**
      *@brief print the sparse matrix in triplet form
      */
-    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const override;
+    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+               Ipopt::EJournalLevel level =Ipopt::J_ALL,
+               Ipopt::EJournalCategory category=Ipopt::J_DBG) const override;
 
 
     /**
      * @brief print the sparse matrix in the sense form
      */
-    void print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist>
-                    jnlst =
-                        nullptr) const override;
+    void print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                    Ipopt::EJournalLevel level =Ipopt::J_ALL,
+                    Ipopt::EJournalCategory category=Ipopt::J_DBG) const override;
 
 
     /**
@@ -350,14 +356,16 @@ public:
      * @brief print the matrix information
      */
     void
-    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr)
+    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+          Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
+          category=Ipopt::J_DBG)
     const
     override;
 
 
-    void print_full(const char* name = nullptr,
-                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst =
-                        nullptr) const
+    void print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+                    Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
+                    category=Ipopt::J_DBG) const
     override;
 
 
@@ -451,7 +459,15 @@ public:
     };
     //@}
 
-    void write_to_file(FILE* file_to_write, const char* const name);
+    /**
+     *@brief write data to a file
+     * Only works when DEBUG is enabled.
+     */
+    void write_to_file(const char* name,
+                       Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                       Ipopt::EJournalLevel level,
+                       Ipopt::EJournalCategory category,
+                       QPSolver solver);
 
 ///////////////////////////////////////////////////////////
 //                     PRIVATE  METHODS                  //

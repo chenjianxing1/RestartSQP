@@ -10,15 +10,16 @@
 namespace SQPhotstart {
 DECLARE_STD_EXCEPTION(INVALID_QP_SOLVER_CHOICE);
 
-QPhandler::QPhandler(Index_info nlp_info, QPSolver QPsolverChoice):
+QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     nlp_info_(nlp_info),
-    QPsolverChoice_(QPsolverChoice) {
-    switch(QPsolverChoice) {
+    QPsolverChoice_(options->QPsolverChoice) {
+    switch(QPsolverChoice_) {
     case QPOASES_QP:
         solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP);
         break;
     case QORE_QP:
-        solverInterface_ = make_shared<QOREInterface>(nlp_info,QP);
+        solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
         break;
     default:
         THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")

@@ -1,9 +1,10 @@
 #ifndef _SQPHOTSTART_MESSAGE_HANDLE_
 #define _SQPHOTSTART_MESSAGE_HANDLE_
 
-#define DOUBLE_DIVIDER "===============================================\n"
-#define SINGLE_DIVIDER "-----------------------------------------------\n"
+#define DOUBLE_DIVIDER "===============================================================\n"
+#define SINGLE_DIVIDER "---------------------------------------------------------------\n"
 #define DOUBLE_LONG_DIVIDER "=====================================================================================\n"
+
 #define STANDARD_HEADER "%6s   %23s%9s %9s %9s %9s\n", "iter", "f", "||p_k||", "||c_k||", "Delta","rho"
 
 #define STANDARD_OUTPUT "%6i %23e %9.2e  %9.2e %9.2e %9.2e\n", stats_->iter,obj_value_,norm_p_k_, infea_measure_, delta_, rho_

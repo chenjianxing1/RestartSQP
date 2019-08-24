@@ -41,7 +41,9 @@ SpTripletMat::~SpTripletMat() {
  */
 //@{
 void
-SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jrnl) const {
+SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jrnl,
+                    Ipopt::EJournalLevel level,
+                    Ipopt::EJournalCategory category) const {
 
     std::cout << "Row Column Entry Order" << std::endl;
     for (int i = 0; i < EntryNum_; i++) {
@@ -56,9 +58,10 @@ SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jrnl) c
  *@name print the sparse matrix in dense form
  */
 //@{
-void SpTripletMat::print_full(const char* name,
-                              Ipopt::SmartPtr<Ipopt::Journalist>
-                              jnlst) const {
+void
+SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                         Ipopt::EJournalLevel level,
+                         Ipopt::EJournalCategory category) const {
     char mat_val[99];
 
     if (name != nullptr) {
@@ -76,7 +79,7 @@ void SpTripletMat::print_full(const char* name,
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-            sprintf(mat_val, "%f  ",dense_matrix[i*ColNum()+j]);
+            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
 //                jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
         }
 //            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
@@ -209,7 +212,9 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
 /**
  * qpOASESSparseMatrix
  */
-void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const {
+void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                    Ipopt::EJournalLevel level,
+                    Ipopt::EJournalCategory category) const {
 
     std::cout << "ColIndex: ";
     for (int i = 0; i < ColNum_ + 1; i++)
@@ -485,37 +490,47 @@ void SpHbMat::copy(std::shared_ptr<const SpHbMat> rhs) {
 }
 
 
-void SpHbMat::write_to_file(FILE* file_to_write, const char* const name) {
-
-    fprintf(file_to_write, "sparse_int_t %s_jc[] = \n{", name);
+void SpHbMat::write_to_file(const char* name,
+                            Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                            Ipopt::EJournalLevel level,
+                            Ipopt::EJournalCategory category,
+                            QPSolver solver) {
+    const char* var_type_int;
+    const char* var_type_double;
+    var_type_int = (solver == QPOASES_QP) ? "sparse_int_t" : "qp_int";
+    var_type_double = (solver == QPOASES_QP) ? "real_t" : "double";
+    jnlst->Printf(level, category, "%s %s_jc[] = \n{", var_type_int, name);
     int i;
     for (i = 0; i < ColNum_ + 1; i++) {
         if (i % 10 == 0 && i > 1)
-            fprintf(file_to_write, "\n");
+            jnlst->Printf(level, category, "\n");
         if (i == ColNum_)
-            fprintf(file_to_write, "%i};\n\n", ColIndex_[i]);
+            jnlst->Printf(level, category, "%i};\n\n", ColIndex_[i]);
         else
-            fprintf(file_to_write, "%i, ", ColIndex_[i]);
+            jnlst->Printf(level, category, "%i, ", ColIndex_[i]);
     }
-    fprintf(file_to_write, "sparse_int_t %s_ir[] = \n{", name);
+    jnlst->Printf(level, category, "%s %s_ir[] = \n{", var_type_int, name);
     for (i = 0; i < EntryNum_; i++) {
         if (i % 10 == 0 && i > 1)
-            fprintf(file_to_write, "\n");
+            jnlst->Printf(level, category, "\n");
         if (i == EntryNum_ - 1)
-            fprintf(file_to_write, "%i};\n\n", RowIndex_[i]);
+            jnlst->Printf(level, category, "%i};\n\n", RowIndex_[i]);
         else
-            fprintf(file_to_write, "%i, ", RowIndex_[i]);
+            jnlst->Printf(level, category, "%i, ", RowIndex_[i]);
     }
-    fprintf(file_to_write, "real_t %s_val[] = \n{", name);
+    jnlst->Printf(level, category, "%s %s_val[] = \n{", var_type_double, name);
     for (i = 0; i < EntryNum_; i++) {
         if (i % 10 == 0 && i > 1)
-            fprintf(file_to_write, "\n");
+            jnlst->Printf(level, category, "\n");
         if (i == EntryNum_ - 1)
-            fprintf(file_to_write, "%10e};\n\n", MatVal_[i]);
+            jnlst->Printf(level, category, "%10e};\n\n", MatVal_[i]);
         else
-            fprintf(file_to_write, "%10e, ", MatVal_[i]);
+            jnlst->Printf(level, category, "%10e, ", MatVal_[i]);
     }
+
+
 }
+
 
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
@@ -524,7 +539,9 @@ SpHbMat::times(std::shared_ptr<const Vector> p,
 }
 
 void
-SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst) const {
+SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                    Ipopt::EJournalLevel level,
+                    Ipopt::EJournalCategory category) const {
 
 }
 

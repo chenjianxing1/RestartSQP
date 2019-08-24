@@ -20,8 +20,8 @@ int Options::setToDefault() {
     iter_max = 300;
     printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
-    QPsolverChoice = QPOASES_QP;
-    LPsolverChoice = QPOASES_LP;
+    QPsolverChoice = QORE_QP;
+    LPsolverChoice = QORE_LP;
     second_order_correction = false;
     penalty_update = true;
     eta_c = 0.25;
