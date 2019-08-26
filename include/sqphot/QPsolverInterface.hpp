@@ -140,6 +140,9 @@ public:
     virtual QPReturnType get_status() = 0;
 
     //@}
+    virtual void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                                   Ipopt::EJournalLevel level,
+                                   Ipopt::EJournalCategory category) = 0;
 
 private:
     /** Copy Constructor */

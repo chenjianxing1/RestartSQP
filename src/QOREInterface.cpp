@@ -226,11 +226,52 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     QPdata_jrnl->SetPrintLevel(category,level);
 
 #if DEBUG
+
+    jnlst->Printf(level, category, "#include <stdio.h>\n"
+                  "#include <assert.h>\n"
+                  "#include <stdlib.h>\n"
+                  "#include <string.h>\n"
+                  "#include <math.h>\n"
+                  "#include <matrixconversion.h>\n"
+                  "#include <qpsolver.h>\n"
+                  "\n"
+                  "int main(){\n"
+                  "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
+
+
     lb_->write_to_file("lb",jnlst,level,category,QORE_QP);
     ub_->write_to_file("ub",jnlst,level,category,QORE_QP);
     g_->write_to_file("g",jnlst,level,category,QORE_QP);
     A_->write_to_file("A",jnlst,level,category,QORE_QP);
     H_->write_to_file("H",jnlst,level,category,QORE_QP);
+
+
+    jnlst->Printf(level,category,"QoreProblem * qp = 0;\n");
+    jnlst->Printf(level,category,"qp_int rv = QPNew( &qp, NV, NC, %i, %i );\n",
+                  A_->EntryNum(), H_->EntryNum());
+    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    jnlst->Printf(level,category,"assert( qp!= 0 );\n");
+    jnlst->Printf(level,category,"QPSetInt(qp, \"prtfreq\", 0); \n");
+    // pass problem data to solver
+    jnlst->Printf(level, category, "rv = QPSetData( qp, NV, NC, A_jc, A_ir, A_val, H_jc,"
+                  " H_ir, H_val );\n");
+
+    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    // solve first QP
+    jnlst->Printf(level, category,"rv = QPOptimize( qp, lb, ub, g, 0, 0 );\n");
+
+    jnlst->Printf(level,category,"qp_int status;\n");
+    jnlst->Printf(level,category,"QPGetInt(qp, \"status\", &status);\n");
+    jnlst->Printf(level,category,"if(status!=QPSOLVER_OPTIMAL){\n)");
+    jnlst->Printf(level,category,"    printf(\"Warning! The QP is not solved to optimality!\");\n");
+    jnlst->Printf(level,category,"}\n");
+    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    // get and print primal solution
+
+    jnlst->Printf(level, category, "QPFree(&qp);\n"
+                  "\n return 0; \n"
+                  "}\n");
+
 #endif
     jnlst->DeleteAllJournals();
 

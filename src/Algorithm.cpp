@@ -321,6 +321,7 @@ void Algorithm::termination_check() {
         exitflag_ = OPTIMAL;
     } else {
         if (norm_p_k_ > delta_ + options_->tol) {
+            myQP_->WriteQPData();
             exitflag_ = STEP_LARGER_THAN_TRUST_REGION;
         }
         //if it is not optimal
@@ -723,12 +724,14 @@ void Algorithm::ratio_test() {
 
 #if 0
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_)
-            && actual_reduction_ >= -options_->tol) {
+            && actual_reduction_ >= -options_->tol)
 #else
+    if (pred_reduction_ < 0)
+        myQP_->WriteQPData();
     assert(pred_reduction_ > 0);
-    if (actual_reduction_ >= (options_->eta_s * pred_reduction_)) {
+    if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
-
+    {
         //succesfully update
         //copy information already calculated from the trial point
         infea_measure_ = infea_measure_trial_;
@@ -751,8 +754,8 @@ void Algorithm::ratio_test() {
     } else {
         isaccept_ = false;
     }
-
 }
+
 
 /**
  * @brief Update the trust region radius.
@@ -798,7 +801,7 @@ void Algorithm::update_radius() {
         }
         exitflag_ = TRUST_REGION_TOO_SMALL;
         jnlst_->Printf(J_WARNING, J_MAIN,
-                       "Trust-region is too small!");
+                       "Trust-region is too small!\n");
         THROW_EXCEPTION(SMALL_TRUST_REGION, "The trust region is smaller than"
                         "the user-defined minimum value");
     }

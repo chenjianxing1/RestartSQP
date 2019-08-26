@@ -156,7 +156,9 @@ public:
     //@}
 
     //@}
-
+    void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                           Ipopt::EJournalLevel level,
+                           Ipopt::EJournalCategory category);
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////
@@ -181,9 +183,7 @@ private:
      */
     void allocate_memory(Index_info nlp_info, QPType qptype);
 
-    void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                           Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category);
+
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //

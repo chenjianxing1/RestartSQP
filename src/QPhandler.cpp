@@ -13,6 +13,7 @@ DECLARE_STD_EXCEPTION(INVALID_QP_SOLVER_CHOICE);
 QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     nlp_info_(nlp_info),
+    jnlst_(jnlst),
     QPsolverChoice_(options->QPsolverChoice) {
     switch(QPsolverChoice_) {
     case QPOASES_QP:
@@ -315,6 +316,8 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
     }
 
 }
+
+
 
 
 } // namespace SQPhotstart

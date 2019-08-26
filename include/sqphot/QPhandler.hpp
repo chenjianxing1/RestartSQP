@@ -204,6 +204,10 @@ public:
         return (solverInterface_->get_status());
     }
 
+    void WriteQPData() {
+        solverInterface_->WriteQPDataToFile(jnlst_,J_LAST_LEVEL,J_USER1);
+    }
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     //////////////////////////////////////////////////////////
@@ -242,6 +246,7 @@ private:
     const Index_info nlp_info_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 };
 
 
