@@ -45,9 +45,10 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype) :
+qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+                                   shared_ptr<const Options> options) :
     status_(UNSOLVED) {
-
+    options_ = options;
     allocate(nlp_index_info, qptype);
 }
 
@@ -63,9 +64,9 @@ qpOASESInterface::~qpOASESInterface() = default;
  * number used to solve the QP to the qp_iter in object stats
  */
 void
-qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) {
+qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 
-    qpOASES::int_t nWSR = options->qp_maxiter;
+    qpOASES::int_t nWSR = options_->qp_maxiter;
 
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
         if (DEBUG) {
@@ -80,7 +81,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
             }
         }
 
-        setQP_options(options);
+        setQP_options();
 
         solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
@@ -90,7 +91,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
         }
         else {
             obtain_status();
-            handler_error(QP, stats, options);
+            handler_error(QP, stats);
         }
     }
     else {
@@ -148,18 +149,17 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> option
     solver_->getDualSolution(y_qp_->values());
     if (!solver_->isSolved()) {
         obtain_status();
-        handler_error(QP, stats, options);
+        handler_error(QP, stats);
     }
 
 }
 
 
-void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
-                                  options) {
+void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
 
-    qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+    qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
     if (!firstQPsolved_) {
-        setQP_options(options);
+        setQP_options();
         solver_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
         if (solver_->isSolved()) {
@@ -167,7 +167,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         }
         else {
             obtain_status();
-            handler_error(LP, stats, options);
+            handler_error(LP, stats);
         }
     }
     else {
@@ -207,7 +207,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>
         solver_->getDualSolution(y_qp_->values());
         if (!solver_->isSolved()) {
             obtain_status();
-            handler_error(LP, stats, options);
+            handler_error(LP, stats);
         }
         stats->qp_iter_addValue((int) nWSR);
     }
@@ -453,12 +453,11 @@ void qpOASESInterface::reset_flags() {
 }
 
 
-void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
-                                     shared_ptr<Options> options) {
+void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
 
     if (qptype == LP) {
         if (true) {
-            qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+            qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
             solver_->init(0, g_->values(), A_qpOASES_.get(),
                           lb_->values(), ub_->values(), lbA_->values(),
                           ubA_->values(), nWSR);
@@ -490,7 +489,7 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
     }
     else {
         if (true) {
-            qpOASES::int_t nWSR = options->lp_maxiter;//TODO modify it
+            qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
             solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                           lb_->values(), ub_->values(), lbA_->values(),
                           ubA_->values(), nWSR);
@@ -521,12 +520,12 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats,
 }
 
 
-void qpOASESInterface::setQP_options(shared_ptr<Options> options) {
+void qpOASESInterface::setQP_options() {
 
     qpOASES::Options qp_options;
     qp_options.setToReliable();
     //setup the printlevel of q
-    switch (options->qpPrintLevel) {
+    switch (options_->qpPrintLevel) {
     case 0:
         qp_options.printLevel = qpOASES::PL_NONE;
         break;
@@ -555,7 +554,7 @@ void qpOASESInterface::WriteQPDataToFile(
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     Ipopt::EJournalLevel level,
     Ipopt::EJournalCategory category) {
-
+//TODO: can be write as a cpp file ....
 #if DEBUG
     lb_->write_to_file("lb",jnlst,level,category,QPOASES_QP);
     ub_->write_to_file("ub",jnlst,level,category,QPOASES_QP);

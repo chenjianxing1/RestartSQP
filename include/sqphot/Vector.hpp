@@ -167,27 +167,12 @@ public:
 //            size_ = rhs.size_;
 //            values_ = rhs.values_;
 //        }
-//TODO: remove it after incorporate jnalst
     void write_to_file(const char* name,
                        Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                        Ipopt::EJournalLevel level,
                        Ipopt::EJournalCategory category,
-                       QPSolver qpsolver) {
-        const char * var_type;
+                       QPSolver qpsolver);
 
-        var_type = (qpsolver==QPOASES_QP)?"real_t":"double const";
-
-        jnlst->Printf(level, category, "%s %s[%i] = {", var_type,name,Dim());
-        for (int i = 0; i < Dim(); i++) {
-            if (i % 10 == 0 && i > 1)
-                jnlst->Printf(level, category, "\n");
-            if (i == Dim() - 1)
-                jnlst->Printf(level, category, "%10e};\n\n", values_[i]);
-            else
-                jnlst->Printf(level, category, "%10e, ", values_[i]);
-        }
-
-    }
 
     bool isAllocated() {
         return isAllocated_;

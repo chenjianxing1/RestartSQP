@@ -302,7 +302,7 @@ public:
     //@{
 
     /**Default constructor*/
-    SpHbMat(int RowNum, int ColNum, bool isSymmetric);
+    SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow = false);
 
 
     /**
@@ -311,7 +311,7 @@ public:
      * @param RowNum the number of rows
      * @param ColNum the number of columns
      */
-    SpHbMat(int nnz, int RowNum, int ColNum);
+    SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow = false);
 
 
     /**
@@ -399,19 +399,19 @@ public:
     }
 
 
-    inline qpOASES::sparse_int_t* RowIndex() {
+    inline int* RowIndex() {
 
         return RowIndex_;
     }
 
 
-    inline qpOASES::sparse_int_t* ColIndex() {
+    inline int* ColIndex() {
 
         return ColIndex_;
     }
 
 
-    inline qpOASES::real_t* MatVal() {
+    inline double* MatVal() {
 
         return MatVal_;
     }
@@ -423,19 +423,19 @@ public:
     }
 
 
-    inline const qpOASES::sparse_int_t* RowIndex() const {
+    inline const int* RowIndex() const {
 
         return RowIndex_;
     }
 
 
-    inline const qpOASES::sparse_int_t* ColIndex() const {
+    inline const int* ColIndex() const {
 
         return ColIndex_;
     }
 
 
-    inline const qpOASES::real_t* MatVal() const {
+    inline const double* MatVal() const {
 
         return MatVal_;
     }
@@ -453,10 +453,14 @@ public:
     };
 
 
-    inline bool isIsinitialized() const {
+    inline bool isinitialized() const {
 
         return isInitialised_;
     };
+
+    inline bool isCompressedRow() const {
+        return isCompressedRow_;
+    }
     //@}
 
     /**
@@ -468,6 +472,7 @@ public:
                        Ipopt::EJournalLevel level,
                        Ipopt::EJournalCategory category,
                        QPSolver solver);
+
 
 ///////////////////////////////////////////////////////////
 //                     PRIVATE  METHODS                  //
@@ -492,35 +497,60 @@ private:
 
 
     void set_zero() {
-
-        for (int i = 0; i < EntryNum_; i++) {
-            MatVal_[i] = 0;
-            RowIndex_[i] = 0;
-            order_[i] = i;
+        if(isCompressedRow_) {
+            for (int i = 0; i < EntryNum_; i++) {
+                MatVal_[i] = 0;
+                ColIndex_[i] = 0;
+                order_[i] = i;
+            }
+            for (int i = 0; i < RowNum_ + 1; i++) {
+                RowIndex_[i] = 0;
+            }
         }
-        for (int i = 0; i < ColNum_ + 1; i++) {
-            ColIndex_[i] = 0;
+        else {
+            for (int i = 0; i < EntryNum_; i++) {
+                MatVal_[i] = 0;
+                RowIndex_[i] = 0;
+                order_[i] = i;
+            }
+            for (int i = 0; i < ColNum_ + 1; i++) {
+                ColIndex_[i] = 0;
+            }
         }
     }
 
 
     /**
-     * This is part of qpOASESMatrixAdapter
      * @brief This is the sorted rule that used to sort data, first based on column
      * index then based on row index
      */
     static bool
-    tuple_sort_rule(const std::tuple<int, int, int> left,
-                    const std::tuple<int, int, int> right) {
+    tuple_sort_rule_compressed_column(const std::tuple<int, int, int> left,
+                                      const std::tuple<int, int, int> right) {
+
 
         if (std::get<1>(left) < std::get<1>(right)) return true;
         else if (std::get<1>(left) > std::get<1>(right)) return false;
         else {
-            if (std::get<0>(left) < std::get<0>(right))return true;
-            else return false;
+            return std::get<0>(left) < std::get<0>(right);
         }
     }
 
+    /**
+     * @brief This is the sorted rule that used to sort data, first based on row
+     * index then based on column index
+     */
+    static bool
+    tuple_sort_rule_compressed_row(const std::tuple<int, int, int> left,
+                                   const std::tuple<int, int, int> right) {
+
+
+        if (std::get<0>(left) < std::get<0>(right)) return true;
+        else if (std::get<0>(left) > std::get<0>(right)) return false;
+        else {
+            return std::get<1>(left) < std::get<1>(right);
+        }
+    }
 
 ///////////////////////////////////////////////////////////
 //                     PRIVATE  MEMBERS                  //
@@ -528,15 +558,18 @@ private:
 private:
     bool isInitialised_;
     bool isSymmetric_;
+    bool isCompressedRow_;
     int ColNum_;
     int EntryNum_;
     int RowNum_;
     int* order_;
-    qpOASES::real_t* MatVal_;
-    qpOASES::sparse_int_t* ColIndex_;
-    qpOASES::sparse_int_t* RowIndex_;
+    double * MatVal_;
+    int * ColIndex_;
+    int *RowIndex_;
 };
 
 
+
 }
+
 #endif //SQPHOTSTART_MATRIX_HPP_

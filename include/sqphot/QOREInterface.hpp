@@ -59,7 +59,7 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
-    void optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeQP(shared_ptr<Stats> stats) override;
 
 
     /**
@@ -68,7 +68,7 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
-    void optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeLP(shared_ptr<Stats> stats) override;
 
     /**@name Getters */
     //@{
@@ -111,6 +111,7 @@ public:
 
     void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
         H_->setMatVal(rhs);
+//        H_->print("H",jnlst_);
     };
 
 
@@ -158,7 +159,7 @@ public:
     //@}
     void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                            Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category);
+                           Ipopt::EJournalCategory category) override ;
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////

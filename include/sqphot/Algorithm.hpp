@@ -17,7 +17,6 @@
 #include <sqphot/QPhandler.hpp>
 #include <sqphot/LPhandler.hpp>
 #include <sqphot/Utils.hpp>
-#include <sqphot/Log.hpp>
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Vector.hpp>
 #include <sqphot/Matrix.hpp>
@@ -337,24 +336,23 @@ private:
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
     Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions;
-    Number actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
-    Number delta_;/**< trust-region radius*/
-    Number infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
-    Number infea_measure_model_; /**< the one norm of all slack variables in the QP */
-    Number infea_measure_trial_;/**< the measure of infeasibility evaluated at x_trial*/
-    Number norm_p_k_;/**< the infinity norm of p_k*/
-    Number obj_value_;/**<the objective corresponding to the x_k*/
-    Number obj_value_trial_;/**<the objective corresponding to the x_trial*/
-    Number pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
-    Number qp_obj_;/**< the objective value of current qp*/
-    Number rho_; /**< penalty parameter*/
+    double actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
+    double delta_;/**< trust-region radius*/
+    double infea_measure_;/**< the measure of infeasibility evaluated at x_k*/
+    double infea_measure_model_; /**< the one norm of all slack variables in the QP */
+    double infea_measure_trial_;/**< the measure of infeasibility evaluated at x_trial*/
+    double norm_p_k_;/**< the infinity norm of p_k*/
+    double obj_value_;/**<the objective corresponding to the x_k*/
+    double obj_value_trial_;/**<the objective corresponding to the x_trial*/
+    double pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
+    double qp_obj_;/**< the objective value of current qp*/
+    double rho_; /**< penalty parameter*/
     ActiveType* Active_Set_bounds_;
     ActiveType* Active_Set_constraints_;
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
     shared_ptr<LPhandler> myLP_;
-    shared_ptr<Log> log_;
     shared_ptr<Options> options_;/**< the default options used for now. */
     shared_ptr<QPhandler> myQP_;
     shared_ptr<SQPTNLP> nlp_;

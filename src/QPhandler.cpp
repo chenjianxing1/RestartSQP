@@ -17,7 +17,7 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
     QPsolverChoice_(options->QPsolverChoice) {
     switch(QPsolverChoice_) {
     case QPOASES_QP:
-        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP);
+        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options);
         break;
     case QORE_QP:
         solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
@@ -274,7 +274,7 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad) {
 void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
                         shared_ptr<Options> options) {
 
-    solverInterface_->optimizeQP(stats, options);
+    solverInterface_->optimizeQP(stats);
 }
 
 

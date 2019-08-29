@@ -28,9 +28,9 @@ QOREInterface::~QOREInterface() {
     QPFree(&qp_);
 }
 
-void QOREInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options>) {
-    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->ColIndex(), A_->RowIndex(),
-                    A_->MatVal(), H_->ColIndex(), H_->RowIndex(), H_->MatVal());
+void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
+    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
+                    A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
 #if DEBUG
 #if CHECK_QP_INFEASIBILITY
     A_->print();
@@ -81,7 +81,7 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options>) {
 }
 
 
-void QOREInterface::optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options>) {
+void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
     rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->ColIndex(), A_->RowIndex(),
                     A_->MatVal(), 0, 0, 0);
     assert(rv_ == QPSOLVER_OK);
@@ -118,15 +118,14 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     lb_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     ub_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     g_ = make_shared<Vector>(nVar_QP_);
-    A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_);
-    H_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_);
+    A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_,true);
     x_qp_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
     int returnvalue;
     if (qptype != LP) {
         rv_ = QPNew(&qp_, nVar_QP_, nConstr_QP_, nnz_g_QP,
                     nlp_info.nnz_h_lag);
-        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
+        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true,true);
     } else {
         //if we are solving an LP, the number of nonzero in the Hessian is 0
 
@@ -193,6 +192,7 @@ QOREInterface::set_A_values(shared_ptr<const SpTripletMat> rhs,
                             Identity2Info I_info) {
 
     A_->setMatVal(rhs, I_info);
+//    A_->print("A",jnlst_);
 }
 
 QPReturnType QOREInterface::get_status() {
@@ -217,6 +217,9 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                                       Ipopt::EJournalLevel level,
                                       Ipopt::EJournalCategory category) {
 
+
+#if DEBUG
+
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
     if (IsNull(QPdata_jrnl)) {
         QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
@@ -224,9 +227,8 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     }
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
-
-#if DEBUG
-
+#if PRINT_OUT_QP_WITH_ERROR
+#if PRINT_QP_IN_CPP
     jnlst->Printf(level, category, "#include <stdio.h>\n"
                   "#include <assert.h>\n"
                   "#include <stdlib.h>\n"
@@ -237,7 +239,12 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                   "\n"
                   "int main(){\n"
                   "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
-
+#else
+    jnlst->Printf(level, category, "%d\n", nVar_QP_);
+    jnlst->Printf(level, category, "%d\n", nCon_QP_);
+    jnlst->Printf(level, category, "%d\n", A_->EntryNum();
+                  jnlst->Printf(level, category, "%d\n", H_->EntryNum();
+#endif
 
     lb_->write_to_file("lb",jnlst,level,category,QORE_QP);
     ub_->write_to_file("ub",jnlst,level,category,QORE_QP);
@@ -245,7 +252,7 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     A_->write_to_file("A",jnlst,level,category,QORE_QP);
     H_->write_to_file("H",jnlst,level,category,QORE_QP);
 
-
+#if PRINT_QP_IN_CPP
     jnlst->Printf(level,category,"QoreProblem * qp = 0;\n");
     jnlst->Printf(level,category,"qp_int rv = QPNew( &qp, NV, NC, %i, %i );\n",
                   A_->EntryNum(), H_->EntryNum());
@@ -271,9 +278,10 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     jnlst->Printf(level, category, "QPFree(&qp);\n"
                   "\n return 0; \n"
                   "}\n");
-
+#endif
 #endif
     jnlst->DeleteAllJournals();
+#endif
 
 }
 

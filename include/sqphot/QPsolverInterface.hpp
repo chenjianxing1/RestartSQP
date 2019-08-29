@@ -56,10 +56,10 @@ public:
 
 #endif
 #endif
-    QPSolverInterface() {}
+    QPSolverInterface() = default;
 
     /** Default destructor*/
-    virtual ~QPSolverInterface() {}
+    virtual ~QPSolverInterface() = default;
 
     /**
      * @brief Solve a regular QP with given data and options.
@@ -68,7 +68,7 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
     virtual void
-    optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
+    optimizeQP(shared_ptr<Stats> stats) = 0;
 
     /**
      * @brief Solve a regular LP with given data and options
@@ -77,7 +77,7 @@ public:
      */
 
     virtual void
-    optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) = 0;
+    optimizeLP(shared_ptr<Stats> stats) = 0;
 
     /**
      * @brief copy the optimal solution of the QP to the input pointer

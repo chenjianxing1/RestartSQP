@@ -10,4 +10,5 @@
 #define STANDARD_OUTPUT "%6i %23e %9.2e  %9.2e %9.2e %9.2e\n", stats_->iter,obj_value_,norm_p_k_, infea_measure_, delta_, rho_
 #define PENALTY_UPDATE_HEADER "%6s %18s %18s %18s \n", "iter", "rho_trial", "infea_measure_model"
 #define PENALTY_UPDATE_OUTPUT "%6i %18e %18e %18e \n",iter,rho_trial,infea_measure_model,infea_measure_infty
+
 #endif

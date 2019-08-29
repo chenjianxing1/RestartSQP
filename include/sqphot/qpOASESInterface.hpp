@@ -32,6 +32,14 @@ class qpOASESInterface :
     ///////////////////////////////////////////////////////////
 public:
 
+    /**
+     * @brief Constructor which also initializes the qpOASES SQProblem objects
+     * @param nlp_index_info the struct that stores simple nlp dimension info
+     * @param qptype  is the problem to be solved QP or LP?
+     */
+    qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+                     shared_ptr<const Options> options);    //number of constraints in the QP problem
+
     /** Defualt Destructor */
     ~qpOASESInterface() override;
 
@@ -52,16 +60,9 @@ public:
 #endif
 
 
-    /**
-     * @brief Constructor which also initializes the qpOASES SQProblem objects
-     * @param nlp_index_info the struct that stores simple nlp dimension info
-     * @param qptype  is the problem to be solved QP or LP?
-     */
-    qpOASESInterface(Index_info nlp_index_info,
-                     QPType qptype);    //number of constraints in the QP problem
 
 
-    void optimizeQP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeQP(shared_ptr<Stats> stats) override;
 
 
     /**
@@ -69,7 +70,7 @@ public:
      * in the class members.
      */
 
-    void optimizeLP(shared_ptr<Stats> stats, shared_ptr<Options> options) override;
+    void optimizeLP(shared_ptr<Stats> stats) override;
 
 
     /**
@@ -156,7 +157,7 @@ public:
     void WriteQPDataToFile(
         Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         Ipopt::EJournalLevel level,
-        Ipopt::EJournalCategory category);
+        Ipopt::EJournalCategory category) override ;
     //@}
 
 
@@ -169,8 +170,7 @@ private:
     qpOASESInterface();
 
 
-    void handler_error(QPType qptype, shared_ptr<Stats> stats,
-                       shared_ptr<Options> options);
+    void handler_error(QPType qptype, shared_ptr<Stats> stats);
 
 
     /**
@@ -194,7 +194,7 @@ private:
     void allocate(Index_info nlp_index_info, QPType qptype);
 
 
-    void setQP_options(shared_ptr<Options> options);
+    void setQP_options();
 
 
     void get_Matrix_change_status();
@@ -246,6 +246,7 @@ private:
     QPMatrixType new_QP_matrix_status_ = UNDEFINED;
     QPMatrixType old_QP_matrix_status_ = UNDEFINED;
     QPReturnType status_;
+    shared_ptr<const Options> options_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 };
 }

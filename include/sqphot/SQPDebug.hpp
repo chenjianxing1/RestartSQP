@@ -16,6 +16,7 @@
 
 
 #ifdef DEBUG
+
 #define CHECK_TERMINATION true
 #define CHECK_TR_ALG false //check trust region algorithm
 #define CHECK_SOC false
@@ -26,6 +27,9 @@
 #define CHECK_QP_INFEASIBILITY false
 #define GET_QP_INTERFACE_MEMBERS false
 #define PRINT_OUT_QP_WITH_ERROR true
+#if PRINT_OUT_QP_WITH_ERROR
+#define PRINT_QP_IN_CPP true
+#endif
 #endif
 
 #endif /* __SQPDEBUG_HPP */

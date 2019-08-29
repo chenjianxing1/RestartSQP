@@ -424,6 +424,7 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
     SmartPtr<Journal> stdout_jrnl =
         jnlst_->AddFileJournal("console", "stdout", J_ITERSUMMARY);
     stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
+
 #if DEBUG
     SmartPtr<Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
                                    J_MOREDETAILED);
@@ -489,7 +490,6 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     //TODO: use roptions instead of this one
     options_ = make_shared<Options>();
     stats_ = make_shared<Stats>();
-    log_ = make_shared<Log>();
 
     myQP_ = make_shared<QPhandler>(nlp_->nlp_info_, options_, jnlst_);
     myLP_ = make_shared<LPhandler>(nlp_->nlp_info_, options_, jnlst_);
@@ -717,8 +717,6 @@ void Algorithm::ratio_test() {
     jnlst_->Printf(J_ALL,J_DBG,SINGLE_DIVIDER);
     jnlst_->Printf(J_ALL,J_DBG,"\n");
 
-
-
 #endif
 #endif
 
@@ -866,8 +864,6 @@ void Algorithm::update_penalty_parameter() {
             double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
                                                  2 * nCon_);
 
-            log_->print_penalty_update(stats_->penalty_change_trial, rho_trial,
-                                       infea_measure_model_, infea_measure_infty);
 
             if (infea_measure_infty <= options_->penalty_update_tol) {
                 //try to increase the penalty parameter to a number such that the
@@ -900,9 +896,6 @@ void Algorithm::update_penalty_parameter() {
                     infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                    2 * nCon_);
 
-                    log_->print_penalty_update(stats_->penalty_change_trial,
-                                               rho_trial, infea_measure_model_,
-                                               infea_measure_infty);
                 }
 
             } else {
@@ -938,9 +931,6 @@ void Algorithm::update_penalty_parameter() {
                     infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                    2 * nCon_);
 
-                    log_->print_penalty_update(stats_->penalty_change_trial,
-                                               rho_trial, infea_measure_model_,
-                                               infea_measure_infty);
                 }
             }
             //if any change occurs

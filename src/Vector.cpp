@@ -64,6 +64,7 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
 /** print the vector*/
 void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                    Ipopt::EJournalLevel level, Ipopt::EJournalCategory category) const {
+
     if (name != nullptr)
         jnlst->Printf(level, category, name);
     jnlst->Printf(level, category, " =: \n");
@@ -166,6 +167,36 @@ void Vector::set_zeros() {
     for (int i = 0; i < size_; i++) {
         values_[i] = 0;
     }
+}
+
+void Vector::write_to_file(const char* name,
+                           Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                           Ipopt::EJournalLevel level,
+                           Ipopt::EJournalCategory category,
+                           QPSolver qpsolver) {
+#if DEBUG
+#if PRINT_QP_IN_CPP
+    const char * var_type;
+    var_type = (qpsolver==QPOASES_QP)?"real_t":"double const";
+
+    jnlst->Printf(level, category, "%s %s[%i] = {", var_type,name,Dim());
+    for (int i = 0; i < Dim(); i++) {
+        if (i % 10 == 0 && i > 1)
+            jnlst->Printf(level, category, "\n");
+        if (i == Dim() - 1)
+            jnlst->Printf(level, category, "%10e};\n\n", values_[i]);
+        else
+            jnlst->Printf(level, category, "%10e, ", values_[i]);
+    }
+#else
+    //print in file
+    for (int i = 0; i < Dim(); i++) {
+        if (i % 10 == 0 && i > 1)
+            jnlst->Printf(level, category, "%10e\n", values_[i]);
+    }
+#endif
+
+#endif
 }
 //
 //Vector Vector::operator+(const Vector& rhs) {

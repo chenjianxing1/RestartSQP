@@ -216,18 +216,38 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
                     Ipopt::EJournalCategory category) const {
 
-    std::cout << "ColIndex: ";
-    for (int i = 0; i < ColNum_ + 1; i++)
-        std::cout << ColIndex()[i] << " ";
+    if(isCompressedRow_) {
+        std::cout<< name <<"= "<<std::endl;
+        std::cout << "ColIndex: ";
+        for (int i = 0; i < EntryNum_; i++)
+            std::cout << ColIndex()[i] << " ";
 
-    std::cout << " " << std::endl;
+        std::cout << " " << std::endl;
 
-    std::cout << "RowIndex: ";
+        std::cout << "RowIndex: ";
 
-    for (int i = 0; i < EntryNum_; i++)
-        std::cout << RowIndex()[i] << " ";
-    std::cout << " " << std::endl;
+        for (int i = 0; i < RowNum_+1; i++)
+            std::cout << RowIndex()[i] << " ";
+        std::cout << " " << std::endl;
 
+
+    } else {
+        std::cout<< name <<"= "<<std::endl;
+        std::cout << "ColIndex: ";
+        for (int i = 0; i < ColNum_ + 1; i++)
+            std::cout << ColIndex()[i] << " ";
+
+        std::cout << " " << std::endl;
+
+        std::cout << "RowIndex: ";
+
+        for (int i = 0; i < EntryNum_; i++)
+            std::cout << RowIndex()[i] << " ";
+        std::cout << " " << std::endl;
+
+
+
+    }
     std::cout << "MatVal:   ";
 
     for (int i = 0; i < EntryNum_; i++)
@@ -238,14 +258,11 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     for (int i = 0; i < EntryNum_; i++)
         std::cout << order()[i] << " ";
     std::cout << " " << std::endl;
-
-
 }
 
 
 /** Default constructor*/
-SpHbMat::SpHbMat(int RowNum, int ColNum, bool
-                 isSymmetric) :
+SpHbMat::SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
@@ -254,9 +271,13 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool
     isInitialised_(false),
     RowNum_(RowNum),
     ColNum_(ColNum),
-    isSymmetric_(isSymmetric) {
+    isSymmetric_(isSymmetric),
+    isCompressedRow_(isCompressedRow) {
 
-    ColIndex_ = new qpOASES::int_t[ColNum + 1]();
+    if(isCompressedRow_) {
+        RowIndex_ = new int[RowNum+1]();
+    } else
+        ColIndex_ = new int[ColNum + 1]();
 }
 
 
@@ -268,25 +289,31 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool
  * @param RowNum: number of rows of a matrix
  * @param ColNum: number of columns of a matrix
  */
-SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum) :
+SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
     order_(NULL),
+    EntryNum_(nnz),
+    RowNum_(RowNum),
+    ColNum_(ColNum),
     isSymmetric_(false),
-    isInitialised_(false) {
+    isInitialised_(false),
+    isCompressedRow_(isCompressedRow) {
 
-    EntryNum_ = nnz;
-    RowNum_ = RowNum;
-    ColNum_ = ColNum;
-    ColIndex_ = new qpOASES::int_t[ColNum + 1]();
-    RowIndex_ = new qpOASES::int_t[nnz]();
-    MatVal_ = new qpOASES::real_t[nnz]();
+    if(isCompressedRow) {
+        ColIndex_ = new int[nnz]();
+        RowIndex_ = new int[RowNum+1]();
+    } else {
+        ColIndex_ = new int[ColNum + 1]();
+        RowIndex_ = new int[nnz]();
+    }
+    MatVal_ = new double[nnz]();
     order_ = new int[nnz]();
     for (int i = 0; i < nnz; i++)
         order_[i] = i;
-
 }
+
 
 
 /**
@@ -313,8 +340,10 @@ SpHbMat::~SpHbMat() {
 void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                            Identity2Info I_info) {
 
+
     set_zero();
     assert(isInitialised_ == false);
+
     int counter = 0; // the counter for recording the index location
     std::vector<std::tuple<int, int, int>> sorted_index_info;
     for (int i = 0; i < rhs->EntryNum(); i++) {
@@ -322,6 +351,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                                     rhs->ColIndex()[i], counter));
         counter++;
     }
+
 
     // adding 2 identity matrix to the tuple array.
     if (I_info.irow1 != 0) {
@@ -337,20 +367,37 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
     }
     assert(counter == EntryNum_);
 
-    std::sort(sorted_index_info.begin(), sorted_index_info.end(),
-              tuple_sort_rule);
-    for (int i = 0; i < EntryNum_; i++) {
-        RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-        order_[i] = std::get<2>(sorted_index_info[i]);
+    if(isCompressedRow_) {
 
-        for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
-            ColIndex_[j]++;
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule_compressed_row);
+        for (int i = 0; i < EntryNum_; i++) {
+            ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
+            order_[i] = std::get<2>(sorted_index_info[i]);
+
+            for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
+                RowIndex_[j]++;
+            }
+
+            RowIndex_[RowNum_] = EntryNum_;
+
         }
+    } else {
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule_compressed_column);
+        for (int i = 0; i < EntryNum_; i++) {
+            RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
+            order_[i] = std::get<2>(sorted_index_info[i]);
 
-        ColIndex_[ColNum_] = EntryNum_;
-        sorted_index_info.clear();
+            for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
+                ColIndex_[j]++;
+            }
 
+            ColIndex_[ColNum_] = EntryNum_;
+
+        }
     }
+    sorted_index_info.clear();
 }
 
 
@@ -393,29 +440,51 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
         }
         if (EntryNum_ == -1) {
+
             EntryNum_ = counter;
-            RowIndex_ = new qpOASES::sparse_int_t[counter]();
             MatVal_ = new double[counter]();
             order_ = new int[counter]();
+
+            if (isCompressedRow_) {
+                ColIndex_ = new int[counter]();
+            } else {
+                RowIndex_ = new int[counter]();
+            }
         }
     }
     assert(counter == EntryNum_);
 
 
-    std::sort(sorted_index_info.begin(), sorted_index_info.end(),
-              tuple_sort_rule);
-    //copy the order information back
+    if (isCompressedRow_) {
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule_compressed_row);
+        //copy the order information back
 
-    for (int i = 0; i < EntryNum_; i++) {
-        RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-        order_[i] = std::get<2>(sorted_index_info[i]);
+        for (int i = 0; i < EntryNum_; i++) {
+            ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
+            order_[i] = std::get<2>(sorted_index_info[i]);
 
-        for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
-            ColIndex_[j]++;
+            for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
+                RowIndex_[j]++;
+            }
         }
-    }
-    ColIndex_[ColNum_] = EntryNum_;
+        RowIndex_[RowNum_] = EntryNum_;
+    } else {
+        std::sort(sorted_index_info.begin(), sorted_index_info.end(),
+                  tuple_sort_rule_compressed_column);
+        //copy the order information back
 
+        for (int i = 0; i < EntryNum_; i++) {
+            RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
+            order_[i] = std::get<2>(sorted_index_info[i]);
+
+            for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
+                ColIndex_[j]++;
+            }
+        }
+        ColIndex_[ColNum_] = EntryNum_;
+
+    }
     sorted_index_info.clear();
 }
 
@@ -495,6 +564,8 @@ void SpHbMat::write_to_file(const char* name,
                             Ipopt::EJournalLevel level,
                             Ipopt::EJournalCategory category,
                             QPSolver solver) {
+#if DEBUG
+#if PRINT_QP_IN_CPP
     const char* var_type_int;
     const char* var_type_double;
     var_type_int = (solver == QPOASES_QP) ? "sparse_int_t" : "qp_int";
@@ -505,18 +576,18 @@ void SpHbMat::write_to_file(const char* name,
         if (i % 10 == 0 && i > 1)
             jnlst->Printf(level, category, "\n");
         if (i == ColNum_)
-            jnlst->Printf(level, category, "%i};\n\n", ColIndex_[i]);
+            jnlst->Printf(level, category, "%d};\n\n", ColIndex_[i]);
         else
-            jnlst->Printf(level, category, "%i, ", ColIndex_[i]);
+            jnlst->Printf(level, category, "%d, ", ColIndex_[i]);
     }
     jnlst->Printf(level, category, "%s %s_ir[] = \n{", var_type_int, name);
     for (i = 0; i < EntryNum_; i++) {
         if (i % 10 == 0 && i > 1)
             jnlst->Printf(level, category, "\n");
         if (i == EntryNum_ - 1)
-            jnlst->Printf(level, category, "%i};\n\n", RowIndex_[i]);
+            jnlst->Printf(level, category, "%d};\n\n", RowIndex_[i]);
         else
-            jnlst->Printf(level, category, "%i, ", RowIndex_[i]);
+            jnlst->Printf(level, category, "%d, ", RowIndex_[i]);
     }
     jnlst->Printf(level, category, "%s %s_val[] = \n{", var_type_double, name);
     for (i = 0; i < EntryNum_; i++) {
@@ -527,7 +598,20 @@ void SpHbMat::write_to_file(const char* name,
         else
             jnlst->Printf(level, category, "%10e, ", MatVal_[i]);
     }
+#else
+    int i;
+    for (i = 0; i < ColNum_ + 1; i++) {
+        jnlst->Printf(level, category, "%d\n", ColIndex_[i]);
+    }
+    for (i = 0; i < EntryNum_; i++) {
+        jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
+    }
+    for (i = 0; i < EntryNum_; i++) {
+        jnlst->Printf(level, category, "%10e\n", MatVal_[i]);
+    }
 
+#endif
+#endif
 
 }
 
@@ -547,5 +631,4 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 
 
 }//END_OF_NAMESPACE
-
 
