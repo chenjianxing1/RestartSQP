@@ -72,7 +72,7 @@ public:
     void assign_n(int Location, int subvector_size, double scaling_factor);
 
     /** print the vector*/
-    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst= nullptr,
                Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
                category =Ipopt::J_DBG) const;
 

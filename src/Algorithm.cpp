@@ -599,7 +599,7 @@ DECLARE_STD_EXCEPTION(QP_UNCHANGED);
 
 void Algorithm::setupQP() {
     if (stats_->iter == 0) {
-        myQP_->set_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
+        myQP_->set_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
         myQP_->set_g(grad_f_, rho_);
         myQP_->set_A(jacobian_);
         myQP_->set_H(hessian_);
@@ -651,7 +651,7 @@ void Algorithm::setupQP() {
 
 void Algorithm::setupLP() {
 
-    myLP_->set_bounds(delta_, x_k_, x_l_, x_u_, c_k_, c_l_, c_u_);
+    myLP_->set_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
     myLP_->set_g(rho_);
     myLP_->set_A(jacobian_);
 }
@@ -726,7 +726,7 @@ void Algorithm::ratio_test() {
 #else
     if (pred_reduction_ < 0)
         myQP_->WriteQPData();
-    assert(pred_reduction_ > 0);
+//    assert(pred_reduction_ > 0);
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {

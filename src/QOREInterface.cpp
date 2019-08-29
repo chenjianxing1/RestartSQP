@@ -82,8 +82,8 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
 
 
 void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
-    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->ColIndex(), A_->RowIndex(),
-                    A_->MatVal(), 0, 0, 0);
+    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
+                    +                   A_->MatVal(), NULL, NULL, NULL);
     assert(rv_ == QPSOLVER_OK);
     //set the print level.
     //TODO: adjust it based on user option

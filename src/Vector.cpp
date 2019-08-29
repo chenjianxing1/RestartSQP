@@ -65,16 +65,29 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
 void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                    Ipopt::EJournalLevel level, Ipopt::EJournalCategory category) const {
 
-    if (name != nullptr)
-        jnlst->Printf(level, category, name);
-    jnlst->Printf(level, category, " =: \n");
+    if(!Ipopt::IsValid(jnlst)) {
+        if (name != nullptr)
+            printf("%s = :\n",name);
 
-    for (int i = 0; i < size_; i++) {
-        if (i == 0)
-            jnlst->Printf(level, category, "{ ");
-        jnlst->Printf(level, category, "%10e ", values_[i]);
+        for (int i = 0; i < size_; i++) {
+            if (i == 0)
+                printf("{ ");
+            printf("%10e ", values_[i]);
+        }
+        printf("}\n\n");
     }
-    jnlst->Printf(level, category, "}\n\n");
+    else {
+        if (name != nullptr) {
+            jnlst->Printf(level, category, name);
+            jnlst->Printf(level, category, " =: \n");
+        }
+        for (int i = 0; i < size_; i++) {
+            if (i == 0)
+                jnlst->Printf(level, category, "{ ");
+            jnlst->Printf(level, category, "%10e ", values_[i]);
+        }
+        jnlst->Printf(level, category, "}\n\n");
+    }
 }
 
 /* add all the element in the array by a number*/

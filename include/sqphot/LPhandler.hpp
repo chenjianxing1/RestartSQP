@@ -48,13 +48,10 @@ public:
     /** Default destructor */
     ~LPhandler() override;
 
-    void set_bounds(double delta,
-                    shared_ptr<const Vector> x_k,
-                    shared_ptr<const Vector> x_l,
-                    shared_ptr<const Vector> x_u,
-                    shared_ptr<const Vector> c_k,
-                    shared_ptr<const Vector> c_l,
-                    shared_ptr<const Vector> c_u) override;
+    void set_bounds(double delta, shared_ptr<const Vector> x_l,
+                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                    shared_ptr<const Vector> c_k) override;
 
 
     void set_g(double rho);;

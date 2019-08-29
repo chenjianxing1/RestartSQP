@@ -12,12 +12,12 @@
 
 #define DEBUG true
 
-#define CHECK_LINEAR_ALGEBRA false
+#define CHECK_LINEAR_ALGEBRA true
 
 
 #ifdef DEBUG
-
-#define CHECK_TERMINATION true
+#define COMPARE_QP_SOLVER true
+#define CHECK_TERMINATION false
 #define CHECK_TR_ALG false //check trust region algorithm
 #define CHECK_SOC false
 #define CHECK_INFEA_CAL false

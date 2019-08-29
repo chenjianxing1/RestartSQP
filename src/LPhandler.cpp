@@ -67,12 +67,10 @@ void LPhandler::set_g(double rho) {
         solverInterface_->set_g(i, rho);
 }
 
-void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_k,
-                           shared_ptr<const Vector> x_l,
-                           shared_ptr<const Vector> x_u,
-                           shared_ptr<const Vector> c_k,
-                           shared_ptr<const Vector> c_l,
-                           shared_ptr<const Vector> c_u) {
+void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
+                           shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                           shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                           shared_ptr<const Vector> c_k) {
     for (int i = 0; i < nlp_info_.nCon; i++) {
         solverInterface_->set_lbA(i, c_l->values()[i] - c_k->values()[i]);
         solverInterface_->set_ubA(i, c_u->values()[i] - c_k->values()[i]);

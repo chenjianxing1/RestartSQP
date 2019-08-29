@@ -81,27 +81,36 @@ public:
      */
     double GetObjective();
 
+#if DEBUG
+#if COMPARE_QP_SOLVER
+    void set_bounds_debug(double delta, shared_ptr<const Vector> x_k,
+                          shared_ptr<const Vector> x_l,
+                          shared_ptr<const Vector> x_u,
+                          shared_ptr<const Vector> c_k,
+                          shared_ptr<const Vector> c_l,
+                          shared_ptr<const Vector> c_u);
+
+    bool testQPsolverDifference();
+#endif
+#endif
 
     /**
-     *
-     * @brief setup the bounds for the QP subproblems
-     * according to the information from current iterate
-     *
-     * @param delta      trust region radius
-     * @param x_k 	     current iterate point
-     * @param c_k        current constraint value evaluated at x_k
-     * @param x_l        the lower bounds for variables
-     * @param x_u        the upper bounds for variables
-     * @param c_l        the lower bounds for constraints
-     * @param c_u        the upper bounds for constraints
-     */
-    virtual void set_bounds(double delta,
-                            shared_ptr<const Vector> x_k,
-                            shared_ptr<const Vector> x_l,
-                            shared_ptr<const Vector> x_u,
-                            shared_ptr<const Vector> c_k,
-                            shared_ptr<const Vector> c_l,
-                            shared_ptr<const Vector> c_u);
+    *
+    * @brief setup the bounds for the QP subproblems
+    * according to the information from current iterate
+    *
+    * @param delta      trust region radius
+    * @param x_k 	     current iterate point
+    * @param c_k        current constraint value evaluated at x_k
+    * @param x_l        the lower bounds for variables
+    * @param x_u        the upper bounds for variables
+    * @param c_l        the lower bounds for constraints
+    * @param c_u        the upper bounds for constraints
+    */
+    virtual void set_bounds(double delta, shared_ptr<const Vector> x_l,
+                            shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                            shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                            shared_ptr<const Vector> c_k);
 
 
     /**
@@ -200,12 +209,21 @@ public:
 
 
     inline QPReturnType GetStatus() {
-
+#if DEBUG
+        return QP_UNKNOWN_ERROR;
+#else
         return (solverInterface_->get_status());
+#endif
     }
 
     void WriteQPData() {
+#if DEBUG
+#if COMPARE_QP_SOLVER
+        QOREInterface_->WriteQPDataToFile(jnlst_,J_LAST_LEVEL,J_USER1);
+#endif
+#else
         solverInterface_->WriteQPDataToFile(jnlst_,J_LAST_LEVEL,J_USER1);
+#endif
     }
 
     ///////////////////////////////////////////////////////////
@@ -244,8 +262,17 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;
+
+#if DEBUG
+#if COMPARE_QP_SOLVER
+    shared_ptr<qpOASESInterface> qpOASESInterface_;
+    shared_ptr<QOREInterface> QOREInterface_;
+#endif
+#else
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/
+#endif
+
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 };
 
