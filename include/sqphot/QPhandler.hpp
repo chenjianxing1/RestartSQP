@@ -193,10 +193,6 @@ public:
      */
     virtual void update_A(shared_ptr<const SpTripletMat> Jacobian);
 
-
-    const shared_ptr<QPSolverInterface>& getQpInterface() const;
-
-
     inline QPReturnType GetStatus() {
 #if DEBUG
         return QP_UNKNOWN_ERROR;
@@ -230,7 +226,7 @@ public:
     bool testQPsolverDifference();
 
     bool
-    OptimalityTest(QPSolver QPsolverChoice);
+    OptimalityTest(QPSolver qpSolver);
 
 #endif
 #endif

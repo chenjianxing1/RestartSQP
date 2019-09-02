@@ -402,6 +402,10 @@ void qpOASESInterface::set_A_values(
     }
     A_->setMatVal(rhs, I_info);
     A_qpOASES_->setVal(A_->MatVal());
+
+    A_triplet_->convert2Triplet(A_);
+
+    A_triplet_->print_full("A_triplet");
 }
 
 
@@ -629,6 +633,22 @@ void qpOASESInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds)
     for (int i = 0; i < nVar_QP_; i++) {
         switch((int)tmp_W_b[i]) {
         case 1:
+            W_bounds[i] = ACTIVE_ABOVE;
+            break;
+        case -1:
+            W_bounds[i] = ACTIVE_BELOW;
+            break;
+        case 0:
+            W_bounds[i] = INACTIVE;
+                break;
+            default:
+                printf("invalud workingset for qpoases1");
+                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+        }
+    }
+    for (int i = 0; i < nConstr_QP_; i++) {
+        switch((int)tmp_W_c[i]) {
+        case 1:
             W_constr[i] = ACTIVE_ABOVE;
             break;
         case -1:
@@ -638,21 +658,7 @@ void qpOASESInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds)
             W_constr[i] = INACTIVE;
             break;
         default:
-            THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
-        }
-    }
-    for (int i = 0; i < nConstr_QP_; i++) {
-        switch((int)tmp_W_c[i]) {
-        case 1:
-            W_bounds[i] = ACTIVE_ABOVE;
-            break;
-        case -1:
-            W_bounds[i] = ACTIVE_BELOW;
-            break;
-        case 0:
-            W_bounds[i] = INACTIVE;
-            break;
-        default:
+            printf("invalud workingset for qpoases2;");
             THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
         }
     }

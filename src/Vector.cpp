@@ -72,7 +72,7 @@ void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         for (int i = 0; i < size_; i++) {
             if (i == 0)
                 printf("{ ");
-            printf("%10e ", values_[i]);
+            printf("%23.16e ", values_[i]);
         }
         printf("}\n\n");
     }
@@ -84,7 +84,7 @@ void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         for (int i = 0; i < size_; i++) {
             if (i == 0)
                 jnlst->Printf(level, category, "{ ");
-            jnlst->Printf(level, category, "%10e ", values_[i]);
+            jnlst->Printf(level, category, "%23.16e ", values_[i]);
         }
         jnlst->Printf(level, category, "}\n\n");
     }
@@ -197,15 +197,15 @@ void Vector::write_to_file(const char* name,
         if (i % 10 == 0 && i > 1)
             jnlst->Printf(level, category, "\n");
         if (i == Dim() - 1)
-            jnlst->Printf(level, category, "%10e};\n\n", values_[i]);
+            jnlst->Printf(level, category, "%23.16e};\n\n", values_[i]);
         else
-            jnlst->Printf(level, category, "%10e, ", values_[i]);
+            jnlst->Printf(level, category, "%23.16e, ", values_[i]);
     }
 #else
     //print in file
     for (int i = 0; i < Dim(); i++) {
         if (i % 10 == 0 && i > 1)
-            jnlst->Printf(level, category, "%10e\n", values_[i]);
+            jnlst->Printf(level, category, "%23.16e\n", values_[i]);
     }
 #endif
 

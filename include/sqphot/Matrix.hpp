@@ -21,7 +21,15 @@
 
 
 namespace SQPhotstart {
-class SpTripletMat;
+
+typedef struct {
+    int irow1 = 0;
+    int jcol1 = 0;
+    int size = 0;
+    int irow2 = 0;
+    int jcol2 = 0;
+} Identity2Info;
+
 
 /**
  *@brief
@@ -34,9 +42,7 @@ class Matrix {
 //                     PUBLIC  METHODS                   //
 ///////////////////////////////////////////////////////////
 
-
 public:
-
 
     /** Default constructor*/
     Matrix() = default;
@@ -62,6 +68,15 @@ public:
     const
         = 0;
 
+    virtual bool isCompressedRow() = 0;
+
+    virtual double* MatVal() =0;
+
+    virtual int* ColIndex() = 0;
+
+    virtual int* RowIndex() = 0;
+
+    virtual int* order() = 0;
 ///////////////////////////////////////////////////////////
 //                     PRIVATE  METHODS                  //
 ///////////////////////////////////////////////////////////
@@ -76,17 +91,7 @@ private:
 
 };
 
-/** Forward Declaration*/
 
-class SpHbMat;
-
-typedef struct {
-    int irow1 = 0;
-    int jcol1 = 0;
-    int size = 0;
-    int irow2 = 0;
-    int jcol2 = 0;
-} Identity2Info;
 
 /**
  *
@@ -114,7 +119,7 @@ public:
     /**
      *@brief print the sparse matrix in triplet form
      */
-    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
                Ipopt::EJournalLevel level =Ipopt::J_ALL,
                Ipopt::EJournalCategory category=Ipopt::J_DBG) const override;
 
@@ -122,7 +127,7 @@ public:
     /**
      * @brief print the sparse matrix in the sense form
      */
-    void print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+    void print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
                     Ipopt::EJournalLevel level =Ipopt::J_ALL,
                     Ipopt::EJournalCategory category=Ipopt::J_DBG) const override;
 
@@ -142,15 +147,41 @@ public:
      * called "result"
      * */
     virtual void transposed_times(std::shared_ptr<const Vector> p,
-                                  std::shared_ptr<Vector> result) const;;
+                                  std::shared_ptr<Vector> result) const;
 
 
+    void convert2Triplet(std::shared_ptr<Matrix> rhs) {
+        set_zero();
+        int j = 1;
+        for(int i = 0; i<EntryNum_; i++) {
+            if(rhs->isCompressedRow()) {
+                if(i==rhs->RowIndex()[j])
+                    j++;
+                RowIndex_[i] = j;
+                ColIndex_[i] = rhs->ColIndex()[i] + 1;
+            }
+            else
+            {
+                if(i==rhs->ColIndex()[j])
+                    j++;
+                ColIndex_[i] = j;
+                RowIndex_[i] = rhs->RowIndex()[i] + 1;
+            }
+            MatVal_[i] = rhs->MatVal()[i];
+            order_[i] = rhs->order()[i];
+        }
+    }
     /**
      * @brief calculate the one norm of the matrix
      *
      * @return the calculated one-norm
      */
     double OneNorm();
+
+
+    bool isCompressedRow() override {
+        return false;
+    };
 
 
     /**
@@ -247,6 +278,14 @@ public:
 
     inline void setMatValAt(int location, int value_to_assign);
 
+    void set_zero() {
+        for(int i = 0; i<EntryNum_; i++) {
+            order_[i] = 0;
+            MatVal_[i] = 0;
+            ColIndex_[i] = 0;
+            RowIndex_[i] = 0;
+        }
+    }
 
     inline void setOrderAt(int location, int order_to_assign);
 
@@ -289,12 +328,14 @@ private:
 
 };
 
+
 /**
  *@brief This is a derived class of Matrix.
  * It strored matrix in Harwell-Boeing format which is required by qpOASES and QORE.
  * It contains method to transform matrix format from Triplet form to
  * Harwell-Boeing format and then stored to its class members
  */
+
 class SpHbMat :
     public Matrix {
 
@@ -370,6 +411,8 @@ public:
     override;
 
 
+
+
     void times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const;;
 
@@ -400,25 +443,25 @@ public:
     }
 
 
-    inline int* RowIndex() {
+    inline int* RowIndex() override {
 
         return RowIndex_;
     }
 
 
-    inline int* ColIndex() {
+    inline int* ColIndex() override {
 
         return ColIndex_;
     }
 
 
-    inline double* MatVal() {
+    inline double* MatVal() override {
 
         return MatVal_;
     }
 
 
-    inline int* order() {
+    inline int* order() override {
 
         return order_;
     }
@@ -448,20 +491,21 @@ public:
     }
 
 
-    inline bool isSymmetric() const {
+    inline bool isSymmetric() {
 
         return isSymmetric_;
     };
 
 
-    inline bool isinitialized() const {
+    inline bool isinitialized() {
 
         return isInitialised_;
     };
 
-    inline bool isCompressedRow() const {
+    inline bool isCompressedRow() override {
         return isCompressedRow_;
     }
+
     //@}
 
     /**
@@ -568,9 +612,6 @@ private:
     int * ColIndex_;
     int *RowIndex_;
 };
-
-
-
 }
 
 #endif //SQPHOTSTART_MATRIX_HPP_

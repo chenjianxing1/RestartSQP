@@ -3,269 +3,6 @@
 
 namespace SQPhotstart {
 
-/** Constructor for an empty matrix with N non-zero
- * entries*/
-
-SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric,
-                           bool allocate) :
-    RowIndex_(NULL),
-    ColIndex_(NULL),
-    MatVal_(NULL),
-    order_(NULL),
-    isSymmetric_(isSymmetric) {
-
-    EntryNum_ = nnz;
-    RowNum_ = RowNum;
-    ColNum_ = ColNum;
-    //do nothing unless any data is to be assigned
-    if(allocate) {
-        RowIndex_ = new int[nnz]();
-        ColIndex_ = new int[nnz]();
-        MatVal_ = new double[nnz]();
-        order_ = new int[nnz]();
-        //initialize the order to 0:N-1
-        for (int i = 0; i < nnz; i++) {
-            order_[i] = i;
-        }
-    }
-
-}
-
-
-/** Default destructor */
-SpTripletMat::~SpTripletMat() {
-
-    freeMemory();
-}
-
-
-/**
- *@name print the sparse matrix in triplet form
- */
-//@{
-void
-SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jrnl,
-                    Ipopt::EJournalLevel level,
-                    Ipopt::EJournalCategory category) const {
-
-    std::cout << "Row Column Entry Order" << std::endl;
-    for (int i = 0; i < EntryNum_; i++) {
-        std::cout << RowIndex_[i] << "    ";
-        std::cout << ColIndex_[i] << "    ";
-        std::cout << MatVal_[i] << "    ";
-        std::cout << order_[i] << std::endl;
-    }
-}
-
-/**
- *@name print the sparse matrix in dense form
- */
-//@{
-void
-SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                         Ipopt::EJournalLevel level,
-                         Ipopt::EJournalCategory category) const {
-    char mat_val[99];
-
-    if (name != nullptr) {
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
-    }
-    auto dense_matrix = new double[RowNum_ * ColNum_]();
-
-    for (int i = 0; i < EntryNum_; i++) {
-        dense_matrix[ColNum_ * (RowIndex_[i] - 1) + ColIndex_[i] - 1] = MatVal_[i];
-        if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
-            dense_matrix[ColNum_ * (ColIndex_[i] - 1) + RowIndex_[i] -
-                         1] = MatVal_[i];
-    }
-
-    for (int i = 0; i < RowNum_; i++) {
-        for (int j = 0; j < ColNum_; j++) {
-            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
-//                jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
-        }
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
-    }
-//        jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
-    delete[] dense_matrix;
-}
-//@}
-
-
-/** free all memory*/
-void SpTripletMat::freeMemory() {
-
-    delete[] RowIndex_;
-    RowIndex_ = NULL;
-    delete[] ColIndex_;
-    ColIndex_ = NULL;
-    delete[] MatVal_;
-    MatVal_ = NULL;
-    delete[] order_;
-    order_ = NULL;
-}
-
-
-void SpTripletMat::setMatValAt(int location, int value_to_assign) {
-
-    MatVal_[location] = value_to_assign;
-}
-
-
-void SpTripletMat::setOrderAt(int location, int order_to_assign) {
-
-    order_[location] = order_to_assign;
-}
-
-
-/**
- * @brief Times a matrix with a vector p, the pointer to the matrix-vector
- * product  will be stored in the class member of another Vector class object
- * called "result"
- */
-
-void SpTripletMat::times(std::shared_ptr<const Vector> p,
-                         std::shared_ptr<Vector> result) const {
-
-    assert(ColNum_ == p->Dim());
-    if (isSymmetric_) {
-        result->set_zeros();
-        for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
-                                [ColIndex_[i] - 1]);
-            if (RowIndex_[i] != ColIndex_[i]) {
-                result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
-                                    [RowIndex_[i] - 1]);
-            }
-        }
-    } else {
-        result->set_zeros(); //set all entries to be 0
-        for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
-                                [ColIndex_[i] - 1]);
-        }
-    }
-}
-
-
-double SpTripletMat::InfNorm() {
-    //TODO: test it!
-    std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
-    for (int i = 0; i < EntryNum_; i++) {
-        rowSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
-    }
-
-    double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
-
-    return InfNorm;
-}
-
-
-double SpTripletMat::OneNorm() {
-
-    std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
-    for (int i = 0; i < EntryNum_; i++) {
-        colSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
-    }
-
-    double OneNorm = colSums->getInfNorm();//same as calculating the MAX of an array
-
-    return OneNorm;
-}
-
-
-void SpTripletMat::copy(std::shared_ptr<const SpTripletMat> rhs, bool deep_copy) {
-
-    if(!deep_copy) {
-        RowIndex_= (int*)rhs->RowIndex();
-        ColIndex_= (int*)rhs->ColIndex();
-        MatVal_ = (double*)rhs->MatVal();
-        order_= (int*)rhs->order();
-    }
-    for (int i = 0; i < EntryNum_; i++) {
-        RowIndex_[i] = rhs->RowIndex()[i];
-        ColIndex_[i] = rhs->ColIndex()[i];
-        MatVal_[i] = rhs->MatVal()[i];
-        order_[i] = rhs->order()[i];
-    }
-}
-
-
-bool SpTripletMat::isSymmetric() const {
-
-    return isSymmetric_;
-}
-
-
-void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
-                                    std::shared_ptr<Vector> result) const {
-
-    if (isSymmetric_) {
-        times(p, result);
-    } else {
-        result->set_zeros(); //set all entries to be 0
-        for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
-                                [RowIndex_[i] - 1]);
-        }
-    }
-
-}
-
-
-/**
- * qpOASESSparseMatrix
- */
-void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                    Ipopt::EJournalLevel level,
-                    Ipopt::EJournalCategory category) const {
-
-    if(isCompressedRow_) {
-        std::cout<< name <<"= "<<std::endl;
-        std::cout << "ColIndex: ";
-        for (int i = 0; i < EntryNum_; i++)
-            std::cout << ColIndex()[i] << " ";
-
-        std::cout << " " << std::endl;
-
-        std::cout << "RowIndex: ";
-
-        for (int i = 0; i < RowNum_+1; i++)
-            std::cout << RowIndex()[i] << " ";
-        std::cout << " " << std::endl;
-
-
-    } else {
-        std::cout<< name <<"= "<<std::endl;
-        std::cout << "ColIndex: ";
-        for (int i = 0; i < ColNum_ + 1; i++)
-            std::cout << ColIndex()[i] << " ";
-
-        std::cout << " " << std::endl;
-
-        std::cout << "RowIndex: ";
-
-        for (int i = 0; i < EntryNum_; i++)
-            std::cout << RowIndex()[i] << " ";
-        std::cout << " " << std::endl;
-
-
-
-    }
-    std::cout << "MatVal:   ";
-
-    for (int i = 0; i < EntryNum_; i++)
-        std::cout << MatVal()[i] << " ";
-    std::cout << " " << std::endl;
-
-    std::cout << "order:    ";
-    for (int i = 0; i < EntryNum_; i++)
-        std::cout << order()[i] << " ";
-    std::cout << " " << std::endl;
-}
-
-
 /** Default constructor*/
 SpHbMat::SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow) :
     RowIndex_(NULL),
@@ -632,6 +369,53 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
                     Ipopt::EJournalCategory category) const {
 
+}
+void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                    Ipopt::EJournalLevel level,
+                    Ipopt::EJournalCategory category) const {
+
+    if(isCompressedRow_) {
+        std::cout<< name <<"= "<<std::endl;
+        std::cout << "ColIndex: ";
+        for (int i = 0; i < EntryNum_; i++)
+            std::cout << ColIndex()[i] << " ";
+
+        std::cout << " " << std::endl;
+
+        std::cout << "RowIndex: ";
+
+        for (int i = 0; i < RowNum_+1; i++)
+            std::cout << RowIndex()[i] << " ";
+        std::cout << " " << std::endl;
+
+
+    } else {
+        std::cout<< name <<"= "<<std::endl;
+        std::cout << "ColIndex: ";
+        for (int i = 0; i < ColNum_ + 1; i++)
+            std::cout << ColIndex()[i] << " ";
+
+        std::cout << " " << std::endl;
+
+        std::cout << "RowIndex: ";
+
+        for (int i = 0; i < EntryNum_; i++)
+            std::cout << RowIndex()[i] << " ";
+        std::cout << " " << std::endl;
+
+
+
+    }
+    std::cout << "MatVal:   ";
+
+    for (int i = 0; i < EntryNum_; i++)
+        std::cout << MatVal()[i] << " ";
+    std::cout << " " << std::endl;
+
+    std::cout << "order:    ";
+    for (int i = 0; i < EntryNum_; i++)
+        std::cout << order()[i] << " ";
+    std::cout << " " << std::endl;
 }
 
 
