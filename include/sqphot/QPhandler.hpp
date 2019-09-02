@@ -12,6 +12,7 @@
 namespace SQPhotstart {
 /** Forward Declaration */
 class LPhandler;
+
 /**
  *
  * This is a class for setting up and solving the SQP
@@ -81,18 +82,6 @@ public:
      */
     double GetObjective();
 
-#if DEBUG
-#if COMPARE_QP_SOLVER
-    void set_bounds_debug(double delta, shared_ptr<const Vector> x_k,
-                          shared_ptr<const Vector> x_l,
-                          shared_ptr<const Vector> x_u,
-                          shared_ptr<const Vector> c_k,
-                          shared_ptr<const Vector> c_l,
-                          shared_ptr<const Vector> c_u);
-
-    bool testQPsolverDifference();
-#endif
-#endif
 
     /**
     *
@@ -226,6 +215,26 @@ public:
 #endif
     }
 
+#if DEBUG
+
+#if COMPARE_QP_SOLVER
+
+
+    void set_bounds_debug(double delta, shared_ptr<const Vector> x_k,
+                          shared_ptr<const Vector> x_l,
+                          shared_ptr<const Vector> x_u,
+                          shared_ptr<const Vector> c_k,
+                          shared_ptr<const Vector> c_l,
+                          shared_ptr<const Vector> c_u);
+
+    bool testQPsolverDifference();
+
+    bool
+    OptimalityTest(QPSolver QPsolverChoice);
+
+#endif
+#endif
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     //////////////////////////////////////////////////////////
@@ -262,11 +271,18 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;
+    const int nConstr_QP_;
+    const int nVar_QP_;
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
     shared_ptr<qpOASESInterface> qpOASESInterface_;
     shared_ptr<QOREInterface> QOREInterface_;
+    OptimalityStatus qpOptimalStatus_;
+    ActiveType* W_c_qpOASES_;//working set for constraints;
+    ActiveType* W_b_qpOASES_;//working set for bounds;
+    ActiveType* W_c_qore_;//working set for constraints;
+    ActiveType* W_b_qore_;//working set for bounds;
 #endif
 #else
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard

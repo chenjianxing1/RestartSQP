@@ -45,16 +45,36 @@ public:
 
 
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS
-    const shared_ptr<Vector>& getLb() const override;
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    const shared_ptr<Vector>& getLb() const override {
+        return lb_;
+    };
 
-    const shared_ptr<Vector>& getUb() const override ;
+    const shared_ptr<Vector>& getUb() const override {
+        return ub_;
+    };
 
-    const shared_ptr<Vector>& getLbA() const override ;
 
-    const shared_ptr<Vector>& getUbA() const override ;
+    const shared_ptr<Vector>& getLbA() const override {
+        return lbA_;
+    };
 
-    const shared_ptr<Vector>& getG() const override ;
+    const shared_ptr<Vector>& getUbA() const override {
+        return ubA_;
+    };
+
+    const shared_ptr<Vector>& getG() const override {
+        return g_;
+    };
+
+
+    const shared_ptr<const SpTripletMat> getH() const override {
+        return H_triplet_;
+    };
+
+    const shared_ptr<const SpTripletMat> getA() const override {
+        return A_triplet_;
+    };
 
 #endif
 #endif
@@ -154,6 +174,9 @@ public:
     set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override;
 
 
+    void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) override ;
+
+
     void WriteQPDataToFile(
         Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         Ipopt::EJournalLevel level,
@@ -168,6 +191,7 @@ private:
 
     /** default constructor*/
     qpOASESInterface();
+
 
 
     void handler_error(QPType qptype, shared_ptr<Stats> stats);
@@ -197,6 +221,7 @@ private:
     void setQP_options();
 
 
+
     void get_Matrix_change_status();
 
 
@@ -207,12 +232,7 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const qpOASESInterface &);
 
-    ///////////////////////////////////////////////////////////
-    //                      PUBLIC MEMBERS                   //
-    ///////////////////////////////////////////////////////////
-    //FIXME: move it to private..
-    //make it public temporarily
-public:
+
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
@@ -220,7 +240,15 @@ public:
 private:
 
 
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+    QPMatrixType new_QP_matrix_status_ = UNDEFINED;
+    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
+    QPReturnType status_;
     UpdateFlags data_change_flags_;
+    bool firstQPsolved_ = false; /**< if the first QP has been solved? */
+    int nConstr_QP_;  /**< number of constraints for QP*/
+    int nVar_QP_;  /**< number of variables for QP*/
+    shared_ptr<const Options> options_;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
@@ -242,12 +270,13 @@ private:
                                           * Harwell-Boeing Sparse Matrix format*/
     shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
-    bool firstQPsolved_ = false; /**< if the first QP has been solved? */
-    QPMatrixType new_QP_matrix_status_ = UNDEFINED;
-    QPMatrixType old_QP_matrix_status_ = UNDEFINED;
-    QPReturnType status_;
-    shared_ptr<const Options> options_;
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    shared_ptr<SpTripletMat> H_triplet_;
+    shared_ptr<SpTripletMat> A_triplet_;
+#endif
+#endif
+
 };
 }
 #endif

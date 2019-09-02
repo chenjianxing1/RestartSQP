@@ -103,7 +103,8 @@ public:
     /** constructor/destructor */
     //@{
     /** Constructor for an empty Sparse Matrix with N non-zero entries*/
-    SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false);
+    SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric=false,
+                 bool allocate=true);
 
 
     /** Default destructor*/
@@ -163,7 +164,7 @@ public:
     /**
      *@brief make a deep copy of a matrix information
      */
-    virtual void copy(std::shared_ptr<const SpTripletMat> rhs);;
+    virtual void copy(std::shared_ptr<const SpTripletMat> rhs, bool deep_copy = true);
 
 
     /**@name Extract Matrix info*/
@@ -376,7 +377,7 @@ public:
      * @brief make a deep copy of a matrix information
      */
 
-    virtual void copy(std::shared_ptr<const SpHbMat> rhs);
+    virtual  void copy(std::shared_ptr<const SpHbMat> rhs);
 
     /** Extract class member information*/
     //@{

@@ -237,6 +237,14 @@ double Vector::times(std::shared_ptr<Vector> rhs) {
     return product;
 }
 
+double Vector::getOneNorm() const {
+    double oneNorm = 0;
+    for(int i=0; i<size_; i++) {
+        oneNorm += fabs(values_[i]);
+    }
+    return oneNorm;
+}
+
 
 }
 

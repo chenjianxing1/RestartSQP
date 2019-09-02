@@ -14,6 +14,8 @@ extern "C" {
 #include <sqphot/QPsolverInterface.hpp>
 
 
+
+DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 namespace SQPhotstart {
 class QOREInterface :
     public QPSolverInterface {
@@ -24,18 +26,36 @@ class QOREInterface :
 public:
 
 #if DEBUG
-#if GET_QP_MEMBERS
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
 
-    const shared_ptr<Vector>& getG() const override {};
+    const shared_ptr<Vector>& getG() const override {
+        return g_;
+    };
 
-    const shared_ptr<Vector>& getLb() const override {};
+    const shared_ptr<Vector>& getLb() const override {
+        return lb_;
+    };
 
-    const shared_ptr<Vector>& getLbA() const override {};
+    const shared_ptr<Vector>& getLbA() const override {
+        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
+    }
 
-    const shared_ptr<Vector>& getUb() const override {};
+    const shared_ptr<Vector>& getUb() const override {
+        return ub_;
+    };
 
-    const shared_ptr<Vector>& getUbA() const override {};
+    const shared_ptr<Vector>& getUbA() const override {
+        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
+    }
 
+
+    const shared_ptr<const SpTripletMat> getH()const override {
+        return H_triplet_;
+    };
+
+    const shared_ptr<const SpTripletMat> getA() const override {
+        return A_triplet_;
+    };
 
 #endif
 #endif
@@ -104,15 +124,10 @@ public:
 
     /** @name Setters */
     //@{
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
-        H_->setStructure(rhs);
-    };
+    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override;;
 
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
-        H_->setMatVal(rhs);
-//        H_->print("H",jnlst_);
-    };
+    void set_H_values(shared_ptr<const SpTripletMat> rhs) override;;
 
 
     void set_g(int location, double value) override;;
@@ -160,6 +175,8 @@ public:
     void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                            Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category) override ;
+
+    void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) override ;
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////
@@ -192,7 +209,7 @@ private:
     ///////////////////////////////////////////////////////////
 private:
     int status_;
-    QoreProblem* qp_;
+    QoreProblem* solver_;
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
@@ -205,6 +222,15 @@ private:
     shared_ptr<Vector> y_qp_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
+#if DEBUG
+#if COMPARE_QP_SOLVER
+    int* working_set_;
+#endif
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    shared_ptr<SpTripletMat> H_triplet_;
+    shared_ptr<SpTripletMat> A_triplet_;
+#endif
+#endif
 };
 
 

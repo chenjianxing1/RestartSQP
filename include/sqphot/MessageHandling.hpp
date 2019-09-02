@@ -11,4 +11,7 @@
 #define PENALTY_UPDATE_HEADER "%6s %18s %18s %18s \n", "iter", "rho_trial", "infea_measure_model"
 #define PENALTY_UPDATE_OUTPUT "%6i %18e %18e %18e \n",iter,rho_trial,infea_measure_model,infea_measure_infty
 
+#define INVALID_WORKING_SET_MSG "Warning! The working set index in QP is not well defined!"
+
+#define INVALID_RETURN_TYPE_MSG " The return type is invalid for QOREInterface"
 #endif

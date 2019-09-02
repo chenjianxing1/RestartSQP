@@ -6,7 +6,8 @@ namespace SQPhotstart {
 /** Constructor for an empty matrix with N non-zero
  * entries*/
 
-SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric) :
+SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric,
+                           bool allocate) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
@@ -17,13 +18,15 @@ SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric) :
     RowNum_ = RowNum;
     ColNum_ = ColNum;
     //do nothing unless any data is to be assigned
-    RowIndex_ = new int[nnz]();
-    ColIndex_ = new int[nnz]();
-    MatVal_ = new double[nnz]();
-    order_ = new int[nnz]();
-    //initialize the order to 0:N-1
-    for (int i = 0; i < nnz; i++) {
-        order_[i] = i;
+    if(allocate) {
+        RowIndex_ = new int[nnz]();
+        ColIndex_ = new int[nnz]();
+        MatVal_ = new double[nnz]();
+        order_ = new int[nnz]();
+        //initialize the order to 0:N-1
+        for (int i = 0; i < nnz; i++) {
+            order_[i] = i;
+        }
     }
 
 }
@@ -172,12 +175,14 @@ double SpTripletMat::OneNorm() {
 }
 
 
-void SpTripletMat::copy(std::shared_ptr<const SpTripletMat> rhs) {
+void SpTripletMat::copy(std::shared_ptr<const SpTripletMat> rhs, bool deep_copy) {
 
-    RowNum_ = rhs->RowNum();
-    ColNum_ = rhs->ColNum();
-    EntryNum_ = rhs->EntryNum();
-
+    if(!deep_copy) {
+        RowIndex_= (int*)rhs->RowIndex();
+        ColIndex_= (int*)rhs->ColIndex();
+        MatVal_ = (double*)rhs->MatVal();
+        order_= (int*)rhs->order();
+    }
     for (int i = 0; i < EntryNum_; i++) {
         RowIndex_[i] = rhs->RowIndex()[i];
         ColIndex_[i] = rhs->ColIndex()[i];

@@ -18,6 +18,7 @@
 #include <string>
 #include <algorithm>
 #include <IpTNLP.hpp>
+#include <math.h>
 #include <sqphot/SQPDebug.hpp>
 #include <sqphot/MessageHandling.hpp>
 #include <sqphot/Types.hpp>

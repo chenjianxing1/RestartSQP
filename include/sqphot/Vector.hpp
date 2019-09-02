@@ -120,7 +120,7 @@ public:
     void set_zeros();
 
     /** calculate one norm of the member _vector*/
-    double getOneNorm() const;
+    double getOneNorm() const;;
 
     /** calculate the infinity norm of the member _vector*/
     double getInfNorm() const;
@@ -178,7 +178,11 @@ public:
         return isAllocated_;
     }
 
+//    double operator[int i](const Vector&){
+//        return values_[i];
+//    }
 private:
+
 
     /** Default Constructor*/
     Vector();

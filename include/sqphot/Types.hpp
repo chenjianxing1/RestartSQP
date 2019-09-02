@@ -99,10 +99,15 @@ typedef struct {
 
 typedef struct {
     bool primal_feasibility = false;
+    double primal_violation = 0.0;
     bool dual_feasibility = false;
+    double dual_violation = 0.0;
     bool complementarity = false;
+    double compl_violation = 0.0;
     bool stationarity = false;
+    double statioanrity_violation = 0.0;
     bool first_order_opt = false;
+    double KKT_error=0.0;
     bool Second_order_opt = false;
 } OptimalityStatus;
 

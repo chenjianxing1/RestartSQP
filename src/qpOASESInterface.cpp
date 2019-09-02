@@ -17,26 +17,33 @@ namespace SQPhotstart {
  */
 void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
 
-    int nVar_QP = 2 * nlp_index_info.nCon + nlp_index_info.nVar;
-    int nCon_QP = nlp_index_info.nCon;
 
-    lbA_ = make_shared<Vector>(nCon_QP);
-    ubA_ = make_shared<Vector>(nCon_QP);
-    lb_ = make_shared<Vector>(nVar_QP);
-    ub_ = make_shared<Vector>(nVar_QP);
-    g_ = make_shared<Vector>(nVar_QP);
+    lbA_ = make_shared<Vector>(nConstr_QP_);
+    ubA_ = make_shared<Vector>(nConstr_QP_);
+    lb_ = make_shared<Vector>(nVar_QP_);
+    ub_ = make_shared<Vector>(nVar_QP_);
+    g_ = make_shared<Vector>(nVar_QP_);
     A_ = make_shared<SpHbMat>(
-             nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nCon_QP, nVar_QP);
-    x_qp_ = make_shared<Vector>(nVar_QP);
-    y_qp_ = make_shared<Vector>(nCon_QP+nVar_QP);
+             nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nConstr_QP_, nVar_QP_);
+    x_qp_ = make_shared<Vector>(nVar_QP_);
+    y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
 
     if (qptype != LP) {
-        H_ = make_shared<SpHbMat>(nVar_QP, nVar_QP, true);
+        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
     }
 
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
+                                           .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
+                                           nVar_QP_);
+    H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
+                                           nVar_QP_,true);
+#endif
+#endif
     //FIXME: the qpOASES does not accept any extra input
-    solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP,
-              (qpOASES::int_t) nCon_QP);
+    solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
+              (qpOASES::int_t) nConstr_QP_);
 }
 
 
@@ -47,8 +54,14 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
  */
 qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
                                    shared_ptr<const Options> options) :
-    status_(UNSOLVED) {
-    options_ = options;
+    status_(UNSOLVED),
+    nConstr_QP_(nlp_index_info.nCon),
+    nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
+    options_(options)
+{
+
+    //options_ = options;
+
     allocate(nlp_index_info, qptype);
 }
 
@@ -332,6 +345,11 @@ void qpOASESInterface::set_g(int location, double value) {
 
 void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    H_triplet_->copy(rhs,false);
+#endif
+#endif
     H_->setStructure(rhs);//TODO: move to somewhere else?
     H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
                  H_->ColNum(),
@@ -355,6 +373,11 @@ void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
                                        Identity2Info I_info) {
 
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    A_triplet_->copy(rhs, false);
+#endif
+#endif
     A_->setStructure(rhs, I_info);
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
                  A_->ColNum(),
@@ -365,7 +388,14 @@ void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
 
 
 void qpOASESInterface::set_A_values(
+
     shared_ptr<const SQPhotstart::SpTripletMat> rhs, Identity2Info I_info) {
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    A_triplet_->copy(rhs, false);
+#endif
+#endif
+
 
     if (firstQPsolved_ && !data_change_flags_.Update_A) {
         data_change_flags_.Update_A = true;
@@ -584,6 +614,50 @@ void qpOASESInterface::get_Matrix_change_status() {
     }
 
 
+}
+
+void qpOASESInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
+    int* tmp_W_c = new int[nConstr_QP_];
+    int* tmp_W_b = new int[nVar_QP_];
+
+
+    assert(nConstr_QP_==solver_->getNC());
+    assert(nVar_QP_==solver_->getNV());
+    solver_->getWorkingSetConstraints(tmp_W_c);
+    solver_->getWorkingSetBounds(tmp_W_b);
+
+    for (int i = 0; i < nVar_QP_; i++) {
+        switch((int)tmp_W_b[i]) {
+        case 1:
+            W_constr[i] = ACTIVE_ABOVE;
+            break;
+        case -1:
+            W_constr[i] = ACTIVE_BELOW;
+            break;
+        case 0:
+            W_constr[i] = INACTIVE;
+            break;
+        default:
+            THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+        }
+    }
+    for (int i = 0; i < nConstr_QP_; i++) {
+        switch((int)tmp_W_c[i]) {
+        case 1:
+            W_bounds[i] = ACTIVE_ABOVE;
+            break;
+        case -1:
+            W_bounds[i] = ACTIVE_BELOW;
+            break;
+        case 0:
+            W_bounds[i] = INACTIVE;
+            break;
+        default:
+            THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+        }
+    }
+    delete[] tmp_W_b;
+    delete[] tmp_W_c;
 }
 
 }//SQPHOTSTART

@@ -15,7 +15,7 @@ QOREInterface::QOREInterface(Index_info nlp_info,
                              Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     jnlst_(jnlst),
     firstQPsolved_(false),
-    qp_(0),
+    solver_(0),
     nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
     nConstr_QP_(nlp_info.nCon) {
     allocate_memory(nlp_info, qptype);
@@ -25,11 +25,16 @@ QOREInterface::QOREInterface(Index_info nlp_info,
 
 
 QOREInterface::~QOREInterface() {
-    QPFree(&qp_);
+#if DEBUG
+#if COMPARE_QP_SOLVER
+    delete[] working_set_;
+#endif
+#endif
+    QPFree(&solver_);
 }
 
 void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
-    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
+    rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
                     A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
 #if DEBUG
 #if CHECK_QP_INFEASIBILITY
@@ -41,12 +46,12 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
 #endif
 #endif
     assert(rv_ == QPSOLVER_OK);
-    QPSetInt(qp_, "prtfreq", -1);
+    QPSetInt(solver_, "prtfreq", -1);
     if (!firstQPsolved_) {
-        rv_ = QPOptimize(qp_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
+        rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
         firstQPsolved_ = true;
         assert(rv_ == QPSOLVER_OK);
-        rv_ = QPGetInt(qp_, "status", &status_);
+        rv_ = QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
 
 #if DEBUG
@@ -60,10 +65,10 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     }
     else {
         //TODO:monitor the data changes.
-        rv_ = QPOptimize(qp_, lb_->values(), ub_->values(), g_->values(),
+        rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          0, 0);//TODO: does not update primal-dual sol here
         assert(rv_ == QPSOLVER_OK);
-        rv_ = QPGetInt(qp_, "status", &status_);
+        rv_ = QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
 #if DEBUG
 #if PRINT_OUT_QP_WITH_ERROR
@@ -82,26 +87,26 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
 
 
 void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
-    rv_ = QPSetData(qp_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
+    rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
                     +                   A_->MatVal(), NULL, NULL, NULL);
     assert(rv_ == QPSOLVER_OK);
     //set the print level.
     //TODO: adjust it based on user option
-    QPSetInt(qp_, "prtfreq", -1);
+    QPSetInt(solver_, "prtfreq", -1);
 
     if (!firstQPsolved_) {
-        rv_ = QPOptimize(qp_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
+        rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
         assert(rv_ == QPSOLVER_OK);
-        rv_ = QPGetInt(qp_, "status", &status_);
+        rv_ = QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL)
             THROW_EXCEPTION(LP_NOT_OPTIMAL,
                             "the LP problem didn't solved to optimality\n")
 
             firstQPsolved_ = true;
     } else {
-        rv_ = QPOptimize(qp_, lb_->values(), ub_->values(), g_->values(),
+        rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          0, 0);//TODO: does not update primal-dual sol here
-        rv_ = QPGetInt(qp_, "status", &status_);
+        rv_ = QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL)
             THROW_EXCEPTION(LP_NOT_OPTIMAL,
                             "the LP problem didn't solved to optimality\n")
@@ -121,22 +126,30 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_,true);
     x_qp_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
-    int returnvalue;
     if (qptype != LP) {
-        rv_ = QPNew(&qp_, nVar_QP_, nConstr_QP_, nnz_g_QP,
+        rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP,
                     nlp_info.nnz_h_lag);
         H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true,true);
     } else {
         //if we are solving an LP, the number of nonzero in the Hessian is 0
 
-        rv_ = QPNew(&qp_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
+        rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
     }
 
+#if DEBUG
+#if COMPARE_QP_SOLVER
+    working_set_  =  new int[nConstr_QP_+nVar_QP_];
+    A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
+                                           nVar_QP_);
+    H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nConstr_QP_,
+                                           nVar_QP_,true);
+#endif
+#endif
     assert(rv_ == QPSOLVER_OK);
 }
 
 double* QOREInterface::get_optimal_solution() {
-    rv_ = QPGetDblVector(qp_, "primalsol", x_qp_->values());
+    rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
     assert(rv_ == QPSOLVER_OK);
 #if DEBUG
 #if CHECK_QP_INFEASIBILITY
@@ -153,7 +166,7 @@ double QOREInterface::get_obj_value() {
 
 
 double* QOREInterface::get_multipliers() {
-    rv_ = QPGetDblVector(qp_, "dualsol", y_qp_->values());
+    rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
     assert(rv_ == QPSOLVER_OK);
 
 #if DEBUG
@@ -184,6 +197,11 @@ void QOREInterface::set_lb(int location, double value) {
 void QOREInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
                                     Identity2Info I_info) {
 
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    A_triplet_->copy(rhs, false);
+#endif
+#endif
     A_->setStructure(rhs, I_info);
 }
 
@@ -286,8 +304,58 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 }
 
 
+void QOREInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
 
+    QPGetIntVector(solver_,"workingset",working_set_);
+    for(int i=0; i<nConstr_QP_+nVar_QP_; i++) {
+        if(i<nVar_QP_) {
+            switch (working_set_[i]) {
+            case 1:
+                W_bounds[i] = ACTIVE_ABOVE;
+                break;
+            case -1:
+                W_bounds[i] = ACTIVE_BELOW;
+                break;
+            case 0:
+                W_bounds[i] = INACTIVE;
+                break;
+            default:
+                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+            }
+        }
+        else {
 
+            switch (working_set_[i]) {
+            case 1:
+                W_constr[i] = ACTIVE_ABOVE;
+                break;
+            case -1:
+                W_constr[i] = ACTIVE_BELOW;
+                break;
+            case 0:
+                W_constr[i] = INACTIVE;
+                break;
+            default:
+                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+            }
+        }
+    }
+
+}
+
+void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    H_triplet_->copy(rhs, false);
+#endif
+#endif
+    H_->setStructure(rhs);
+}
+
+void QOREInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
+    H_->setMatVal(rhs);
+//        H_->print("H",jnlst_);
+}
 
 
 }//SQP_HOTSTART

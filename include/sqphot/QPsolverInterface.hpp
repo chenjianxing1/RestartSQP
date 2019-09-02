@@ -28,6 +28,7 @@ DECLARE_STD_EXCEPTION(LP_NOT_OPTIMAL);
 
 DECLARE_STD_EXCEPTION(QP_INTERNAL_ERROR);
 
+DECLARE_STD_EXCEPTION(INVALID_WORKING_SET);
 /**
  * @brief Base class for all standard QP solvers that use standard triplet matrix
  * form and dense vectors.
@@ -41,7 +42,7 @@ DECLARE_STD_EXCEPTION(QP_INTERNAL_ERROR);
 class QPSolverInterface {
 public:
 #if DEBUG
-#if GET_QPOASES_MEMBERS
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     virtual const shared_ptr<Vector>& getLb() const = 0;
 
     virtual const shared_ptr<Vector>& getUb() const = 0;
@@ -52,7 +53,8 @@ public:
 
     virtual const shared_ptr<Vector>& getG() const = 0;
 
-
+    virtual const shared_ptr<const SpTripletMat> getH() const =0;
+    virtual const shared_ptr<const SpTripletMat> getA() const =0;
 
 #endif
 #endif
@@ -143,6 +145,7 @@ public:
     virtual void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                                    Ipopt::EJournalLevel level,
                                    Ipopt::EJournalCategory category) = 0;
+    virtual void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds)=0;
 
 private:
     /** Copy Constructor */
