@@ -314,24 +314,21 @@ void QOREInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
                 W_bounds[i] = INACTIVE;
                 break;
             default:
-                printf("invalud workingset for qore1;");
                 THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
             }
         }
         else {
             switch (working_set_[i]) {
             case 1:
-                W_constr[i] = ACTIVE_ABOVE;
+                W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
             case -1:
-                W_constr[i] = ACTIVE_BELOW;
+                W_constr[i-nVar_QP_] = ACTIVE_BELOW;
                 break;
             case 0:
-                W_constr[i] = INACTIVE;
+                W_constr[i-nVar_QP_] = INACTIVE;
                 break;
             default:
-                printf("invalud workingset for qore2, the working set is %i;",
-                        W_constr[i]);
                 THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
             }
         }
