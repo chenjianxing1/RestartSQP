@@ -369,14 +369,17 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 #if COMPARE_QP_SOLVER
     QOREInterface_->optimizeQP(stats);
     qpOASESInterface_->optimizeQP(stats);
-    OptimalityTest(QPOASES_QP);
-    OptimalityTest(QORE_QP);
+    bool qpOASES_optimal = OptimalityTest(QPOASES_QP);
+    bool qore_optimal = OptimalityTest(QORE_QP);
 //        OptimalityTest(QPOASES_QP, , nullptr, shared_ptr<const
 //                Vector>(),
 //                       shared_ptr<const Vector>(), shared_ptr<const Vector>(),
 //                       shared_ptr<const Vector>(), 0, nullptr, shared_ptr<const Vector>(),
 //                       shared_ptr<const Vector>());
-    testQPsolverDifference();
+
+    if(!qpOASES_optimal||!qore_optimal)    
+        testQPsolverDifference();
+
 
 #endif
 #else
@@ -517,9 +520,9 @@ bool QPhandler::testQPsolverDifference() {
     QOREsol->copy_vector(QOREInterface_->get_optimal_solution());
     difference->copy_vector(qpOASESsol);
     difference->subtract_vector(QOREsol->values());
-    double diff_norm = difference->getInfNorm();
+    double diff_norm = difference->getOneNorm();
     if(diff_norm>1.0e-8) {
-        std::cout << "difference is"  << diff_norm << std::endl;
+        printf("difference is %10e\n",diff_norm);
         qpOASESsol->print("qpOASESsol");
         QOREsol->print("QOREsol");
         QOREInterface_->WriteQPDataToFile(jnlst_,J_ALL,J_DBG);
@@ -844,8 +847,10 @@ if(qpOptimalStatus_.KKT_error>1.0e-6) {
     qpOptimalStatus_.KKT_error =
             compl_violation + statioanrity_violation + dual_violation + primal_violation;
     assert(qpOptimalStatus_.KKT_error < 1.0e-4);
+    return false;
 }
 
+return true;
 }
 
 

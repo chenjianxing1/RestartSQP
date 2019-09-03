@@ -316,6 +316,7 @@ private:
 ///////////////////////////////////////////////////////////
 
 private:
+    bool isAllocated_;
     bool isSymmetric_;/**< is the matrix symmetric, if yes, the non-diagonal
                                 *data will only be stored for once*/
     double* MatVal_;  /**< the entry data of a matrix */

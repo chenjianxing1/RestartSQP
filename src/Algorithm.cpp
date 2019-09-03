@@ -21,15 +21,11 @@ Algorithm::Algorithm() :
     Active_Set_bounds_(NULL),
     cons_type_(NULL),
     bound_cons_type_(NULL),
-    norm_p_k_(0),
-    obj_value_(0),
     obj_value_trial_(0),
     pred_reduction_(0),
     qp_obj_(0),
-    rho_(0),
     actual_reduction_(0),
-    delta_(0),
-    infea_measure_(0),
+    infea_measure_(0.0),
     infea_measure_model_(0) {
     jnlst_ = new Ipopt::Journalist();
     roptions2_ = new Ipopt::OptionsList();
@@ -394,9 +390,12 @@ void Algorithm::get_trial_point_info() {
  *
  */
 void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
-
     allocate_memory(nlp);
 
+    delta_ = options_->delta;
+    rho_ = options_->rho;
+    norm_p_k_ = 0.0;
+    
     /*-----------------------------------------------------*/
     /*         Get the nlp information                     */
     /*-----------------------------------------------------*/
@@ -445,6 +444,17 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
         jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
         jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
         jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
+        //printf(" %6i\n",stats_->iter);
+	
+		//printf("%9.2e\n", obj_value_); 
+	
+		//printf("%9.2e\n",norm_p_k_);
+		//printf("%9.2e\n",infea_measure_);
+		//printf("%9.2e\n",delta_);
+		//printf("%9.2e\n",rho_);
+		
+
+
     }
 
 }
@@ -461,9 +471,10 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
 void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
 
     nlp_ = make_shared<SQPTNLP>(nlp);
-
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
+
+
 
     cons_type_ = new ConstraintType[nCon_];
     bound_cons_type_ = new ConstraintType[nVar_];
@@ -495,8 +506,6 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
     myLP_ = make_shared<LPhandler>(nlp_->nlp_info_, options_, jnlst_);
 
 
-    delta_ = options_->delta;
-    rho_ = options_->rho;
 }
 
 
@@ -515,7 +524,7 @@ void Algorithm::allocate_memory(SmartPtr<Ipopt::TNLP> nlp) {
  */
 void Algorithm::cal_infea_trial() {
 
-    infea_measure_trial_ = 0;
+    infea_measure_trial_ = 0.0;
     for (int i = 0; i < c_k_->Dim(); i++) {
         if (c_trial_->values()[i] < c_l_->values()[i])
             infea_measure_trial_ += (c_l_->values()[i] - c_trial_->values()[i]);
@@ -528,7 +537,7 @@ void Algorithm::cal_infea_trial() {
 
 void Algorithm::cal_infea() {
 
-    infea_measure_ = 0;
+    infea_measure_ = 0.0;
     for (int i = 0; i < c_k_->Dim(); i++) {
         if (c_k_->values()[i] < c_l_->values()[i])
             infea_measure_ += (c_l_->values()[i] - c_k_->values()[i]);

@@ -12,6 +12,7 @@ SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric,
     ColIndex_(nullptr),
     MatVal_(nullptr),
     order_(nullptr),
+    isAllocated_(allocate),
     isSymmetric_(isSymmetric) {
     EntryNum_ = nnz;
     RowNum_ = RowNum;
@@ -33,8 +34,8 @@ SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric,
 
 /** Default destructor */
 SpTripletMat::~SpTripletMat() {
-
-    freeMemory();
+    if(isAllocated_)
+        freeMemory();
 }
 
 
@@ -94,22 +95,14 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
 
 /** free all memory*/
 void SpTripletMat::freeMemory() {
-    if(RowIndex_!= nullptr){
         delete[] RowIndex_;
-    RowIndex_ = nullptr;
-    }
-  if(ColIndex_!= nullptr) {
+        RowIndex_ = nullptr;
       delete[] ColIndex_;
       ColIndex_ = nullptr;
-  }
-  if(MatVal_!= nullptr) {
       delete[] MatVal_;
       MatVal_ = nullptr;
-  }
-  if(order_!= nullptr) {
       delete[] order_;
       order_ = nullptr;
-  }
 }
 
 

@@ -36,9 +36,9 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
 #if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
                                            .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
-                                           nVar_QP_);
+                                           nVar_QP_,false,false);
     H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
-                                           nVar_QP_,true);
+                                           nVar_QP_,true,false);
 #endif
 #endif
     //FIXME: the qpOASES does not accept any extra input
