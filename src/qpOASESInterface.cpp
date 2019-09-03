@@ -36,9 +36,9 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
 #if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
                                            .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
-                                           nVar_QP_,false,false);
+                                           nVar_QP_,false);
     H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
-                                           nVar_QP_,true,false);
+                                           nVar_QP_,true);
 #endif
 #endif
     //FIXME: the qpOASES does not accept any extra input
@@ -345,11 +345,6 @@ void qpOASESInterface::set_g(int location, double value) {
 
 void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    H_triplet_->copy(rhs,false);
-#endif
-#endif
     H_->setStructure(rhs);//TODO: move to somewhere else?
     H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
                  H_->ColNum(),
@@ -373,11 +368,6 @@ void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
                                        Identity2Info I_info) {
 
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    A_triplet_->copy(rhs, false);
-#endif
-#endif
     A_->setStructure(rhs, I_info);
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
                  A_->ColNum(),
@@ -390,12 +380,6 @@ void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
 void qpOASESInterface::set_A_values(
 
     shared_ptr<const SQPhotstart::SpTripletMat> rhs, Identity2Info I_info) {
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    A_triplet_->copy(rhs, false);
-#endif
-#endif
-
 
     if (firstQPsolved_ && !data_change_flags_.Update_A) {
         data_change_flags_.Update_A = true;

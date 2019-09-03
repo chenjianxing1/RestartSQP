@@ -196,12 +196,6 @@ void QOREInterface::set_lb(int location, double value) {
 
 void QOREInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
                                     Identity2Info I_info) {
-
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    A_triplet_->copy(rhs, false);
-#endif
-#endif
     A_->setStructure(rhs, I_info);
 }
 
@@ -346,11 +340,6 @@ void QOREInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
 }
 
 void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    H_triplet_->copy(rhs, false);
-#endif
-#endif
     H_->setStructure(rhs);
 }
 

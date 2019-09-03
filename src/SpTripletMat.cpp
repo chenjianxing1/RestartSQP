@@ -95,14 +95,16 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
 
 /** free all memory*/
 void SpTripletMat::freeMemory() {
+    if(isAllocated_) {
         delete[] RowIndex_;
         RowIndex_ = nullptr;
-      delete[] ColIndex_;
-      ColIndex_ = nullptr;
-      delete[] MatVal_;
-      MatVal_ = nullptr;
-      delete[] order_;
-      order_ = nullptr;
+        delete[] ColIndex_;
+        ColIndex_ = nullptr;
+        delete[] MatVal_;
+        MatVal_ = nullptr;
+        delete[] order_;
+        order_ = nullptr;
+    }
 }
 
 
