@@ -36,7 +36,6 @@ Algorithm::Algorithm() :
  * Default Destructor
  */
 Algorithm::~Algorithm() {
-
     delete[] cons_type_;
     cons_type_ = NULL;
     delete[] bound_cons_type_;
@@ -581,8 +580,6 @@ void Algorithm::get_search_direction() {
  */
 
 void Algorithm::get_multipliers() {
-//    if (multiplier_cons_->isAllocated())
-//        multiplier_cons_->free();
     if (options_->QPsolverChoice == QORE_QP) {
 
         multiplier_cons_->copy_vector(myQP_->GetMultipliers() + nVar_ + 2 * nCon_);
@@ -704,12 +701,12 @@ void Algorithm::ratio_test() {
 
     jnlst_->Printf(J_ALL,J_DBG,"\n");
     jnlst_->Printf(J_ALL,J_DBG,SINGLE_DIVIDER);
-    jnlst_->Printf(J_ALL,J_DBG,"       The actual reduction is %10e\n",
+    jnlst_->Printf(J_ALL,J_DBG,"       The actual reduction is %23.16e\n",
                    actual_reduction_ );
-    jnlst_->Printf(J_ALL,J_DBG,"       The pred reduction is   %10e\n",
+    jnlst_->Printf(J_ALL,J_DBG,"       The pred reduction is   %23.16e\n",
                    pred_reduction_ );
     double ratio = actual_reduction_ / pred_reduction_;
-    jnlst_->Printf(J_ALL,J_DBG,"       The calculated ratio is %10e\n",ratio);
+    jnlst_->Printf(J_ALL,J_DBG,"       The calculated ratio is %23.16e\n",ratio);
     jnlst_->Printf(J_ALL,J_DBG, "       The correct decision is ");
     if (ratio >= options_->eta_s)
         jnlst_->Printf(J_ALL,J_DBG, "to ACCEPT the trial point\n");
@@ -856,7 +853,6 @@ void Algorithm::update_penalty_parameter() {
 
             double infea_measure_model_tmp = infea_measure_model_;//temporarily store the value
             double rho_trial = rho_;//the temporary trial value for rho
-
             setupLP();
 
             try {
@@ -884,8 +880,8 @@ void Algorithm::update_penalty_parameter() {
                         break;
                     }//TODO:safeguarded procedure...put here for now
 
-                    rho_trial *= std::min(options_->rho_max,
-                                          options_->increase_parm);  //increase rho
+                    rho_trial = std::min(options_->rho_max,
+                                          rho_trial*options_->increase_parm);  //increase rho
 
                     stats_->penalty_change_trial_addone();
 
@@ -913,14 +909,14 @@ void Algorithm::update_penalty_parameter() {
                         (stats_->penalty_change_trial <
                          options_->penalty_iter_max))) {
 
-                    if (rho_trial * 2 >= options_->rho_max) {
+                    if (rho_trial >= options_->rho_max) {
                         break;
                     }
 
                     //try to increase the penalty parameter to a number such that
                     // the incurred reduction for the QP model is to a ratio to the
                     // maximum possible reduction for current linear model.
-                    rho_trial *= std::min(options_->rho_max, options_->increase_parm);
+                    rho_trial = std::min(options_->rho_max, rho_trial*options_->increase_parm);
 
                     stats_->penalty_change_trial_addone();
 
@@ -954,15 +950,18 @@ void Algorithm::update_penalty_parameter() {
 
                     //use the new solution as the search direction
                     p_k_->copy_vector(sol_tmp);
-
+			
                     rho_ = rho_trial; //update to the class variable
+                   	
+		    get_trial_point_info();
+		    get_obj_QP();
 
-                    qp_obj_ = myQP_->GetObjective();//update the qp_obj
                 } else {
 
                     stats_->penalty_change_Fail_addone();
                     infea_measure_model_ = infea_measure_model_tmp;
                     QPinfoFlag_.Update_penalty = true;
+		    
                 }
             }
         }
@@ -1195,13 +1194,45 @@ void Algorithm::handle_error(const char* error) {
 
 void Algorithm::get_obj_QP() {
 
-    if (options_->QPsolverChoice == QPOASES_QP)
+    if (options_->QPsolverChoice == QPOASES_QP){
+	
         qp_obj_ = myQP_->GetObjective();
+#if DEBUG
+        shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
+		
+        hessian_->times(p_k_, Hp);//H*p_k
+        double qp_obj_tmp = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
+                  infea_measure_model_ * rho_;
+
+
+	if(qp_obj_tmp-qp_obj_>1.0e-5){
+		jacobian_->print_full("J");
+	hessian_->print_full("H");
+	p_k_->print("p");
+	grad_f_->print("g");
+	Hp->print("Hp");
+	printf("p*H*p = : %10e\n", p_k_->times(Hp));
+	printf("g*p = %10e\n",p_k_->times(grad_f_));
+	
+	printf("qp_obj_tmp = : %10e\n",qp_obj_tmp);
+	printf("qp_obj_ = : %10e\n",qp_obj_);
+	printf("infea_measure_model = :%10e\n", infea_measure_model_);
+	}
+#endif
+	//assert(fabs(qp_obj_tmp-qp_obj_)<1.0e-5);
+    }
     else if (options_->QPsolverChoice == QORE_QP) {
         shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Hp);//H*p_k
         qp_obj_ = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
                   infea_measure_model_ * rho_;
+#if DEBUG
+#if COMPARE_QP_SOLVER
+	if(fabs(qp_obj_- myQP_->GetObjective())>=1.0e-5)
+		printf(" The different of objectives is %23.16e\n", fabs(qp_obj_-myQP_->GetObjective()));
+	assert(fabs(qp_obj_- myQP_->GetObjective())<1.0e-5);
+#endif 
+#endif 
     }
 }
 

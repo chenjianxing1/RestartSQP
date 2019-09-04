@@ -10,7 +10,7 @@
 #ifndef __SQPDEBUG_HPP__
 #define __SQPDEBUG_HPP__
 
-#define DEBUG true
+#define DEBUG false
 
 #define CHECK_LINEAR_ALGEBRA true
 

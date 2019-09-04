@@ -66,11 +66,6 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
                          Ipopt::EJournalLevel level,
                          Ipopt::EJournalCategory category) const {
     char mat_val[99];
-
-    if (name != nullptr) {
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
-    }
     auto dense_matrix = new double[RowNum_ * ColNum_]();
 
     for (int i = 0; i < EntryNum_; i++) {
@@ -79,15 +74,31 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
             dense_matrix[ColNum_ * (ColIndex_[i] - 1) + RowIndex_[i] -
                          1] = MatVal_[i];
     }
+if(!IsNull(jnlst)){
+//    if (name != nullptr) {
+//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
+//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
+//    }
+//    for (int i = 0; i < RowNum_; i++) {
+//        for (int j = 0; j < ColNum_; j++) {
+//            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+//               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
+//        }
+//           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
+//    }
+//       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+}else{
+	if(name!=nullptr)
+		printf("%s =:{\n", name);
 
     for (int i = 0; i < RowNum_; i++) {
         for (int j = 0; j < ColNum_; j++) {
-            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
-//                jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
+		printf("%10e  ", dense_matrix[i * ColNum() + j]);
         }
-//            jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
+	printf("\n");
     }
-//        jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+       printf("}\n\n");
+}
     delete[] dense_matrix;
 }
 //@}

@@ -34,8 +34,8 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
     case QORE_QP:
         solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
         break;
-    default:
-        THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
+//    default:
+//        THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
     }
 #endif
 }
@@ -68,7 +68,9 @@ QPhandler::~QPhandler() {
  */
 double* QPhandler::GetOptimalSolution() {
 #if DEBUG
-    return qpOASESInterface_->get_optimal_solution();
+	return QOREInterface_->get_optimal_solution();
+    //return qpOASESInterface_->get_optimal_solution();
+
 #else
     return solverInterface_->get_optimal_solution();
 #endif
@@ -371,12 +373,6 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
     qpOASESInterface_->optimizeQP(stats);
     bool qpOASES_optimal = OptimalityTest(QPOASES_QP);
     bool qore_optimal = OptimalityTest(QORE_QP);
-//        OptimalityTest(QPOASES_QP, , nullptr, shared_ptr<const
-//                Vector>(),
-//                       shared_ptr<const Vector>(), shared_ptr<const Vector>(),
-//                       shared_ptr<const Vector>(), 0, nullptr, shared_ptr<const Vector>(),
-//                       shared_ptr<const Vector>());
-
     if(!qpOASES_optimal||!qore_optimal)    
         testQPsolverDifference();
 
@@ -392,6 +388,8 @@ double QPhandler::GetObjective() {
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
+
+
 
     return qpOASESInterface_->get_obj_value();
 #endif
@@ -555,6 +553,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
         auto g=qpOASESInterface_->getG();
 
         shared_ptr<const SpTripletMat> A = qpOASESInterface_->getA();
+
         shared_ptr<const SpTripletMat> H = qpOASESInterface_->getH();
         x->copy_vector(qpOASESInterface_->get_optimal_solution());
         multiplier_bounds->copy_vector(qpOASESInterface_->get_multipliers());

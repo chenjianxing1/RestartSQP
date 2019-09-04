@@ -375,7 +375,6 @@ private:
                                           *x_trial = x_k+p_k*/
 
     shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
-    std::string tmp_address_;
     Ipopt::EJournalLevel jnrl_level_;
 
 

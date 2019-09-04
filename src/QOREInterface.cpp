@@ -136,9 +136,9 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
     }
 
+    working_set_  =  new int[nConstr_QP_+nVar_QP_];
 #if DEBUG
 #if COMPARE_QP_SOLVER
-    working_set_  =  new int[nConstr_QP_+nVar_QP_];
     A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
                                            nVar_QP_);
     H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nConstr_QP_,
@@ -299,7 +299,6 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 
 
 void QOREInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
-
     QPGetIntVector(solver_,"workingset",working_set_);
     for(int i=0; i<nConstr_QP_+nVar_QP_; i++) {
         if(i<nVar_QP_) {

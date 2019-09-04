@@ -224,10 +224,8 @@ private:
     shared_ptr<Vector> y_qp_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
-#if DEBUG
-#if COMPARE_QP_SOLVER
     int* working_set_;
-#endif
+#if DEBUG
 #if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     shared_ptr<SpTripletMat> H_triplet_;
     shared_ptr<SpTripletMat> A_triplet_;
