@@ -59,6 +59,7 @@ public:
 
 #endif
 #endif
+    /** Default constructor*/
     QPSolverInterface() = default;
 
     /** Default destructor*/
@@ -76,17 +77,15 @@ public:
     /**
      * @brief Solve a regular LP with given data and options
      * overload this method to optimize a LP with the data specified, update the
-     * stats by adding the iteration number used to solve this QP to stats.qp_iter
+     * stats by adding the iteration number used to solve this LP to stats.qp_iter
      */
 
     virtual void
     optimizeLP(shared_ptr<Stats> stats) = 0;
 
     /**
-     * @brief copy the optimal solution of the QP to the input pointer
+     * @return the pointer to the optimal solution
      *
-     * @param x_optimal a pointer to an empty array with allocated memory euqal to
-     * sizeof(double)*number_variables
      */
     virtual double* get_optimal_solution() = 0;
 
@@ -99,34 +98,44 @@ public:
 
 
     /**
-     * @brief copy the multipliers of the QP to the input pointer
-     *
-     * @param y_k   a pointer to an array with allocated memory
+     * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    virtual double* get_multipliers() = 0;
-
+    virtual double* get_multipliers_bounds() = 0;
 
     /**
-     * Return private class members info
+     * @brief get the pointer to the multipliers to the regular constraints.
      */
+    virtual double* get_multipliers_constr() = 0;
 
+    virtual void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)=0;
+    /**@name Setters, by location and value*/
+
+//@{
+    /**
+     *@brief
+     */
     virtual void set_lb(int location, double value) = 0;
 
-    virtual void set_lb(shared_ptr<const Vector> rhs) = 0;
-
+    /**
+     *
+     */
     virtual void set_ub(int location, double value) = 0;
-
-    virtual void set_ub(shared_ptr<const Vector> rhs) = 0;
 
     virtual void set_lbA(int location, double value) = 0;
 
-    virtual void set_lbA(shared_ptr<const Vector> rhs) = 0;
-
     virtual void set_ubA(int location, double value) = 0;
 
-    virtual void set_ubA(shared_ptr<const Vector> rhs) = 0;
-
     virtual void set_g(int location, double value) = 0;
+//@}
+    /**@name Setters for dense vector, by vector value*/
+    //@{
+    virtual void set_ub(shared_ptr<const Vector> rhs) = 0;
+
+    virtual void set_lb(shared_ptr<const Vector> rhs) = 0;
+
+    virtual void set_lbA(shared_ptr<const Vector> rhs) = 0;
+
+    virtual void set_ubA(shared_ptr<const Vector> rhs) = 0;
 
     virtual void set_g(shared_ptr<const Vector> rhs) = 0;
 
@@ -139,14 +148,13 @@ public:
 
     virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
                               I_info) = 0;
+    //@}
 
     virtual QPReturnType get_status() = 0;
 
-    //@}
     virtual void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                                    Ipopt::EJournalLevel level,
                                    Ipopt::EJournalCategory category) = 0;
-    virtual void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds)=0;
 
 private:
     /** Copy Constructor */

@@ -216,6 +216,8 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
             }
         }
         reset_flags();
+
+//get primal and dual solutions
         solver_->getPrimalSolution(x_qp_->values());
         solver_->getDualSolution(y_qp_->values());
         if (!solver_->isSolved()) {
@@ -228,25 +230,26 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
 
 
 /**
- * @brief copy the multipliers of the QP to the input pointer
- *
- * @param y_k   a pointer to an array with allocated memory equals to
- * sizeof(double)*(num_variable+num_constraint)
+ * @brief get the pointer to the multipliers to the bounds constraints.
  */
-inline double* qpOASESInterface::get_multipliers() {
+double* qpOASESInterface::get_multipliers_bounds() {
 
     return y_qp_->values();
 }
 
 
 /**
- * @brief copy the optimal solution of the QP to the input pointer
- *
- * @param x_optimal a pointer to an empty array with allocated memory equals to
- * sizeof(double)*number_variables
- *
+ * @brief get the pointer to the multipliers to the regular constraints.
  */
-inline double* qpOASESInterface::get_optimal_solution() {
+double* qpOASESInterface::get_multipliers_constr() {
+    return y_qp_->values()+nVar_QP_;
+};
+
+
+/**
+ * @brief copy the optimal solution of the QP to the input pointer
+ */
+double* qpOASESInterface::get_optimal_solution() {
 //    x_qp_->print("x_qp_");
     return x_qp_->values();
 }
@@ -604,7 +607,8 @@ void qpOASESInterface::get_Matrix_change_status() {
 
 }
 
-void qpOASESInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
+void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
+                                       SQPhotstart::ActiveType* W_bounds) {
     int* tmp_W_c = new int[nConstr_QP_];
     int* tmp_W_b = new int[nVar_QP_];
 
@@ -624,10 +628,10 @@ void qpOASESInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds)
             break;
         case 0:
             W_bounds[i] = INACTIVE;
-                break;
-            default:
-                printf("invalud workingset for qpoases1");
-                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+            break;
+        default:
+            printf("invalud workingset for qpoases1");
+            THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
         }
     }
     for (int i = 0; i < nConstr_QP_; i++) {

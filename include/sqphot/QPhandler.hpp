@@ -72,7 +72,7 @@ public:
      * the length equal to the size of multipliers of the QP
      * subproblem
      */
-    virtual double* GetMultipliers();
+    virtual double* get_multipliers_bounds();
 
 
     /**
@@ -235,6 +235,8 @@ public:
     //                      PRIVATE METHODS                  //
     //////////////////////////////////////////////////////////
 
+    double* get_multipliers_constr();
+
 private:
     //@{
 
@@ -286,6 +288,7 @@ private:
 #endif
 
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+
 };
 
 

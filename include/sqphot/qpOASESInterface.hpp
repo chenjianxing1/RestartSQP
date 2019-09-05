@@ -107,12 +107,14 @@ public:
 
 
     /**
-     * @brief copy the multipliers of the QP to the input pointer
-     *
-     * @param y_k   a pointer to an array with allocated memory equals to
-     * sizeof(double)*(num_variable+num_constraint)
+     * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    double* get_multipliers() override;
+    double* get_multipliers_bounds()override;
+
+    /**
+     * @brief get the pointer to the multipliers to the regular constraints.
+     */
+    double* get_multipliers_constr()override;
 
 
     /**
@@ -176,7 +178,7 @@ public:
     set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override;
 
 
-    void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) override ;
+    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
 
     void WriteQPDataToFile(

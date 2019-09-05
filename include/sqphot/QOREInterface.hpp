@@ -76,9 +76,6 @@ public:
 
     /**
      * @brief Solve a regular QP with given data and options.
-     *
-     * overload this method to optimize a QP with the data specified, update the
-     * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
     void optimizeQP(shared_ptr<Stats> stats) override;
@@ -86,8 +83,6 @@ public:
 
     /**
      * @brief Solve a regular LP with given data and options
-     * overload this method to optimize a LP with the data specified, update the
-     * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
 
     void optimizeLP(shared_ptr<Stats> stats) override;
@@ -113,11 +108,15 @@ public:
 
 
     /**
-     * @brief copy the multipliers of the QP to the input pointer
-     *
-     * @param y_k   a pointer to an array with allocated memory
+     * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    double* get_multipliers() override;
+    double* get_multipliers_bounds()override;
+
+    /**
+     * @brief get the pointer to the multipliers to the regular constraints.
+     */
+    double* get_multipliers_constr()override;
+
 
     QPReturnType get_status() override;;
 
@@ -178,7 +177,7 @@ public:
                            Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category) override ;
 
-    void GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) override ;
+    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////

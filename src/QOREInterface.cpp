@@ -20,18 +20,18 @@ QOREInterface::QOREInterface(Index_info nlp_info,
     nConstr_QP_(nlp_info.nCon) {
     allocate_memory(nlp_info, qptype);
 
-
 }
 
 
 QOREInterface::~QOREInterface() {
-#if DEBUG
-#if COMPARE_QP_SOLVER
+
     delete[] working_set_;
-#endif
-#endif
     QPFree(&solver_);
 }
+
+/**
+ * @brief Solve a regular QP with given data and options.
+ */
 
 void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
@@ -45,6 +45,7 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     g_->print("g_");
 #endif
 #endif
+    //does not print anything
     assert(rv_ == QPSOLVER_OK);
     QPSetInt(solver_, "prtfreq", -1);
     if (!firstQPsolved_) {
@@ -82,10 +83,18 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
 
     }
     assert(rv_ == QPSOLVER_OK);
-
+    //get the primal solution
+    rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
+    assert(rv_ == QPSOLVER_OK);
+    //get the multiplier information
+    rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
+    assert(rv_ == QPSOLVER_OK);
 }
 
 
+/**
+ * @brief Solve a regular LP with given data and options
+ */
 void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
     rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
                     +                   A_->MatVal(), NULL, NULL, NULL);
@@ -112,11 +121,22 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
                             "the LP problem didn't solved to optimality\n")
         }
     assert(rv_ == QPSOLVER_OK);
+    //get the primal solution
+    rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
+    assert(rv_ == QPSOLVER_OK);
+    //get the multiplier information
+    rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
+    assert(rv_ == QPSOLVER_OK);
 }
 
 
-void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
+/**
+ * @brief Allocate memory for the class members
+ * @param nlp_index_info  the struct that stores simple nlp dimension info
+ * @param qptype is the problem to be solved QP or LP?
+ */
 
+void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     int nnz_g_QP = nlp_info.nnz_jac_g +
                    2 * nlp_info.nCon;//number of nonzero variables in jacobian
     //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr nonzero elements
@@ -126,6 +146,7 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_,true);
     x_qp_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
+    working_set_  =  new int[nConstr_QP_+nVar_QP_];
     if (qptype != LP) {
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP,
                     nlp_info.nnz_h_lag);
@@ -138,7 +159,6 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
-    working_set_  =  new int[nConstr_QP_+nVar_QP_];
     A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
                                            nVar_QP_);
     H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nConstr_QP_,
@@ -148,36 +168,9 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     assert(rv_ == QPSOLVER_OK);
 }
 
-double* QOREInterface::get_optimal_solution() {
-    rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
-    assert(rv_ == QPSOLVER_OK);
-#if DEBUG
-#if CHECK_QP_INFEASIBILITY
-    x_qp_->print("x_qp_");
-#endif
-#endif
-    return x_qp_->values();
-}
 
-double QOREInterface::get_obj_value() {
-    //FIXME: QORE does not have existing emthod to return the qp obj, now it is calculated
-    // in Algorithm class for QOREInterface...
-}
-
-
-double* QOREInterface::get_multipliers() {
-    rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
-    assert(rv_ == QPSOLVER_OK);
-
-#if DEBUG
-#if CHECK_QP_INFEASIBILITY
-    y_qp_->print("y_qp_");
-#endif
-#endif
-
-    return y_qp_->values();
-}
-
+/**@name Setters*/
+//@{
 void QOREInterface::set_ub(int location, double value) {
     value = value < INF ? value : INF;
     ub_->setValueAt(location, value);
@@ -204,7 +197,48 @@ QOREInterface::set_A_values(shared_ptr<const SpTripletMat> rhs,
                             Identity2Info I_info) {
 
     A_->setMatVal(rhs, I_info);
-//    A_->print("A",jnlst_);
+    //    A_->print("A",jnlst_);
+}
+
+void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
+    H_->setStructure(rhs);
+}
+
+void QOREInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
+    H_->setMatVal(rhs);
+    //        H_->print("H",jnlst_);
+}
+
+//@}
+
+/**@name Getters*/
+//@{
+double* QOREInterface::get_optimal_solution() {
+#if DEBUG
+#if CHECK_QP_INFEASIBILITY
+    x_qp_->print("x_qp_");
+#endif
+#endif
+    return x_qp_->values();
+}
+
+double QOREInterface::get_obj_value() {
+    //FIXME: QORE does not have existing emthod to return the qp obj, now it is calculated
+    // in Algorithm class for QOREInterface...
+}
+
+double* QOREInterface::get_multipliers_bounds() {
+#if DEBUG
+#if CHECK_QP_INFEASIBILITY
+    y_qp_->print("y_qp_");
+#endif
+#endif
+
+    return y_qp_->values();
+}
+
+double* QOREInterface::get_multipliers_constr() {
+    return y_qp_->values()+ nVar_QP_;
 }
 
 QPReturnType QOREInterface::get_status() {
@@ -222,6 +256,50 @@ QPReturnType QOREInterface::get_status() {
 
     }
 }
+
+void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) {
+    QPGetIntVector(solver_,"workingset",working_set_);
+    for(int i=0; i<nConstr_QP_+nVar_QP_; i++) {
+        if(i<nVar_QP_) {
+            switch (working_set_[i]) {
+            case 1:
+                W_bounds[i] = ACTIVE_ABOVE;
+                break;
+            case -1:
+                W_bounds[i] = ACTIVE_BELOW;
+                break;
+            case 0:
+                W_bounds[i] = INACTIVE;
+                break;
+            default:
+                printf("invalud workingset for qore1;");
+                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+            }
+        }
+        else {
+            switch (working_set_[i]) {
+            case 1:
+                W_constr[i] = ACTIVE_ABOVE;
+                break;
+            case -1:
+                W_constr[i] = ACTIVE_BELOW;
+                break;
+            case 0:
+                W_constr[i] = INACTIVE;
+                break;
+            default:
+                printf("invalud workingset for qore2, the working set is %i;",
+                       W_constr[i]);
+                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
+            }
+        }
+    }
+
+}
+
+
+
+//@}
 
 
 
@@ -296,58 +374,6 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 #endif
 
 }
-
-
-void QOREInterface::GetWorkingSet(ActiveType* W_constr, ActiveType* W_bounds) {
-
-    QPGetIntVector(solver_,"workingset",working_set_);
-    for(int i=0; i<nConstr_QP_+nVar_QP_; i++) {
-        if(i<nVar_QP_) {
-            switch (working_set_[i]) {
-            case 1:
-                W_bounds[i] = ACTIVE_ABOVE;
-                break;
-            case -1:
-                W_bounds[i] = ACTIVE_BELOW;
-                break;
-            case 0:
-                W_bounds[i] = INACTIVE;
-                break;
-            default:
-                printf("invalud workingset for qore1;");
-                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
-            }
-        }
-        else {
-            switch (working_set_[i]) {
-            case 1:
-                W_constr[i] = ACTIVE_ABOVE;
-                break;
-            case -1:
-                W_constr[i] = ACTIVE_BELOW;
-                break;
-            case 0:
-                W_constr[i] = INACTIVE;
-                break;
-            default:
-                printf("invalud workingset for qore2, the working set is %i;",
-                        W_constr[i]);
-                THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
-            }
-        }
-    }
-
-}
-
-void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
-    H_->setStructure(rhs);
-}
-
-void QOREInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
-    H_->setMatVal(rhs);
-//        H_->print("H",jnlst_);
-}
-
 
 }//SQP_HOTSTART
 

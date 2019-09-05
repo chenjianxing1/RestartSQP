@@ -395,7 +395,7 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
     delta_ = options_->delta;
     rho_ = options_->rho;
     norm_p_k_ = 0.0;
-    
+
     /*-----------------------------------------------------*/
     /*         Get the nlp information                     */
     /*-----------------------------------------------------*/
@@ -445,14 +445,14 @@ void Algorithm::initialization(SmartPtr<Ipopt::TNLP> nlp) {
         jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
         jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
         //printf(" %6i\n",stats_->iter);
-	
-		//printf("%9.2e\n", obj_value_); 
-	
-		//printf("%9.2e\n",norm_p_k_);
-		//printf("%9.2e\n",infea_measure_);
-		//printf("%9.2e\n",delta_);
-		//printf("%9.2e\n",rho_);
-		
+
+        //printf("%9.2e\n", obj_value_);
+
+        //printf("%9.2e\n",norm_p_k_);
+        //printf("%9.2e\n",infea_measure_);
+        //printf("%9.2e\n",delta_);
+        //printf("%9.2e\n",rho_);
+
 
 
     }
@@ -585,11 +585,11 @@ void Algorithm::get_multipliers() {
 //        multiplier_cons_->free();
     if (options_->QPsolverChoice == QORE_QP) {
 
-        multiplier_cons_->copy_vector(myQP_->GetMultipliers() + nVar_ + 2 * nCon_);
-        multiplier_vars_->copy_vector(myQP_->GetMultipliers());
+        multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
+        multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
     } else if (options_->QPsolverChoice == QPOASES_QP) {
-        multiplier_cons_->copy_vector(myQP_->GetMultipliers() + 2 * nCon_ + nVar_);
-        multiplier_vars_->copy_vector(myQP_->GetMultipliers());
+        multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
+        multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
     }
 
 }

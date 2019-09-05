@@ -83,16 +83,23 @@ double* QPhandler::GetOptimalSolution() {
  * @param y_k       the pointer to an empty array with the length equal to the size of
  * multipliers of the QP subproblem
  */
-double*  QPhandler::GetMultipliers() {
+double*  QPhandler::get_multipliers_bounds() {
 #if DEBUG
-
-    return qpOASESInterface_->get_multipliers();
+    return qpOASESInterface_->get_multipliers_bounds();
 #else
-    return solverInterface_->get_multipliers();
+    return solverInterface_->get_multipliers_bounds();
 #endif
 
 }
 
+
+double* QPhandler::get_multipliers_constr() {
+#if DEBUG
+    return qpOASESInterface_->get_multipliers_constr();
+#else
+    return solverInterface_->get_multipliers_constr();
+#endif
+}
 
 /**
  * Setup the bounds for the QP subproblems according to the information from current
@@ -377,7 +384,7 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 //                       shared_ptr<const Vector>(), 0, nullptr, shared_ptr<const Vector>(),
 //                       shared_ptr<const Vector>());
 
-    if(!qpOASES_optimal||!qore_optimal)    
+    if(!qpOASES_optimal||!qore_optimal)
         testQPsolverDifference();
 
 
@@ -427,7 +434,7 @@ void QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian) {
 }
 
 
-    void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
+void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
                              shared_ptr<const Vector> x_u,
                              shared_ptr<const Vector> x_k) {
 
@@ -557,9 +564,9 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
         shared_ptr<const SpTripletMat> A = qpOASESInterface_->getA();
         shared_ptr<const SpTripletMat> H = qpOASESInterface_->getH();
         x->copy_vector(qpOASESInterface_->get_optimal_solution());
-        multiplier_bounds->copy_vector(qpOASESInterface_->get_multipliers());
-        multiplier_constr->copy_vector(qpOASESInterface_->get_multipliers()+nVar_QP_);
-        qpOASESInterface_->GetWorkingSet(W_c_qpOASES_, W_b_qpOASES_);
+        multiplier_bounds->copy_vector(qpOASESInterface_->get_multipliers_bounds());
+        multiplier_constr->copy_vector(qpOASESInterface_->get_multipliers_constr());
+        qpOASESInterface_->get_working_set(W_c_qpOASES_, W_b_qpOASES_);
         /**-------------------------------------------------------**/
         /**                    primal feasibility                 **/
         /**-------------------------------------------------------**/
@@ -598,7 +605,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
                 printf("failed in dual fea test, the working set  for qpOASES at "
                        "the "
                        "bounds is %i", W_b_qore_[i]);
-                    THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+                THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
             }
         }
         if(A!= nullptr) {
@@ -662,7 +669,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
                 printf("failed in compl test, the working set  for qpOASES at "
                        "the "
                        "bounds is %i", W_b_qore_[i]);
-                    THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+                THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
             }
         }
         if (A != nullptr) {
@@ -684,7 +691,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
                     printf("failed in compl test, the working set  for qpOASES at "
                            "the "
                            "constr is %i", W_c_qore_[i]);
-                        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+                    THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
                 }
             }
         }
@@ -698,9 +705,9 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
         x->copy_vector(QOREInterface_->get_optimal_solution());
         shared_ptr<const SpTripletMat> A = QOREInterface_->getA();
         shared_ptr<const SpTripletMat> H = QOREInterface_->getH();
-        multiplier_bounds->copy_vector(QOREInterface_->get_multipliers());
-        multiplier_constr->copy_vector(QOREInterface_->get_multipliers()+nVar_QP_);
-        QOREInterface_->GetWorkingSet(W_c_qore_, W_b_qore_);
+        multiplier_bounds->copy_vector(QOREInterface_->get_multipliers_bounds());
+        multiplier_constr->copy_vector(QOREInterface_->get_multipliers_constr());
+        QOREInterface_->get_working_set(W_c_qore_, W_b_qore_);
 
         /**-------------------------------------------------------**/
         /**                    primal feasibility                 **/
@@ -800,7 +807,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
                 printf("failed in compl test, the working set  for qore at "
                        "the "
                        "bounds is %i", W_b_qpOASES_[i]);
-                    THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+                THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
             }
         }
         if (A != nullptr) {
@@ -825,7 +832,7 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
                     printf("failed in compl test, the working set  for qpOASES at "
                            "the "
                            "constr is %i", W_c_qpOASES_[i]);
-                        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+                    THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
                 }
             }
         }
@@ -839,18 +846,18 @@ bool QPhandler::OptimalityTest(QPSolver qpSolver) {
     qpOptimalStatus_.dual_violation=dual_violation;
     qpOptimalStatus_.primal_feasibility=primal_violation;
 
-if(qpOptimalStatus_.KKT_error>1.0e-6) {
-    printf("comp_violation %10e\n", compl_violation);
-    printf("stat_violation %10e\n", statioanrity_violation);
-    printf("prim_violation %10e\n", primal_violation);
-    printf("dual_violation %10e\n", dual_violation);
-    qpOptimalStatus_.KKT_error =
+    if(qpOptimalStatus_.KKT_error>1.0e-6) {
+        printf("comp_violation %10e\n", compl_violation);
+        printf("stat_violation %10e\n", statioanrity_violation);
+        printf("prim_violation %10e\n", primal_violation);
+        printf("dual_violation %10e\n", dual_violation);
+        qpOptimalStatus_.KKT_error =
             compl_violation + statioanrity_violation + dual_violation + primal_violation;
-    assert(qpOptimalStatus_.KKT_error < 1.0e-4);
-    return false;
-}
+        assert(qpOptimalStatus_.KKT_error < 1.0e-4);
+        return false;
+    }
 
-return true;
+    return true;
 }
 
 
