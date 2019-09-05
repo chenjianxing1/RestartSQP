@@ -119,6 +119,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 //                ubA_->print("ubA_", jnlst_, Ipopt::J_DBG, Ipopt::J_ALL);;
             }
         }
+	//TODO: input the working set info for hotstarting..
         get_Matrix_change_status();
         if (new_QP_matrix_status_ == UNDEFINED) {
             assert(old_QP_matrix_status_ != UNDEFINED);
@@ -389,10 +390,10 @@ void qpOASESInterface::set_A_values(
     }
     A_->setMatVal(rhs, I_info);
     A_qpOASES_->setVal(A_->MatVal());
-
+#if DEBUG
     A_triplet_->convert2Triplet(A_);
 
-    A_triplet_->print_full("A_triplet");
+#endif
 }
 
 
