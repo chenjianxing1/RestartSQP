@@ -42,11 +42,9 @@ DECLARE_STD_EXCEPTION(INVALID_WORKING_SET);
 class QPSolverInterface {
 public:
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     /**@name Getters for private members*/
     //only to overload this part if debug is on
     //@{
-
     virtual const shared_ptr<Vector>& getLb() const = 0;
 
     virtual const shared_ptr<Vector>& getUb() const = 0;
@@ -62,7 +60,6 @@ public:
     virtual const shared_ptr<const SpTripletMat> getA() const =0;
     //@}
 
-#endif
 #endif
     /** Default constructor*/
     QPSolverInterface() = default;

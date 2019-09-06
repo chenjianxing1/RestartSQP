@@ -362,9 +362,9 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
     if(!qpOASES_optimal||!qore_optimal)
         testQPsolverDifference();
 
+#endif
+#endif
 
-#endif
-#endif
     solverInterface_->optimizeQP(stats);
 }
 

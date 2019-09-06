@@ -66,7 +66,7 @@ void Algorithm::Optimize() {
 
         //get the search direction from the solution of the QPsubproblem
         get_search_direction();
-
+//        p_k_->print("p_k");
         get_obj_QP();
 
         //Update the penalty parameter if necessary
@@ -410,8 +410,8 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
 
 #if DEBUG
-    SmartPtr<Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
-                                   Ipopt::J_MOREDETAILED);
+    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
+            Ipopt::J_MOREDETAILED);
     debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_MOREDETAILED);
 #endif
 
@@ -1338,5 +1338,6 @@ void Algorithm::print_final_statsitics() {
 }
 
 }//END_NAMESPACE_SQPHOTSTART
+
 
 

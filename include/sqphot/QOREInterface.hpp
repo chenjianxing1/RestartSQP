@@ -26,7 +26,6 @@ class QOREInterface :
 public:
 
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
 
     const shared_ptr<Vector>& getG() const override {
         return g_;
@@ -59,7 +58,6 @@ public:
         return A_triplet_;
     };
 
-#endif
 #endif
 
     /**Constructor*/
@@ -225,10 +223,8 @@ private:
     int rv_;//temporarily placed here, for recording the return value from the solver
     int* working_set_;
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     shared_ptr<SpTripletMat> H_triplet_;
     shared_ptr<SpTripletMat> A_triplet_;
-#endif
 #endif
 };
 

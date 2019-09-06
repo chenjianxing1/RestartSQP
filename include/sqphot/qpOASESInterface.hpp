@@ -148,7 +148,6 @@ public:
         Ipopt::EJournalCategory category) override ;
 
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     const shared_ptr<Vector>& getLb() const override {
         return lb_;
     };
@@ -181,7 +180,6 @@ public:
         return A_triplet_;
     };
 
-#endif
 #endif
 
     ///////////////////////////////////////////////////////////
@@ -269,10 +267,8 @@ private:
     shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     shared_ptr<SpTripletMat> H_triplet_;
     shared_ptr<SpTripletMat> A_triplet_;
-#endif
 #endif
 
 };

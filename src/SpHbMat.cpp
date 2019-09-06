@@ -129,7 +129,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                   tuple_sort_rule_compressed_column);
         for (int i = 0; i < EntryNum_; i++) {
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-            order_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<2>(sorted_index_info[i])] =i;
 
             for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
                 ColIndex_[j]++;
@@ -165,7 +165,6 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     // number of entry and allocate_memory the memory
     // of RowIndex and MatVal by going through
     // all of its entries one by one
-
     if (isSymmetric_) {
         for (int i = 0; i < rhs->EntryNum(); i++) {
 
@@ -181,6 +180,12 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
             }
 
         }
+//
+//        for(int i = 0; i<counter;i++){
+//            std::cout<<std::get<0>(sorted_index_info[i]);
+//            std::cout<<std::get<1>(sorted_index_info[i]);
+//            std::cout<<std::get<2>(sorted_index_info[i])<<std::endl;
+//        }
         if (EntryNum_ == -1) {
 
             EntryNum_ = counter;
@@ -218,7 +223,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
         for (int i = 0; i < EntryNum_; i++) {
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-            order_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<2>(sorted_index_info[i])] = i;
 
             for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
                 ColIndex_[j]++;
@@ -226,6 +231,12 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
         }
         ColIndex_[ColNum_] = EntryNum_;
 
+//
+//        for(int i = 0; i<counter;i++){
+//            std::cout<<std::get<0>(sorted_index_info[i]);
+//            std::cout<<std::get<1>(sorted_index_info[i]);
+//            std::cout<<std::get<2>(sorted_index_info[i])<<std::endl;
+//        }
     }
     sorted_index_info.clear();
 }
@@ -257,14 +268,17 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
 
     int j = 0;
+//    rhs->print("rhs");
     for (int i = 0; i < rhs->EntryNum(); i++) {
-        MatVal_[order()[j]] = rhs->MatVal()[i];
+        MatVal_[order_[j]] = rhs->MatVal()[i];
         j++;
         if (isSymmetric_ && (rhs->ColIndex()[i] != rhs->RowIndex()[i])) {
-            MatVal_[order()[j]] = rhs->MatVal()[i];
+//            MatVal_[order()[j]] = rhs->MatVal()[i];
+            MatVal_[order_[j]] = rhs->MatVal()[i];
             j++;
         }
     }
+//    print("last");
 }
 
 

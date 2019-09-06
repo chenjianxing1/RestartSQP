@@ -52,13 +52,11 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     }
 
 #if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
     A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
                                            .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
                                            nVar_QP_,false);
     H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
                                            nVar_QP_,true);
-#endif
 #endif
     //FIXME: the qpOASES does not accept any extra input
     solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
@@ -79,6 +77,17 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
 
         setQP_options();
+#if DEBUG
+#if PRINT_QP_DATA
+        H_qpOASES_->print("H_qp_oases");
+        A_qpOASES_->print("A_qpoases");
+        g_->print("g");
+        lbA_->print("LbA");
+        ubA_->print("ubA");
+        lb_->print("lb");
+        ub_->print("ub");
+#endif
+#endif
         solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
 
