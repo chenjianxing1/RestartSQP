@@ -1,3 +1,10 @@
+/* Copyright (C) 2019
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-07
+*/
+
 #ifndef _SQPHOTSTART_MESSAGE_HANDLE_
 #define _SQPHOTSTART_MESSAGE_HANDLE_
 
@@ -13,4 +20,5 @@
 //WARNING MESSAGES
 #define INVALID_WORKING_SET_MSG "Warning! The working set index in QP is not well defined!"
 #define INVALID_RETURN_TYPE_MSG " The return type is invalid for QOREInterface"
+
 #endif

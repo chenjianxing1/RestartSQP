@@ -9,7 +9,6 @@
 
 #include <memory>
 #include <sqphot/Utils.hpp>
-#include <sqphot/MyNLP.hpp>
 #include <IpTNLP.hpp>
 #include <sqphot/Vector.hpp>
 #include <sqphot/Matrix.hpp>
@@ -27,7 +26,7 @@ class SQPTNLP {
 public:
 
     /** @brief constructor that copies nlp to _nlp as a local data reader*/
-    SQPTNLP(SmartPtr<Ipopt::TNLP> nlp);
+    SQPTNLP(Ipopt::SmartPtr<Ipopt::TNLP> nlp);
 
     /** Default destructor*/
     virtual ~SQPTNLP();
@@ -50,7 +49,7 @@ public:
     /**
      *@brief Evaluate the objective value
      */
-    virtual bool Eval_f(shared_ptr<const Vector> x, Number& obj_value);
+    virtual bool Eval_f(shared_ptr<const Vector> x, double& obj_value);
 
     /**
      * @brief Evaluate the constraints at point x
@@ -108,7 +107,7 @@ public:
     Index_info nlp_info_; /**< the struct record the number of variables, number of
                                constraints, number of nonzeoro entry of Hessian and that of Jacobian
                                Please check Types.hpp for details*/
-    SmartPtr<Ipopt::TNLP> nlp_;/**< a local nlp reader */
+    Ipopt::SmartPtr<Ipopt::TNLP> nlp_;/**< a local nlp reader */
 
 private:
     /** Default constructor*/

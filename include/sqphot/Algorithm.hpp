@@ -57,21 +57,17 @@ public:
      *  information for the first QP.
      *
      */
-    void initialization(SmartPtr<Ipopt::TNLP> nlp);
+    void initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp);
 
     /** temporarily use Ipopt options*/
     //@{
     //
 
-    SmartPtr<RegisteredOptions> getRoptions() {
-        return roptions;
-    }
-
-    SmartPtr<OptionsList> getRoptions2() {
+    Ipopt::SmartPtr<Ipopt::OptionsList> getRoptions2() {
         return roptions2_;
     }
 
-    SmartPtr<Journalist> getJnlst() {
+    Ipopt::SmartPtr<Ipopt::Journalist> getJnlst() {
         return jnlst_;
     }
 
@@ -91,7 +87,7 @@ public:
      * TO BE IMPLEMENTED
      */
 
-    virtual void ReOptimize(SmartPtr<Ipopt::TNLP> nlp) {}
+    virtual void ReOptimize(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {}
 
 
     /** @name Set the corresponding option to the user-defined value */
@@ -293,7 +289,7 @@ private:
      *
      * @param nlp: the nlp reader that read data of the function to be minimized;
      */
-    void allocate_memory(SmartPtr<Ipopt::TNLP> nlp);
+    void allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp);
 
     /**
      *
@@ -331,8 +327,8 @@ private:
     ConstraintType* cons_type_; /**<the constraints type, it can be either
                                           *bounded,bounded above,bounded below, or unbounded*/
     Exitflag exitflag_ = UNKNOWN;
-    Index nCon_; /**< number of constraints*/
-    Index nVar_; /**< number of variables*/
+    int nCon_; /**< number of constraints*/
+    int nVar_; /**< number of variables*/
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
     Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions;

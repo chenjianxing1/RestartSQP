@@ -23,7 +23,6 @@ enum QPMatrixType {
     VARIED
 };
 
-
 class qpOASESInterface :
     public QPSolverInterface {
 
@@ -44,44 +43,6 @@ public:
     ~qpOASESInterface() override;
 
 
-#if DEBUG
-#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
-    const shared_ptr<Vector>& getLb() const override {
-        return lb_;
-    };
-
-    const shared_ptr<Vector>& getUb() const override {
-        return ub_;
-    };
-
-
-    const shared_ptr<Vector>& getLbA() const override {
-        return lbA_;
-    };
-
-    const shared_ptr<Vector>& getUbA() const override {
-        return ubA_;
-    };
-
-    const shared_ptr<Vector>& getG() const override {
-        return g_;
-    };
-
-
-    const shared_ptr<const SpTripletMat> getH() const override {
-        H_triplet_->convert2Triplet(H_);
-        return H_triplet_;
-    };
-
-    const shared_ptr<const SpTripletMat> getA() const override {
-        A_triplet_->convert2Triplet(A_);
-        return A_triplet_;
-    };
-
-#endif
-#endif
-
-
 
 
     void optimizeQP(shared_ptr<Stats> stats) override;
@@ -94,7 +55,8 @@ public:
 
     void optimizeLP(shared_ptr<Stats> stats) override;
 
-
+    /** @name Getters*/
+//@{
     /**
     * @brief copy the optimal solution of the QP to the input pointer
     *
@@ -117,6 +79,8 @@ public:
     double* get_multipliers_constr()override;
 
 
+    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+
     /**
      *@brief get the objective value from the QP solvers
      *
@@ -131,6 +95,7 @@ public:
      */
 
     QPReturnType get_status() override;
+//@}
 
     /** @name Setters */
     //@{
@@ -173,20 +138,51 @@ public:
     void set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info)
     override;
 
+    void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override;
 
-    void
-    set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info I_info) override;
-
-
-    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
-
+    //@}
 
     void WriteQPDataToFile(
         Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         Ipopt::EJournalLevel level,
         Ipopt::EJournalCategory category) override ;
-    //@}
 
+#if DEBUG
+#if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    const shared_ptr<Vector>& getLb() const override {
+        return lb_;
+    };
+
+    const shared_ptr<Vector>& getUb() const override {
+        return ub_;
+    };
+
+
+    const shared_ptr<Vector>& getLbA() const override {
+        return lbA_;
+    };
+
+    const shared_ptr<Vector>& getUbA() const override {
+        return ubA_;
+    };
+
+    const shared_ptr<Vector>& getG() const override {
+        return g_;
+    };
+
+
+    const shared_ptr<const SpTripletMat> getH() const override {
+        H_triplet_->convert2Triplet(H_);
+        return H_triplet_;
+    };
+
+    const shared_ptr<const SpTripletMat> getA() const override {
+        A_triplet_->convert2Triplet(A_);
+        return A_triplet_;
+    };
+
+#endif
+#endif
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
@@ -242,8 +238,6 @@ private:
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
 private:
-
-
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPMatrixType new_QP_matrix_status_ = UNDEFINED;
     QPMatrixType old_QP_matrix_status_ = UNDEFINED;

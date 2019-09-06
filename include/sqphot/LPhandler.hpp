@@ -48,6 +48,15 @@ public:
     /** Default destructor */
     ~LPhandler() override;
 
+    /**
+     * @brief solve the QP subproblem according to the bounds setup before,
+     * assuming the first QP subproblem has been solved.
+     * */
+
+    void solveLP(shared_ptr<SQPhotstart::Stats> stats);
+
+    /**@name Setters */
+    //@{
     void set_bounds(double delta, shared_ptr<const Vector> x_l,
                     shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
                     shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
@@ -58,6 +67,7 @@ public:
 
 
     void set_A(shared_ptr<const SpTripletMat> jacobian) override;
+    //@}
 
     /**
      * @brief Get the optimal solution from the QPsolverinterface
@@ -66,40 +76,8 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    double* GetOptimalSolution() override;
+    double* get_optimal_solution() override;
 
-
-    void update_delta(double delta,
-                      shared_ptr<const Vector> x_l,
-                      shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> x_k) override {
-//        QPhandler::update_delta(delta,x_l,x_u,x_k);
-    }
-
-    const shared_ptr<QPSolverInterface>& getSolverInterface() const;;
-
-    void update_bounds(double delta, shared_ptr<const Vector> x_l,
-                       shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
-                       shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                       shared_ptr<const Vector> c_k) override {
-//        QPhandler::update_bounds(delta,x_l,x_u,x_k,c_l,c_u,c_k);
-    };
-
-    void update_penalty(double rho) override {
-//        QPhandler::update_penalty(rho);
-    };
-
-
-    void update_A(shared_ptr<const SpTripletMat> Jacobian) override {
-//        QPhandler::update_A(Jacobian);
-    };
-
-    /**
-     * @brief solve the QP subproblem according to the bounds setup before,
-     * assuming the first QP subproblem has been solved.
-     * */
-
-    void solveLP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
 
     ///////////////////////////////////////////////////////////
@@ -121,26 +99,29 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const LPhandler &);
 
-
-
-
     ///////////////////////////////////////////////////////////
-    //                      PRIVATE METHOD                   //
+    //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
 
-    /** QP problem will be in the following form
-     * min 1/2x^T H x+ g^Tx
+    /** LP problem will be in the following form
+     * min g^Tx
      * s.t. lbA <= A x <= ubA,
      *      lb  <=   x <= ub.
      *
      */
 private:
 
+    LPSolver LPsolverChoice_;
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    Index_info nlp_info_;
+    const Index_info nlp_info_;
+    const int nConstr_QP_;
+    const int nVar_QP_;
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+                                                              QP solver specified by the user*/
+    //bounds that can be represented as vectors
     bool isAinitialised = false;//TODO: delete it later
-    shared_ptr<QPSolverInterface> solverInterface_; //an interface to the standard LP
 };
 
 

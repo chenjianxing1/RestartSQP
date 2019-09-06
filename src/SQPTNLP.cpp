@@ -10,7 +10,7 @@
 namespace SQPhotstart {
 
 /** Default constructor*/
-SQPTNLP::SQPTNLP(SmartPtr<TNLP> nlp) {
+SQPTNLP::SQPTNLP(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     nlp_ = nlp;
     Ipopt::TNLP::IndexStyleEnum index_style;
     nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
@@ -49,7 +49,7 @@ SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0)
 /**
  *@brief Evaluate the objective value
  */
-bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, Number& obj_value) {
+bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, double& obj_value) {
     nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
     return true;
 }

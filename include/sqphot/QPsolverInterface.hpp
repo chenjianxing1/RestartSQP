@@ -30,7 +30,7 @@ DECLARE_STD_EXCEPTION(QP_INTERNAL_ERROR);
 
 DECLARE_STD_EXCEPTION(INVALID_WORKING_SET);
 /**
- * @brief Base class for all standard QP solvers that use standard triplet matrix
+ * @brief Virtual base class for all standard QP solvers that use standard triplet matrix
  * form and dense vectors.
  *
  * It can optimize QP problem in the following format
@@ -43,6 +43,10 @@ class QPSolverInterface {
 public:
 #if DEBUG
 #if GET_QP_INTERFACE_MEMBERS or COMPARE_QP_SOLVER
+    /**@name Getters for private members*/
+    //only to overload this part if debug is on
+    //@{
+
     virtual const shared_ptr<Vector>& getLb() const = 0;
 
     virtual const shared_ptr<Vector>& getUb() const = 0;
@@ -56,6 +60,7 @@ public:
     virtual const shared_ptr<const SpTripletMat> getH() const =0;
 
     virtual const shared_ptr<const SpTripletMat> getA() const =0;
+    //@}
 
 #endif
 #endif
@@ -76,6 +81,7 @@ public:
 
     /**
      * @brief Solve a regular LP with given data and options
+     *
      * overload this method to optimize a LP with the data specified, update the
      * stats by adding the iteration number used to solve this LP to stats.qp_iter
      */
@@ -83,6 +89,12 @@ public:
     virtual void
     optimizeLP(shared_ptr<Stats> stats) = 0;
 
+
+    /**-------------------------------------------------------**/
+    /**                    Getters                            **/
+    /**-------------------------------------------------------**/
+    /**@name Getters*/
+    //@{
     /**
      * @return the pointer to the optimal solution
      *
@@ -107,18 +119,30 @@ public:
      */
     virtual double* get_multipliers_constr() = 0;
 
-    virtual void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)=0;
-    /**@name Setters, by location and value*/
-
-//@{
     /**
-     *@brief
+     * @brief copy the working set information
+     * @param W_constr a pointer to an array of length (nCon_QP_) which will store the
+     * working set for constraints
+     * @param W_bounds a pointer to an array of length (nVar_QP_) which will store the
+     * working set for bounds
+     *
+     * overload this method by assign each entry of W_constr and W_bounds to be
+     * ACTIVE_ABOVE, ACTIVE_BELOW, INACTIVE, or ACTIVE_BOTH_SIDE based on the working
+     * set information from the QP solver
      */
+    virtual void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)=0;
+
+    virtual QPReturnType get_status() = 0;
+
+    //@}
+
+    /**-------------------------------------------------------**/
+    /**                    Setters                            **/
+    /**-------------------------------------------------------**/
+    /**@name Setters, by location and value*/
+    //@{
     virtual void set_lb(int location, double value) = 0;
 
-    /**
-     *
-     */
     virtual void set_ub(int location, double value) = 0;
 
     virtual void set_lbA(int location, double value) = 0;
@@ -126,7 +150,8 @@ public:
     virtual void set_ubA(int location, double value) = 0;
 
     virtual void set_g(int location, double value) = 0;
-//@}
+    //@}
+
     /**@name Setters for dense vector, by vector value*/
     //@{
     virtual void set_ub(shared_ptr<const Vector> rhs) = 0;
@@ -138,7 +163,10 @@ public:
     virtual void set_ubA(shared_ptr<const Vector> rhs) = 0;
 
     virtual void set_g(shared_ptr<const Vector> rhs) = 0;
+    //@}
 
+    /**@name Setters for matrix*/
+    //@{
     virtual void set_H_structure(shared_ptr<const SpTripletMat> rhs) = 0;
 
     virtual void set_H_values(shared_ptr<const SpTripletMat> rhs) = 0;
@@ -150,7 +178,11 @@ public:
                               I_info) = 0;
     //@}
 
-    virtual QPReturnType get_status() = 0;
+
+
+    /**-------------------------------------------------------**/
+    /**                  Data Writer                          **/
+    /**-------------------------------------------------------**/
 
     virtual void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                                    Ipopt::EJournalLevel level,

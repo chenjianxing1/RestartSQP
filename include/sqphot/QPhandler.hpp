@@ -48,10 +48,19 @@ public:
 
     QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
               Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+
     /** Default destructor */
     virtual ~QPhandler();
 
+    /**
+     * @brief solve the QP subproblem according to the bounds setup before,
+     * assuming the first QP subproblem has been solved.
+     * */
 
+    void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
+
+    /** @name Getters */
+    //@{
     /**
      * @brief Get the optimal solution from the QPsolverinterface
      *
@@ -59,30 +68,33 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual double* GetOptimalSolution();
+    virtual double* get_optimal_solution();
 
 
     /**
-     *@brief Get the multipliers from the QPhandler_interface
-     *
-     * This is only an interface for user to avoid call
-     * interface directly.
-     *
-     * @param y_k 	the pointer to an empty array with
-     * the length equal to the size of multipliers of the QP
-     * subproblem
+     *@brief Get the multipliers corresponding to the bound variables
      */
-    virtual double* get_multipliers_bounds();
+    double* get_multipliers_bounds();
 
+    /**
+     * @brief Get the multipliers corresponding to the constraints
+     */
+    double* get_multipliers_constr();
 
     /**
      * @brief Get the objective value of the QP
-     * @param qp_obj the reference to a double variable which will hold the
-     * objective value of the qp problem
      */
-    double GetObjective();
+    double get_objective();
 
 
+    /**
+     * @brief Get the return status of QPsolver
+     */
+    QPReturnType get_status();
+    //@}
+
+    /** @name Setters*/
+    //@{
     /**
     *
     * @brief setup the bounds for the QP subproblems
@@ -134,19 +146,15 @@ public:
      * information from current iterate*/
     virtual void set_A(shared_ptr<const SpTripletMat> jacobian);
 
+    //@}
 
-    /**
-     * @brief solve the QP subproblem according to the bounds setup before,
-     * assuming the first QP subproblem has been solved.
-     * */
+    /** @name Update QPdata */
 
-    void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
-
-
-    virtual void update_delta(double delta,
-                              shared_ptr<const Vector> x_l,
-                              shared_ptr<const Vector> x_u,
-                              shared_ptr<const Vector> x_k);
+//@{
+    void update_delta(double delta,
+                      shared_ptr<const Vector> x_l,
+                      shared_ptr<const Vector> x_u,
+                      shared_ptr<const Vector> x_k);
 
 
     /**
@@ -191,28 +199,16 @@ public:
      * @brief Update the Matrix H of the QP problems
      * when there is any change to the Jacobian to the constraints.
      */
-    virtual void update_A(shared_ptr<const SpTripletMat> Jacobian);
+    void update_A(shared_ptr<const SpTripletMat> Jacobian);
 
-    inline QPReturnType GetStatus() {
-#if DEBUG
-        return QP_UNKNOWN_ERROR;
-#else
-        return (solverInterface_->get_status());
-#endif
-    }
+//@}
 
-    void WriteQPData() {
-#if DEBUG
-#if COMPARE_QP_SOLVER
-        QOREInterface_->WriteQPDataToFile(jnlst_,J_LAST_LEVEL,J_USER1);
-#endif
-#else
-        solverInterface_->WriteQPDataToFile(jnlst_,J_LAST_LEVEL,J_USER1);
-#endif
-    }
+    /**
+     * @brief Write QP data to a file
+     */
+    void WriteQPData();
 
 #if DEBUG
-
 #if COMPARE_QP_SOLVER
 
 
@@ -235,7 +231,6 @@ public:
     //                      PRIVATE METHODS                  //
     //////////////////////////////////////////////////////////
 
-    double* get_multipliers_constr();
 
 private:
     //@{
@@ -271,7 +266,9 @@ private:
     const Index_info nlp_info_;
     const int nConstr_QP_;
     const int nVar_QP_;
-
+    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+                                                              QP solver specified by the user*/
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 #if DEBUG
 #if COMPARE_QP_SOLVER
     shared_ptr<qpOASESInterface> qpOASESInterface_;
@@ -282,12 +279,7 @@ private:
     ActiveType* W_c_qore_;//working set for constraints;
     ActiveType* W_b_qore_;//working set for bounds;
 #endif
-#else
-    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
-                                                              QP solver specified by the user*/
 #endif
-
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
 
 };
 

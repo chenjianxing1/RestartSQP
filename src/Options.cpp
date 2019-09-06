@@ -18,7 +18,7 @@ Options::~Options() {
 
 int Options::setToDefault() {
     iter_max = 1000;
-    printLevel = 2;
+    printLevel = 1;
     qpPrintLevel = 0;       //does not print anything
     QPsolverChoice = QPOASES_QP;
     LPsolverChoice = QPOASES_LP;
@@ -33,17 +33,17 @@ int Options::setToDefault() {
     delta_min = 1.0e-16;
     delta_max = 1.0e10;
     active_set_tol = 1.0e-5;
-    opt_tol = 1.0e-3;
+    opt_stat_tol = 1.0e-4;
     opt_compl_tol = 1.0e-4;
-    opt_dual_fea_tol = 1.0e-5;
-    opt_prim_fea_tol = 1.0e-5;
+    opt_dual_fea_tol = 1.0e-4;
+    opt_prim_fea_tol = 1.0e-4;
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
     rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
-    increase_parm = 2;
+    increase_parm = 10;
     rho_max = 1.0e8;
     penalty_iter_max = 200;
     eps1 = 0.1;

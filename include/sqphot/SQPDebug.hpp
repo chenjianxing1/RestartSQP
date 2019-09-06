@@ -12,8 +12,6 @@
 
 #define DEBUG false
 
-#define CHECK_LINEAR_ALGEBRA true
-
 
 #ifdef DEBUG
 #define COMPARE_QP_SOLVER true
@@ -25,7 +23,7 @@
 #define CHECK_NLP_READER false
 #define PRINT_QP_DATA false
 #define CHECK_QP_INFEASIBILITY false
-#define GET_QP_INTERFACE_MEMBERS true
+#define GET_QP_INTERFACE_MEMBERS false
 #define PRINT_OUT_QP_WITH_ERROR true
 #if PRINT_OUT_QP_WITH_ERROR
 #define PRINT_QP_IN_CPP true

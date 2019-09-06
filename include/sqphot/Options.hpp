@@ -59,7 +59,7 @@ public:
     double opt_dual_fea_tol;
     double opt_prim_fea_tol;
     double opt_second_tol;
-    double opt_tol;
+    double opt_stat_tol;
     //@}
 
     /**QPsolver options */

@@ -74,7 +74,7 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
             dense_matrix[ColNum_ * (ColIndex_[i] - 1) + RowIndex_[i] -
                          1] = MatVal_[i];
     }
-if(!IsNull(jnlst)){
+    if(!IsNull(jnlst)) {
 //    if (name != nullptr) {
 //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
 //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
@@ -87,18 +87,18 @@ if(!IsNull(jnlst)){
 //           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
 //    }
 //       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
-}else{
-	if(name!=nullptr)
-		printf("%s =:{\n", name);
+    } else {
+        if(name!=nullptr)
+            printf("%s =:{\n", name);
 
-    for (int i = 0; i < RowNum_; i++) {
-        for (int j = 0; j < ColNum_; j++) {
-		printf("%10e  ", dense_matrix[i * ColNum() + j]);
+        for (int i = 0; i < RowNum_; i++) {
+            for (int j = 0; j < ColNum_; j++) {
+                printf("%10e  ", dense_matrix[i * ColNum() + j]);
+            }
+            printf("\n");
         }
-	printf("\n");
+        printf("}\n\n");
     }
-       printf("}\n\n");
-}
     delete[] dense_matrix;
 }
 //@}
