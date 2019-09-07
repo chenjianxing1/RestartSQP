@@ -111,7 +111,7 @@ private:
      */
 private:
 
-    LPSolver LPsolverChoice_;
+    Solver LPsolverChoice_;
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;

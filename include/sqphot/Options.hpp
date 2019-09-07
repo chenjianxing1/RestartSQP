@@ -34,8 +34,8 @@ public:
 
     /**solver choice*/
     //@{
-    QPSolver QPsolverChoice;
-    LPSolver LPsolverChoice;
+    Solver QPsolverChoice;
+    Solver LPsolverChoice;
 
     //@}
 

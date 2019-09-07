@@ -79,16 +79,12 @@ enum ActiveType {
     INACTIVE = 0
 };
 
-enum QPSolver {
-    QPOASES_QP = 0,
-    QORE_QP = 1
+enum Solver {
+    QPOASES,
+    QORE,
+    GUROBI =2
 };
 
-
-enum LPSolver {
-    QPOASES_LP = 0,
-    QORE_LP = 1
-};
 
 typedef struct {
     int  nCon;

@@ -17,11 +17,11 @@ Options::~Options() {
 
 
 int Options::setToDefault() {
-    iter_max = 1000;
-    printLevel = 0;
+    iter_max = 3000;
+    printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
-    QPsolverChoice = QPOASES_QP;
-    LPsolverChoice = QPOASES_LP;
+    QPsolverChoice = GUROBI;
+    LPsolverChoice = GUROBI;
     second_order_correction = false;
     penalty_update = true;
     eta_c = 0.25;

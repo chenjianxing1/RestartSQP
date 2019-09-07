@@ -93,8 +93,6 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 
         if (solver_->isSolved()) {
             firstQPsolved_ = true;
-            solver_->getPrimalSolution(x_qp_->values());
-            solver_->getDualSolution(y_qp_->values());
         }
         else {
             obtain_status();
@@ -164,8 +162,6 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
         if (solver_->isSolved()) {
             firstQPsolved_ = true;
-            solver_->getPrimalSolution(x_qp_->values());
-            solver_->getDualSolution(y_qp_->values());
         }
         else {
             obtain_status();
@@ -206,15 +202,15 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
         }
         reset_flags();
 
-//get primal and dual solutions
         if (!solver_->isSolved()) {
             obtain_status();
             handler_error(LP, stats);
         }
-        solver_->getPrimalSolution(x_qp_->values());
-        solver_->getDualSolution(y_qp_->values());
-        stats->qp_iter_addValue((int) nWSR);
     }
+    //get primal and dual solutions
+    stats->qp_iter_addValue((int) nWSR);
+    solver_->getPrimalSolution(x_qp_->values());
+    solver_->getDualSolution(y_qp_->values());
 }
 
 
@@ -576,13 +572,13 @@ void qpOASESInterface::WriteQPDataToFile(
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
 
-    lb_->write_to_file("lb",jnlst,level,category,QPOASES_QP);
-    ub_->write_to_file("ub",jnlst,level,category,QPOASES_QP);
-    lbA_->write_to_file("lbA",jnlst,level,category,QPOASES_QP);
-    ubA_->write_to_file("ubA",jnlst,level,category,QPOASES_QP);
-    g_->write_to_file("g",jnlst,level,category,QPOASES_QP);
-    A_->write_to_file("A",jnlst,level,category,QPOASES_QP);
-    H_->write_to_file("H",jnlst,level,category,QPOASES_QP);
+    lb_->write_to_file("lb",jnlst,level,category,QPOASES);
+    ub_->write_to_file("ub",jnlst,level,category,QPOASES);
+    lbA_->write_to_file("lbA",jnlst,level,category,QPOASES);
+    ubA_->write_to_file("ubA",jnlst,level,category,QPOASES);
+    g_->write_to_file("g",jnlst,level,category,QPOASES);
+    A_->write_to_file("A",jnlst,level,category,QPOASES);
+    H_->write_to_file("H",jnlst,level,category,QPOASES);
     jnlst->DeleteAllJournals();
 #endif
 

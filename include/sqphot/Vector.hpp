@@ -155,6 +155,9 @@ public:
         return values_;
     }
 
+    inline const double values(int i) const {
+        return values_[i];
+    }
     inline void setValueAt(int location, double value) {
         values_[location] = value;
     }
@@ -171,7 +174,7 @@ public:
                        Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                        Ipopt::EJournalLevel level,
                        Ipopt::EJournalCategory category,
-                       QPSolver qpsolver);
+                       Solver qpsolver);
 
 
     bool isAllocated() {

@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
- * All Rights Reserved.
- *
- * Authors: Xinyi Luo
- * Date:2019-06
- */
+* All Rights Reserved.
+*
+* Authors: Xinyi Luo
+* Date:2019-06
+*/
 #include <sqphot/Algorithm.hpp>
 
 namespace SQPhotstart {
@@ -52,63 +52,63 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize() {
-    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-        setupQP();
-        try {
-            myQP_->solveQP(stats_,
-                           options_);//solve the QP subproblem and update the stats_
-        }
-        catch (QP_NOT_OPTIMAL) {
-            handle_error("QP NOT OPTIMAL");
-            break;
-        }
-
-
-        //get the search direction from the solution of the QPsubproblem
-        get_search_direction();
-//        p_k_->print("p_k");
-        get_obj_QP();
-
-        //Update the penalty parameter if necessary
-
-        update_penalty_parameter();
-
-        //calculate the infinity norm of the search direction
-        norm_p_k_ = p_k_->getInfNorm();
-
-        get_trial_point_info();
-
-        ratio_test();
-
-        // Calculate the second-order-correction steps
-        second_order_correction();
-
-        // Update the radius and the QP bounds if the radius has been changed
-        stats_->iter_addone();
-        /* output some information to the console*/
-
-        //check if the current iterates is optimal and decide to
-        //exit the loop or not
-        if (options_->printLevel >= 2) {
-            if (stats_->iter % 10 == 0) {
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-            }
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-        }
-        termination_check();
-        if (exitflag_ != UNKNOWN) {
-            break;
-        }
-
-        try {
-            update_radius();
-        }
-        catch (SMALL_TRUST_REGION) {
-            break;
-        }
-
+//    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+    setupQP();
+    try {
+        myQP_->solveQP(stats_,
+                       options_);//solve the QP subproblem and update the stats_
     }
+    catch (QP_NOT_OPTIMAL) {
+        handle_error("QP NOT OPTIMAL");
+//            break;
+    }
+
+
+    //get the search direction from the solution of the QPsubproblem
+    get_search_direction();
+//        p_k_->print("p_k");
+    get_obj_QP();
+
+    //Update the penalty parameter if necessary
+
+    update_penalty_parameter();
+
+    //calculate the infinity norm of the search direction
+    norm_p_k_ = p_k_->getInfNorm();
+
+    get_trial_point_info();
+
+    ratio_test();
+
+    // Calculate the second-order-correction steps
+    second_order_correction();
+
+    // Update the radius and the QP bounds if the radius has been changed
+    stats_->iter_addone();
+    /* output some information to the console*/
+
+    //check if the current iterates is optimal and decide to
+    //exit the loop or not
+    if (options_->printLevel >= 2) {
+        if (stats_->iter % 10 == 0) {
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+        }
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+    }
+    termination_check();
+    if (exitflag_ != UNKNOWN) {
+//            break;
+    }
+
+    try {
+        update_radius();
+    }
+    catch (SMALL_TRUST_REGION) {
+//            break;
+    }
+
+//    }
 
     //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)
@@ -547,11 +547,11 @@ void Algorithm::get_search_direction() {
  */
 
 void Algorithm::get_multipliers() {
-    if (options_->QPsolverChoice == QORE_QP) {
+    if (options_->QPsolverChoice == QORE) {
 
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
         multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
-    } else if (options_->QPsolverChoice == QPOASES_QP) {
+    } else if (options_->QPsolverChoice == QPOASES) {
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
         multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
     }
@@ -572,10 +572,10 @@ DECLARE_STD_EXCEPTION(QP_UNCHANGED);
 
 void Algorithm::setupQP() {
     if (stats_->iter == 0) {
-        myQP_->set_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
-        myQP_->set_g(grad_f_, rho_);
         myQP_->set_A(jacobian_);
         myQP_->set_H(hessian_);
+        myQP_->set_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
+        myQP_->set_g(grad_f_, rho_);
     } else {
         if ((!QPinfoFlag_.Update_g) && (!QPinfoFlag_.Update_H) &&
                 (!QPinfoFlag_.Update_A)
@@ -1161,7 +1161,7 @@ void Algorithm::handle_error(const char* error) {
 
 void Algorithm::get_obj_QP() {
 
-    if (options_->QPsolverChoice == QPOASES_QP) {
+    if (options_->QPsolverChoice == QPOASES) {
 
         qp_obj_ = myQP_->get_objective();
 #if DEBUG
@@ -1188,7 +1188,7 @@ void Algorithm::get_obj_QP() {
 #endif
         //assert(fabs(qp_obj_tmp-qp_obj_)<1.0e-5);
     }
-    else if (options_->QPsolverChoice == QORE_QP) {
+    else if (options_->QPsolverChoice == QORE) {
         shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Hp);//H*p_k
         qp_obj_ = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +

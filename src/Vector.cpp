@@ -186,11 +186,11 @@ void Vector::write_to_file(const char* name,
                            Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                            Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category,
-                           QPSolver qpsolver) {
+                           Solver qpsolver) {
 #if DEBUG
 #if PRINT_QP_IN_CPP
     const char * var_type;
-    var_type = (qpsolver==QPOASES_QP)?"real_t":"double const";
+    var_type = (qpsolver==QPOASES)?"real_t":"double const";
 
     jnlst->Printf(level, category, "%s %s[%i] = {", var_type,name,Dim());
     for (int i = 0; i < Dim(); i++) {

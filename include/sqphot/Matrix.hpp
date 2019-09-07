@@ -70,6 +70,14 @@ public:
 
     virtual bool isCompressedRow() = 0;
 
+    virtual double MatVal(int i) =0;
+
+    virtual int ColIndex(int i) = 0;
+
+    virtual int RowIndex(int i) = 0;
+
+    virtual int order(int i) = 0;
+
     virtual double* MatVal() =0;
 
     virtual int* ColIndex() = 0;
@@ -224,29 +232,75 @@ public:
     }
 
 
-    inline int* RowIndex() {
+    inline int* RowIndex() override{
 
         return RowIndex_;
     }
 
 
-    inline int* ColIndex() {
+    inline int* ColIndex() override{
 
         return ColIndex_;
     }
 
 
-    inline double* MatVal() {
+    inline double* MatVal() override {
 
         return MatVal_;
     }
 
 
-    inline int* order() {
+    inline int* order() override {
 
         return order_;
     }
 
+    inline int RowIndex(int i) override{
+
+        return RowIndex_[i];
+    }
+
+
+    inline int ColIndex(int i ) override{
+
+        return ColIndex_[i];
+    }
+
+
+    inline double MatVal(int i) override {
+
+        return MatVal_[i];
+    }
+
+
+    inline int order(int i) override {
+
+        return order_[i];
+    }
+
+
+    inline const int RowIndex(int i) const{
+
+        return RowIndex_[i];
+    }
+
+
+    inline const int ColIndex(int i ) const{
+
+        return ColIndex_[i];
+    }
+
+
+    inline const double MatVal(int i) const{
+
+        return MatVal_[i];
+    }
+
+
+    inline const int order(int i) const {
+
+        return order_[i];
+    }
 
     inline const int* RowIndex() const {
 
@@ -443,6 +497,28 @@ public:
         return RowNum_;
     }
 
+    inline int RowIndex(int i) override{
+
+        return RowIndex_[i];
+    }
+
+
+    inline int ColIndex(int i ) override{
+
+        return ColIndex_[i];
+    }
+
+
+    inline double MatVal(int i) override {
+
+        return MatVal_[i];
+    }
+
+
+    inline int order(int i) override {
+
+        return order_[i];
+    }
 
     inline int* RowIndex() override {
 
@@ -517,7 +593,7 @@ public:
                        Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                        Ipopt::EJournalLevel level,
                        Ipopt::EJournalCategory category,
-                       QPSolver solver);
+                       Solver solver);
 
 
 ///////////////////////////////////////////////////////////

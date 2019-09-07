@@ -319,13 +319,13 @@ void SpHbMat::write_to_file(const char* name,
                             Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                             Ipopt::EJournalLevel level,
                             Ipopt::EJournalCategory category,
-                            QPSolver solver) {
+                            Solver solver) {
 #if DEBUG
 #if PRINT_QP_IN_CPP
     const char* var_type_int;
     const char* var_type_double;
-    var_type_int = (solver == QPOASES_QP) ? "sparse_int_t" : "qp_int";
-    var_type_double = (solver == QPOASES_QP) ? "real_t" : "double";
+    var_type_int = (solver == QPOASES) ? "sparse_int_t" : "qp_int";
+    var_type_double = (solver == QPOASES) ? "real_t" : "double";
     jnlst->Printf(level, category, "%s %s_jc[] = \n{", var_type_int, name);
     int i;
     for (i = 0; i < ColNum_ + 1; i++) {
