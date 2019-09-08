@@ -232,13 +232,13 @@ public:
     }
 
 
-    inline int* RowIndex() override{
+    inline int* RowIndex() override {
 
         return RowIndex_;
     }
 
 
-    inline int* ColIndex() override{
+    inline int* ColIndex() override {
 
         return ColIndex_;
     }
@@ -255,13 +255,13 @@ public:
         return order_;
     }
 
-    inline int RowIndex(int i) override{
+    inline int RowIndex(int i) override {
 
         return RowIndex_[i];
     }
 
 
-    inline int ColIndex(int i ) override{
+    inline int ColIndex(int i ) override {
 
         return ColIndex_[i];
     }
@@ -279,19 +279,19 @@ public:
     }
 
 
-    inline const int RowIndex(int i) const{
+    inline const int RowIndex(int i) const {
 
         return RowIndex_[i];
     }
 
 
-    inline const int ColIndex(int i ) const{
+    inline const int ColIndex(int i ) const {
 
         return ColIndex_[i];
     }
 
 
-    inline const double MatVal(int i) const{
+    inline const double MatVal(int i) const {
 
         return MatVal_[i];
     }
@@ -497,13 +497,13 @@ public:
         return RowNum_;
     }
 
-    inline int RowIndex(int i) override{
+    inline int RowIndex(int i) override {
 
         return RowIndex_[i];
     }
 
 
-    inline int ColIndex(int i ) override{
+    inline int ColIndex(int i ) override {
 
         return ColIndex_[i];
     }

@@ -48,6 +48,7 @@ public:
     void optimizeQP(shared_ptr<Stats> stats) override;
 
 
+
     /**
      * @brief optimize the LP problem whose objective and constraints are defined
      * in the class members.
@@ -147,6 +148,8 @@ public:
         Ipopt::EJournalLevel level,
         Ipopt::EJournalCategory category) override ;
 
+
+    void remove_constraints() override {}
 #if DEBUG
     const shared_ptr<Vector>& getLb() const override {
         return lb_;

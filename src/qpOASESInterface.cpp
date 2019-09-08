@@ -227,6 +227,7 @@ double* qpOASESInterface::get_multipliers_bounds() {
  * @brief get the pointer to the multipliers to the regular constraints.
  */
 double* qpOASESInterface::get_multipliers_constr() {
+    y_qp_->print("y_qp");
     return y_qp_->values()+nVar_QP_;
 };
 

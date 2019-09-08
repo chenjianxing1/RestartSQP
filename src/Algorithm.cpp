@@ -7,7 +7,7 @@
 #include <sqphot/Algorithm.hpp>
 
 namespace SQPhotstart {
-
+using namespace std;
 DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
 
 DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
@@ -52,63 +52,63 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize() {
-//    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-    setupQP();
-    try {
-        myQP_->solveQP(stats_,
-                       options_);//solve the QP subproblem and update the stats_
-    }
-    catch (QP_NOT_OPTIMAL) {
-        handle_error("QP NOT OPTIMAL");
-//            break;
-    }
-
-
-    //get the search direction from the solution of the QPsubproblem
-    get_search_direction();
-//        p_k_->print("p_k");
-    get_obj_QP();
-
-    //Update the penalty parameter if necessary
-
-    update_penalty_parameter();
-
-    //calculate the infinity norm of the search direction
-    norm_p_k_ = p_k_->getInfNorm();
-
-    get_trial_point_info();
-
-    ratio_test();
-
-    // Calculate the second-order-correction steps
-    second_order_correction();
-
-    // Update the radius and the QP bounds if the radius has been changed
-    stats_->iter_addone();
-    /* output some information to the console*/
-
-    //check if the current iterates is optimal and decide to
-    //exit the loop or not
-    if (options_->printLevel >= 2) {
-        if (stats_->iter % 10 == 0) {
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+        setupQP();
+        try {
+            myQP_->solveQP(stats_,
+                           options_);//solve the QP subproblem and update the stats_
         }
-        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-    }
-    termination_check();
-    if (exitflag_ != UNKNOWN) {
-//            break;
-    }
+        catch (QP_NOT_OPTIMAL) {
+            handle_error("QP NOT OPTIMAL");
+            break;
+        }
 
-    try {
-        update_radius();
-    }
-    catch (SMALL_TRUST_REGION) {
-//            break;
-    }
 
-//    }
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
+//        p_k_->print("p_k");
+        get_obj_QP();
+
+        //Update the penalty parameter if necessary
+
+        update_penalty_parameter();
+
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
+
+        get_trial_point_info();
+
+        ratio_test();
+
+        // Calculate the second-order-correction steps
+        second_order_correction();
+
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
+        /* output some information to the console*/
+
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        if (options_->printLevel >= 2) {
+            if (stats_->iter % 10 == 0) {
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+            }
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+        }
+        termination_check();
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+
+        try {
+            update_radius();
+        }
+        catch (SMALL_TRUST_REGION) {
+            break;
+        }
+
+    }
 
     //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)
@@ -144,18 +144,20 @@ void Algorithm::termination_check() {
 
     int i;
     get_multipliers();
-    /**-------------------------------------------------------**/
-    /**               Check the KKT conditions                **/
-    /**-------------------------------------------------------**/
+
+    if(multiplier_vars_== nullptr)
+        /**-------------------------------------------------------**/
+        /**               Check the KKT conditions                **/
+        /**-------------------------------------------------------**/
 
 //TODO: can just use the working set information from the QPsolver?
-    /**-------------------------------------------------------**/
-    /**                    Identify Active Set                **/
-    /**-------------------------------------------------------**/
+        /**-------------------------------------------------------**/
+        /**                    Identify Active Set                **/
+        /**-------------------------------------------------------**/
 
-    if (Active_Set_constraints_ == NULL)
+        if (Active_Set_constraints_ == NULL)
 
-        Active_Set_constraints_ = new ActiveType[nCon_];
+            Active_Set_constraints_ = new ActiveType[nCon_];
     if (Active_Set_bounds_ == NULL)
         Active_Set_bounds_ = new ActiveType[nVar_];
 
@@ -209,14 +211,23 @@ void Algorithm::termination_check() {
     /**-------------------------------------------------------**/
     /**                    Dual Feasibility                   **/
     /**-------------------------------------------------------**/
-
+//
+//        multiplier_vars_->print("multiplier_vars");
+//        multiplier_cons_->print("multiplier_cons");
+//   x_k_->print("x_k");
+//   x_l_->print("x_l");
+//        x_u_->print("x_u");
+//
+//        c_k_->print("c_k");
+//        c_l_->print("c_l");
+//        c_u_->print("c_u");
     i = 0;
     opt_status_.dual_feasibility = true;
     while (i < nVar_) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            dual_violation += std::max(multiplier_vars_->values()[i], 0.0);
+            dual_violation += max(multiplier_vars_->values()[i], 0.0);
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            dual_violation += -std::min(multiplier_vars_->values()[i], 0.0);
+            dual_violation += -min(multiplier_vars_->values()[i], 0.0);
         }
         i++;
 
@@ -225,9 +236,9 @@ void Algorithm::termination_check() {
     i = 0;
     while (i < nCon_) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            dual_violation += std::max(multiplier_cons_->values()[i],0.0);
+            dual_violation += max(multiplier_cons_->values()[i],0.0);
         } else if (cons_type_[i] == BOUNDED_BELOW) {
-            dual_violation += -std::min(multiplier_cons_->values()[i],0.0);
+            dual_violation += -min(multiplier_cons_->values()[i],0.0);
         }
         i++;
     }
@@ -532,7 +543,6 @@ void Algorithm::cal_infea() {
  */
 void Algorithm::get_search_direction() {
     p_k_->copy_vector(myQP_->get_optimal_solution());
-//    p_k_->print("p_k");
 
     if (options_->penalty_update)
         infea_measure_model_ = oneNorm(myQP_->get_optimal_solution() + nVar_,
@@ -548,12 +558,20 @@ void Algorithm::get_search_direction() {
 
 void Algorithm::get_multipliers() {
     if (options_->QPsolverChoice == QORE) {
-
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
         multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
     } else if (options_->QPsolverChoice == QPOASES) {
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
         multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
+    } else if(options_->QPsolverChoice ==GUROBI) {
+        multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
+//        multiplier_cons_->print("multiplier_con");
+        shared_ptr<Vector> tmp_vec_nVar = make_shared<Vector>(nVar_);
+        jacobian_->transposed_times(multiplier_cons_,tmp_vec_nVar);
+        hessian_->times(p_k_,multiplier_vars_);
+        multiplier_vars_->add_vector(grad_f_->values());
+        multiplier_vars_->subtract_vector(tmp_vec_nVar->values());
+//        multiplier_vars_->print("multiplier_var");
     }
 
 }
@@ -645,8 +663,6 @@ void Algorithm::setupLP() {
  * QPinfoFlag_ will set to be true.
  */
 void Algorithm::ratio_test() {
-
-    using namespace std;
 
 
     double P1x = obj_value_ + rho_ * infea_measure_;
@@ -753,7 +769,7 @@ void Algorithm::update_radius() {
         if (actual_reduction_ > options_->
                 eta_e * pred_reduction_
                 && options_->tol > (delta_ - norm_p_k_)) {
-            delta_ = std::min(options_->gamma_e * delta_, options_->delta_max);
+            delta_ = min(options_->gamma_e * delta_, options_->delta_max);
             QPinfoFlag_.Update_delta = true;
         }
     }
@@ -848,8 +864,8 @@ void Algorithm::update_penalty_parameter() {
                         break;
                     }//TODO:safeguarded procedure...put here for now
 
-                    rho_trial = std::min(options_->rho_max,
-                                         rho_trial*options_->increase_parm);  //increase rho
+                    rho_trial = min(options_->rho_max,
+                                    rho_trial*options_->increase_parm);  //increase rho
 
                     stats_->penalty_change_trial_addone();
 
@@ -884,7 +900,7 @@ void Algorithm::update_penalty_parameter() {
                     //try to increase the penalty parameter to a number such that
                     // the incurred reduction for the QP model is to a ratio to the
                     // maximum possible reduction for current linear model.
-                    rho_trial = std::min(options_->rho_max, rho_trial*options_->increase_parm);
+                    rho_trial = min(options_->rho_max, rho_trial*options_->increase_parm);
 
                     stats_->penalty_change_trial_addone();
 
@@ -1078,9 +1094,9 @@ void Algorithm::second_order_correction() {
         cout << "       Entering the SOC STEP calculation\n";
         cout << "       class member isaccept is ";
         if (isaccept_)
-            std::cout << "TRUE" << endl;
+            cout << "TRUE" << endl;
         else
-            std::cout << "FALSE" << endl;
+            cout << "FALSE" << endl;
         cout << "---------------------------------------------------------\n";
 
         cout << endl;
@@ -1326,6 +1342,19 @@ void Algorithm::print_final_statsitics() {
     jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
                    "Final Objectives:                                           %23e\n",
                    obj_value_);
+    jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                   "Primal Feasibility Violation                                %23e\n",
+                   opt_status_.primal_violation);
+
+    jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                   "Dual Feasibility Violation                                  %23e\n",
+                   opt_status_.dual_violation);
+    jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                   "Complmentarity Violation                                    %23e\n",
+                   opt_status_.compl_violation);
+    jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                   "Stationarity Violation                                      %23e\n",
+                   opt_status_.stationarity_violation);
     jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
                    "||p_k||                                                     %23e\n",
                    norm_p_k_);

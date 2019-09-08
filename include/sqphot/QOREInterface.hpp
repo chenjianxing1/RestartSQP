@@ -176,6 +176,8 @@ public:
                            Ipopt::EJournalCategory category) override ;
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+
+    void remove_constraints() override {}
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////

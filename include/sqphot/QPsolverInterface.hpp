@@ -175,7 +175,7 @@ public:
                               I_info) = 0;
     //@}
 
-
+    virtual void remove_constraints() =0;
 
     /**-------------------------------------------------------**/
     /**                  Data Writer                          **/

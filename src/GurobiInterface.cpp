@@ -19,11 +19,12 @@ GurobiInterface::GurobiInterface(Index_info nlp_info,
     options_(options),
     grb_mod_(NULL),
     A_(NULL),
-    qobj_(0)
+    qobj_(0),
+    lterm_(0)
 {
     grb_env_ = new GRBEnv();
     grb_mod_ = new GRBModel(*grb_env_);
-
+    grb_constr.resize(2*nConstr_QP_);
     set_solver_options();
     grb_vars_ = grb_mod_->addVars(nVar_QP_);
     x_qp = make_shared<Vector>(nVar_QP_);
@@ -46,19 +47,33 @@ void GurobiInterface::reset_model() {
  * @brief Solve a regular QP with given data and options.
  */
 void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
-    grb_mod_->setObjective(qobj_,GRB_MINIMIZE);
+    grb_mod_->setObjective(qobj_+lterm_,GRB_MINIMIZE);
     grb_mod_->update();
-    grb_mod_->optimize();
+    try {
+        grb_mod_->optimize();
+    }
+    catch(GRBException exception) {
+
+        std::cout<< exception.getErrorCode()<<std::endl;
+    }
     for(int i =0; i<nVar_QP_; i++) {
         x_qp->setValueAt(i,grb_vars_[i].get(GRB_DoubleAttr_X));
     }
 
-    x_qp->print("x_qp");
-    for(int i=0; i<nConstr_QP_; i++) {
-        y_qp->setValueAt(i,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
+    if(grb_mod_->get(GRB_IntAttr_Status)!=GRB_OPTIMAL) {
+        printf("qp is not optimal, the current status is %i", grb_mod_->get
+               (GRB_IntAttr_Status));
+    }
+//        x_qp->print("x_qp");
+    for(int i=0; i<nConstr_QP_*2; i++) {
+        if(grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi)>0)
+            y_qp->setValueAt((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
+        else if(grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi)<0)
+            y_qp->setValueAt((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
     }
 
-    y_qp->print("y_qp");
+
+//        y_qp->print("y_qp");
 
 }
 
@@ -70,7 +85,7 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
  */
 
 void GurobiInterface::optimizeLP(shared_ptr<Stats> stats) {
-    grb_mod_->setObjective(qobj_,GRB_MINIMIZE);
+    grb_mod_->setObjective(lterm_,GRB_MINIMIZE);
     grb_mod_->optimize();
 }
 
@@ -102,12 +117,18 @@ double GurobiInterface::get_obj_value()  {
 /**
  * @brief get the pointer to the multipliers to the bounds constraints.
  */
-double* GurobiInterface::get_multipliers_bounds()  {}
+double* GurobiInterface::get_multipliers_bounds()  {
+    return nullptr;
+}
+
+
 
 /**
  * @brief get the pointer to the multipliers to the regular constraints.
  */
-double* GurobiInterface::get_multipliers_constr()  {}
+double* GurobiInterface::get_multipliers_constr()  {
+    return y_qp->values();
+}
 
 /**
  * @brief copy the working set information
@@ -129,7 +150,6 @@ QPReturnType GurobiInterface::get_status() {}
 /**@name Setters, by location and value*/
 //@{
 void GurobiInterface::set_lb(int location, double value) {
-
     if(value>-INF) {
         grb_vars_[location].set(GRB_DoubleAttr_LB, value);
     }
@@ -137,6 +157,7 @@ void GurobiInterface::set_lb(int location, double value) {
 }
 
 void GurobiInterface::set_ub(int location, double value) {
+
     if(value<INF) {
         grb_vars_[location].set(GRB_DoubleAttr_UB, value);
     }
@@ -145,25 +166,17 @@ void GurobiInterface::set_ub(int location, double value) {
 void GurobiInterface::set_lbA(int location, double value) {
     assert(A_!=NULL);
     GRBLinExpr lterm, linlhs; //linear term
-    A_->print_full("A");
+//    A_->print_full("A");
     linlhs =0;
     for(int i=0; i<A_->EntryNum(); i++) {
         if(A_->RowIndex(i)==location+1) {
-
             lterm = A_->MatVal(i)*grb_vars_[A_->ColIndex(i)-1];
-//                 printf("On Row % i : lterm = A_->MatVal(%i)*grb_vars_[%i]\n",
-//                         location+1, i,
-//                         A_->ColIndex(i)
-//                 -1);
-            //TODOL: check the index...
         }
         linlhs += lterm;
     }
     lterm = grb_vars_[A_->ColNum()+location];
-//         printf("lterm = grb_vars_[%i]\n",A_->ColNum()+location);
 
     lterm += -1.0*grb_vars_[A_->ColNum()+nConstr_QP_+location];
-//         printf("lterm = grb_vars_[%i]\n",A_->ColNum()+location+nConstr_QP_);
     linlhs += lterm;
     linlhs-=value;
 
@@ -194,7 +207,8 @@ void GurobiInterface::set_ubA(int location, double value) {
 }
 
 void GurobiInterface::set_g(int location, double value) {
-    qobj_ +=value*grb_vars_[location];
+    lterm_.remove(grb_vars_[location]);
+    lterm_+=value*grb_vars_[location];
 }
 //@}
 
@@ -204,7 +218,7 @@ void GurobiInterface::set_g(int location, double value) {
 void GurobiInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {}
 
 void GurobiInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
-    rhs->print_full("H");
+    qobj_=0;
 
     for(int i =0; i<rhs->EntryNum(); i++) {
         if(rhs->isSymmetric()) {
@@ -212,15 +226,10 @@ void GurobiInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
                 qobj_ += 0.5 * rhs->MatVal(i) * grb_vars_[rhs->ColIndex(i)
                          - 1] *
                          grb_vars_[rhs->RowIndex(i) - 1];
-//                    printf("obj+=0.5*%10e * x[%i]*x[%i]\n",rhs->MatVal(i),rhs->ColIndex(i)
-//                    -1,rhs->RowIndex(i)-1);
             }
             else {
                 qobj_ += rhs->MatVal(i) * grb_vars_[rhs->ColIndex(i) - 1] *
                          grb_vars_[rhs->RowIndex(i) - 1];
-//                    printf("obj+=%10e * x[%i]*x[%i]\n", rhs->MatVal(i), rhs->ColIndex(i)
-//                                                                       - 1,
-//                           rhs->RowIndex(i) - 1);
             }
 
         }
@@ -231,9 +240,16 @@ void GurobiInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, Identi
                                       I_info) {
 }
 
+void GurobiInterface::remove_constraints() {
+    for(int i =0; i<nConstr_QP_; i++) {
+        grb_mod_->remove(grb_mod_->getConstrByName("lbA_"+to_string(i)));
+        grb_mod_->remove(grb_mod_->getConstrByName("ubA_"+to_string(i)));
+    }
+
+}
+
 void GurobiInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
                                    I_info) {
-
 
     A_ = rhs;
     I_info_ = I_info;
@@ -243,7 +259,11 @@ void GurobiInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2
 /**@name Gurobi model setup */
 //@{
 
-void GurobiInterface::set_solver_options() {}
+void GurobiInterface::set_solver_options() {
+    grb_mod_->set(GRB_DoubleParam_TimeLimit,1000.0);
+    grb_mod_->set(GRB_IntParam_OutputFlag,0);
+
+}
 
 //@}
 
