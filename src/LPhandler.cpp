@@ -24,7 +24,12 @@ LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
     case QORE:
         solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
         break;
-
+    case GUROBI:
+        solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
+        break;
+    case CPLEX:
+        solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
+        break;
     }
 }
 
@@ -90,7 +95,7 @@ void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     /* Set lbA, ubA as well as lb and ub as qpOASES differentiates */
     /*the bound constraints from the linear constraints            */
     /*-------------------------------------------------------------*/
-    if(LPsolverChoice_ == QPOASES) {
+    if(LPsolverChoice_ != QORE) {
         for (int i = 0; i < nConstr_QP_; i++) {
             solverInterface_->set_lbA(i, c_l->values()[i] - c_k->values()[i]);
             solverInterface_->set_ubA(i, c_u->values()[i] - c_k->values()[i]);
@@ -114,7 +119,7 @@ void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     /*-------------------------------------------------------------*/
     /* Only set lb and ub, where lb = [lbx;lbA]; and ub=[ubx; ubA] */
     /*-------------------------------------------------------------*/
-    else if(LPsolverChoice_ == QORE) {
+    else {
         for (int i = 0; i < nlp_info_.nVar; i++) {
             solverInterface_->set_lb(i, std::max(
                                          x_l->values()[i] - x_k->values()[i], -delta));

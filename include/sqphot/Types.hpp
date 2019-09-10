@@ -82,7 +82,8 @@ enum ActiveType {
 enum Solver {
     QPOASES,
     QORE,
-    GUROBI =2
+    GUROBI,
+    CPLEX
 };
 
 

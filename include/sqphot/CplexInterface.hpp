@@ -2,60 +2,64 @@
  * All Rights Reserved.
  *
  * Authors: Xinyi Luo
- * Date:2019-09-06
+ * Data: 2019-09-09
  */
-#ifndef _SQPHOTSTART_GUROBI_INTERFACE_
-#define _SQPHOTSTART_GUROBI_INTERFACE_
+#ifndef SQPHOTSTART_CPLEX_INTERFACE_HPP
+#define SQPHOTSTART_CPLEX_INTERFACE_HPP
+
+#include <ilcplex/ilocplex.h>
 
 #include <sqphot/QPsolverInterface.hpp>
-#include <gurobi_c++.h>
+
+
 
 namespace SQPhotstart {
-DECLARE_STD_EXCEPTION(GRB_SOLVER_FAILS);
-class GurobiInterface : public QPSolverInterface {
+DECLARE_STD_EXCEPTION(CPLEX_SOLVER_FAILS);
 
+class CplexInterface : public QPSolverInterface {
+    /**-------------------------------------------------------**/
+    /**                  Public Methods                       **/
+    /**-------------------------------------------------------**/
 public:
-
-
-    GurobiInterface(Index_info nlp_info,
-                    QPType qptype,
-                    shared_ptr<const Options> options,
-                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
-
-
-
     /**@name Getters for private members*/
     //@{
     const shared_ptr<Vector>& getLb() const override;
 
     const shared_ptr<Vector>& getUb() const override;
 
-    const shared_ptr<Vector>& getLbA() const  override;
+    const shared_ptr<Vector>& getLbA() const override;
 
-    const shared_ptr<Vector>& getUbA() const  override;
+    const shared_ptr<Vector>& getUbA() const override;
 
-    const shared_ptr<Vector>& getG() const  override;
+    const shared_ptr<Vector>& getG() const override;
 
-    const shared_ptr<const SpTripletMat> getH() const  override;
+    const shared_ptr<const SpTripletMat> getH() const override;
 
-    const shared_ptr<const SpTripletMat> getA() const  override;
+    const shared_ptr<const SpTripletMat> getA() const override;
     //@}
 
 
+    CplexInterface(Index_info nlp_info,
+                   QPType qptype,
+                   shared_ptr<const Options> options,
+                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+
     /** Default destructor*/
-    ~GurobiInterface();
+    ~CplexInterface() override;
 
     /**
      * @brief Solve a regular QP with given data and options.
+     *
      */
-    void optimizeQP(shared_ptr<Stats> stats)  override;
+    void
+    optimizeQP(shared_ptr<Stats> stats) override;
 
     /**
      * @brief Solve a regular LP with given data and options
-     *
      */
 
-    void optimizeLP(shared_ptr<Stats> stats) override;
+    void
+    optimizeLP(shared_ptr<Stats> stats) override;
 
 
     /**-------------------------------------------------------**/
@@ -67,25 +71,25 @@ public:
      * @return the pointer to the optimal solution
      *
      */
-    double* get_optimal_solution()  override;
+    double* get_optimal_solution() override;
 
     /**
      *@brief get the objective value from the QP solvers
      *
      * @return the objective function value of the QP problem
      */
-    double get_obj_value()  override;
+    double get_obj_value() override;
 
 
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    double* get_multipliers_bounds()  override;
+    double* get_multipliers_bounds() override;
 
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    double* get_multipliers_constr()  override;
+    double* get_multipliers_constr() override;
 
     /**
      * @brief copy the working set information
@@ -95,7 +99,7 @@ public:
      * working set for bounds
      *
      */
-    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)override;
 
     QPReturnType get_status() override;
 
@@ -143,9 +147,8 @@ public:
                       I_info) override;
     //@}
 
+    void reset_constraints() override;
 
-
-    void reset_model();
     /**-------------------------------------------------------**/
     /**                  Data Writer                          **/
     /**-------------------------------------------------------**/
@@ -154,48 +157,51 @@ public:
                            Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category) override;
 
-
+    /**-------------------------------------------------------**/
+    /**                  Private Methods                      **/
+    /**-------------------------------------------------------**/
 private:
     /** Default constructor*/
-    GurobiInterface();
+    CplexInterface();
 
     /** Copy Constructor */
-    GurobiInterface(const GurobiInterface &);
+    CplexInterface(const CplexInterface &);
 
     /** Overloaded Equals Operator */
-    void operator=(const GurobiInterface &);
-
+    void operator=(const CplexInterface &);
 
     void set_solver_options();
-
-
-    void reset_constraints() override;
     /**-------------------------------------------------------**/
     /**                  Private Members                      **/
     /**-------------------------------------------------------**/
 
 private:
-    GRBEnv* grb_env_;
-    GRBLinExpr lterm_;
-    GRBModel* grb_mod_;
-    GRBQuadExpr qobj_;
-    GRBVar*  grb_vars_;
     Identity2Info I_info_;
+    IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPReturnType status_;
     QPType qptype_;
+    bool firstQPsolved_;
+    double final_obj_;
     int nConstr_QP_;
     int nVar_QP_;
-    shared_ptr<Vector> x_qp;
-    shared_ptr<Vector> y_qp;
+    shared_ptr<IloEnv> cplex_env_;
+    shared_ptr<IloModel> cplex_model_;
+    shared_ptr<Vector> lb_;
+    shared_ptr<Vector> ub_;
+    shared_ptr<Vector> x_qp_;
+    shared_ptr<Vector> y_qp_;
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
-    vector<GRBConstr> grb_constr;
+    vector<IloNumExpr> constraints_;
+    vector<IloNumExpr> lterm_;/**< linear part of the objective */
+    vector<IloNumVar> cplex_vars_;
+
 
 };
 
 
-}
-
-
+}//SQPHOTSTART
 #endif
+
+

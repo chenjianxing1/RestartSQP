@@ -158,14 +158,12 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
     }
 
     working_set_  =  new int[nConstr_QP_+nVar_QP_];
-#if DEBUG
-#if COMPARE_QP_SOLVER
+
+    //TODO: for debugging use only
     A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
                                            nVar_QP_);
     H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nConstr_QP_,
                                            nVar_QP_,true);
-#endif
-#endif
     assert(rv_ == QPSOLVER_OK);
 }
 

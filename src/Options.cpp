@@ -17,16 +17,16 @@ Options::~Options() {
 
 
 int Options::setToDefault() {
-    iter_max = 1000;
-    printLevel = 0;
+    iter_max = 600;
+    printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
-    QPsolverChoice = GUROBI;
-    LPsolverChoice = GUROBI;
-    second_order_correction = false;
-    penalty_update = false;
+    QPsolverChoice = QORE;
+    LPsolverChoice = QORE;
+    second_order_correction = true;
+    penalty_update = true;
     eta_c = 0.25;
     eta_s = 1.0e-8;
-    eta_e = 0.75;
+    eta_e = 0.5;
     gamma_c = 0.5;
     gamma_e = 2;
     delta = 1;
@@ -40,11 +40,11 @@ int Options::setToDefault() {
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
-    rho = 100;
+    rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
-    increase_parm = 10;
-    rho_max = 1.0e8;
+    increase_parm = 2;
+    rho_max = 1.0e10;
     penalty_iter_max = 200;
     eps1 = 0.1;
     eps1_change_parm = 0.1;

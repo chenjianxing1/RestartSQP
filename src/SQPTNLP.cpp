@@ -139,9 +139,11 @@ bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector
     for (int i = 0; i < x->Dim(); i++) {
         assert(x_l->values()[i] <= x_u->values()[i]);
         if (x_l->values()[i] > x->values()[i]) {
-            x->setValueAt(i, x_l->values()[i]+0.5*(x_u->values()[i]-x_l->values()[i]));
+            x->setValueAt(i,x_l->values(i));
+//            x->setValueAt(i, x_l->values()[i]+0.5*(x_u->values()[i]-x_l->values()[i]));
         } else if (x->values()[i] > x_u->values()[i]) {
-            x->setValueAt(i, x_u->values()[i]-0.5*(x_u->values()[i]-x_l->values()[i]));
+            x->setValueAt(i,x_u->values(i));
+//           x->setValueAt(i, x_u->values()[i]-0.5*(x_u->values()[i]-x_l->values()[i]));
         }
     }
     return true;

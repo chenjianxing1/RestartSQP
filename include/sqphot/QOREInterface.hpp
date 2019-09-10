@@ -25,7 +25,6 @@ class QOREInterface :
     ///////////////////////////////////////////////////////////
 public:
 
-#if DEBUG
 
     const shared_ptr<Vector>& getG() const override {
         return g_;
@@ -57,8 +56,6 @@ public:
         A_triplet_->convert2Triplet(A_);
         return A_triplet_;
     };
-
-#endif
 
     /**Constructor*/
 
@@ -177,7 +174,7 @@ public:
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
-    void remove_constraints() override {}
+    void reset_constraints() override {}
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////
@@ -224,10 +221,9 @@ private:
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
     int* working_set_;
-#if DEBUG
+    //TODO: for debugging use only
     shared_ptr<SpTripletMat> H_triplet_;
     shared_ptr<SpTripletMat> A_triplet_;
-#endif
 };
 
 

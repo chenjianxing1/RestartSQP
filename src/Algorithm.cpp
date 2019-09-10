@@ -211,16 +211,16 @@ void Algorithm::termination_check() {
     /**-------------------------------------------------------**/
     /**                    Dual Feasibility                   **/
     /**-------------------------------------------------------**/
+
+//    multiplier_vars_->print("multiplier_vars");
+//    multiplier_cons_->print("multiplier_cons");
+//    x_k_->print("x_k");
+//    x_l_->print("x_l");
+//    x_u_->print("x_u");
 //
-//        multiplier_vars_->print("multiplier_vars");
-//        multiplier_cons_->print("multiplier_cons");
-//   x_k_->print("x_k");
-//   x_l_->print("x_l");
-//        x_u_->print("x_u");
-//
-//        c_k_->print("c_k");
-//        c_l_->print("c_l");
-//        c_u_->print("c_u");
+//    c_k_->print("c_k");
+//    c_l_->print("c_l");
+//    c_u_->print("c_u");
     i = 0;
     opt_status_.dual_feasibility = true;
     while (i < nVar_) {
@@ -557,23 +557,17 @@ void Algorithm::get_search_direction() {
  */
 
 void Algorithm::get_multipliers() {
-    if (options_->QPsolverChoice == QORE) {
+    if (options_->QPsolverChoice == QORE||options_->QPsolverChoice==QPOASES) {
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
         multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
-    } else if (options_->QPsolverChoice == QPOASES) {
+    } else if(options_->QPsolverChoice ==GUROBI||options_->QPsolverChoice==CPLEX) {
         multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
-        multiplier_vars_->copy_vector(myQP_->get_multipliers_bounds());
-    } else if(options_->QPsolverChoice ==GUROBI) {
-        multiplier_cons_->copy_vector(myQP_->get_multipliers_constr());
-//        multiplier_cons_->print("multiplier_con");
         shared_ptr<Vector> tmp_vec_nVar = make_shared<Vector>(nVar_);
         jacobian_->transposed_times(multiplier_cons_,tmp_vec_nVar);
         hessian_->times(p_k_,multiplier_vars_);
         multiplier_vars_->add_vector(grad_f_->values());
         multiplier_vars_->subtract_vector(tmp_vec_nVar->values());
-//        multiplier_vars_->print("multiplier_var");
     }
-
 }
 
 
@@ -674,7 +668,7 @@ void Algorithm::ratio_test() {
 
 #if DEBUG
 #if CHECK_TR_ALG
-    SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
+    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl = jnlst_->GetJournal("Debug");
     if (IsNull(debug_jrnl)) {
         debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", Ipopt::J_ITERSUMMARY);
     }
@@ -714,7 +708,7 @@ void Algorithm::ratio_test() {
 #else
     if (pred_reduction_ < 0)
         myQP_->WriteQPData();
-//    assert(pred_reduction_ > 0);
+    assert(pred_reduction_ > 0);
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {
@@ -768,7 +762,7 @@ void Algorithm::update_radius() {
     } else {
         if (actual_reduction_ > options_->
                 eta_e * pred_reduction_
-                && options_->tol > (delta_ - norm_p_k_)) {
+                && (options_->tol > fabs(delta_ - norm_p_k_))) {
             delta_ = min(options_->gamma_e * delta_, options_->delta_max);
             QPinfoFlag_.Update_delta = true;
         }
@@ -948,6 +942,28 @@ void Algorithm::update_penalty_parameter() {
                 }
             }
         }
+        else if(infea_measure_<options_->opt_prim_fea_tol*1.0e-3) {
+//            rho_ = rho_*0.5;
+//            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
+//            myQP_->update_penalty(rho_);
+//
+//            try {
+//                myQP_->solveQP(stats_, options_);
+//            }
+//            catch (QP_NOT_OPTIMAL) {
+//                handle_error("QP NOT OPTIMAL");
+//            }
+//
+//            //recalculate the infeasibility measure of the model by
+//            // calculating the one norm of the slack variables
+//            get_full_direction_QP(sol_tmp);
+//
+//            infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
+//                    2 * nCon_);
+//            p_k_->copy_vector(sol_tmp);
+//            get_trial_point_info();
+//            get_obj_QP();
+        }
     }
 }
 
@@ -1103,16 +1119,17 @@ void Algorithm::second_order_correction() {
 #endif
 #endif
 
-        shared_ptr<Vector> p_k_tmp = make_shared<Vector>(nVar_); //for temporarily
-        shared_ptr<Vector> s_k = make_shared<Vector>(nVar_);
-        shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_ + 2 * nCon_);
+        shared_ptr<Vector> p_k_tmp = make_shared<Vector>(nVar_); //for temporarily storing data for p_k
         p_k_tmp->copy_vector(p_k_);
+
+        shared_ptr<Vector> s_k = make_shared<Vector>(nVar_);//for storing solution for SOC
+        shared_ptr<Vector> tmp_sol = make_shared<Vector>(nVar_ + 2 * nCon_);
 
         double norm_p_k_tmp = norm_p_k_;
         double qp_obj_tmp = qp_obj_;
         shared_ptr<Vector> Htimesp = make_shared<Vector>(nVar_);
-        hessian_->times(p_k_, Htimesp);
-        Htimesp->add_vector(grad_f_->values());
+        hessian_->times(p_k_, Htimesp); //Htimesp = H_k*p_k
+        Htimesp->add_vector(grad_f_->values());//(H_k*p_k+g_k)
         myQP_->update_grad(Htimesp);
         myQP_->update_bounds(delta_, x_l_, x_u_, x_trial_, c_l_, c_u_, c_trial_);
         norm_p_k_ = p_k_->getInfNorm();
@@ -1123,19 +1140,20 @@ void Algorithm::second_order_correction() {
         catch (QP_NOT_OPTIMAL) {
             handle_error("QP NOT OPTIMAL");
         }
-//TODO rewrite
-//        myQP_->GetOptimalSolution();
+        tmp_sol->copy_vector(myQP_->get_optimal_solution());
         s_k->copy_vector(tmp_sol->values());
 
         qp_obj_ = myQP_->get_objective() + (qp_obj_tmp - rho_ * infea_measure_model_);
         p_k_->add_vector(s_k->values());
         get_trial_point_info();
         ratio_test();
-        if (!isaccept_)
-            p_k_ = p_k_tmp;
-        qp_obj_ = qp_obj_tmp;
-        norm_p_k_ = norm_p_k_tmp;
-
+        if (!isaccept_) {
+            p_k_ ->copy_vector(p_k_tmp->values());
+            qp_obj_ = qp_obj_tmp;
+            norm_p_k_ = norm_p_k_tmp;
+            myQP_->update_grad(grad_f_);
+            myQP_->update_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
+        }
     }
 
 }
@@ -1177,46 +1195,56 @@ void Algorithm::handle_error(const char* error) {
 
 void Algorithm::get_obj_QP() {
 
-    if (options_->QPsolverChoice == QPOASES) {
 
+    switch(options_->QPsolverChoice) {
+    case QPOASES:
         qp_obj_ = myQP_->get_objective();
-#if DEBUG
-        shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
-
-        hessian_->times(p_k_, Hp);//H*p_k
-        double qp_obj_tmp = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
-                            infea_measure_model_ * rho_;
-
-
-        if(qp_obj_tmp-qp_obj_>1.0e-5) {
-            jacobian_->print_full("J");
-            hessian_->print_full("H");
-            p_k_->print("p");
-            grad_f_->print("g");
-            Hp->print("Hp");
-            printf("p*H*p = : %10e\n", p_k_->times(Hp));
-            printf("g*p = %10e\n",p_k_->times(grad_f_));
-
-            printf("qp_obj_tmp = : %10e\n",qp_obj_tmp);
-            printf("qp_obj_ = : %10e\n",qp_obj_);
-            printf("infea_measure_model = :%10e\n", infea_measure_model_);
-        }
-#endif
-        //assert(fabs(qp_obj_tmp-qp_obj_)<1.0e-5);
-    }
-    else if (options_->QPsolverChoice == QORE) {
+        break;
+    case QORE: {
         shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
         hessian_->times(p_k_, Hp);//H*p_k
         qp_obj_ = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
                   infea_measure_model_ * rho_;
+    }
+    break;
+    case GUROBI:
+        qp_obj_ = myQP_->get_objective();
+        break;
+    case CPLEX:
+        qp_obj_ = myQP_->get_objective();
+        break;
+    }
+#if DEBUG
+    shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
+
+    hessian_->times(p_k_, Hp);//H*p_k
+    double qp_obj_tmp = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
+                        infea_measure_model_ * rho_;
+
+
+    if(qp_obj_tmp-qp_obj_>1.0e-5) {
+        jacobian_->print_full("J");
+        hessian_->print_full("H");
+        p_k_->print("p");
+        grad_f_->print("g");
+        Hp->print("Hp");
+        printf("p*H*p = : %10e\n", p_k_->times(Hp));
+        printf("g*p = %10e\n",p_k_->times(grad_f_));
+
+        printf("qp_obj_tmp = : %10e\n",qp_obj_tmp);
+        printf("qp_obj_ = : %10e\n",qp_obj_);
+        printf("infea_measure_model = :%10e\n", infea_measure_model_);
+    }
+#endif
+    //assert(fabs(qp_obj_tmp-qp_obj_)<1.0e-5);
+
 #if DEBUG
 #if COMPARE_QP_SOLVER
-        if(fabs(qp_obj_- myQP_->get_objective())>=1.0e-5)
-            printf(" The different of objectives is %23.16e\n", fabs(qp_obj_-myQP_->get_objective()));
-        assert(fabs(qp_obj_- myQP_->get_objective()<1.0e-5));
+    if(fabs(qp_obj_- myQP_->get_objective())>=1.0e-5)
+        printf(" The different of objectives is %23.16e\n", fabs(qp_obj_-myQP_->get_objective()));
+    assert(fabs(qp_obj_- myQP_->get_objective()<1.0e-5));
 #endif
 #endif
-    }
 }
 
 

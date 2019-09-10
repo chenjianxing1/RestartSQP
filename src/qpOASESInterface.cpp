@@ -50,14 +50,12 @@ void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
     if (qptype != LP) {
         H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
     }
-
-#if DEBUG
+//TODO: for debugging
     A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
                                            .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
                                            nVar_QP_,false);
     H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
                                            nVar_QP_,true);
-#endif
     //FIXME: the qpOASES does not accept any extra input
     solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
               (qpOASES::int_t) nConstr_QP_);
@@ -227,7 +225,6 @@ double* qpOASESInterface::get_multipliers_bounds() {
  * @brief get the pointer to the multipliers to the regular constraints.
  */
 double* qpOASESInterface::get_multipliers_constr() {
-    y_qp_->print("y_qp");
     return y_qp_->values()+nVar_QP_;
 };
 
@@ -293,7 +290,6 @@ QPReturnType qpOASESInterface::get_status() {
 
 //@}
 void qpOASESInterface::set_lb(int location, double value) {
-
     if (firstQPsolved_ && !data_change_flags_.Update_bounds)
         data_change_flags_.Update_bounds = true;
     lb_->setValueAt(location, value);
@@ -317,7 +313,6 @@ void qpOASESInterface::set_lbA(int location, double value) {
 
 
 void qpOASESInterface::set_ubA(int location, double value) {
-
     if (firstQPsolved_ && !data_change_flags_.Update_bounds)
         data_change_flags_.Update_bounds = true;
     ubA_->setValueAt(location, value);
@@ -425,30 +420,6 @@ void qpOASESInterface::set_g(shared_ptr<const Vector> rhs) {
 }
 
 
-#if DEBUG
-#if GET_QPOASES_MEMBERS
-const shared_ptr<Vector>& qpOASESInterface::getLb() const {
-    return lb_;
-}
-
-const shared_ptr<Vector>& qpOASESInterface::getUb() const {
-    return ub_;
-}
-
-const shared_ptr<Vector>& qpOASESInterface::getLbA() const {
-    return lbA_;
-}
-
-const shared_ptr<Vector>& qpOASESInterface::getUbA() const {
-    return ubA_;
-}
-
-const shared_ptr<Vector>& qpOASESInterface::getG() const {
-    return g_;
-}
-#endif
-#endif
-
 
 void qpOASESInterface::reset_flags() {
 
@@ -510,8 +481,8 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
                 WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
+//                THROW_EXCEPTION(QP_NOT_OPTIMAL,
+//                                "the QP problem didn't solved to optimality\n")
 
             }
         }
@@ -521,8 +492,8 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
             WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n")
+//            THROW_EXCEPTION(QP_NOT_OPTIMAL,
+//                            "the QP problem didn't solved to optimality\n")
         }
     }
 }
@@ -649,6 +620,10 @@ void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
     }
     delete[] tmp_W_b;
     delete[] tmp_W_c;
+}
+
+void qpOASESInterface::reset_constraints() {
+
 }
 
 }//SQPHOTSTART

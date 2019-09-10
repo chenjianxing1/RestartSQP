@@ -32,8 +32,11 @@ GurobiInterface::GurobiInterface(Index_info nlp_info,
 }
 
 GurobiInterface::~GurobiInterface() {
-    if (grb_mod_) delete grb_mod_;
+    grb_constr.clear();
+    delete grb_mod_;
+    grb_mod_ = nullptr;
     delete grb_env_;
+    grb_env_ = nullptr;
 }
 
 void GurobiInterface::reset_model() {
@@ -53,8 +56,7 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
         grb_mod_->optimize();
     }
     catch(GRBException exception) {
-
-        std::cout<< exception.getErrorCode()<<std::endl;
+        THROW_EXCEPTION(GRB_SOLVER_FAILS,"Gurobi Fails due to internal errors");
     }
     for(int i =0; i<nVar_QP_; i++) {
         x_qp->setValueAt(i,grb_vars_[i].get(GRB_DoubleAttr_X));
@@ -64,7 +66,6 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
         printf("qp is not optimal, the current status is %i", grb_mod_->get
                (GRB_IntAttr_Status));
     }
-//        x_qp->print("x_qp");
     for(int i=0; i<nConstr_QP_*2; i++) {
         if(grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi)>0)
             y_qp->setValueAt((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
@@ -73,7 +74,6 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
     }
 
 
-//        y_qp->print("y_qp");
 
 }
 
@@ -240,7 +240,7 @@ void GurobiInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, Identi
                                       I_info) {
 }
 
-void GurobiInterface::remove_constraints() {
+void GurobiInterface::reset_constraints() {
     for(int i =0; i<nConstr_QP_; i++) {
         grb_mod_->remove(grb_mod_->getConstrByName("lbA_"+to_string(i)));
         grb_mod_->remove(grb_mod_->getConstrByName("ubA_"+to_string(i)));
@@ -289,7 +289,6 @@ void GurobiInterface::set_ubA(shared_ptr<const Vector> rhs) {
 void GurobiInterface::set_g(shared_ptr<const Vector> rhs) {}
 //@}
 
-#if DEBUG
 /**@name Getters for private members*/
 //@{
 const shared_ptr<Vector>& GurobiInterface::getLb() const {}
@@ -307,7 +306,6 @@ const shared_ptr<const SpTripletMat> GurobiInterface::getH() const  {}
 const shared_ptr<const SpTripletMat> GurobiInterface::getA() const  {}
 //@}
 
-#endif
 /**-------------------------------------------------------**/
 /**                  Data Writer                          **/
 /**-------------------------------------------------------**/

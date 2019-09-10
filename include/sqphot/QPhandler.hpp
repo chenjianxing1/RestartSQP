@@ -9,7 +9,7 @@
 #include <sqphot/qpOASESInterface.hpp>
 #include <sqphot/GurobiInterface.hpp>
 #include <sqphot/QOREInterface.hpp>
-
+#include <sqphot/CplexInterface.hpp>
 namespace SQPhotstart {
 /** Forward Declaration */
 class LPhandler;
@@ -209,6 +209,15 @@ public:
      */
     void WriteQPData();
 
+    /**
+     * @brief Test the KKT conditions for the certain qpsolver
+     */
+    bool OptimalityTest(
+        shared_ptr<QPSolverInterface> qpsolverInterface,
+        Solver qpSolver,
+        ActiveType* W_b,
+        ActiveType* W_c);
+
 #if DEBUG
 #if COMPARE_QP_SOLVER
 
@@ -222,8 +231,6 @@ public:
 
     bool testQPsolverDifference();
 
-    bool
-    OptimalityTest(Solver qpSolver);
 
 #endif
 #endif
@@ -267,14 +274,17 @@ private:
     const Index_info nlp_info_;
     const int nConstr_QP_;
     const int nVar_QP_;
+    ActiveType* W_c_;//working set for constraints;
+    ActiveType* W_b_;//working set for bounds;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+    OptimalityStatus qpOptimalStatus_;
+
 #if DEBUG
 #if COMPARE_QP_SOLVER
     shared_ptr<qpOASESInterface> qpOASESInterface_;
     shared_ptr<QOREInterface> QOREInterface_;
-    OptimalityStatus qpOptimalStatus_;
     ActiveType* W_c_qpOASES_;//working set for constraints;
     ActiveType* W_b_qpOASES_;//working set for bounds;
     ActiveType* W_c_qore_;//working set for constraints;
