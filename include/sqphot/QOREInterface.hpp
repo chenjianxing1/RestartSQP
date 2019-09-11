@@ -190,7 +190,7 @@ private:
     void operator=(const QOREInterface &);
 
 
-    void setQP_options(shared_ptr<Options> options);
+    void set_solver_options(shared_ptr<const Options> options);
 
     /**
      * @brief Allocate memory for the class members

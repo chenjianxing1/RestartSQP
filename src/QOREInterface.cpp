@@ -19,7 +19,7 @@ QOREInterface::QOREInterface(Index_info nlp_info,
     nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
     nConstr_QP_(nlp_info.nCon) {
     allocate_memory(nlp_info, qptype);
-
+    set_solver_options(options);
 }
 
 
@@ -34,17 +34,21 @@ QOREInterface::~QOREInterface() {
  */
 
 void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
-    rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
-                    A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
+
 #if DEBUG
 #if CHECK_QP_INFEASIBILITY
-    A_->print();
-    H_->print();
+    A_->print("A_");
+    H_->print("H_");
     lb_->print("lb_");
     ub_->print("ub_");
     g_->print("g_");
 #endif
 #endif
+
+    rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
+                    A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
+
+
     //does not print anything
     assert(rv_ == QPSOLVER_OK);
     QPSetInt(solver_, "prtfreq", -1);
@@ -153,7 +157,6 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
         H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true,true);
     } else {
         //if we are solving an LP, the number of nonzero in the Hessian is 0
-
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
     }
 
@@ -189,6 +192,7 @@ void QOREInterface::set_lb(int location, double value) {
 void QOREInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
                                     Identity2Info I_info) {
     A_->setStructure(rhs, I_info);
+
 }
 
 void
@@ -196,7 +200,12 @@ QOREInterface::set_A_values(shared_ptr<const SpTripletMat> rhs,
                             Identity2Info I_info) {
 
     A_->setMatVal(rhs, I_info);
-    //    A_->print("A",jnlst_);
+
+//    A_triplet_->convert2Triplet(A_);
+//    A_triplet_->print("A");
+//    auto dense_A = new double[nVar_QP_*nConstr_QP_]();
+//    A_triplet_->get_dense_matrix(dense_A);
+
 }
 
 void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
@@ -205,7 +214,6 @@ void QOREInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 
 void QOREInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
     H_->setMatVal(rhs);
-    //        H_->print("H",jnlst_);
 }
 
 //@}
@@ -213,11 +221,6 @@ void QOREInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 /**@name Getters*/
 //@{
 double* QOREInterface::get_optimal_solution() {
-#if DEBUG
-#if CHECK_QP_INFEASIBILITY
-    x_qp_->print("x_qp_");
-#endif
-#endif
     return x_qp_->values();
 }
 
@@ -227,12 +230,6 @@ double QOREInterface::get_obj_value() {
 }
 
 double* QOREInterface::get_multipliers_bounds() {
-#if DEBUG
-#if CHECK_QP_INFEASIBILITY
-    y_qp_->print("y_qp_");
-#endif
-#endif
-
     return y_qp_->values();
 }
 
@@ -278,13 +275,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
         else {
             switch (working_set_[i]) {
             case 1:
-                W_constr[i] = ACTIVE_ABOVE;
+                W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
             case -1:
-                W_constr[i] = ACTIVE_BELOW;
+                W_constr[i-nVar_QP_] = ACTIVE_BELOW;
                 break;
             case 0:
-                W_constr[i] = INACTIVE;
+                W_constr[i-nVar_QP_] = INACTIVE;
                 break;
             default:
                 printf("invalud workingset for qore2, the working set is %i;",
@@ -371,6 +368,12 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 #endif
     jnlst->DeleteAllJournals();
 #endif
+
+}
+
+void QOREInterface::set_solver_options(shared_ptr<const Options> options) {
+
+
 
 }
 

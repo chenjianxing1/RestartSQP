@@ -110,20 +110,18 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
     assert(counter == EntryNum_);
 
     if(isCompressedRow_) {
-
         std::sort(sorted_index_info.begin(), sorted_index_info.end(),
                   tuple_sort_rule_compressed_row);
         for (int i = 0; i < EntryNum_; i++) {
             ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-            order_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<2>(sorted_index_info[i])]= i;
 
             for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
                 RowIndex_[j]++;
             }
-
-            RowIndex_[RowNum_] = EntryNum_;
-
         }
+        RowIndex_[RowNum_] = EntryNum_;
+
     } else {
         std::sort(sorted_index_info.begin(), sorted_index_info.end(),
                   tuple_sort_rule_compressed_column);
@@ -134,10 +132,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
             for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
                 ColIndex_[j]++;
             }
-
-            ColIndex_[ColNum_] = EntryNum_;
-
         }
+        ColIndex_[ColNum_] = EntryNum_;
     }
     sorted_index_info.clear();
 }
@@ -180,12 +176,6 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
             }
 
         }
-//
-//        for(int i = 0; i<counter;i++){
-//            std::cout<<std::get<0>(sorted_index_info[i]);
-//            std::cout<<std::get<1>(sorted_index_info[i]);
-//            std::cout<<std::get<2>(sorted_index_info[i])<<std::endl;
-//        }
         if (EntryNum_ == -1) {
 
             EntryNum_ = counter;
@@ -209,8 +199,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
         for (int i = 0; i < EntryNum_; i++) {
             ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-            order_[i] = std::get<2>(sorted_index_info[i]);
-
+            order_[std::get<2>(sorted_index_info[i])]= i;
             for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
                 RowIndex_[j]++;
             }
@@ -231,15 +220,10 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
         }
         ColIndex_[ColNum_] = EntryNum_;
 
-//
-//        for(int i = 0; i<counter;i++){
-//            std::cout<<std::get<0>(sorted_index_info[i]);
-//            std::cout<<std::get<1>(sorted_index_info[i]);
-//            std::cout<<std::get<2>(sorted_index_info[i])<<std::endl;
-//        }
     }
     sorted_index_info.clear();
 }
+
 
 
 /**
@@ -250,14 +234,29 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
  */
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
                         Identity2Info I_info) {                       //adding the value to the matrix
-    if (isInitialised_ == false) {
-        for (int i = 0; i < I_info.size; i++) {
-            MatVal_[EntryNum_ - i - 1] = -1;
-            MatVal_[EntryNum_ - i - I_info.size - 1] = 1;
+    if(isCompressedRow_) {
+        if (isInitialised_ == false) {
+            for(int i =1; i<rhs->EntryNum(); i++) {
+                if(rhs->RowIndex(i)>rhs->RowIndex(i-1)&& i>=2) {
+                    MatVal_[i-2+I_info.size] = 1;
+                    MatVal_[i-1+I_info.size] = -1;
+                }
+            }
+            MatVal_[EntryNum_-2] = 1;
+            MatVal_[EntryNum_-1] = -1;
+            isInitialised_ = true;
         }
-        isInitialised_ = true;
     }
+    else {
+        if (isInitialised_ == false) {
+            for (int i = 0; i < I_info.size; i++) {
+                MatVal_[EntryNum_ - i - 1] = -1;
+                MatVal_[EntryNum_ - i - I_info.size - 1] = 1;
+            }
+            isInitialised_ = true;
+        }
 
+    }
     //assign each matrix entry to the corresponding position after permutation
     for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
         MatVal_[order()[i]] = rhs->MatVal()[i];
@@ -268,7 +267,6 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
 
     int j = 0;
-//    rhs->print("rhs");
     for (int i = 0; i < rhs->EntryNum(); i++) {
         MatVal_[order_[j]] = rhs->MatVal()[i];
         j++;
@@ -278,7 +276,6 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
             j++;
         }
     }
-//    print("last");
 }
 
 
@@ -384,6 +381,7 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalCategory category) const {
 
 }
+
 void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
                     Ipopt::EJournalCategory category) const {
@@ -393,16 +391,12 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         std::cout << "ColIndex: ";
         for (int i = 0; i < EntryNum_; i++)
             std::cout << ColIndex()[i] << " ";
-
         std::cout << " " << std::endl;
 
         std::cout << "RowIndex: ";
-
         for (int i = 0; i < RowNum_+1; i++)
             std::cout << RowIndex()[i] << " ";
         std::cout << " " << std::endl;
-
-
     } else {
         std::cout<< name <<"= "<<std::endl;
         std::cout << "ColIndex: ";

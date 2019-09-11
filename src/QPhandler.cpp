@@ -81,6 +81,9 @@ QPhandler::~QPhandler() {
  *                  of the QP subproblem
  */
 double* QPhandler::get_optimal_solution() {
+//    for(int i= 0; i<nVar_QP_; i++) {
+//        std::cout<< solverInterface_->get_optimal_solution()[i]<<std::endl;
+//    }
     return solverInterface_->get_optimal_solution();
 }
 
@@ -387,6 +390,7 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 #endif
 
     solverInterface_->optimizeQP(stats);
+
     bool isQPOptimal = OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
     assert(isQPOptimal ==true);
 

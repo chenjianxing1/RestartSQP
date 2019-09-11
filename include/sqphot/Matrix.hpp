@@ -158,6 +158,26 @@ public:
                                   std::shared_ptr<Vector> result) const;
 
 
+    //@}
+    /**
+     * @brief get the dense matrix corresponding to the matrix data stored in class
+     * members. The stored matrix will be column oriented.
+     */
+    void get_dense_matrix(double* dense_matrix) {
+
+        for(int i = 0; i<EntryNum_; i++) {
+            dense_matrix[RowNum_* (ColIndex_[i] - 1)+RowIndex_[i]-1] = MatVal_[i];
+
+            if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
+                dense_matrix[RowNum_ * (RowIndex_[i] - 1) + ColIndex_[i] -
+                             1] = MatVal_[i];
+        }
+
+    }
+
+    /**
+     * @convert the input matrix rhs to a triplet matrix and store its data in the
+     * class members*/
     void convert2Triplet(std::shared_ptr<Matrix> rhs) {
         set_zero();
         int j = 1;
@@ -582,8 +602,6 @@ public:
     inline bool isCompressedRow() override {
         return isCompressedRow_;
     }
-
-    //@}
 
     /**
      *@brief write data to a file
