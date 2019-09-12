@@ -97,7 +97,7 @@ QOREInterface::~QOREInterface() {
         /**                   Set Data and Optimize LP            **/
         /**-------------------------------------------------------**/
         rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
-                        +                   A_->MatVal(), NULL, NULL, NULL);
+                                           A_->MatVal(), NULL, NULL, NULL);
         assert(rv_ == QPSOLVER_OK);
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
         assert(rv_ == QPSOLVER_OK);
