@@ -371,8 +371,23 @@ void SpHbMat::write_to_file(const char* name,
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const {
+	
+	result->set_zeros();
+	int row = 0;
 
+	if(isCompressedRow_){
+	for(int i = 0; i<EntryNum_;i++){
+		if(i==RowIndex_[row+1]){
+			row++;
+		}
+		result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
+	}
 
+//	print("H");
+//
+//	p->print("p");
+//	result->print("result");
+	}
 }
 
 void

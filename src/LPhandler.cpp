@@ -19,22 +19,19 @@ namespace SQPhotstart {
             LPsolverChoice_(options->LPsolverChoice) {
 
 		    switch(LPsolverChoice_) {
-#ifdef USE_QPOASES_
+			    case QPOASES:
 			    solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP,options,jnlst);
-#endif
 			    break;
 			    case QORE:
-#ifdef USE_QORE_
 			    solverInterface_ = make_shared<QOREInterface>(nlp_info,LP,options,jnlst);
-#endif
 			    break;
 			    case GUROBI:
-#ifdef USE_GUROBI_
+#ifdef USE_GUROBI
 			    solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
 #endif
 			    break;
 			    case CPLEX:
-#ifdef USE_CPLEX_
+#ifdef USE_CPLEX
 			    solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
 #endif
 			    break;

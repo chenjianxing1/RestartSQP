@@ -23,6 +23,7 @@ QOREInterface::QOREInterface(Index_info nlp_info,
     solver_(0),
     nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
     nConstr_QP_(nlp_info.nCon) {
+	    qpiter_[0] = 0;
     allocate_memory(nlp_info, qptype);
     set_solver_options(options);
 }
@@ -73,9 +74,8 @@ QOREInterface::~QOREInterface() {
         /**-------------------------------------------------------**/
         /**                     Update Stats                      **/
         /**-------------------------------------------------------**/
-        int* iter;
-        QPGetInt(solver_, "itercount", iter);
-        stats->qp_iter_addValue(iter[0]);
+        QPGetInt(solver_, "itercount", qpiter_);
+        stats->qp_iter_addValue(qpiter_[0]);
 
 #if DEBUG
         #if CHECK_QP_INFEASIBILITY
@@ -119,9 +119,8 @@ QOREInterface::~QOREInterface() {
         /**-------------------------------------------------------**/
         /**                     Update Stats                      **/
         /**-------------------------------------------------------**/
-        int* iter;
-        QPGetInt(solver_, "itercount", iter);
-        stats->qp_iter_addValue(iter[0]);
+        QPGetInt(solver_, "itercount", qpiter_);
+        stats->qp_iter_addValue(qpiter_[0]);
     }
 
 
@@ -151,9 +150,9 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
     }
 
+    
     assert(rv_ == QPSOLVER_OK);
 
-    working_set_  =  new int[nConstr_QP_+nVar_QP_];
 
     //TODO: for debugging use only
     A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
@@ -168,8 +167,9 @@ void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
 //@{
 
 double QOREInterface::get_obj_value() {
-    //FIXME: QORE does not have existing emthod to return the qp obj, now it is calculated
-    // in Algorithm class for QOREInterface...
+shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);	
+H_->times(x_qp_,Hx);
+return (Hx->times(x_qp_)*0.5+g_->times(x_qp_));
 }
 
 

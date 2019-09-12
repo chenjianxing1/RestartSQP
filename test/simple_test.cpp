@@ -20,7 +20,6 @@ int main(int argc, char** args) {
     //std::cout << args[1]<<std::endl;
     //printf("=====================================================================================\n");
 
-    try {
         SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                                 alg.getRoptions2(),
                                                 args);
@@ -31,11 +30,6 @@ int main(int argc, char** args) {
 	else
 		std::cout<<std::endl;
 
-    }
-    catch(...) {
-        printf( "WARNING, the NLP is invalid!");
-
-    }
 
 
     return 0;
