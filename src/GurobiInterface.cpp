@@ -5,6 +5,7 @@
  * Date:2019-09-06
  */
 #include <sqphot/GurobiInterface.hpp>
+#ifdef GUROBI
 
 namespace SQPhotstart {
 
@@ -315,6 +316,7 @@ void GurobiInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst
                                         Ipopt::EJournalCategory category) {}
 
 };
+#endif
 
 
 

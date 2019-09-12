@@ -6,7 +6,7 @@
  */
 
 #include <sqphot/CplexInterface.hpp>
-
+#ifdef CPLEX
 namespace SQPhotstart {
 /** Constructor*/
 CplexInterface::CplexInterface(Index_info nlp_info,
@@ -384,3 +384,4 @@ const shared_ptr<const SpTripletMat> CplexInterface::getA() const {}
 
 }
 
+#endif

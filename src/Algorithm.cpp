@@ -498,6 +498,28 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     options_ = make_shared<Options>();
     stats_ = make_shared<Stats>();
 
+    if(options_->QPsolverChoice == QPOASES||options_->LPsolverChoice==QPOASES){
+#ifndef USE_QPOASES
+#define USE_QPOASES
+#endif
+    }
+
+    if(options_->QPsolverChoice == QORE||options_->LPsolverChoice==QORE){
+#ifndef USE_QORE
+#define USE_QORE 
+#endif
+    }
+    if(options_->QPsolverChoice == GUROBI||options_->LPsolverChoice==GUROBI){
+#ifndef USE_GUROBI
+#define USE_GUROBI 
+#endif
+    }
+    if(options_->QPsolverChoice == CPLEX||options_->LPsolverChoice==CPLEX){
+#ifndef USE_CPLEX
+#define USE_CPLEX 
+#endif
+    }
+
     myQP_ = make_shared<QPhandler>(nlp_->nlp_info_, options_, jnlst_);
     myLP_ = make_shared<LPhandler>(nlp_->nlp_info_, options_, jnlst_);
 

@@ -7,8 +7,9 @@
 #ifndef SQPHOTSTART_CPLEX_INTERFACE_HPP
 #define SQPHOTSTART_CPLEX_INTERFACE_HPP
 
-#include <ilcplex/ilocplex.h>
 
+#ifdef CPLEX
+#include <ilcplex/ilocplex.h>
 #include <sqphot/QPsolverInterface.hpp>
 
 
@@ -177,7 +178,6 @@ private:
 
 private:
     Identity2Info I_info_;
-    IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPReturnType status_;
     QPType qptype_;
@@ -193,6 +193,7 @@ private:
     shared_ptr<Vector> y_qp_;
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
+    IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     vector<IloNumExpr> constraints_;
     vector<IloNumExpr> lterm_;/**< linear part of the objective */
     vector<IloNumVar> cplex_vars_;
@@ -202,6 +203,7 @@ private:
 
 
 }//SQPHOTSTART
+#endif
 #endif
 
 

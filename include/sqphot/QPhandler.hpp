@@ -6,10 +6,23 @@
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Utils.hpp>
+#include <sqphot/QPsolverInterface.hpp>
+
+#ifdef USE_QPOASES
 #include <sqphot/qpOASESInterface.hpp>
+#endif
+
+#ifdef USE_GUROBI
 #include <sqphot/GurobiInterface.hpp>
+#endif
+
+#ifdef USE_QORE
 #include <sqphot/QOREInterface.hpp>
+#endif
+
+#ifdef USE_CPLEX
 #include <sqphot/CplexInterface.hpp>
+#endif
 namespace SQPhotstart {
 /** Forward Declaration */
 class LPhandler;

@@ -7,7 +7,6 @@
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Utils.hpp>
-#include <sqphot/qpOASESInterface.hpp>
 
 namespace SQPhotstart {
 /**
