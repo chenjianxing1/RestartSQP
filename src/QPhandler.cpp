@@ -47,7 +47,6 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
         case CPLEX:
             solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
             break;
-//            THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
     }
 }
 
@@ -801,7 +800,7 @@ bool QPhandler::OptimalityTest(
 }
 
     double QPhandler::get_infea_measure_model() {
-        oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
+        return oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
     }
 
 #if DEBUG

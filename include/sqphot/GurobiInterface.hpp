@@ -179,11 +179,14 @@ private:
     /**-------------------------------------------------------**/
 
 private:
+    #ifdef USE_GUROBI
     GRBEnv* grb_env_;
     GRBLinExpr lterm_;
     GRBModel* grb_mod_;
     GRBQuadExpr qobj_;
     GRBVar*  grb_vars_;
+    vector<GRBConstr> grb_constr;
+    #endif
     Identity2Info I_info_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPReturnType status_;
@@ -194,7 +197,6 @@ private:
     shared_ptr<Vector> y_qp;
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
-    vector<GRBConstr> grb_constr;
 
 };
 

@@ -185,8 +185,6 @@ private:
     double final_obj_;
     int nConstr_QP_;
     int nVar_QP_;
-    shared_ptr<IloEnv> cplex_env_;
-    shared_ptr<IloModel> cplex_model_;
     shared_ptr<Vector> lb_;
     shared_ptr<Vector> ub_;
     shared_ptr<Vector> x_qp_;
@@ -194,6 +192,8 @@ private:
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
     #ifdef USE_CPLEX
+    shared_ptr<IloEnv> cplex_env_;
+    shared_ptr<IloModel> cplex_model_;
     IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     vector<IloNumExpr> constraints_;
     vector<IloNumExpr> lterm_;/**< linear part of the objective */
