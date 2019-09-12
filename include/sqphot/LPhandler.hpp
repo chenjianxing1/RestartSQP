@@ -79,6 +79,10 @@ public:
     double* get_optimal_solution() override;
 
 
+    double get_infea_measure_model() override{
+        oneNorm(solverInterface_->get_optimal_solution() + nVar_LP_ - 2 * nConstr_LP_,
+                2 * nConstr_LP_);
+    }
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
@@ -115,8 +119,8 @@ private:
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
     const Index_info nlp_info_;
-    const int nConstr_QP_;
-    const int nVar_QP_;
+    const int nConstr_LP_;
+    const int nVar_LP_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/

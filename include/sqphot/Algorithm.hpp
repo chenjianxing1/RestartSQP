@@ -133,7 +133,7 @@ private:
      *  function cannot be solved, it will assign _exitflag the	corresponding
      *  code according to the error type.
      */
-    void termination_check();
+    void check_optimality();
 
 
 
@@ -229,23 +229,6 @@ private:
     void get_search_direction();
 
 
-    /**
-     * @brief get the full search direction(including the slack variables) from the
-     * QPhandler
-     * @param qphandler a QP handler objbect which has already solved a QP
-     * @param search_direction a Vector object which will be used to store the full
-     * direction
-     */
-    void get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction);
-
-    /**
-     * @brief get the full search direction(including the slack variables) from the
-     * LPhandler
-     * @param lphandler an LP handler objbect which has already solved a LP
-     * @param search_direction a Vector object which will be used to store the full
-     * direction
-     */
-    void get_full_direction_LP(shared_ptr<Vector> search_direction);
 
 
     void get_obj_QP();
@@ -312,7 +295,7 @@ private:
     void handle_error(const char* error = NULL);
 
 
-    void print_final_statsitics();
+    void print_final_stats();
     //@}
 
 

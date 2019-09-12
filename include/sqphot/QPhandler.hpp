@@ -73,6 +73,11 @@ public:
 
 
     /**
+     * @brief Get the infeasibility measure of the quadratic model
+     * @return The one norm of the last (2*nConstr) varaibles of the QP solution
+     */
+    virtual double get_infea_measure_model();
+    /**
      *@brief Get the multipliers corresponding to the bound variables
      */
     double* get_multipliers_bounds();
@@ -87,6 +92,20 @@ public:
      */
     double get_objective();
 
+
+    /**
+     * @brief
+     */
+    ActiveType* get_working_set_constr{
+
+    };
+
+    /**
+     * @brief
+     */
+    ActiveType* get_working_set_bounds{
+
+    };
 
     /**
      * @brief Get the return status of QPsolver

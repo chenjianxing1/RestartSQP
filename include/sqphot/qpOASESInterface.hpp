@@ -37,7 +37,8 @@ public:
      * @param qptype  is the problem to be solved QP or LP?
      */
     qpOASESInterface(Index_info nlp_index_info, QPType qptype,
-                     shared_ptr<const Options> options);    //number of constraints in the QP problem
+                     shared_ptr<const Options> options,
+                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
     /** Defualt Destructor */
     ~qpOASESInterface() override;
@@ -60,14 +61,9 @@ public:
 //@{
     /**
     * @brief copy the optimal solution of the QP to the input pointer
-    *
-    * @param p_k a pointer to an empty array with allocated memory equals to
-    * sizeof(double)*number_variables
-    *
     */
 
     double* get_optimal_solution() override;
-
 
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
@@ -151,6 +147,7 @@ public:
 
     void reset_constraints() override;
 
+    //@{
     const shared_ptr<Vector>& getLb() const override {
         return lb_;
     };
@@ -182,7 +179,7 @@ public:
         A_triplet_->convert2Triplet(A_);
         return A_triplet_;
     };
-
+    //@}
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
@@ -196,10 +193,6 @@ private:
 
     void handler_error(QPType qptype, shared_ptr<Stats> stats);
 
-
-    /**
-     * @brief get the final return status of the QP problem
-     */
 
     void reset_flags();
 
@@ -215,10 +208,10 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate(Index_info nlp_index_info, QPType qptype);
+    void allocate_memory(Index_info nlp_index_info, QPType qptype);
 
 
-    void setQP_options();
+    void set_solver_options();
 
 
 

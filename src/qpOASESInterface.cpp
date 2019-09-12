@@ -16,13 +16,14 @@ namespace SQPhotstart {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
-                                   shared_ptr<const Options> options) :
+    qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+                                       shared_ptr<const Options> options,
+                                       Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     status_(UNSOLVED),
     nConstr_QP_(nlp_index_info.nCon),
     nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
     options_(options) {
-    allocate(nlp_index_info, qptype);
+        allocate_memory(nlp_index_info, qptype);
 }
 
 
@@ -36,7 +37,7 @@ qpOASESInterface::~qpOASESInterface() = default;
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-void qpOASESInterface::allocate(Index_info nlp_index_info, QPType qptype) {
+void qpOASESInterface::allocate_memory(Index_info nlp_index_info, QPType qptype) {
     lbA_ = make_shared<Vector>(nConstr_QP_);
     ubA_ = make_shared<Vector>(nConstr_QP_);
     lb_ = make_shared<Vector>(nVar_QP_);
@@ -74,7 +75,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
 
-        setQP_options();
+        set_solver_options();
 #if DEBUG
 #if PRINT_QP_DATA
         H_qpOASES_->print("H_qp_oases");
@@ -155,7 +156,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
 // ub_->print("ub");
     qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
     if (!firstQPsolved_) {
-        setQP_options();
+        set_solver_options();
         solver_->init(0, g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
         if (solver_->isSolved()) {
@@ -450,9 +451,7 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
                 WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-
-                THROW_EXCEPTION(LP_NOT_OPTIMAL,
-                                "the QP problem didn't solved to optimality\n")
+                THROW_EXCEPTION(LP_NOT_OPTIMAL,LP_NOT_OPTIMAL_MSG);
             }
         }
         else {
@@ -461,8 +460,7 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
             WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-            THROW_EXCEPTION(LP_NOT_OPTIMAL,
-                            "the QP problem didn't solved to optimality\n")
+            THROW_EXCEPTION(LP_NOT_OPTIMAL,LP_NOT_OPTIMAL_MSG);
         }
 
     }
@@ -481,8 +479,7 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
                 WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-//                THROW_EXCEPTION(QP_NOT_OPTIMAL,
-//                                "the QP problem didn't solved to optimality\n")
+                THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
 
             }
         }
@@ -492,14 +489,13 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
             WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
-//            THROW_EXCEPTION(QP_NOT_OPTIMAL,
-//                            "the QP problem didn't solved to optimality\n")
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
         }
     }
 }
 
 
-void qpOASESInterface::setQP_options() {
+void qpOASESInterface::set_solver_options() {
 
     qpOASES::Options qp_options;
 

@@ -32,21 +32,20 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 #endif
 #endif
     switch(QPsolverChoice_) {
-    case QPOASES:
-        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options);
-        break;
-    case QORE:
-        solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
-        break;
-    case GUROBI:
-        solverInterface_ = make_shared<GurobiInterface>(nlp_info,QP,options,jnlst);
-        break;
-    case CPLEX:
-        solverInterface_ = make_shared<CplexInterface>(nlp_info,QP,options,
-                           jnlst);
-        break;
-        // default:
-        //     THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
+        case QPOASES:
+            solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options,jnlst);
+            break;
+        case QORE:
+            solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
+            break;
+        case GUROBI:
+            solverInterface_ = make_shared<GurobiInterface>(nlp_info,QP,options,jnlst);
+            break;
+        case CPLEX:
+            solverInterface_ = make_shared<CplexInterface>(nlp_info,QP,options,jnlst);
+            break;
+//        default:
+//            THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
     }
 }
 
@@ -659,9 +658,9 @@ bool QPhandler::OptimalityTest(
         if (A != nullptr) {
             A->times(x, Ax); //tmp_vec_nCon=A*x
             for (i = 0; i < nConstr_QP_; i++) {
-                primal_violation += max(0.0, (lb->values()[i + nVar_QP_] -
+                primal_violation += max(0.0, (lb->values(i + nVar_QP_) -
                                               Ax->values(i)));
-                primal_violation += -min(0.0, (ub->values()[i + nVar_QP_] -
+                primal_violation += -min(0.0, (ub->values(i + nVar_QP_) -
                                                Ax->values(i)));
             }
         }
@@ -758,15 +757,13 @@ bool QPhandler::OptimalityTest(
                     break;
                 case ACTIVE_BELOW://the constraint is active at the lower bound
                     compl_violation += abs(multiplier_constr->values(i) *
-                                           (Ax->values(i) - lb->values()
-                                            [i + nVar_QP_]));
+                                           (Ax->values(i) - lb->values(i + nVar_QP_)));
                     break;
                 case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
                     // multiplier should be negavie
                     compl_violation += abs(multiplier_constr->values(i) *
-                                           (ub->values()[i + nVar_QP_] -
-                                            Ax->values()
-                                            [i]));
+                                           (ub->values(i + nVar_QP_) -
+                                            Ax->values(i)));
                     break;
                 default:
                     printf("failed in compl test, the working set  for qpOASES at "
@@ -793,12 +790,17 @@ bool QPhandler::OptimalityTest(
         printf("dual_violation %10e\n", dual_violation);
         qpOptimalStatus_.KKT_error =
             compl_violation + statioanrity_violation + dual_violation + primal_violation;
-        assert(qpOptimalStatus_.KKT_error < 1.0e-6);
+        assert(qpOptimalStatus_.KKT_error < 1.0e-6);//TODO: change the number to one in
+        // options
         return false;
     }
 
     return true;
 }
+
+    double QPhandler::get_infea_measure_model() {
+        oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
+    }
 
 #if DEBUG
 #if COMPARE_QP_SOLVER

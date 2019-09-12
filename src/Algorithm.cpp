@@ -96,7 +96,7 @@ void Algorithm::Optimize() {
             }
             jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
         }
-        termination_check();
+        check_optimality();
         if (exitflag_ != UNKNOWN) {
             break;
         }
@@ -105,7 +105,7 @@ void Algorithm::Optimize() {
             update_radius();
         }
         catch (SMALL_TRUST_REGION) {
-            break;
+            THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
         }
 
     }
@@ -115,12 +115,12 @@ void Algorithm::Optimize() {
         exitflag_ = EXCEED_MAX_ITER;
 
     if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-        termination_check();
+        check_optimality();
     }
 
     // print the final summary message to the console
     if (options_->printLevel > 0)
-        print_final_statsitics();
+        print_final_stats();
     jnlst_->FlushBuffer();
 }
 
@@ -134,7 +134,7 @@ void Algorithm::Optimize() {
  *  function cannot be solved, it will assign _exitflag the	corresponding
  *  code according to the error type.
  */
-void Algorithm::termination_check() {
+void Algorithm::check_optimality() {
     //FIXME: not sure if it is better to use the new multiplier or the old one
 
     double primal_violation = 0;
@@ -163,18 +163,18 @@ void Algorithm::termination_check() {
 
     for (i = 0; i < nCon_; i++) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(c_u_->values()[i] - c_k_->values()[i]) <
+            if (abs(c_u_->values(i) - c_k_->values(i)) <
                     options_->active_set_tol)
                 Active_Set_constraints_[i] = ACTIVE_ABOVE;
         } else if (cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(c_k_->values()[i] - c_l_->values()[i]) <
+            if (abs(c_k_->values(i) - c_l_->values(i)) <
                     options_->active_set_tol) {
                 Active_Set_constraints_[i] = ACTIVE_BELOW;
             }
         } else if (cons_type_[i] == EQUAL) {
-            if ((abs(c_u_->values()[i] - c_k_->values()[i]) <
+            if ((abs(c_u_->values(i) - c_k_->values(i)) <
                     options_->active_set_tol) &&
-                    (abs(c_k_->values()[i] - c_l_->values()[i]) <
+                    (abs(c_k_->values(i) - c_l_->values(i)) <
                      options_->active_set_tol))
                 Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
         } else {
@@ -185,17 +185,17 @@ void Algorithm::termination_check() {
 
     for (i = 0; i < nVar_; i++) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(x_u_->values()[i] - x_k_->values()[i]) <
+            if (abs(x_u_->values(i) - x_k_->values(i)) <
                     options_->active_set_tol)
                 Active_Set_bounds_[i] = ACTIVE_ABOVE;
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(x_k_->values()[i] - x_l_->values()[i]) <
+            if (abs(x_k_->values(i) - x_l_->values(i)) <
                     options_->active_set_tol)
                 Active_Set_bounds_[i] = ACTIVE_BELOW;
         } else if (bound_cons_type_[i] == EQUAL) {
-            if ((abs(x_u_->values()[i] - x_k_->values()[i]) <
+            if ((abs(x_u_->values(i) - x_k_->values(i)) <
                     options_->active_set_tol) &&
-                    (abs(x_k_->values()[i] - x_l_->values()[i]) <
+                    (abs(x_k_->values(i) - x_l_->values(i)) <
                      options_->active_set_tol))
                 Active_Set_bounds_[i] = ACTIVE_BOTH_SIDE;
         } else {
@@ -225,9 +225,9 @@ void Algorithm::termination_check() {
     opt_status_.dual_feasibility = true;
     while (i < nVar_) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            dual_violation += max(multiplier_vars_->values()[i], 0.0);
+            dual_violation += max(multiplier_vars_->values(i), 0.0);
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            dual_violation += -min(multiplier_vars_->values()[i], 0.0);
+            dual_violation += -min(multiplier_vars_->values(i), 0.0);
         }
         i++;
 
@@ -236,9 +236,9 @@ void Algorithm::termination_check() {
     i = 0;
     while (i < nCon_) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            dual_violation += max(multiplier_cons_->values()[i],0.0);
+            dual_violation += max(multiplier_cons_->values(i),0.0);
         } else if (cons_type_[i] == BOUNDED_BELOW) {
-            dual_violation += -min(multiplier_cons_->values()[i],0.0);
+            dual_violation += -min(multiplier_cons_->values(i),0.0);
         }
         i++;
     }
@@ -251,15 +251,15 @@ void Algorithm::termination_check() {
     i = 0;
     while (i < nCon_ ) {
         if (cons_type_[i] == BOUNDED_ABOVE) {
-            compl_violation+=abs(multiplier_cons_->values()[i] *
-                                 (c_u_->values()[i] - c_k_->values()[i]));
+            compl_violation+=abs(multiplier_cons_->values(i) *
+                                 (c_u_->values(i) - c_k_->values(i)));
         }
         else if (cons_type_[i] == BOUNDED_BELOW) {
-            compl_violation+=abs(multiplier_cons_->values()[i] *
-                                 (c_k_->values()[i] - c_l_->values()[i]));
+            compl_violation+=abs(multiplier_cons_->values(i) *
+                                 (c_k_->values(i) - c_l_->values(i)));
         }
         else if (cons_type_[i] == UNBOUNDED) {
-            compl_violation+=multiplier_cons_->values()[i];
+            compl_violation+=multiplier_cons_->values(i);
         }
         i++;
     }
@@ -267,15 +267,15 @@ void Algorithm::termination_check() {
     i = 0;
     while (i < nVar_ ) {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-            compl_violation+=abs(multiplier_vars_->values()[i] *
-                                 (x_u_->values()[i] - x_k_->values()[i]));
+            compl_violation+=abs(multiplier_vars_->values(i) *
+                                 (x_u_->values(i) - x_k_->values(i)));
         }
         else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-            compl_violation+=abs(multiplier_vars_->values()[i] *
-                                 (x_k_->values()[i] - x_l_->values()[i]));
+            compl_violation+=abs(multiplier_vars_->values(i) *
+                                 (x_k_->values(i) - x_l_->values(i)));
         }
         else if (cons_type_[i] == UNBOUNDED) {
-            compl_violation+= multiplier_vars_->values()[i];
+            compl_violation+= multiplier_vars_->values(i);
         }
         i++;
     }
@@ -512,10 +512,10 @@ void Algorithm::cal_infea_trial() {
 
     infea_measure_trial_ = 0.0;
     for (int i = 0; i < c_k_->Dim(); i++) {
-        if (c_trial_->values()[i] < c_l_->values()[i])
-            infea_measure_trial_ += (c_l_->values()[i] - c_trial_->values()[i]);
-        else if (c_trial_->values()[i] > c_u_->values()[i])
-            infea_measure_trial_ += (c_trial_->values()[i] - c_u_->values()[i]);
+        if (c_trial_->values(i) < c_l_->values(i))
+            infea_measure_trial_ += (c_l_->values(i) - c_trial_->values(i));
+        else if (c_trial_->values(i) > c_u_->values(i))
+            infea_measure_trial_ += (c_trial_->values(i) - c_u_->values(i));
     }
 
 }
@@ -529,10 +529,10 @@ void Algorithm::cal_infea() {
 
     infea_measure_ = 0.0;
     for (int i = 0; i < c_k_->Dim(); i++) {
-        if (c_k_->values()[i] < c_l_->values()[i])
-            infea_measure_ += (c_l_->values()[i] - c_k_->values()[i]);
-        else if (c_k_->values()[i] > c_u_->values()[i])
-            infea_measure_ += (c_k_->values()[i] - c_u_->values()[i]);
+        if (c_k_->values(i) < c_l_->values(i))
+            infea_measure_ += (c_l_->values(i) - c_k_->values(i));
+        else if (c_k_->values(i) > c_u_->values(i))
+            infea_measure_ += (c_k_->values(i) - c_u_->values(i));
     }
 }
 
@@ -543,11 +543,6 @@ void Algorithm::cal_infea() {
  */
 void Algorithm::get_search_direction() {
     p_k_->copy_vector(myQP_->get_optimal_solution());
-
-    if (options_->penalty_update)
-        infea_measure_model_ = oneNorm(myQP_->get_optimal_solution() + nVar_,
-                                       2 * nCon_);
-    //FIXME:calculate somewhere else?
 }
 
 
@@ -782,8 +777,7 @@ void Algorithm::update_radius() {
         exitflag_ = TRUST_REGION_TOO_SMALL;
         jnlst_->Printf(Ipopt::J_WARNING, Ipopt::J_MAIN,
                        "Trust-region is too small!\n");
-        THROW_EXCEPTION(SMALL_TRUST_REGION, "The trust region is smaller than"
-                        "the user-defined minimum value");
+        THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
     }
 }
 
@@ -808,12 +802,12 @@ void Algorithm::update_radius() {
 void Algorithm::classify_constraints_types() {
 
     for (int i = 0; i < nCon_; i++) {
-        cons_type_[i] = classify_single_constraint(c_l_->values()[i],
-                        c_u_->values()[i]);
+        cons_type_[i] = classify_single_constraint(c_l_->values(i),
+                        c_u_->values(i));
     }
     for (int i = 0; i < nVar_; i++) {
-        bound_cons_type_[i] = classify_single_constraint(x_l_->values()[i],
-                              x_u_->values()[i]);
+        bound_cons_type_[i] = classify_single_constraint(x_l_->values(i),
+                              x_u_->values(i));
     }
 }
 
@@ -825,6 +819,8 @@ void Algorithm::classify_constraints_types() {
 void Algorithm::update_penalty_parameter() {
 
     if (options_->penalty_update) {
+        infea_measure_model_ = myQP_->get_infea_measure_model();
+
         if (infea_measure_model_ > options_->penalty_update_tol) {
 
             double infea_measure_model_tmp = infea_measure_model_;//temporarily store the value
@@ -839,14 +835,10 @@ void Algorithm::update_penalty_parameter() {
             }
 
             shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2 * nCon_);
-            get_full_direction_LP(sol_tmp);
-
 
 
             //calculate the infea_measure of the LP
-            double infea_measure_infty = oneNorm(sol_tmp->values() + nVar_,
-                                                 2 * nCon_);
-
+            double infea_measure_infty = myLP_->get_infea_measure_model();
 
             if (infea_measure_infty <= options_->penalty_update_tol) {
                 //try to increase the penalty parameter to a number such that the
@@ -874,10 +866,8 @@ void Algorithm::update_penalty_parameter() {
 
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
-                    get_full_direction_QP(sol_tmp);
 
-                    infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-                                                   2 * nCon_);
+                    infea_measure_model_ = myQP_->get_infea_measure_model();
 
                 }
 
@@ -909,7 +899,6 @@ void Algorithm::update_penalty_parameter() {
 
                     //recalculate the infeasibility measure of the model by
                     // calculating the one norm of the slack variables
-                    get_full_direction_QP(sol_tmp);
 
                     infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
                                                    2 * nCon_);
@@ -956,10 +945,9 @@ void Algorithm::update_penalty_parameter() {
 //
 //            //recalculate the infeasibility measure of the model by
 //            // calculating the one norm of the slack variables
-//            get_full_direction_QP(sol_tmp);
 //
-//            infea_measure_model_ = oneNorm(sol_tmp->values() + nVar_,
-//                    2 * nCon_);
+//            infea_measure_model_ = myQP_->get_infea_measure_model();
+
 //            p_k_->copy_vector(sol_tmp);
 //            get_trial_point_info();
 //            get_obj_QP();
@@ -1078,16 +1066,7 @@ void Algorithm::setDefaultOption() {
 }
 
 
-void
-Algorithm::get_full_direction_QP(shared_ptr<SQPhotstart::Vector> search_direction) {
-    //Can also swp the pointer...
-    search_direction->copy_vector(myQP_->get_optimal_solution());
-}
 
-
-void Algorithm::get_full_direction_LP(shared_ptr<Vector> search_direction) {
-    search_direction->copy_vector(myLP_->get_optimal_solution());
-}
 
 
 void Algorithm::second_order_correction() {
@@ -1248,7 +1227,7 @@ void Algorithm::get_obj_QP() {
 }
 
 
-void Algorithm::print_final_statsitics() {
+void Algorithm::print_final_stats() {
 
     Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl = jnlst_->GetJournal("console");
     if (IsNull(stdout_jrnl)) {

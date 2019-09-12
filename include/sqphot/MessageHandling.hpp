@@ -20,5 +20,7 @@
 //WARNING MESSAGES
 #define INVALID_WORKING_SET_MSG "Warning! The working set index in QP is not well defined!"
 #define INVALID_RETURN_TYPE_MSG " The return type is invalid for QOREInterface"
-
+#define QP_NOT_OPTIMAL_MSG "The QP problem is not solved to optimality!\n"
+#define LP_NOT_OPTIMAL_MSG "The LP problem is not solved to optimality!\n"
+#define SMALL_TRUST_REGION_MSG "The trust region is smaller than the user-defined minimum value\n"
 #endif

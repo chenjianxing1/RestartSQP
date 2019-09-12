@@ -365,13 +365,13 @@ void SpHbMat::write_to_file(const char* name,
 
 #endif
 #endif
-
 }
 
 
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const {
+
 
 }
 
@@ -398,19 +398,18 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             std::cout << RowIndex()[i] << " ";
         std::cout << " " << std::endl;
     } else {
+        //for compressed column format
         std::cout<< name <<"= "<<std::endl;
         std::cout << "ColIndex: ";
         for (int i = 0; i < ColNum_ + 1; i++)
             std::cout << ColIndex()[i] << " ";
 
         std::cout << " " << std::endl;
-
         std::cout << "RowIndex: ";
 
         for (int i = 0; i < EntryNum_; i++)
             std::cout << RowIndex()[i] << " ";
         std::cout << " " << std::endl;
-
 
 
     }

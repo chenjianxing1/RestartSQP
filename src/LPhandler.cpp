@@ -9,29 +9,29 @@
 
 namespace SQPhotstart {
 
-LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
-                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
-    QPhandler(nlp_info, options,jnlst),
-    nlp_info_(nlp_info),
-    jnlst_(jnlst),
-    nConstr_QP_(nlp_info.nCon),
-    nVar_QP_(nlp_info.nVar +2*nlp_info.nCon),
-    LPsolverChoice_(options->LPsolverChoice) {
-    switch(LPsolverChoice_) {
-    case QPOASES:
-        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options);
-        break;
-    case QORE:
-        solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
-        break;
-    case GUROBI:
-        solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
-        break;
-    case CPLEX:
-        solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
-        break;
+    LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+                         Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+            QPhandler(nlp_info, options,jnlst),
+            nlp_info_(nlp_info),
+            jnlst_(jnlst),
+            nConstr_LP_(nlp_info.nCon),
+            nVar_LP_(nlp_info.nVar + 2 * nlp_info.nCon),
+            LPsolverChoice_(options->LPsolverChoice) {
+        switch(LPsolverChoice_) {
+            case QPOASES:
+                solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP,options,jnlst);
+                break;
+            case QORE:
+                solverInterface_ = make_shared<QOREInterface>(nlp_info,LP,options,jnlst);
+                break;
+            case GUROBI:
+                solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
+                break;
+            case CPLEX:
+                solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
+                break;
+        }
     }
-}
 
 
 
@@ -96,7 +96,7 @@ void LPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     /*the bound constraints from the linear constraints            */
     /*-------------------------------------------------------------*/
     if(LPsolverChoice_ != QORE) {
-        for (int i = 0; i < nConstr_QP_; i++) {
+        for (int i = 0; i < nConstr_LP_; i++) {
             solverInterface_->set_lbA(i, c_l->values()[i] - c_k->values()[i]);
             solverInterface_->set_ubA(i, c_u->values()[i] - c_k->values()[i]);
         }
