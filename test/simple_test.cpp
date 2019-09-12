@@ -1,7 +1,6 @@
 #include <iostream>
 #include <memory>
 #include <sqphot/QPhandler.hpp>
-#include <sqphot/MyNLP.hpp>
 #include <sqphot/Algorithm.hpp>
 #include <sqphot/Utils.hpp>
 #include <IpTNLP.hpp>
@@ -20,7 +19,6 @@ int main(int argc, char** args) {
     //printf( "	Solving Problem ");
     //std::cout << args[1]<<std::endl;
     //printf("=====================================================================================\n");
-    SmartPtr<MyNLP> nlp= new MyNLP();
 
     try {
         SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),

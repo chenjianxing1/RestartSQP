@@ -3,16 +3,14 @@ include_directories(${PROJECT_INCLUDE_DIR})
 file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/sqphot/*.hpp)
 file(GLOB SOURCES *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
-if (NOT Ipopt)
-  list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/IpoptProgram.cpp)
-endif()
 if (NOT Gurobi)
-  list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/GurobiProgram.cpp)
+  list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/GurobiInterface.cpp)
 endif()
 
 if (NOT Cplex)
-    list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/CplexProgram.cpp)
+    list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/src/CplexInterface.cpp)
 endif()
+
 
 add_library(sqphotstart STATIC ${SOURCES} ${HEADERS})
 

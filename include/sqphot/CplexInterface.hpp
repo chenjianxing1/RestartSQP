@@ -8,11 +8,11 @@
 #define SQPHOTSTART_CPLEX_INTERFACE_HPP
 
 
-#ifdef CPLEX
+#ifdef USE_CPLEX
 #include <ilcplex/ilocplex.h>
+#endif
+
 #include <sqphot/QPsolverInterface.hpp>
-
-
 
 namespace SQPhotstart {
 DECLARE_STD_EXCEPTION(CPLEX_SOLVER_FAILS);
@@ -193,17 +193,18 @@ private:
     shared_ptr<Vector> y_qp_;
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
+    #ifdef USE_CPLEX
     IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     vector<IloNumExpr> constraints_;
     vector<IloNumExpr> lterm_;/**< linear part of the objective */
     vector<IloNumVar> cplex_vars_;
+    #endif
 
 
 };
 
 
 }//SQPHOTSTART
-#endif
 #endif
 
 

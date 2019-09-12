@@ -7,10 +7,12 @@
 #ifndef _SQPHOTSTART_GUROBI_INTERFACE_
 #define _SQPHOTSTART_GUROBI_INTERFACE_
 
-#ifdef GUROBI
 
 #include <sqphot/QPsolverInterface.hpp>
+
+#ifdef USE_GUROBI
 #include <gurobi_c++.h>
+#endif
 
 namespace SQPhotstart {
 DECLARE_STD_EXCEPTION(GRB_SOLVER_FAILS);
@@ -199,5 +201,4 @@ private:
 
 }
 
-#endif
 #endif

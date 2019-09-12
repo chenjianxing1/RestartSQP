@@ -31,28 +31,22 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 
 #endif
 #endif
-    switch(QPsolverChoice_) {
+    switch (QPsolverChoice_) {
         case QPOASES:
-#ifdef USE_QPOASES
-            solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options,jnlst);
-#endif
+            solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP, options,
+                                                             jnlst);
             break;
         case QORE:
-#ifdef USE_QORE
-            solverInterface_ = make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
-#endif
+            solverInterface_ = make_shared<QOREInterface>(nlp_info, QP, options, jnlst);
+
             break;
         case GUROBI:
-#ifdef USE_GUROBI
-            solverInterface_ = make_shared<GurobiInterface>(nlp_info,QP,options,jnlst);
-#endif
+            solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
+
             break;
         case CPLEX:
-#ifdef USE_CPLEX
-            solverInterface_ = make_shared<CplexInterface>(nlp_info,QP,options,jnlst);
-#endif
+            solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
             break;
-//        default:
 //            THROW_EXCEPTION(INVALID_QP_SOLVER_CHOICE,"The QP solver choice is invalid!")
     }
 }
@@ -63,7 +57,7 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 /**
  *Default destructor
  */
-QPhandler::~QPhandler() {
+QPhandler::~QPhandler(){
     delete[] W_b_;
     W_b_ = NULL;
     delete[] W_c_;
