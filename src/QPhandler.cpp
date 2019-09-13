@@ -32,26 +32,26 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 #endif
 #endif
     switch (QPsolverChoice_) {
-        case QPOASES:
-            solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP, options,
-                                                             jnlst);
-            break;
-        case QORE:
-            solverInterface_ = make_shared<QOREInterface>(nlp_info, QP, options, jnlst);
+    case QPOASES:
+        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP, options,
+                           jnlst);
+        break;
+    case QORE:
+        solverInterface_ = make_shared<QOREInterface>(nlp_info, QP, options, jnlst);
 
-            break;
-        case GUROBI:
-	    printf("interfacing with GUROBI");
+        break;
+    case GUROBI:
+        printf("interfacing with GUROBI");
 #ifdef USE_GUROBI
-            solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
+        solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
 #endif
 
-            break;
-        case CPLEX:
+        break;
+    case CPLEX:
 #ifdef USE_CPLEX
-            solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
+        solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
 #endif
-            break;
+        break;
     }
 }
 
@@ -61,7 +61,7 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 /**
  *Default destructor
  */
-QPhandler::~QPhandler(){
+QPhandler::~QPhandler() {
     delete[] W_b_;
     W_b_ = NULL;
     delete[] W_c_;
@@ -804,9 +804,9 @@ bool QPhandler::OptimalityTest(
     return true;
 }
 
-    double QPhandler::get_infea_measure_model() {
-        return oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
-    }
+double QPhandler::get_infea_measure_model() {
+    return oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
+}
 
 #if DEBUG
 #if COMPARE_QP_SOLVER

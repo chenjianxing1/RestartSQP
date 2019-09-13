@@ -179,14 +179,14 @@ private:
     /**-------------------------------------------------------**/
 
 private:
-    #ifdef USE_GUROBI
+#ifdef USE_GUROBI
     GRBEnv* grb_env_;
     GRBLinExpr lterm_;
     GRBModel* grb_mod_;
     GRBQuadExpr qobj_;
     GRBVar*  grb_vars_;
     vector<GRBConstr> grb_constr;
-    #endif
+#endif
     Identity2Info I_info_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPReturnType status_;

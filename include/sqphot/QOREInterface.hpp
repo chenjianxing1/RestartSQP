@@ -25,11 +25,17 @@ class QOREInterface :
 public:
 
 
-    const shared_ptr<Vector>& getG() const override {return g_;};
+    const shared_ptr<Vector>& getG() const override {
+        return g_;
+    };
 
-    const shared_ptr<Vector>& getLb() const override {return lb_;};
+    const shared_ptr<Vector>& getLb() const override {
+        return lb_;
+    };
 
-    const shared_ptr<Vector>& getUb() const override {return ub_;};
+    const shared_ptr<Vector>& getUb() const override {
+        return ub_;
+    };
 
     const shared_ptr<Vector>& getLbA() const override {
         THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
@@ -90,21 +96,21 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    inline double* get_optimal_solution() override{
+    inline double* get_optimal_solution() override {
         return x_qp_->values();
     };
 
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    inline double* get_multipliers_bounds()override{
+    inline double* get_multipliers_bounds()override {
         return y_qp_->values();
     };
 
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    inline double* get_multipliers_constr()override{
+    inline double* get_multipliers_constr()override {
         return y_qp_->values()+ nVar_QP_;
     };
 
@@ -117,36 +123,36 @@ public:
 
     /** @name Setters */
     //@{
-    void set_g(int location, double value) override{
+    void set_g(int location, double value) override {
         value = value < INF ? value : INF;
         g_->setValueAt(location, value);
     };
 
-    void set_lb(int location, double value) override{
+    void set_lb(int location, double value) override {
         value = value > -INF ? value : -INF;
         lb_->setValueAt(location, value);
     };
 
-    void set_ub(int location, double value) override{
+    void set_ub(int location, double value) override {
         value = value < INF ? value : INF;
         ub_->setValueAt(location, value);
     };
 
     void set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                         Identity2Info I_info) override{
+                         Identity2Info I_info) override {
         A_->setStructure(rhs, I_info);
     };
 
     void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
-                      I_info) override{
+                      I_info) override {
         A_->setMatVal(rhs, I_info);
     };
 
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override{
+    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
         H_->setStructure(rhs);
     };
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override{
+    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
         H_->setMatVal(rhs);
     };
 
@@ -166,7 +172,7 @@ public:
     void set_lbA(shared_ptr<const Vector> rhs) override {};
     void set_ubA(int location, double value) override {};
     void set_ubA(shared_ptr<const Vector> rhs) override {};
-    void reset_constraints() override{};
+    void reset_constraints() override {};
     //@}
 
     ///////////////////////////////////////////////////////////

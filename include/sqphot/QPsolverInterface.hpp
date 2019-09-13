@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 #include <IpException.hpp>
+
 #include <sqphot/Vector.hpp>
 #include <sqphot/Utils.hpp>
 #include <sqphot/Matrix.hpp>

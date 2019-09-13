@@ -107,6 +107,13 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         }
 
     }
+
+    //  for(int i = 0; i <sorted_index_info.size(); i++) {
+    //      printf("%i ", std::get<0>(sorted_index_info[i]));
+    //      printf("%i ", std::get<1>(sorted_index_info[i]));
+    //      printf("%i \n", std::get<2>(sorted_index_info[i]));
+    //  }
+
     assert(counter == EntryNum_);
 
     if(isCompressedRow_) {
@@ -236,14 +243,12 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
                         Identity2Info I_info) {                       //adding the value to the matrix
     if(isCompressedRow_) {
         if (isInitialised_ == false) {
-            for(int i =1; i<rhs->EntryNum(); i++) {
-                if(rhs->RowIndex(i)>rhs->RowIndex(i-1)&& i>=2) {
-                    MatVal_[i-2+I_info.size] = 1;
-                    MatVal_[i-1+I_info.size] = -1;
-                }
+            int i = rhs->EntryNum();
+            while(i<EntryNum_) {
+                MatVal_[order_[i]] = 1;
+                MatVal_[order_[i+1]] = -1;
+                i +=2;
             }
-            MatVal_[EntryNum_-2] = 1;
-            MatVal_[EntryNum_-1] = -1;
             isInitialised_ = true;
         }
     }
@@ -371,23 +376,23 @@ void SpHbMat::write_to_file(const char* name,
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const {
-	
-	result->set_zeros();
-	int row = 0;
 
-	if(isCompressedRow_){
-	for(int i = 0; i<EntryNum_;i++){
-		if(i==RowIndex_[row+1]){
-			row++;
-		}
-		result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
-	}
+    result->set_zeros();
+    int row = 0;
+
+    if(isCompressedRow_) {
+        for(int i = 0; i<EntryNum_; i++) {
+            if(i==RowIndex_[row+1]) {
+                row++;
+            }
+            result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
+        }
 
 //	print("H");
 //
 //	p->print("p");
 //	result->print("result");
-	}
+    }
 }
 
 void

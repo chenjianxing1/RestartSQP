@@ -105,8 +105,8 @@ void Algorithm::Optimize() {
             update_radius();
         }
         catch (SMALL_TRUST_REGION) {
-		check_optimality();
-		break;
+            check_optimality();
+            break;
         }
 
     }
@@ -155,26 +155,26 @@ void Algorithm::check_optimality() {
         /**-------------------------------------------------------**/
         /**                    Identify Active Set                **/
         /**-------------------------------------------------------**/
-    for (i = 0; i < nCon_; i++) {
-        if (cons_type_[i] == BOUNDED_ABOVE) {
-            if (abs(c_u_->values(i) - c_k_->values(i)) <
-                    options_->active_set_tol)
-                Active_Set_constraints_[i] = ACTIVE_ABOVE;
-        } else if (cons_type_[i] == BOUNDED_BELOW) {
-            if (abs(c_k_->values(i) - c_l_->values(i)) <
-                    options_->active_set_tol) {
-                Active_Set_constraints_[i] = ACTIVE_BELOW;
+        for (i = 0; i < nCon_; i++) {
+            if (cons_type_[i] == BOUNDED_ABOVE) {
+                if (abs(c_u_->values(i) - c_k_->values(i)) <
+                        options_->active_set_tol)
+                    Active_Set_constraints_[i] = ACTIVE_ABOVE;
+            } else if (cons_type_[i] == BOUNDED_BELOW) {
+                if (abs(c_k_->values(i) - c_l_->values(i)) <
+                        options_->active_set_tol) {
+                    Active_Set_constraints_[i] = ACTIVE_BELOW;
+                }
+            } else if (cons_type_[i] == EQUAL) {
+                if ((abs(c_u_->values(i) - c_k_->values(i)) <
+                        options_->active_set_tol) &&
+                        (abs(c_k_->values(i) - c_l_->values(i)) <
+                         options_->active_set_tol))
+                    Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
+            } else {
+                Active_Set_constraints_[i] = INACTIVE;
             }
-        } else if (cons_type_[i] == EQUAL) {
-            if ((abs(c_u_->values(i) - c_k_->values(i)) <
-                    options_->active_set_tol) &&
-                    (abs(c_k_->values(i) - c_l_->values(i)) <
-                     options_->active_set_tol))
-                Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
-        } else {
-            Active_Set_constraints_[i] = INACTIVE;
         }
-    }
 
 
     for (i = 0; i < nVar_; i++) {
@@ -699,8 +699,8 @@ void Algorithm::ratio_test() {
 #else
     if (pred_reduction_ < -1.0e-8)
         myQP_->WriteQPData();
-    
-	assert(pred_reduction_ >= -1.0e-8);
+
+    assert(pred_reduction_ >= -1.0e-8);
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {
@@ -1170,8 +1170,8 @@ void Algorithm::handle_error(const char* error) {
 }
 
 void Algorithm::get_obj_QP() {
-        qp_obj_ = myQP_->get_objective();
-   
+    qp_obj_ = myQP_->get_objective();
+
 #if DEBUG
     shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
 

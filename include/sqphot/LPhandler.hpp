@@ -78,7 +78,7 @@ public:
     double* get_optimal_solution() override;
 
 
-    double get_infea_measure_model() override{
+    double get_infea_measure_model() override {
         oneNorm(solverInterface_->get_optimal_solution() + nVar_LP_ - 2 * nConstr_LP_,
                 2 * nConstr_LP_);
     }

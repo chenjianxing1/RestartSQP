@@ -16,14 +16,14 @@ namespace SQPhotstart {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-    qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
-                                       shared_ptr<const Options> options,
-                                       Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+                                   shared_ptr<const Options> options,
+                                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     status_(UNSOLVED),
     nConstr_QP_(nlp_index_info.nCon),
     nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
     options_(options) {
-        allocate_memory(nlp_index_info, qptype);
+    allocate_memory(nlp_index_info, qptype);
 }
 
 

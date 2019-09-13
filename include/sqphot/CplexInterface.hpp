@@ -191,14 +191,14 @@ private:
     shared_ptr<Vector> y_qp_;
     shared_ptr<const Options> options_;
     shared_ptr<const SpTripletMat> A_;
-    #ifdef USE_CPLEX
+#ifdef USE_CPLEX
     shared_ptr<IloEnv> cplex_env_;
     shared_ptr<IloModel> cplex_model_;
     IloNumExpr qobj_;/**< quadratic part of the objecitve*/
     vector<IloNumExpr> constraints_;
     vector<IloNumExpr> lterm_;/**< linear part of the objective */
     vector<IloNumVar> cplex_vars_;
-    #endif
+#endif
 
 
 };

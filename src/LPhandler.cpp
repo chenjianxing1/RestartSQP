@@ -9,35 +9,35 @@
 
 namespace SQPhotstart {
 
-    LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
-                         Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
-            QPhandler(nlp_info, options,jnlst),
-            nlp_info_(nlp_info),
-            jnlst_(jnlst),
-            nConstr_LP_(nlp_info.nCon),
-            nVar_LP_(nlp_info.nVar + 2 * nlp_info.nCon),
-            LPsolverChoice_(options->LPsolverChoice) {
+LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+    QPhandler(nlp_info, options,jnlst),
+    nlp_info_(nlp_info),
+    jnlst_(jnlst),
+    nConstr_LP_(nlp_info.nCon),
+    nVar_LP_(nlp_info.nVar + 2 * nlp_info.nCon),
+    LPsolverChoice_(options->LPsolverChoice) {
 
-		    switch(LPsolverChoice_) {
-			    case QPOASES:
-			    solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP,options,jnlst);
-			    break;
-			    case QORE:
-			    solverInterface_ = make_shared<QOREInterface>(nlp_info,LP,options,jnlst);
-			    break;
-			    case GUROBI:
+    switch(LPsolverChoice_) {
+    case QPOASES:
+        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, LP,options,jnlst);
+        break;
+    case QORE:
+        solverInterface_ = make_shared<QOREInterface>(nlp_info,LP,options,jnlst);
+        break;
+    case GUROBI:
 #ifdef USE_GUROBI
-			    solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
+        solverInterface_ = make_shared<GurobiInterface>(nlp_info,LP,options,jnlst);
 #endif
-			    break;
-			    case CPLEX:
+        break;
+    case CPLEX:
 #ifdef USE_CPLEX
-			    solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
+        solverInterface_ = make_shared<CplexInterface>(nlp_info,LP,options,jnlst);
 #endif
-			    break;
-		    }
+        break;
+    }
 
-	    }
+}
 
 
 /**
