@@ -52,63 +52,63 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize() {
-   // while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
         setupQP();
-//        try {
-//            myQP_->solveQP(stats_,
-//                           options_);//solve the QP subproblem and update the stats_
-//        }
-//        catch (QP_NOT_OPTIMAL) {
-//            handle_error("QP NOT OPTIMAL");
-//            break;
-//        }
-//
-//
-//        //get the search direction from the solution of the QPsubproblem
-//        get_search_direction();
-////        p_k_->print("p_k");
-//        get_obj_QP();
-//
-//        //Update the penalty parameter if necessary
-//
-//        update_penalty_parameter();
-//
-//        //calculate the infinity norm of the search direction
-//        norm_p_k_ = p_k_->getInfNorm();
-//
-//        get_trial_point_info();
-//
-//        ratio_test();
-//
-//        // Calculate the second-order-correction steps
-//        second_order_correction();
-//
-//        // Update the radius and the QP bounds if the radius has been changed
-//        stats_->iter_addone();
-//        /* output some information to the console*/
-//
-//        //check if the current iterates is optimal and decide to
-//        //exit the loop or not
-//        if (options_->printLevel >= 2) {
-//            if (stats_->iter % 10 == 0) {
-//                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-//                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-//            }
-//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-//        }
-//        check_optimality();
-//        if (exitflag_ != UNKNOWN) {
-//            break;
-//        }
-//
-//        try {
-//            update_radius();
-//        }
-//        catch (SMALL_TRUST_REGION) {
-//            THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
-//        }
+        try {
+            myQP_->solveQP(stats_,
+                           options_);//solve the QP subproblem and update the stats_
+        }
+        catch (QP_NOT_OPTIMAL) {
+            handle_error("QP NOT OPTIMAL");
+            break;
+        }
 
-    //}
+
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
+//        p_k_->print("p_k");
+        get_obj_QP();
+
+        //Update the penalty parameter if necessary
+
+        update_penalty_parameter();
+
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
+
+        get_trial_point_info();
+
+        ratio_test();
+
+        // Calculate the second-order-correction steps
+        second_order_correction();
+
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
+        /* output some information to the console*/
+
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        if (options_->printLevel >= 2) {
+            if (stats_->iter % 10 == 0) {
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+            }
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+        }
+        check_optimality();
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+
+        try {
+            update_radius();
+        }
+        catch (SMALL_TRUST_REGION) {
+            THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
+        }
+
+    }
 
     //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)

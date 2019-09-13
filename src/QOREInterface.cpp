@@ -313,8 +313,13 @@ void QOREInterface::handle_error(QPType qptype) {
             //do nothing here
             break;
         case QPSOLVER_INFEASIBLE:
-            shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_+nConstr_QP_);
+            shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_+nCon_QP_);
+            shared_ptr<Vector> Ax = make_shared<Vector>(nVar_QP_);
+            x_0->copy_vector(x_qp);
+            A_->times(x_0,
+            
 //TODO: finish this part!
+
 
 
             rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
