@@ -23,9 +23,9 @@
 #define PRINT_QP_DATA false
 #define CHECK_QP_INFEASIBILITY false
 #define GET_QP_INTERFACE_MEMBERS false
-#define PRINT_OUT_QP_WITH_ERROR false
+#define PRINT_OUT_QP_WITH_ERROR true
 #if PRINT_OUT_QP_WITH_ERROR
-#define PRINT_QP_IN_CPP false
+#define PRINT_QP_IN_CPP true
 #endif
 #endif
 

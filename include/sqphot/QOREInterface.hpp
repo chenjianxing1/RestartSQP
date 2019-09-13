@@ -216,6 +216,8 @@ private:
     shared_ptr<Vector> ub_;
     shared_ptr<Vector> x_qp_;
     shared_ptr<Vector> y_qp_;
+
+    int qpiter_[1];
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
     int* working_set_;

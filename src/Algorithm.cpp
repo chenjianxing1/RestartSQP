@@ -105,7 +105,8 @@ void Algorithm::Optimize() {
             update_radius();
         }
         catch (SMALL_TRUST_REGION) {
-            THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
+		check_optimality();
+		break;
         }
 
     }
@@ -114,9 +115,9 @@ void Algorithm::Optimize() {
     if (stats_->iter == options_->iter_max)
         exitflag_ = EXCEED_MAX_ITER;
 
-    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-        check_optimality();
-    }
+//    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+//        check_optimality();
+//    }
 
     // print the final summary message to the console
     if (options_->printLevel > 0)
@@ -239,7 +240,7 @@ void Algorithm::check_optimality() {
     /**-------------------------------------------------------**/
     /**                    Complemtarity                      **/
     /**-------------------------------------------------------**/
-
+//@{
 
     i = 0;
     while (i < nCon_ ) {
@@ -267,16 +268,17 @@ void Algorithm::check_optimality() {
             compl_violation+=abs(multiplier_vars_->values(i) *
                                  (x_k_->values(i) - x_l_->values(i)));
         }
-        else if (cons_type_[i] == UNBOUNDED) {
+        else if (bound_cons_type_[i] == UNBOUNDED) {
             compl_violation+= multiplier_vars_->values(i);
         }
         i++;
     }
 
+    //@}
     /**-------------------------------------------------------**/
     /**                    Stationarity                       **/
     /**-------------------------------------------------------**/
-
+//@{
     shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
     // the difference of g-J^T y -\lambda
     jacobian_->transposed_times(multiplier_cons_, difference);
@@ -284,6 +286,7 @@ void Algorithm::check_optimality() {
     difference->subtract_vector(grad_f_->values());
 
     statioanrity_violation = difference->getOneNorm();
+    //@}
 
 
     /**-------------------------------------------------------**/
@@ -694,9 +697,10 @@ void Algorithm::ratio_test() {
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_)
             && actual_reduction_ >= -options_->tol)
 #else
-    if (pred_reduction_ < 0)
+    if (pred_reduction_ < -1.0e-8)
         myQP_->WriteQPData();
-    assert(pred_reduction_ > 0);
+    
+	assert(pred_reduction_ >= -1.0e-8);
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {
@@ -768,8 +772,8 @@ void Algorithm::update_radius() {
             stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
         }
         exitflag_ = TRUST_REGION_TOO_SMALL;
-        jnlst_->Printf(Ipopt::J_WARNING, Ipopt::J_MAIN,
-                       "Trust-region is too small!\n");
+//        jnlst_->Printf(Ipopt::J_WARNING, Ipopt::J_MAIN,
+//                       "Trust-region is too small!\n");
         THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
     }
 }
@@ -1166,26 +1170,8 @@ void Algorithm::handle_error(const char* error) {
 }
 
 void Algorithm::get_obj_QP() {
-
-
-    switch(options_->QPsolverChoice) {
-    case QPOASES:
         qp_obj_ = myQP_->get_objective();
-        break;
-    case QORE: {
-        shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
-        hessian_->times(p_k_, Hp);//H*p_k
-        qp_obj_ = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
-                  infea_measure_model_ * rho_;
-    }
-    break;
-    case GUROBI:
-        qp_obj_ = myQP_->get_objective();
-        break;
-    case CPLEX:
-        qp_obj_ = myQP_->get_objective();
-        break;
-    }
+   
 #if DEBUG
     shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
 

@@ -41,11 +41,16 @@ QPhandler::QPhandler(Index_info nlp_info, shared_ptr<const Options> options,
 
             break;
         case GUROBI:
+	    printf("interfacing with GUROBI");
+#ifdef USE_GUROBI
             solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
+#endif
 
             break;
         case CPLEX:
+#ifdef USE_CPLEX
             solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
+#endif
             break;
     }
 }

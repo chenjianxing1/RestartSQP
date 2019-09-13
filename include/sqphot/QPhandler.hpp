@@ -6,6 +6,7 @@
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Utils.hpp>
+
 #include <sqphot/QPsolverInterface.hpp>
 #include <sqphot/qpOASESInterface.hpp>
 #include <sqphot/GurobiInterface.hpp>
