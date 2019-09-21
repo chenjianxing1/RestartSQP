@@ -173,18 +173,16 @@ double QOREInterface::get_obj_value() {
 }
 
 
-QPReturnType QOREInterface::get_status() {
+Exitflag QOREInterface::get_status() {
     switch(status_) {
     case QPSOLVER_ITER_LIMIT:
-        return QP_EXCEED_MAX_ITER;
-    case QPSOLVER_OPTIMAL:
-        return QP_OPTIMAL;
+        return QPERROR_EXCEED_MAX_ITER;
     case QPSOLVER_INFEASIBLE:
-        return QP_INFEASIBLE;
+        return QPERROR_INFEASIBLE;
     case QPSOLVER_UNBOUNDED:
-        return QP_UNBOUNDED;
+        return QPERROR_UNBOUNDED;
     default:
-        return QP_UNKNOWN_ERROR;
+        return QPERROR_UNKNOWN;
 
     }
 }

@@ -127,7 +127,7 @@ public:
      */
     virtual void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)=0;
 
-    virtual QPReturnType get_status() = 0;
+    virtual Exitflag get_status() = 0;
 
     //@}
 

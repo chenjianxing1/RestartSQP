@@ -113,7 +113,7 @@ public:
     /**
      * @brief Get the return status of QPsolver
      */
-    QPReturnType get_status();
+    Exitflag get_status();
     //@}
 
     /** @name Setters*/

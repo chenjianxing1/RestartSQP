@@ -91,7 +91,7 @@ public:
      * @brief get the final return status of the QP problem
      */
 
-    QPReturnType get_status() override;
+    Exitflag get_status() override;
 //@}
 
     /** @name Setters */
@@ -191,16 +191,10 @@ private:
 
 
 
-    void handler_error(QPType qptype, shared_ptr<Stats> stats);
+    void handle_error(QPType qptype, shared_ptr<Stats> stats);
 
 
     void reset_flags();
-
-
-    /**
-     * @brief obtain an exit status from QP solver and change the class member status_
-     */
-    void obtain_status();
 
 
     /**
@@ -234,7 +228,6 @@ private:
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     QPMatrixType new_QP_matrix_status_ = UNDEFINED;
     QPMatrixType old_QP_matrix_status_ = UNDEFINED;
-    QPReturnType status_;
     UpdateFlags data_change_flags_;
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
     int nConstr_QP_;  /**< number of constraints for QP*/

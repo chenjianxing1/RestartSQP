@@ -469,12 +469,8 @@ void QPhandler::WriteQPData() {
     solverInterface_->WriteQPDataToFile(jnlst_,Ipopt::J_LAST_LEVEL,Ipopt::J_USER1);
 }
 
-QPReturnType QPhandler::get_status() {
-#if DEBUG
-    return QP_UNKNOWN_ERROR;
-#else
+Exitflag QPhandler::get_status() {
     return (solverInterface_->get_status());
-#endif
 }
 
 

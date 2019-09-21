@@ -114,7 +114,7 @@ public:
         return y_qp_->values()+ nVar_QP_;
     };
 
-    QPReturnType get_status() override;
+    Exitflag get_status() override;
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 

@@ -101,7 +101,7 @@ public:
      */
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
-    QPReturnType get_status() override;
+    Exitflag get_status() override;
 
     //@}
 
@@ -189,7 +189,7 @@ private:
 #endif
     Identity2Info I_info_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    QPReturnType status_;
+    Exitflag status_;
     QPType qptype_;
     int nConstr_QP_;
     int nVar_QP_;

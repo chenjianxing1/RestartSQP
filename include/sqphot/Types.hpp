@@ -22,19 +22,19 @@ namespace SQPhotstart {
 //    TEST_ALL = 0
 //};
 
-enum QPReturnType {
-    UNSOLVED = -99,
-    QP_OPTIMAL = 0,
-    QP_NOTINITIALISED = -1,
-    QP_EXCEED_MAX_ITER = 1,
-    QP_INFEASIBLE = -2,
-    QP_UNBOUNDED = -3,
-    QP_PREPARINGAUXILIARYQP = -6,
-    QP_AUXILIARYQPSOLVED = -7,
-    QP_PERFORMINGHOMOTOPY = -8,
-    QP_HOMOTOPYQPSOLVED = -9,
-    QP_UNKNOWN_ERROR = 99
-};
+//enum QPReturnType {
+//    UNSOLVED = -99,
+//    QP_OPTIMAL = 0,
+//    QP_NOTINITIALISED = -1,
+//    QP_EXCEED_MAX_ITER = 1,
+//    QP_INFEASIBLE = -2,
+//    QP_UNBOUNDED = -3,
+//    QP_PREPARINGAUXILIARYQP = -6,
+//    QP_AUXILIARYQPSOLVED = -7,
+//    QP_PERFORMINGHOMOTOPY = -8,
+//    QP_HOMOTOPYQPSOLVED = -9,
+//    QP_UNKNOWN_ERROR = 99
+//};
 
 
 enum QPType {
@@ -57,6 +57,7 @@ enum Exitflag {
     QPERROR_AUXILIARYQPSOLVED,
     QPERROR_PERFORMINGHOMOTOPY,
     QPERROR_HOMOTOPYQPSOLVED,
+    QPERROR_UNKNOWN,
     TRUST_REGION_TOO_SMALL,
     STEP_LARGER_THAN_TRUST_REGION,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.

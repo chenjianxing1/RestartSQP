@@ -463,11 +463,14 @@ public:
      * @param I_info the information of 2 identity sub matrices.
      *
      */
+//@{
     void setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
 
 
     void setStructure(std::shared_ptr<const SpTripletMat> rhs);
+//@}
 
+    void get_dense_matrix(double* dense_matrix);
 
     /**
      * @brief print the matrix information

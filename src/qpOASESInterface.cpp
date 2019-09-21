@@ -19,7 +19,6 @@ namespace SQPhotstart {
 qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
                                    shared_ptr<const Options> options,
                                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
-    status_(UNSOLVED),
     nConstr_QP_(nlp_index_info.nCon),
     nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
     options_(options) {
@@ -94,8 +93,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
             firstQPsolved_ = true;
         }
         else {
-            obtain_status();
-            handler_error(QP, stats);
+            handle_error(QP, stats);
         }
     }
     else {
@@ -138,8 +136,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
     stats->qp_iter_addValue((int) nWSR);
 
     if (!solver_->isSolved()) {
-        obtain_status();
-        handler_error(QP, stats);
+        handle_error(QP, stats);
     }
     solver_->getPrimalSolution(x_qp_->values());
     solver_->getDualSolution(y_qp_->values());
@@ -163,8 +160,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
             firstQPsolved_ = true;
         }
         else {
-            obtain_status();
-            handler_error(LP, stats);
+            handle_error(LP, stats);
         }
     }
     else {
@@ -202,8 +198,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
         reset_flags();
 
         if (!solver_->isSolved()) {
-            obtain_status();
-            handler_error(LP, stats);
+            handle_error(LP, stats);
         }
     }
     //get primal and dual solutions
@@ -252,40 +247,31 @@ inline double qpOASESInterface::get_obj_value() {
 }
 
 
-void qpOASESInterface::obtain_status() {
+
+
+Exitflag qpOASESInterface::get_status() {
 
     qpOASES::QProblemStatus finalStatus = solver_->getStatus();
 
     if (solver_->isInfeasible()) {
-        status_ = QP_INFEASIBLE;
+        return   QPERROR_INFEASIBLE;
     }
     else if (solver_->isUnbounded()) {
-        status_ = QP_UNBOUNDED;
+        return  QPERROR_UNBOUNDED;
     }
     else
         switch (finalStatus) {
         case qpOASES::QPS_NOTINITIALISED:
-            status_ = QP_NOTINITIALISED;
-            break;
+            return  QPERROR_NOTINITIALISED;
         case qpOASES::QPS_PREPARINGAUXILIARYQP:
-            status_ = QP_PREPARINGAUXILIARYQP;
-            break;
+            return  QPERROR_PREPARINGAUXILIARYQP;
         case qpOASES::QPS_AUXILIARYQPSOLVED:
-            status_ = QP_AUXILIARYQPSOLVED;
-            break;
+            return  QPERROR_AUXILIARYQPSOLVED;
         case qpOASES::QPS_PERFORMINGHOMOTOPY:
-            status_ = QP_PERFORMINGHOMOTOPY;
-            break;
+            return  QPERROR_PERFORMINGHOMOTOPY;
         case qpOASES::QPS_HOMOTOPYQPSOLVED:
-            status_ = QP_HOMOTOPYQPSOLVED;
-            break;
+            return  QPERROR_HOMOTOPYQPSOLVED;
         }
-}
-
-
-QPReturnType qpOASESInterface::get_status() {
-
-    return status_;
 }
 
 
@@ -433,28 +419,18 @@ void qpOASESInterface::reset_flags() {
 }
 
 
-void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
+void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
 
     if (qptype == LP) {
-        if (true) {
-            qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
-            solver_->init(0, g_->values(), A_qpOASES_.get(),
-                          lb_->values(), ub_->values(), lbA_->values(),
-                          ubA_->values(), nWSR);
-            obtain_status();
-            old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
-            stats->qp_iter_addValue((int) nWSR);
+        qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
+        solver_->init(0, g_->values(), A_qpOASES_.get(),
+                      lb_->values(), ub_->values(), lbA_->values(),
+                      ubA_->values(), nWSR);
 
-            if (!solver_->isSolved()) {
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-                WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
-#endif
-#endif
-                THROW_EXCEPTION(LP_NOT_OPTIMAL,LP_NOT_OPTIMAL_MSG);
-            }
-        }
-        else {
+        old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
+        stats->qp_iter_addValue((int) nWSR);
+
+        if (!solver_->isSolved()) {
 #if DEBUG
 #if PRINT_OUT_QP_WITH_ERROR
             WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
@@ -465,31 +441,21 @@ void qpOASESInterface::handler_error(QPType qptype, shared_ptr<Stats> stats) {
 
     }
     else {
-        if (true) {
-            qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
-            solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
-                          lb_->values(), ub_->values(), lbA_->values(),
-                          ubA_->values(), nWSR);
-            obtain_status();
-            old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
-            stats->qp_iter_addValue((int) nWSR);
-            if (!solver_->isSolved()) {
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-                WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
-#endif
-#endif
-                THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
 
-            }
-        }
-        else {
+        qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
+        solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                      lb_->values(), ub_->values(), lbA_->values(),
+                      ubA_->values(), nWSR);
+        old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
+        stats->qp_iter_addValue((int) nWSR);
+        if (!solver_->isSolved()) {
 #if DEBUG
 #if PRINT_OUT_QP_WITH_ERROR
             WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
 #endif
 #endif
             THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
+
         }
     }
 }

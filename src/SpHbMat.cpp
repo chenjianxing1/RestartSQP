@@ -17,7 +17,7 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow)
     isCompressedRow_(isCompressedRow) {
 
     if(isCompressedRow_) {
-        RowIndex_ = new int[RowNum+1]();
+        RowIndex_ = new int[RowNum + 1]();
     } else
         ColIndex_ = new int[ColNum + 1]();
 }
@@ -45,7 +45,7 @@ SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow) :
 
     if(isCompressedRow) {
         ColIndex_ = new int[nnz]();
-        RowIndex_ = new int[RowNum+1]();
+        RowIndex_ = new int[RowNum + 1]();
     } else {
         ColIndex_ = new int[ColNum + 1]();
         RowIndex_ = new int[nnz]();
@@ -373,34 +373,103 @@ void SpHbMat::write_to_file(const char* name,
 }
 
 
+void SpHbMat::get_dense_matrix(double* dense_matrix) {
+
+
+}
 void
 SpHbMat::times(std::shared_ptr<const Vector> p,
                std::shared_ptr<Vector> result) const {
 
     result->set_zeros();
-    int row = 0;
 
+    int row;
     if(isCompressedRow_) {
+        for(int i = 1; i <RowNum_+1; i++) {
+            if(RowIndex_[i]>0) {
+                row = i-1;
+                break;
+            }
+        }
         for(int i = 0; i<EntryNum_; i++) {
             if(i==RowIndex_[row+1]) {
                 row++;
             }
             result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
         }
+    }
+    else {
 
-//	print("H");
-//
-//	p->print("p");
-//	result->print("result");
     }
 }
 
+
+//@{
 void
 SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
                     Ipopt::EJournalCategory category) const {
+    char mat_val[99];
+    auto dense_matrix = new double[RowNum_ * ColNum_]();
+    int row;
+    if(isCompressedRow_) {
+        for(int i = 1; i <RowNum_+1; i++) {
+            if(RowIndex_[i]>0) {
+                row = i-1;
+                break;
+            }
+        }
+        for (int i = 0; i < EntryNum_; i++) {
+            if(i==RowIndex_[row+1]) {
+                row++;
+            }
+            dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
+        }
+    }
+    else {
+        int col;
+        for(int i = 1; i <ColNum_+1; i++) {
+            if(ColIndex_[i]>0) {
+                col = i-1;
+                break;
+            }
+        }
+        for (int i = 0; i < EntryNum_; i++) {
+            if(i==ColIndex_[col+1]) {
+                col++;
+            }
+            dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
+        }
+    }
 
+    if(!IsNull(jnlst)) {
+//    if (name != nullptr) {
+//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
+//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
+//    }
+//    for (int i = 0; i < RowNum_; i++) {
+//        for (int j = 0; j < ColNum_; j++) {
+//            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+//               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
+//        }
+//           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
+//    }
+//       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+    } else {
+        if(name!=nullptr)
+            printf("%s =:{\n", name);
+
+        for (int i = 0; i < RowNum_; i++) {
+            for (int j = 0; j < ColNum_; j++) {
+                printf("%10e  ", dense_matrix[i * ColNum() + j]);
+            }
+            printf("\n");
+        }
+        printf("}\n\n");
+    }
+    delete[] dense_matrix;
 }
+
 
 void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
@@ -431,7 +500,6 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             std::cout << RowIndex()[i] << " ";
         std::cout << " " << std::endl;
 
-
     }
     std::cout << "MatVal:   ";
 
@@ -445,6 +513,6 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     std::cout << " " << std::endl;
 }
 
-
+//@}
 }//END_OF_NAMESPACE
 
