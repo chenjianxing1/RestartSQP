@@ -44,22 +44,23 @@ enum QPType {
 
 
 enum Exitflag {
-    OPTIMAL,
-    INVALID_NLP,
-    CONVERGE_TO_NONOPTIMAL,
-    EXCEED_MAX_ITER, //exceeds the maximum number of iteration
-    QPERROR_INTERNAL_ERROR, //QP solver internal error
-    QPERROR_INFEASIBLE,//QP solver error: conclude QP formulation infeasible
-    QPERROR_UNBOUNDED,  //QP solver error: unbounded QP
-    QPERROR_EXCEED_MAX_ITER, //QP solver error: Exceed maximum iteration,
-    QPERROR_NOTINITIALISED,
-    QPERROR_PREPARINGAUXILIARYQP,
-    QPERROR_AUXILIARYQPSOLVED,
-    QPERROR_PERFORMINGHOMOTOPY,
-    QPERROR_HOMOTOPYQPSOLVED,
-    QPERROR_UNKNOWN,
-    TRUST_REGION_TOO_SMALL,
-    STEP_LARGER_THAN_TRUST_REGION,
+    OPTIMAL = 0,
+    INVALID_NLP = -1,
+    CONVERGE_TO_NONOPTIMAL = 1,
+    EXCEED_MAX_ITER = 2, //exceeds the maximum number of iteration
+    QPERROR_INTERNAL_ERROR = 21, //QP solver internal error
+    QPERROR_INFEASIBLE = 22,//QP solver error: conclude QP formulation infeasible
+    QPERROR_UNBOUNDED = 23,  //QP solver error: unbounded QP
+    QPERROR_EXCEED_MAX_ITER = 24, //QP solver error: Exceed maximum iteration,
+    QPERROR_NOTINITIALISED =25,
+    QPERROR_PREPARINGAUXILIARYQP = 26,
+    QPERROR_AUXILIARYQPSOLVED = 27,
+    QPERROR_PERFORMINGHOMOTOPY = 28,
+    QPERROR_HOMOTOPYQPSOLVED = 29,
+    QPERROR_UNKNOWN = 30,
+    PRED_REDUCTION_NEGATIVE = 3,
+    TRUST_REGION_TOO_SMALL = 4,
+    STEP_LARGER_THAN_TRUST_REGION = 5,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.
     UNKNOWN = -99//unknown error
 };

@@ -334,10 +334,8 @@ void QOREInterface::handle_error(QPType qptype) {
 
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          x_0->values(), NULL);//
+        assert(rv_ == QPSOLVER_OK);
         break;
-
-        //resolve the problem with a feasible starting point
-
     }
 
 }

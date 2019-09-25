@@ -591,18 +591,6 @@ void Algorithm::setupQP() {
                 stdout_jrnl->SetAllPrintLevels(options_->print_level);
                 stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
             }
-            if(!QPinfoFlag_.Update_g)
-                printf("not updating g\n");
-            if(!QPinfoFlag_.Update_H)
-                printf("not updating H\n");
-            if(!QPinfoFlag_.Update_A)
-                printf("not updating A\n");
-            if(!QPinfoFlag_.Update_bounds)
-                printf("not updating bounds\n");
-            if(!QPinfoFlag_.Update_delta)
-                printf("not updating delta\n");
-            if(!QPinfoFlag_.Update_penalty)
-                printf("not updating penalty\n");
 
             jnlst_->Printf(Ipopt::J_WARNING, Ipopt::J_MAIN, "QP is not changed!");
             THROW_EXCEPTION(QP_UNCHANGED, "QP is not changed");
@@ -710,10 +698,15 @@ void Algorithm::ratio_test() {
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_)
             && actual_reduction_ >= -options_->tol)
 #else
-    if (pred_reduction_ < -1.0e-8)
+    if (pred_reduction_ < -1.0e-8) {
         myQP_->WriteQPData();
+        exitflag_ = PRED_REDUCTION_NEGATIVE;
+        //hessian_->print_full("hessian_");
 
-    assert(pred_reduction_ >= -1.0e-8);
+        return;
+    }
+
+
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {
@@ -1245,6 +1238,11 @@ void Algorithm::print_final_stats() {
         jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
                        "Exitflag:                                                   %23s\n",
                        "OPTIMAL");
+        break;
+    case PRED_REDUCTION_NEGATIVE:
+        jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                       "Exitflag:                                                   %23s\n",
+                       "PRED_REDUCTION_NEGATIVE");
         break;
     case INVALID_NLP :
         jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,

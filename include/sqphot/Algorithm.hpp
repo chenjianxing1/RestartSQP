@@ -100,13 +100,35 @@ public:
 
     /** @name Getters*/
     //@{
-    inline Exitflag getExitFlag() {
+    inline Exitflag get_exit_flag() const {
         return exitflag_;
     }
 
+    inline OptimalityStatus get_opt_status() const {
+        return opt_status_;
+    }
+
+    inline double get_final_objective() const {
+        return obj_value_;
+    }
+
+    inline shared_ptr<Stats> get_stats() const {
+        return stats_;
+    }
+
+    inline double get_norm_p() const {
+        return norm_p_k_;
+    }
+
+    inline int get_num_constr() const {
+        return nCon_;
+    }
+
+    inline int get_num_var() const {
+        return nVar_;
+    }
 
     //@}
-
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////
@@ -291,8 +313,6 @@ private:
      */
     void classify_constraints_types();
 
-
-    void handle_error(const char* error = NULL);
 
 
     void print_final_stats();

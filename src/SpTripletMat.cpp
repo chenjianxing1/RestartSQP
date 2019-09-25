@@ -48,12 +48,12 @@ SpTripletMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalLevel level,
                     Ipopt::EJournalCategory category) const {
 
-    std::cout << "Row Column Entry Order" << std::endl;
+    std::cout << "Row    Column    Entry    Order" << std::endl;
     for (int i = 0; i < EntryNum_; i++) {
-        std::cout << RowIndex_[i] << "    ";
-        std::cout << ColIndex_[i] << "    ";
-        std::cout << MatVal_[i] << "    ";
-        std::cout << order_[i] << std::endl;
+        printf("%d       ", RowIndex_[i]);
+        printf("%d       ", ColIndex_[i]);
+        printf("%10e     ", MatVal_[i]);
+        printf("%d     \n", order_[i]);
     }
 }
 
