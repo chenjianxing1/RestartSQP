@@ -96,6 +96,22 @@ void Algorithm::Optimize() {
             }
             jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
         }
+	else{
+
+		Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+
+		if (IsValid(logout_jrnl)) {
+			std::cout<<"isvalied";
+			logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+		}
+		if (stats_->iter % 10 == 0) {
+			jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+			jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+		}
+		jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+	}
+
+	
         check_optimality();
         if (exitflag_ != UNKNOWN) {
             break;
@@ -120,8 +136,7 @@ void Algorithm::Optimize() {
 //    }
 
     // print the final summary message to the console
-    if (options_->printLevel > 0)
-        print_final_stats();
+    print_final_stats();
     jnlst_->FlushBuffer();
 }
 
@@ -381,12 +396,16 @@ void Algorithm::get_trial_point_info() {
  *  information for the first QP.
  *
  */
-void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
-    allocate_memory(nlp);
+void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
+		const string& name) {
+	std::size_t found = name.find_last_of("/\\"); 
+	output_file_name_ = name.substr(found+1)+ "_output.log";
 
-    delta_ = options_->delta;
-    rho_ = options_->rho;
-    norm_p_k_ = 0.0;
+	allocate_memory(nlp);
+
+	delta_ = options_->delta;
+	rho_ = options_->rho;
+	norm_p_k_ = 0.0;
 
     /*-----------------------------------------------------*/
     /*         Get the nlp information                     */
@@ -412,9 +431,13 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     /*-----------------------------------------------------*/
 
 
+    if(options_->printLevel>1){
     Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl =
         jnlst_->AddFileJournal("console", "stdout", Ipopt::J_ITERSUMMARY);
-    stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
+
+    }
+    else
+        jnlst_->AddFileJournal("file_output", output_file_name_.c_str(), Ipopt::J_ITERSUMMARY);
 
 #if DEBUG
     Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
@@ -424,7 +447,9 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
 
     /*-----------------------------------------------------*/
     /*                      OUTPUT                         */
-    /*-----------------------------------------------------*/
+    /*------------------------------------------*-----------*/
+
+
     if (options_->printLevel > 1) {
         Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl = jnlst_->GetJournal("console");
         if (IsValid(stdout_jrnl)) {
@@ -436,16 +461,19 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-        //printf(" %6i\n",stats_->iter);
+    }else{
 
-        //printf("%9.2e\n", obj_value_);
+    Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
 
-        //printf("%9.2e\n",norm_p_k_);
-        //printf("%9.2e\n",infea_measure_);
-        //printf("%9.2e\n",delta_);
-        //printf("%9.2e\n",rho_);
+        if (IsValid(logout_jrnl)) {
+		std::cout<<"isvalied";
+            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+        }
 
-
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
 
     }
 
@@ -465,9 +493,6 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     nlp_ = make_shared<SQPTNLP>(nlp);
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
-
-
-
     cons_type_ = new ConstraintType[nCon_];
     bound_cons_type_ = new ConstraintType[nVar_];
     Active_Set_bounds_ = new ActiveType[nVar_];
@@ -480,7 +505,7 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     multiplier_vars_ = make_shared<Vector>(nVar_);
     c_k_ = make_shared<Vector>(nCon_);
     c_trial_ = make_shared<Vector>(nCon_);
-    x_l_ = make_shared<Vector>(nVar_);
+   x_l_ = make_shared<Vector>(nVar_);
     x_u_ = make_shared<Vector>(nVar_);
     c_l_ = make_shared<Vector>(nCon_);
     c_u_ = make_shared<Vector>(nCon_);
@@ -1220,17 +1245,31 @@ void Algorithm::get_obj_QP() {
 
 void Algorithm::print_final_stats() {
 
-    Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl = jnlst_->GetJournal("console");
-    if (IsNull(stdout_jrnl)) {
-        Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl =
-            jnlst_->AddFileJournal("console", "stdout", Ipopt::J_ITERSUMMARY);
-    }
-    if (IsValid(stdout_jrnl)) {
-        // Set printlevel for stdout
-        stdout_jrnl->SetAllPrintLevels(options_->print_level);
-        stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
-    }
 
+	if(options_ ->printLevel>0){
+		Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl = jnlst_->GetJournal("console");
+		if (IsNull(stdout_jrnl)) {
+			Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl =
+				jnlst_->AddFileJournal("console", "stdout", Ipopt::J_ITERSUMMARY);
+		}
+		if (IsValid(stdout_jrnl)) {
+			// Set printlevel for stdout
+			stdout_jrnl->SetAllPrintLevels(options_->print_level);
+			stdout_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_NONE);
+		}
+	}
+	else{
+		Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+
+		if(IsNull(logout_jrnl)){
+			jnlst_->AddFileJournal("file_output", output_file_name_.c_str(), Ipopt::J_ITERSUMMARY);
+		}
+		if (IsValid(logout_jrnl)) {
+			std::cout<<"isvalied";
+			logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+		}
+
+	}
 
     jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
     switch (exitflag_) {

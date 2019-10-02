@@ -32,7 +32,7 @@ QOREInterface::QOREInterface(Index_info nlp_info,
  * @brief Destructor
  */
 QOREInterface::~QOREInterface() {
-    delete[] working_set_;
+    delete[] working_set_; working_set_ = NULL;
     QPFree(&solver_);
 }
 
@@ -77,15 +77,6 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     QPGetInt(solver_, "itercount", qpiter_);
     stats->qp_iter_addValue(qpiter_[0]);
 
-#if DEBUG
-#if CHECK_QP_INFEASIBILITY
-    A_->print("A_");
-    H_->print("H_");
-    lb_->print("lb_");
-    ub_->print("ub_");
-    g_->print("g_");
-#endif
-#endif
 }
 
 

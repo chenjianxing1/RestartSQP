@@ -57,7 +57,8 @@ public:
      *  information for the first QP.
      *
      */
-    void initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp);
+    void initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
+		    const std::string& name);
 
     /** temporarily use Ipopt options*/
     //@{
@@ -329,6 +330,7 @@ private:
                                                *unbounded*/
     ConstraintType* cons_type_; /**<the constraints type, it can be either
                                           *bounded,bounded above,bounded below, or unbounded*/
+    std::string pname_; /**< problem name*/
     Exitflag exitflag_ = UNKNOWN;
     int nCon_; /**< number of constraints*/
     int nVar_; /**< number of variables*/
@@ -376,6 +378,7 @@ private:
     shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
     Ipopt::EJournalLevel jnrl_level_;
 
+    std::string  output_file_name_;//put here temporarity
 
 };//END_OF_ALG_CLASS
 

@@ -42,12 +42,13 @@ public:
         fclose(file);
     }
 
-    void write_in_detail(const std::string& pname, /**<name of the problem*/
+    /**
+     * @brief Write a brief summary for each problem being solved, 
+     */
+    void write_in_brief(const std::string& pname, /**<name of the problem*/
                          Algorithm& alg) {
 
         std::size_t found = pname.find_last_of("/\\");
-        std::cout << " problem: " << pname.substr(found+1) << '\n';
-
         OptimalityStatus opt_status = alg.get_opt_status();
         shared_ptr<Stats> stats;
         stats = alg.get_stats();
@@ -61,13 +62,16 @@ public:
 
     }
 
-    void write_in_brief( const char* pname, /**<name of the problem*/
+
+
+    //write each iteration out
+    void write_in_detail( const char* pname, /**<name of the problem*/
                          Algorithm& alg) {
+	
 
     }
 private:
     FILE* file;
-
 
 };
 
@@ -76,16 +80,11 @@ int main(int argc, char** args) {
     SmartPtr<TNLP> ampl_tnlp = new AmplTNLP(ConstPtr(alg.getJnlst()),
                                             alg.getRoptions2(),
                                             args);
-    alg.initialization(ampl_tnlp);
+    alg.initialization(ampl_tnlp,args[1]);
     alg.Optimize();
 
     shared_ptr<Table_Writer> writer = make_shared<Table_Writer>("result_table");
     writer->write_in_detail(args[1],alg);
-
-    if(alg.get_exit_flag()==OPTIMAL)
-        std::cout<<args[1]<<std::endl;
-    else
-        std::cout<<std::endl;
 
     return 0;
 
