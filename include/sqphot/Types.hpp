@@ -44,6 +44,9 @@ enum Exitflag {
     INVALID_NLP = -1,
     CONVERGE_TO_NONOPTIMAL = 1,
     EXCEED_MAX_ITER = 2, //exceeds the maximum number of iteration
+    PRED_REDUCTION_NEGATIVE = 3,
+    TRUST_REGION_TOO_SMALL = 4,
+    STEP_LARGER_THAN_TRUST_REGION = 5,
     QPERROR_INTERNAL_ERROR = 21, //QP solver internal error
     QPERROR_INFEASIBLE = 22,//QP solver error: conclude QP formulation infeasible
     QPERROR_UNBOUNDED = 23,  //QP solver error: unbounded QP
@@ -54,9 +57,6 @@ enum Exitflag {
     QPERROR_PERFORMINGHOMOTOPY = 28,
     QPERROR_HOMOTOPYQPSOLVED = 29,
     QPERROR_UNKNOWN = 30,
-    PRED_REDUCTION_NEGATIVE = 3,
-    TRUST_REGION_TOO_SMALL = 4,
-    STEP_LARGER_THAN_TRUST_REGION = 5,
     AUXINPUT_NOT_OPTIMAL = 99,//The input point in auxInput is not optimal when hotstart is enabled.
     UNKNOWN = -99//unknown error
 };

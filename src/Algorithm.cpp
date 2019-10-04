@@ -101,7 +101,6 @@ void Algorithm::Optimize() {
 		Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
 
 		if (IsValid(logout_jrnl)) {
-			std::cout<<"isvalied";
 			logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
 		}
 		if (stats_->iter % 10 == 0) {
@@ -466,7 +465,6 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
     Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
 
         if (IsValid(logout_jrnl)) {
-		std::cout<<"isvalied";
             logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
         }
 
@@ -1265,7 +1263,6 @@ void Algorithm::print_final_stats() {
 			jnlst_->AddFileJournal("file_output", output_file_name_.c_str(), Ipopt::J_ITERSUMMARY);
 		}
 		if (IsValid(logout_jrnl)) {
-			std::cout<<"isvalied";
 			logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
 		}
 

@@ -352,9 +352,9 @@ void SpHbMat::write_to_file(const char* name,
         if (i % 10 == 0 && i > 1)
             jnlst->Printf(level, category, "\n");
         if (i == EntryNum_ - 1)
-            jnlst->Printf(level, category, "%10e};\n\n", MatVal_[i]);
+            jnlst->Printf(level, category, "%23.16e};\n\n", MatVal_[i]);
         else
-            jnlst->Printf(level, category, "%10e, ", MatVal_[i]);
+            jnlst->Printf(level, category, "%23.16e, ", MatVal_[i]);
     }
 #else
     int i;
@@ -365,7 +365,7 @@ void SpHbMat::write_to_file(const char* name,
         jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
     }
     for (i = 0; i < EntryNum_; i++) {
-        jnlst->Printf(level, category, "%10e\n", MatVal_[i]);
+        jnlst->Printf(level, category, "%23.16e\n", MatVal_[i]);
     }
 
 #endif
@@ -461,7 +461,7 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 
         for (int i = 0; i < RowNum_; i++) {
             for (int j = 0; j < ColNum_; j++) {
-                printf("%10e  ", dense_matrix[i * ColNum() + j]);
+                printf("%23.16e  ", dense_matrix[i * ColNum() + j]);
             }
             printf("\n");
         }

@@ -64,12 +64,6 @@ public:
 
 
 
-    //write each iteration out
-    void write_in_detail( const char* pname, /**<name of the problem*/
-                         Algorithm& alg) {
-	
-
-    }
 private:
     FILE* file;
 
@@ -84,7 +78,7 @@ int main(int argc, char** args) {
     alg.Optimize();
 
     shared_ptr<Table_Writer> writer = make_shared<Table_Writer>("result_table");
-    writer->write_in_detail(args[1],alg);
+    writer->write_in_brief(args[1],alg);
 
     return 0;
 

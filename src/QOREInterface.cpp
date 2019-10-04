@@ -253,8 +253,8 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 #else
     jnlst->Printf(level, category, "%d\n", nVar_QP_);
     jnlst->Printf(level, category, "%d\n", nCon_QP_);
-    jnlst->Printf(level, category, "%d\n", A_->EntryNum();
-                  jnlst->Printf(level, category, "%d\n", H_->EntryNum();
+    jnlst->Printf(level, category, "%d\n", A_->EntryNum());
+    jnlst->Printf(level, category, "%d\n", H_->EntryNum();
 #endif
 
     lb_->write_to_file("lb",jnlst,level,category,QORE);
