@@ -86,11 +86,12 @@ enum Solver {
 
 
 typedef struct {
+    std::string problem_name;
     int  nCon;
     int  nVar;
     int  nnz_jac_g;
     int  nnz_h_lag;
-} Index_info;
+} NLPInfo;
 
 typedef struct {
     bool primal_feasibility = false;

@@ -104,7 +104,7 @@ public:
                          shared_ptr<const Vector> x_u);
 
 public:
-    Index_info nlp_info_; /**< the struct record the number of variables, number of
+    NLPInfo nlp_info_; /**< the struct record the number of variables, number of
                                constraints, number of nonzeoro entry of Hessian and that of Jacobian
                                Please check Types.hpp for details*/
     Ipopt::SmartPtr<Ipopt::TNLP> nlp_;/**< a local nlp reader */

@@ -8,7 +8,7 @@
 
 namespace SQPhotstart {
 
-GurobiInterface::GurobiInterface(Index_info nlp_info,
+GurobiInterface::GurobiInterface(NLPInfo nlp_info,
                                  QPType qptype,
                                  shared_ptr<const Options> options,
                                  Ipopt::SmartPtr<Ipopt::Journalist> jnlst):

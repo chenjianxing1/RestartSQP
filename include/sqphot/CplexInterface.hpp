@@ -40,7 +40,7 @@ public:
     //@}
 
 
-    CplexInterface(Index_info nlp_info,
+    CplexInterface(NLPInfo nlp_info,
                    QPType qptype,
                    shared_ptr<const Options> options,
                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst);

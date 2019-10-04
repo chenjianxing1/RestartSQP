@@ -16,7 +16,7 @@ namespace SQPhotstart {
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
                                    shared_ptr<const Options> options,
                                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     nConstr_QP_(nlp_index_info.nCon),
@@ -36,7 +36,7 @@ qpOASESInterface::~qpOASESInterface() = default;
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-void qpOASESInterface::allocate_memory(Index_info nlp_index_info, QPType qptype) {
+void qpOASESInterface::allocate_memory(NLPInfo nlp_index_info, QPType qptype) {
     lbA_ = make_shared<Vector>(nConstr_QP_);
     ubA_ = make_shared<Vector>(nConstr_QP_);
     lb_ = make_shared<Vector>(nVar_QP_);
@@ -499,10 +499,10 @@ void qpOASESInterface::WriteQPDataToFile(
 //TODO: can be write as a cpp file ....
 #if DEBUG
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
-    if (IsNull(QPdata_jrnl)) {
-        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
-                                           Ipopt::J_WARNING);
-    }
+//    if (IsNull(QPdata_jrnl)) {
+//        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
+//                                           Ipopt::J_WARNING);
+//    }
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
 

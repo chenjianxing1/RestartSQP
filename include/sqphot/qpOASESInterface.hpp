@@ -36,7 +36,7 @@ public:
      * @param nlp_index_info the struct that stores simple nlp dimension info
      * @param qptype  is the problem to be solved QP or LP?
      */
-    qpOASESInterface(Index_info nlp_index_info, QPType qptype,
+    qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
                      shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
@@ -202,7 +202,7 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate_memory(Index_info nlp_index_info, QPType qptype);
+    void allocate_memory(NLPInfo nlp_index_info, QPType qptype);
 
 
     void set_solver_options();

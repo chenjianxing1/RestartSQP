@@ -14,7 +14,7 @@ namespace SQPhotstart {
  * @param options object stored user-defined parameter values
  * @param jnlst Ipopt Jourlist object, for printing out log files
  */
-QOREInterface::QOREInterface(Index_info nlp_info,
+QOREInterface::QOREInterface(NLPInfo nlp_info,
                              QPType qptype,
                              shared_ptr<const Options> options,
                              Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
@@ -121,7 +121,7 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
  * @param qptype is the problem to be solved QP or LP?
  */
 
-void QOREInterface::allocate_memory(Index_info nlp_info, QPType qptype) {
+void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
     int nnz_g_QP = nlp_info.nnz_jac_g +
                    2 * nlp_info.nCon;//number of nonzero variables in jacobian
     //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr nonzero elements
@@ -233,8 +233,9 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
     if (IsNull(QPdata_jrnl)) {
-        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
-                                           Ipopt::J_WARNING);
+	    printf("QPdata jrnl is invalid");
+//        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
+//                                           Ipopt::J_WARNING);
     }
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
@@ -252,9 +253,9 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                   "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
 #else
     jnlst->Printf(level, category, "%d\n", nVar_QP_);
-    jnlst->Printf(level, category, "%d\n", nCon_QP_);
+    jnlst->Printf(level, category, "%d\n", nConstr_QP_);
     jnlst->Printf(level, category, "%d\n", A_->EntryNum());
-    jnlst->Printf(level, category, "%d\n", H_->EntryNum();
+    jnlst->Printf(level, category, "%d\n", H_->EntryNum());
 #endif
 
     lb_->write_to_file("lb",jnlst,level,category,QORE);
@@ -306,22 +307,11 @@ void QOREInterface::handle_error(QPType qptype) {
         shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
         x_0->copy_vector(x_qp_);
         A_->times(x_0,Ax);
-//            Ax->print("Ax");
-//            lb_->print("lb_");
-//            ub_->print("ub_");
         //setup the slack variables to satisfy the bound constraints
         for(int i=0; i<nConstr_QP_; i++) {
             x_0->setValueAt(i+nVar_QP_-2*nConstr_QP_,max(0.0,lb_->values(nVar_QP_+i)));
             x_0->setValueAt(i+nVar_QP_-nConstr_QP_,-min(0.0,ub_->values(nVar_QP_+i)));
         }
-
-//            x_0->print("x_0");
-//
-//            A_->times(x_0,Ax);
-//
-//            Ax->print("Ax");
-//            A_->print("A");
-
 
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          x_0->values(), NULL);//

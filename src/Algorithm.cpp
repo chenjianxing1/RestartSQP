@@ -34,6 +34,7 @@ Algorithm::Algorithm() :
  * Default Destructor
  */
 Algorithm::~Algorithm() {
+
     delete[] cons_type_;
     cons_type_ = NULL;
     delete[] bound_cons_type_;
@@ -398,7 +399,10 @@ void Algorithm::get_trial_point_info() {
 void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
 		const string& name) {
 	std::size_t found = name.find_last_of("/\\"); 
-	output_file_name_ = name.substr(found+1)+ "_output.log";
+	
+	nlp_->nlp_info.problem_name  = name.substr(found+1);
+	output_file_name_ = nlp_->nlp_info.problem_name+"_output.log";
+	string qp_data_log_name = nlp_->nlp_info.problem_name+"_qpdata.log";
 
 	allocate_memory(nlp);
 
@@ -436,11 +440,18 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
 
     }
     else
-        jnlst_->AddFileJournal("file_output", output_file_name_.c_str(), Ipopt::J_ITERSUMMARY);
+        jnlst_->AddFileJournal("file_output", output_file_name_.c_str(),
+			Ipopt::J_ITERSUMMARY);
 
 #if DEBUG
-    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
-            Ipopt::J_MOREDETAILED);
+
+//    Ipopt::SmartPtr<Ipopt::Journal> qpdata_jrnl = 
+//	    jnlst_->AddFileJournal("QPdata",qp_data_log_name, Ipopt::J_WARNING);
+//    qpdata_jrnl->SetPrintLevel(Ipopt::J_USER1,Ipopt::J_LAST_LEVEL);
+
+    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl = 
+	    jnlst_->AddFileJournal("Debug", name.substr(found+1)+"debug.out",
+			    Ipopt::J_MOREDETAILED);
     debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_MOREDETAILED);
 #endif
 
@@ -463,7 +474,6 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
     }else{
 
     Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
-
         if (IsValid(logout_jrnl)) {
             logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
         }
@@ -724,8 +734,6 @@ void Algorithm::ratio_test() {
     if (pred_reduction_ < -1.0e-8) {
         myQP_->WriteQPData();
         exitflag_ = PRED_REDUCTION_NEGATIVE;
-        //hessian_->print_full("hessian_");
-
         return;
     }
 
@@ -1105,7 +1113,6 @@ void Algorithm::second_order_correction() {
         isaccept_ = false;
 
 #if DEBUG
-
 #if CHECK_SOC
         EJournalLevel debug_print_level = options_->debug_print_level;
         SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
@@ -1208,30 +1215,28 @@ void Algorithm::get_obj_QP() {
     qp_obj_ = myQP_->get_objective();
 
 #if DEBUG
-    shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
+    //shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
 
-    hessian_->times(p_k_, Hp);//H*p_k
-    double qp_obj_tmp = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
-                        infea_measure_model_ * rho_;
+    //hessian_->times(p_k_, Hp);//H*p_k
+    //double qp_obj_tmp = 0.5 * p_k_->times(Hp) + p_k_->times(grad_f_) +
+    //                    infea_measure_model_ * rho_;
 
 
-    if(qp_obj_tmp-qp_obj_>1.0e-5) {
-        jacobian_->print_full("J");
-        hessian_->print_full("H");
-        p_k_->print("p");
-        grad_f_->print("g");
-        Hp->print("Hp");
-        printf("p*H*p = : %10e\n", p_k_->times(Hp));
-        printf("g*p = %10e\n",p_k_->times(grad_f_));
+    //if(qp_obj_tmp-qp_obj_>1.0e-5) {
+    //    jacobian_->print_full("J");
+    //    hessian_->print_full("H");
+    //    p_k_->print("p");
+    //    grad_f_->print("g");
+    //    Hp->print("Hp");
+    //    printf("p*H*p = : %10e\n", p_k_->times(Hp));
+    //    printf("g*p = %10e\n",p_k_->times(grad_f_));
 
-        printf("qp_obj_tmp = : %10e\n",qp_obj_tmp);
-        printf("qp_obj_ = : %10e\n",qp_obj_);
-        printf("infea_measure_model = :%10e\n", infea_measure_model_);
-    }
-#endif
+    //    printf("qp_obj_tmp = : %10e\n",qp_obj_tmp);
+    //    printf("qp_obj_ = : %10e\n",qp_obj_);
+    //    printf("infea_measure_model = :%10e\n", infea_measure_model_);
+    //}
     //assert(fabs(qp_obj_tmp-qp_obj_)<1.0e-5);
 
-#if DEBUG
 #if COMPARE_QP_SOLVER
     if(fabs(qp_obj_- myQP_->get_objective())>=1.0e-5)
         printf(" The different of objectives is %23.16e\n", fabs(qp_obj_-myQP_->get_objective()));

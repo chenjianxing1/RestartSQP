@@ -58,7 +58,7 @@ public:
 
     /**Constructor*/
 
-    QOREInterface(Index_info nlp_info,
+    QOREInterface(NLPInfo nlp_info,
                   QPType qptype,
                   shared_ptr<const Options> options,
                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
@@ -203,7 +203,7 @@ private:
      * @param nlp_index_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate_memory(Index_info nlp_info, QPType qptype);
+    void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
 
     ///////////////////////////////////////////////////////////

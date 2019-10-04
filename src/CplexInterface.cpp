@@ -9,7 +9,7 @@
 
 namespace SQPhotstart {
 /** Constructor*/
-CplexInterface::CplexInterface(Index_info nlp_info,
+CplexInterface::CplexInterface(NLPInfo nlp_info,
                                QPType qptype,
                                shared_ptr<const Options> options,
                                Ipopt::SmartPtr<Ipopt::Journalist> jnlst):

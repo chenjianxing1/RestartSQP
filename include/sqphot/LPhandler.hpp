@@ -41,7 +41,7 @@ class LPhandler : public QPhandler {
 
 public:
 
-    LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+    LPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
               Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
     /** Default destructor */
@@ -117,7 +117,7 @@ private:
     Solver LPsolverChoice_;
     //bounds that can be represented as vectors
     Identity2Info I_info_A;
-    const Index_info nlp_info_;
+    const NLPInfo nlp_info_;
     const int nConstr_LP_;
     const int nVar_LP_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;

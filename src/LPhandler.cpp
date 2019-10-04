@@ -9,7 +9,7 @@
 
 namespace SQPhotstart {
 
-LPhandler::LPhandler(Index_info nlp_info, shared_ptr<const Options> options,
+LPhandler::LPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     QPhandler(nlp_info, options,jnlst),
     nlp_info_(nlp_info),
