@@ -65,7 +65,7 @@ void
 SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                          Ipopt::EJournalLevel level,
                          Ipopt::EJournalCategory category) const {
-    char mat_val[99];
+
     auto dense_matrix = new double[RowNum_ * ColNum_]();
 
     for (int i = 0; i < EntryNum_; i++) {
@@ -204,12 +204,6 @@ void SpTripletMat::copy(std::shared_ptr<const SpTripletMat> rhs, bool deep_copy)
 }
 
 
-bool SpTripletMat::isSymmetric() const {
-
-    return isSymmetric_;
-}
-
-
 void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
                                     std::shared_ptr<Vector> result) const {
 
@@ -223,6 +217,30 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
         }
     }
 
+}
+
+void SpTripletMat::convert2Triplet(std::shared_ptr<Matrix> rhs) {
+    set_zero();
+    int j = 1;
+    if(rhs->isSymmetric())
+        if(EntryNum_<rhs->EntryNum())
+            EntryNum_ = rhs->EntryNum();
+
+    for (int i = 0; i < EntryNum_; i++) {
+        if (rhs->isCompressedRow()) {
+            if (i == rhs->RowIndex(j))
+                j++;
+            RowIndex_[i] = j;
+            ColIndex_[i] = rhs->ColIndex()[i] + 1;
+        } else {
+            if (i == rhs->ColIndex()[j])
+                j++;
+            ColIndex_[i] = j;
+            RowIndex_[i] = rhs->RowIndex()[i] + 1;
+        }
+        MatVal_[i] = rhs->MatVal()[i];
+        order_[i] = rhs->order()[i];
+    }
 }
 
 

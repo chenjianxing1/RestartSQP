@@ -431,11 +431,6 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
         stats->qp_iter_addValue((int) nWSR);
 
         if (!solver_->isSolved()) {
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-            WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
-#endif
-#endif
             THROW_EXCEPTION(LP_NOT_OPTIMAL,LP_NOT_OPTIMAL_MSG);
         }
 
@@ -449,11 +444,6 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
         old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
         stats->qp_iter_addValue((int) nWSR);
         if (!solver_->isSolved()) {
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-            WriteQPDataToFile(jnlst_, Ipopt::J_ALL, Ipopt::J_DBG);
-#endif
-#endif
             THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
 
         }
@@ -492,10 +482,10 @@ void qpOASESInterface::set_solver_options() {
 }
 
 
-void qpOASESInterface::WriteQPDataToFile(
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-    Ipopt::EJournalLevel level,
-    Ipopt::EJournalCategory category) {
+void qpOASESInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+        Ipopt::EJournalLevel level,
+        Ipopt::EJournalCategory category,
+        const string filename) {
 //TODO: can be write as a cpp file ....
 #if DEBUG
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");

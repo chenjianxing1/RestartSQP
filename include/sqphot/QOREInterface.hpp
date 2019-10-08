@@ -46,6 +46,7 @@ public:
     }
 
     const shared_ptr<const SpTripletMat> getH()const override {
+
         H_triplet_->convert2Triplet(H_);
         return H_triplet_;
     };
@@ -159,7 +160,8 @@ public:
     //@}
     void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                            Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category) override ;
+                           Ipopt::EJournalCategory category,
+                           const string filename) override ;
 
 
 

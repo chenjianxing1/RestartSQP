@@ -32,7 +32,8 @@ QOREInterface::QOREInterface(NLPInfo nlp_info,
  * @brief Destructor
  */
 QOREInterface::~QOREInterface() {
-    delete[] working_set_; working_set_ = NULL;
+    delete[] working_set_;
+    working_set_ = NULL;
     QPFree(&solver_);
 }
 
@@ -56,11 +57,6 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     handle_error(QP);
     if (status_ != QPSOLVER_OPTIMAL) {
         THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-        WriteQPDataToFile(jnlst_,Ipopt::J_LAST_LEVEL, Ipopt::J_USER1);
-#endif
-#endif
     }
 
     /**-------------------------------------------------------**/
@@ -124,7 +120,8 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
 void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
     int nnz_g_QP = nlp_info.nnz_jac_g +
                    2 * nlp_info.nCon;//number of nonzero variables in jacobian
-    //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr nonzero elements
+    //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr
+    //nonzero elements
     lb_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     ub_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     g_ = make_shared<Vector>(nVar_QP_);
@@ -145,11 +142,10 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
     assert(rv_ == QPSOLVER_OK);
 
 
-    //TODO: for debugging use only
     A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
                                            nVar_QP_);
-    H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nConstr_QP_,
-                                           nVar_QP_,true);
+    H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nVar_QP_,
+                                           nVar_QP_);
 }
 
 
@@ -183,10 +179,10 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
     for(int i=0; i<nConstr_QP_+nVar_QP_; i++) {
         if(i<nVar_QP_) {
             switch (working_set_[i]) {
-            case 1:
+            case -1:
                 W_bounds[i] = ACTIVE_ABOVE;
                 break;
-            case -1:
+            case 1:
                 W_bounds[i] = ACTIVE_BELOW;
                 break;
             case 0:
@@ -199,10 +195,10 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
         }
         else {
             switch (working_set_[i]) {
-            case 1:
+            case -1:
                 W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
-            case -1:
+            case 1:
                 W_constr[i-nVar_QP_] = ACTIVE_BELOW;
                 break;
             case 0:
@@ -215,6 +211,8 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
             }
         }
     }
+//    for(int i= 0; i<nVar_QP_+nConstr_QP_; i++)
+//        std::cout<<"W_"<<i<<"="<<working_set_[i]<<std::endl;
 
 }
 
@@ -226,17 +224,14 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
 
 void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                                       Ipopt::EJournalLevel level,
-                                      Ipopt::EJournalCategory category) {
+                                      Ipopt::EJournalCategory category,
+                                      const string filename) {
 
 
 #if DEBUG
-
-    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
-    if (IsNull(QPdata_jrnl)) {
-	    printf("QPdata jrnl is invalid");
-//        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
-//                                           Ipopt::J_WARNING);
-    }
+    jnlst_->DeleteAllJournals();
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst->AddFileJournal("QPdata",
+            filename,Ipopt::J_WARNING);
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
 #if PRINT_OUT_QP_WITH_ERROR

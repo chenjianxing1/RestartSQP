@@ -70,6 +70,10 @@ public:
 
     virtual bool isCompressedRow() = 0;
 
+    virtual int EntryNum() const = 0;
+
+    virtual bool isSymmetric() const =0;
+
     virtual double MatVal(int i) =0;
 
     virtual int ColIndex(int i) = 0;
@@ -178,27 +182,7 @@ public:
     /**
      * @convert the input matrix rhs to a triplet matrix and store its data in the
      * class members*/
-    void convert2Triplet(std::shared_ptr<Matrix> rhs) {
-        set_zero();
-        int j = 1;
-        for(int i = 0; i<EntryNum_; i++) {
-            if(rhs->isCompressedRow()) {
-                if(i==rhs->RowIndex()[j])
-                    j++;
-                RowIndex_[i] = j;
-                ColIndex_[i] = rhs->ColIndex()[i] + 1;
-            }
-            else
-            {
-                if(i==rhs->ColIndex()[j])
-                    j++;
-                ColIndex_[i] = j;
-                RowIndex_[i] = rhs->RowIndex()[i] + 1;
-            }
-            MatVal_[i] = rhs->MatVal()[i];
-            order_[i] = rhs->order()[i];
-        }
-    }
+    void convert2Triplet(std::shared_ptr<Matrix> rhs);
     /**
      * @brief calculate the one norm of the matrix
      *
@@ -210,6 +194,11 @@ public:
     bool isCompressedRow() override {
         return false;
     };
+
+
+    bool isSymmetric() const override {
+        return isSymmetric_;
+    }
 
 
     /**
@@ -246,7 +235,7 @@ public:
     }
 
 
-    inline int EntryNum() const {
+    inline int EntryNum() const override {
 
         return EntryNum_;
     }
@@ -345,8 +334,6 @@ public:
         return order_;
     }
 
-
-    bool isSymmetric() const;
 
     //@}
 
@@ -503,7 +490,7 @@ public:
     /** Extract class member information*/
     //@{
 
-    inline int EntryNum() const {
+    inline int EntryNum() const  override {
 
         return EntryNum_;
     }
@@ -591,7 +578,7 @@ public:
     }
 
 
-    inline bool isSymmetric() {
+    inline bool isSymmetric() const override {
 
         return isSymmetric_;
     };

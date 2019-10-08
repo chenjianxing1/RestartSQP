@@ -30,7 +30,7 @@ public:
     double tol;
     int iter_max;
     int printLevel;
-    
+
 
 
 

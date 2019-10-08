@@ -229,7 +229,7 @@ public:
     /**
      * @brief Write QP data to a file
      */
-    void WriteQPData();
+    void WriteQPData(const string filename);
 
     /**
      * @brief Test the KKT conditions for the certain qpsolver
@@ -239,6 +239,8 @@ public:
         Solver qpSolver,
         ActiveType* W_b,
         ActiveType* W_c);
+
+    const OptimalityStatus &get_QpOptimalStatus() const;
 
 #if DEBUG
 #if COMPARE_QP_SOLVER

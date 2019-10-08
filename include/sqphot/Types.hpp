@@ -11,12 +11,12 @@
 namespace SQPhotstart {
 
 
-	enum PrintLevel{
-		NO_PRINT = 0,
-		PRINT_TO_FILE = 1,
-		PRINT_TO_CONSOLE = 2,
-		PRINT_TO_BOTH =3
-	};
+enum PrintLevel {
+    NO_PRINT = 0,
+    PRINT_TO_FILE = 1,
+    PRINT_TO_CONSOLE = 2,
+    PRINT_TO_BOTH =3
+};
 
 //enum QPReturnType {
 //    UNSOLVED = -99,
@@ -86,7 +86,6 @@ enum Solver {
 
 
 typedef struct {
-    std::string problem_name;
     int  nCon;
     int  nVar;
     int  nnz_jac_g;

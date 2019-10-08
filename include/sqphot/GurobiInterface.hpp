@@ -156,7 +156,8 @@ public:
 
     void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                            Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category) override;
+                           Ipopt::EJournalCategory category,
+                           const string filename) override;
 
 
 private:

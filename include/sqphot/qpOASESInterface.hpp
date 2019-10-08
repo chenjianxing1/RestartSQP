@@ -139,10 +139,10 @@ public:
 
     //@}
 
-    void WriteQPDataToFile(
-        Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-        Ipopt::EJournalLevel level,
-        Ipopt::EJournalCategory category) override ;
+    void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                           Ipopt::EJournalLevel level,
+                           Ipopt::EJournalCategory category,
+                           const string filename) override ;
 
 
     void reset_constraints() override;
