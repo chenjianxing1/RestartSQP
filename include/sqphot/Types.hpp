@@ -81,7 +81,8 @@ enum Solver {
     QPOASES,
     QORE,
     GUROBI,
-    CPLEX
+    CPLEX,
+    SOLVER_UNDEFINED
 };
 
 

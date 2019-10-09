@@ -97,23 +97,25 @@ public:
 
 
     /**
-     * @brief
+     * @brief manually calculate the active set from the class member solverInterface
+     * @param A_c  pointer to the active set corresponding to the constraints
+     * @param A_b  pointer to the active set corresponding to the bound constraints
+     * @param x    solution for QP problem(optional)
+     * @param Ax   constraint evaluation at current QP solution x(optional)
      */
-    ActiveType* get_working_set_constr{
+    void get_active_set(ActiveType* A_c, ActiveType* A_b,
+                        shared_ptr<Vector> x = nullptr,
+                        shared_ptr<Vector> Ax = nullptr);
 
-    };
 
-    /**
-     * @brief
-     */
-    ActiveType* get_working_set_bounds{
-
-    };
 
     /**
      * @brief Get the return status of QPsolver
      */
     Exitflag get_status();
+
+
+
     //@}
 
     /** @name Setters*/
@@ -278,6 +280,9 @@ private:
     /** Overloaded Equals Operator */
     void operator=(const QPhandler&);
     //@}
+
+
+
 
     /**public class member*/
 

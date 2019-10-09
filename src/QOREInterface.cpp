@@ -42,6 +42,14 @@ QOREInterface::~QOREInterface() {
  */
 
 void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
+
+
+    //@{ For debug
+//        printf("QP_var is %d, QP_con is %d\n\n",nVar_QP_,nConstr_QP_);
+//        A_->print("A");
+//        H_->print_full("H");
+
+    //@}
     /**-------------------------------------------------------**/
     /**                   Set Data and Optimize QP            **/
     /**-------------------------------------------------------**/

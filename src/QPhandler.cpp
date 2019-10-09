@@ -394,8 +394,14 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 #endif
 #endif
 
+
+
     solverInterface_->optimizeQP(stats);
-    OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
+    bool isOptimal=OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
+    if(!isOptimal)
+        WriteQPData("QPdata");
+
+    assert(isOptimal);
 
 }
 
@@ -638,8 +644,17 @@ bool QPhandler::OptimalityTest(
         shared_ptr<const SpTripletMat> H = qpsolverInterface->getH();
         multiplier_bounds->copy_vector(qpsolverInterface->get_multipliers_bounds());
         multiplier_constr->copy_vector(qpsolverInterface->get_multipliers_constr());
-        qpsolverInterface->get_working_set(W_c, W_b);
-
+        A->times(x,Ax);
+        get_active_set(W_c,W_b,x);
+//        A->print("A");
+//        Ax->print("Ax");
+//        for(int i = 0; i<nVar_QP_; i++){
+//           std::cout<<W_b[i]<<std::endl;
+//        }
+//
+//        for(int i = 0; i<nConstr_QP_; i++){
+//            std::cout<<W_c[i]<<std::endl;
+//        }
         /**-------------------------------------------------------**/
         /**                    primal feasibility                 **/
         /**-------------------------------------------------------**/
@@ -659,6 +674,12 @@ bool QPhandler::OptimalityTest(
         /**-------------------------------------------------------**/
         /**                    dual feasibility                   **/
         /**-------------------------------------------------------**/
+
+//        multiplier_bounds->print("lambda_x");
+//        multiplier_constr->print("lambda_c");
+//        x->print("x");
+//        lb->print("lb");
+//        ub->print("ub");
 
 
         for (i = 0; i < nVar_QP_; i++) {
@@ -697,6 +718,8 @@ bool QPhandler::OptimalityTest(
                 case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
                     // multiplier should be negavie
                     dual_violation += max(0.0, multiplier_constr->values(i));
+                    break;
+                case ACTIVE_BOTH_SIDE:
                     break;
                 default:
                     printf("failed in dual fea test, the working set  for qore at the "
@@ -737,6 +760,8 @@ bool QPhandler::OptimalityTest(
                 compl_violation += abs(multiplier_bounds->values(i) *
                                        (ub->values(i) - x->values(i)));
                 break;
+            case ACTIVE_BOTH_SIDE:
+                break;
             default:
                 printf("failed in compl test, the working set  for qore at "
                        "the bounds is %i", W_b[i]);
@@ -759,6 +784,8 @@ bool QPhandler::OptimalityTest(
                     compl_violation += abs(multiplier_constr->values(i) *
                                            (ub->values(i + nVar_QP_) -
                                             Ax->values(i)));
+                    break;
+                case ACTIVE_BOTH_SIDE:
                     break;
                 default:
                     printf("failed in compl test, the working set  for qpOASES at "
@@ -791,12 +818,71 @@ bool QPhandler::OptimalityTest(
     return true;
 }
 
+
+
+
 double QPhandler::get_infea_measure_model() {
     return oneNorm(solverInterface_->get_optimal_solution()+nVar_QP_-2*nConstr_QP_,2*nConstr_QP_);
 }
 
 const OptimalityStatus &QPhandler::get_QpOptimalStatus() const {
     return qpOptimalStatus_;
+}
+
+void QPhandler::get_active_set(ActiveType* A_c, ActiveType* A_b, shared_ptr<Vector> x,
+                               shared_ptr<Vector> Ax) {
+    //use the class member to get the qp problem information
+    auto lb = solverInterface_->getLb();
+    auto ub = solverInterface_->getUb();
+    if (x == nullptr) {
+        x = make_shared<Vector>(nVar_QP_);
+        x->copy_vector(get_optimal_solution());
+    }
+    if (Ax == nullptr) {
+        Ax = make_shared<Vector>(nConstr_QP_);
+        auto A = solverInterface_->getA();
+        A->times(x, Ax);
+    }
+    for (int i = 0; i < nVar_QP_; i++) {
+        if (abs(x->values(i) - lb->values(i)) < sqrt_m_eps) {
+            if (abs(ub->values(i) - x->values(i)) < sqrt_m_eps) {
+                A_b[i] = ACTIVE_BOTH_SIDE;
+            } else
+                A_b[i] = ACTIVE_BELOW;
+        } else if (abs(ub->values(i) - x->values(i)) < sqrt_m_eps)
+            A_b[i] = ACTIVE_ABOVE;
+        else
+            A_b[i] = INACTIVE;
+    }
+    if (QPsolverChoice_ == QORE) {
+        //if no x and Ax are input
+        for (int i = 0; i < nConstr_QP_; i++) {
+            if (abs(Ax->values(i) - lb->values(i+nVar_QP_)) < sqrt_m_eps) {
+                if (abs(ub->values(i + nVar_QP_) - Ax->values(i)) < sqrt_m_eps) {
+                    A_c[i] = ACTIVE_BOTH_SIDE;
+                } else
+                    A_c[i] = ACTIVE_BELOW;
+            } else if (abs(ub->values(i + nVar_QP_) - Ax->values(i)) < sqrt_m_eps)
+                A_c[i] = ACTIVE_ABOVE;
+            else
+                A_c[i] = INACTIVE;
+        }
+    }
+    else {
+        auto lbA = solverInterface_->getUbA();
+        auto ubA = solverInterface_->getUbA();
+        for (int i = 0; i < nConstr_QP_; i++) {
+            if (abs(Ax->values(i) - lbA->values(i)) < sqrt_m_eps) {
+                if (abs(ubA->values(i) - Ax->values(i)) < sqrt_m_eps) {
+                    A_c[i] = ACTIVE_BOTH_SIDE;
+                } else
+                    A_c[i] = ACTIVE_BELOW;
+            } else if (abs(ubA->values(i) - Ax->values(i)) < sqrt_m_eps)
+                A_c[i] = ACTIVE_ABOVE;
+            else
+                A_c[i] = INACTIVE;
+        }
+    }
 }
 
 #if DEBUG

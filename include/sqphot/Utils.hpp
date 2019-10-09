@@ -31,6 +31,8 @@ namespace SQPhotstart {
 void print_matrix(double* M, int length, int width);
 
 const double INF = 1.0e18;
+const double m_eps = 1.0e-16;
+const double sqrt_m_eps = 1.0e-8;
 
 /* check if x is finite*/
 bool isFinite(double* x, int length);

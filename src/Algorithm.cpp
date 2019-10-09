@@ -274,7 +274,7 @@ void Algorithm::check_optimality() {
                                  (c_k_->values(i) - c_l_->values(i)));
         }
         else if (cons_type_[i] == UNBOUNDED) {
-            compl_violation+=multiplier_cons_->values(i);
+            compl_violation+= abs(multiplier_cons_->values(i));
         }
         i++;
     }
@@ -290,10 +290,17 @@ void Algorithm::check_optimality() {
                                  (x_k_->values(i) - x_l_->values(i)));
         }
         else if (bound_cons_type_[i] == UNBOUNDED) {
-            compl_violation+= multiplier_vars_->values(i);
+            compl_violation+= abs(multiplier_vars_->values(i));
         }
         i++;
     }
+    //@{
+//    c_l_->print("c_l");
+//    c_u_->print("c_u");
+//    std::cout<<compl_violation<<std::endl;
+//    multiplier_vars_->print("multiplier_vars");
+//    multiplier_cons_->print("multiplier_constr");
+//@}
 
     //@}
     /**-------------------------------------------------------**/
@@ -1181,39 +1188,6 @@ void Algorithm::second_order_correction() {
 }
 
 
-//void Algorithm::handle_error(const char* error) {
-//
-//    if (error != nullptr) {
-//        if (strcmp(error, "QP NOT OPTIMAL") == 0 ||
-//                strcmp(error, "LP NOT OPTIMAL") == 0) {
-//            switch (myQP_->get_status()) {
-//            case QP_INFEASIBLE:
-//                exitflag_ = QPERROR_INFEASIBLE;
-//                break;
-//            case QP_UNBOUNDED:
-//                exitflag_ = QPERROR_UNBOUNDED;
-//                break;
-//            case QP_NOTINITIALISED:
-//                exitflag_ = QPERROR_NOTINITIALISED;
-//                break;
-//            case QP_HOMOTOPYQPSOLVED:
-//                exitflag_ = QPERROR_HOMOTOPYQPSOLVED;
-//                break;
-//            case QP_PERFORMINGHOMOTOPY:
-//                exitflag_ = QPERROR_PERFORMINGHOMOTOPY;
-//                break;
-//            case QP_AUXILIARYQPSOLVED:
-//                exitflag_ = QPERROR_AUXILIARYQPSOLVED;
-//                break;
-//            case QP_PREPARINGAUXILIARYQP:
-//                exitflag_ = QPERROR_PREPARINGAUXILIARYQP;
-//                break;
-//            }
-//        } else if (strcmp(error, "INVALID NLP") == 0) {
-//            exitflag_ = INVALID_NLP;
-//        }
-//    }
-//}
 
 void Algorithm::get_obj_QP() {
     qp_obj_ = myQP_->get_objective();
