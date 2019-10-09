@@ -57,6 +57,111 @@ SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow) :
 }
 
 
+SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
+                 bool isCompressedRow):
+    RowIndex_(NULL),
+    ColIndex_(NULL),
+    MatVal_(NULL),
+    order_(NULL),
+    EntryNum_(0),
+    RowNum_(RowNum),
+    ColNum_(ColNum),
+    isCompressedRow_(isCompressedRow)
+{
+
+    int* RowIndex_tmp;
+    int* ColIndex_tmp;
+    double* MatVal_tmp;
+    //allocate memory
+    if(isCompressedRow) {
+        RowIndex_ = new int[RowNum + 1]();
+        ColIndex_tmp = new int[RowNum*ColNum]();
+        MatVal_tmp = new double[RowNum*ColNum]();
+    } else {
+        ColIndex_ = new int[ColNum + 1]();
+        RowIndex_tmp = new int[RowNum*ColNum]();
+        MatVal_tmp = new double[RowNum*ColNum]();
+    }
+
+    EntryNum_ = 0;
+    if(row_oriented) {
+        if(isCompressedRow) {
+            for(int i = 0; i<RowNum; i++) {
+                for(int j = 0; j<ColNum; j++) {
+                    //identify nonzero entry
+                    if(data[i]>m_eps||data[i]<-m_eps) {
+                        MatVal_tmp[EntryNum_] = data[i*ColNum+j];
+                        ColIndex_tmp[EntryNum_] = j;
+                        EntryNum_++;
+                    }
+                }
+                RowIndex_[i+1] = EntryNum_;
+            }
+        }
+        else { //if it is condensed column
+            for(int j = 0; j<ColNum; j++) {
+                for(int i = 0; i<RowNum; i++) {
+                    if(data[j+i*ColNum]>m_eps||data[j+i*ColNum]<-m_eps) {
+                        MatVal_tmp[EntryNum_] = data[j+i*ColNum];
+                        RowIndex_tmp[EntryNum_] = i;
+                        EntryNum_++;
+                    }
+                }
+                ColIndex_[j+1] = EntryNum_;
+            }
+        }
+    }
+    else {
+        if(isCompressedRow) {
+            for(int j = 0; j<RowNum; j++) {
+                for(int i = 0; i<ColNum; i++) {
+                    if(data[j+i*RowNum]>m_eps||data[j+i*RowNum]<-m_eps) {
+                        MatVal_tmp[EntryNum_] = data[j+i*RowNum];
+                        RowIndex_tmp[EntryNum_] = i;
+                        EntryNum_++;
+                    }
+                }
+                RowIndex_[j+1] = EntryNum_;
+            }
+        }
+        else {
+            for(int i = 0; i<ColNum; i++) {
+                for(int j = 0; j<RowNum; j++) {
+                    //identify nonzero entry
+                    if(data[i]>m_eps||data[i]<-m_eps) {
+                        MatVal_tmp[EntryNum_] = data[i*RowNum+j];
+                        RowIndex_tmp[EntryNum_] = j;
+                        EntryNum_++;
+                    }
+                }
+                ColIndex_[i+1] = EntryNum_;
+            }
+        }
+    }
+    //allocate memory for class member
+    MatVal_ = new double[EntryNum_]();
+    order_ = new int[EntryNum_]();
+    if(isCompressedRow) {
+        ColIndex_ = new int[EntryNum_]();
+        for(int i = 0; i<EntryNum_; i++) {
+            ColIndex_[i] = ColIndex_tmp[i];
+            MatVal_[i] = MatVal_tmp[i];
+        }
+        delete[] MatVal_tmp;
+        delete[] ColIndex_tmp;
+
+    } else {
+        RowIndex_ = new int[EntryNum_]();
+        for(int i = 0; i<EntryNum_; i++) {
+            RowIndex_[i] = RowIndex_tmp[i];
+            MatVal_[i] = MatVal_tmp[i];
+        }
+        delete[] MatVal_tmp;
+        delete[] RowIndex_tmp;
+    }
+}
+
+
 
 /**
  *Default destructor
@@ -373,13 +478,45 @@ void SpHbMat::write_to_file(const char* name,
 }
 
 
+
 void SpHbMat::get_dense_matrix(double* dense_matrix) {
 
+    int row;
+    if(isCompressedRow_) {
+        for(int i = 1; i <RowNum_+1; i++) {
+            if(RowIndex_[i]>0) {
+                row = i-1;
+                break;
+            }
+        }
+        for (int i = 0; i < EntryNum_; i++) {
+            if(i==RowIndex_[row+1]) {
+                row++;
+            }
+            dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
+        }
+    }
+    else {
+        int col;
+        for(int i = 1; i <ColNum_+1; i++) {
+            if(ColIndex_[i]>0) {
+                col = i-1;
+                break;
+            }
+        }
+        for (int i = 0; i < EntryNum_; i++) {
+            if(i==ColIndex_[col+1]) {
+                col++;
+            }
+            dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
+        }
+    }
 
 }
-void
-SpHbMat::times(std::shared_ptr<const Vector> p,
-               std::shared_ptr<Vector> result) const {
+
+
+void SpHbMat::transposed_times(shared_ptr<const Vector> p,
+                               shared_ptr<Vector> result) const {
 
     result->set_zeros();
 
@@ -400,6 +537,51 @@ SpHbMat::times(std::shared_ptr<const Vector> p,
     }
     else {
 
+    }
+
+
+}
+
+void SpHbMat::times(std::shared_ptr<const Vector> p,
+                    std::shared_ptr<Vector> result) const {
+
+    result->set_zeros();
+
+    if(isCompressedRow_) {
+        int row;
+        //find the row corresponding to the first nonzero entry
+        for(int i = 1; i <RowNum_+1; i++) {
+            if(RowIndex_[i]>0) {
+                row = i-1;
+                break;
+            }
+        }
+        for(int i = 0; i<EntryNum_; i++) {
+            //go to the next row
+            if(i==RowIndex_[row+1]) {
+                row++;
+            }
+            result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
+            if(isSymmetric_&&row!=ColIndex_[i]) {
+                result->addNumberAt(ColIndex_[i], MatVal_[i]*p->values(row));
+            }
+        }
+    }
+    else {
+        int col;
+        //find the col corresponding to the first nonzero entry
+        for(int i = 1; i<ColNum_+1; i++) {
+            if(ColIndex_[i]>0) {
+                col = i-1;
+                break;
+            }
+        }
+        for(int i = 0; i<EntryNum_; i++) {
+            //go to the next col
+            if(i == RowIndex_[col+1]) {
+
+            }
+        }
     }
 }
 
@@ -515,4 +697,5 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 
 //@}
 }//END_OF_NAMESPACE
+
 

@@ -500,8 +500,8 @@ bool QPhandler::OptimalityTest(
         auto ubA = qpsolverInterface->getUbA();
         auto g = qpsolverInterface->getG();
 
-        shared_ptr<const SpTripletMat> A = qpsolverInterface->getA();
-        shared_ptr<const SpTripletMat> H = qpsolverInterface->getH();
+        auto A = qpsolverInterface->getA();
+        auto H = qpsolverInterface->getH();
 
         x->copy_vector(qpsolverInterface->get_optimal_solution());
         multiplier_bounds->copy_vector(qpsolverInterface->get_multipliers_bounds());
@@ -640,8 +640,8 @@ bool QPhandler::OptimalityTest(
         auto g = qpsolverInterface->getG();
 
         x->copy_vector(qpsolverInterface->get_optimal_solution());
-        shared_ptr<const SpTripletMat> A = qpsolverInterface->getA();
-        shared_ptr<const SpTripletMat> H = qpsolverInterface->getH();
+        auto A = qpsolverInterface->getA();
+        auto H = qpsolverInterface->getH();
         multiplier_bounds->copy_vector(qpsolverInterface->get_multipliers_bounds());
         multiplier_constr->copy_vector(qpsolverInterface->get_multipliers_constr());
         A->times(x,Ax);
@@ -735,6 +735,8 @@ bool QPhandler::OptimalityTest(
         if (A != nullptr) {
             A->transposed_times(multiplier_constr, stationary_gap);
         }
+
+        H->print("H");
         shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
         H->times(x, Hx);
         stationary_gap->add_vector(multiplier_bounds->values());

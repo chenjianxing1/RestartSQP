@@ -34,9 +34,9 @@ public:
 
     const shared_ptr<Vector>& getG() const override;
 
-    const shared_ptr<const SpTripletMat> getH() const override;
+    shared_ptr<const SpHbMat> getH() const override;
 
-    const shared_ptr<const SpTripletMat> getA() const override;
+    shared_ptr<const SpHbMat> getA() const override;
     //@}
 
 

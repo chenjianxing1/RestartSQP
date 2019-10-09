@@ -53,7 +53,10 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize() {
+
+
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+        hessian_->print_full("hessian");
         setupQP();
 //        hessian_->print_full("hessian");
         try {

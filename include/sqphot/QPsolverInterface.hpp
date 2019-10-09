@@ -54,9 +54,9 @@ public:
 
     virtual const shared_ptr<Vector>& getG() const = 0;
 
-    virtual const shared_ptr<const SpTripletMat> getH() const =0;
+    virtual shared_ptr<const SpHbMat> getH() const =0;
 
-    virtual const shared_ptr<const SpTripletMat> getA() const =0;
+    virtual shared_ptr<const SpHbMat> getA() const =0;
     //@}
 
     /** Default constructor*/

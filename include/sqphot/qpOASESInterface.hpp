@@ -170,14 +170,12 @@ public:
     };
 
 
-    const shared_ptr<const SpTripletMat> getH() const override {
-        H_triplet_->convert2Triplet(H_);
-        return H_triplet_;
+    shared_ptr<const SpHbMat> getH() const override {
+        return H_;
     };
 
-    const shared_ptr<const SpTripletMat> getA() const override {
-        A_triplet_->convert2Triplet(A_);
-        return A_triplet_;
+    shared_ptr<const SpHbMat> getA() const override {
+        return A_;
     };
     //@}
 

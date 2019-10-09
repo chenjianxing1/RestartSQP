@@ -419,6 +419,13 @@ public:
 
 
     /**
+     * @brief constructor which generate matrix data directly from a dense matrix
+     *
+     */
+    SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented = true,
+            bool isCompressedRow = false);
+
+    /**
      * @brief Default destructor
      */
     ~SpHbMat() override;
@@ -479,8 +486,10 @@ public:
 
 
     void times(std::shared_ptr<const Vector> p,
-               std::shared_ptr<Vector> result) const;;
+               std::shared_ptr<Vector> result) const;
 
+    void transposed_times(std::shared_ptr<const Vector> p,
+                          std::shared_ptr<Vector> result) const;
     /**
      * @brief make a deep copy of a matrix information
      */
@@ -700,3 +709,4 @@ private:
 }
 
 #endif //SQPHOTSTART_MATRIX_HPP_
+
