@@ -69,9 +69,9 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
     isCompressedRow_(isCompressedRow)
 {
 
-    int* RowIndex_tmp;
-    int* ColIndex_tmp;
-    double* MatVal_tmp;
+    int* RowIndex_tmp = NULL;
+    int* ColIndex_tmp = NULL;
+    double* MatVal_tmp = NULL ;
     //allocate memory
     if(isCompressedRow) {
         RowIndex_ = new int[RowNum + 1]();
@@ -148,7 +148,9 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
             MatVal_[i] = MatVal_tmp[i];
         }
         delete[] MatVal_tmp;
+        MatVal_tmp = NULL;
         delete[] ColIndex_tmp;
+        ColIndex_tmp = NULL;
 
     } else {
         RowIndex_ = new int[EntryNum_]();
@@ -157,8 +159,11 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
             MatVal_[i] = MatVal_tmp[i];
         }
         delete[] MatVal_tmp;
+        MatVal_tmp = NULL;
         delete[] RowIndex_tmp;
+        RowIndex_tmp = NULL;
     }
+    order_ = new int[EntryNum()]();
 }
 
 
@@ -393,7 +398,6 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
  * Free all memory allocated
  */
 void SpHbMat::freeMemory() {
-
     delete[] ColIndex_;
     ColIndex_ = NULL;
     delete[] RowIndex_;

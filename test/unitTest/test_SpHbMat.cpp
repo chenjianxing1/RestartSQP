@@ -35,8 +35,7 @@ bool TEST_EQUAL_DOUBLE_ARRAY(double* a, double* b, int length, const char* name 
 
 bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNumber, int colNumber,double* dense_matrix_in) {
 
-    double* dense_matrix_out;
-    dense_matrix_out = new double[rowNumber*colNumber]();
+    auto dense_matrix_out = new double[rowNumber*colNumber]();
 
 
 
@@ -83,8 +82,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNumber, int colNumber,double* de
     shared_ptr<SpHbMat> m_csc_col_oriented = make_shared<SpHbMat>(dense_matrix_in,
             rowNumber,colNumber,false,true);
 
-    delete [] dense_matrix_in;
     delete [] dense_matrix_out;
+    dense_matrix_out = NULL;
     return true;
 
 }
@@ -157,7 +156,8 @@ int main(int argc, char* argv[]) {
     int EntryNum = rand() %(rowNumber*colNumber)+1;
 
     std::vector<int> isNonzero;
-    for(int i = 0; i<rowNumber*colNumber; i++)
+    isNonzero.reserve(rowNumber*colNumber);
+for(int i = 0; i<rowNumber*colNumber; i++)
         isNonzero.push_back(i);
 
     std::shuffle(isNonzero.begin(), isNonzero.end(),g);
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
     }
 
 
-    for(int i = 0; i < rowNumber; i++) {
+    for(int i = 0; i < colNumber; i++) {
         vector_in->setValueAt(i,rand() %10+1);
     }
 
@@ -184,12 +184,11 @@ int main(int argc, char* argv[]) {
 
 
     shared_ptr<SpHbMat> matrix_csc = make_shared<SpHbMat>(dense_matrix_in,rowNumber,
-                                     colNumber,true,false);
+      colNumber,true,false);
 
     TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(matrix_csc,vector_in);
 
-
-
+    isNonzero.clear();
 
 }
 
