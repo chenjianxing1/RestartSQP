@@ -117,7 +117,7 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
                 for(int i = 0; i<ColNum; i++) {
                     if(data[j+i*RowNum]>m_eps||data[j+i*RowNum]<-m_eps) {
                         MatVal_tmp[EntryNum_] = data[j+i*RowNum];
-                        RowIndex_tmp[EntryNum_] = i;
+                        ColIndex_tmp[EntryNum_] = i;
                         EntryNum_++;
                     }
                 }
@@ -252,16 +252,16 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 
 
 /**
-* @brief setup the structure of the sparse matrix for solver qpOASES(should
-* be called only for once).
-*
-* This method will convert the strucutre information from the triplet form from a
-* SpMatrix object to the format required by the QPsolver qpOASES.
-*
-* @param rhs a SpMatrix object whose content will be copied to the class members
-* (in a different sparse matrix representations)
-*
-*/
+ * @brief setup the structure of the sparse matrix for solver qpOASES(should
+ * be called only for once).
+ *
+ * This method will convert the strucutre information from the triplet form from a
+ * SpMatrix object to the format required by the QPsolver qpOASES.
+ *
+ * @param rhs a SpMatrix object whose content will be copied to the class members
+ * (in a different sparse matrix representations)
+ *
+ */
 void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
     set_zero();
@@ -381,7 +381,7 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
         MatVal_[order_[j]] = rhs->MatVal()[i];
         j++;
         if (isSymmetric_ && (rhs->ColIndex()[i] != rhs->RowIndex()[i])) {
-//            MatVal_[order()[j]] = rhs->MatVal()[i];
+            //            MatVal_[order()[j]] = rhs->MatVal()[i];
             MatVal_[order_[j]] = rhs->MatVal()[i];
             j++;
         }
@@ -390,8 +390,8 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
 
 
 /**
-* Free all memory allocated
-*/
+ * Free all memory allocated
+ */
 void SpHbMat::freeMemory() {
 
     delete[] ColIndex_;
@@ -479,39 +479,76 @@ void SpHbMat::write_to_file(const char* name,
 
 
 
-void SpHbMat::get_dense_matrix(double* dense_matrix) {
+
+void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) {
 
     int row;
-    if(isCompressedRow_) {
-        for(int i = 1; i <RowNum_+1; i++) {
-            if(RowIndex_[i]>0) {
-                row = i-1;
-                break;
+    if(row_oriented) {
+        if(isCompressedRow_) {
+            for(int i = 1; i <RowNum_+1; i++) {
+                if(RowIndex_[i]>0) {
+                    row = i-1;
+                    break;
+                }
+            }
+            for (int i = 0; i < EntryNum_; i++) {
+                while(i==RowIndex_[row+1]) {
+                    row++;
+                }
+                dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
             }
         }
-        for (int i = 0; i < EntryNum_; i++) {
-            if(i==RowIndex_[row+1]) {
-                row++;
+        else {
+            int col;
+            for(int i = 1; i <ColNum_+1; i++) {
+                if(ColIndex_[i]>0) {
+                    col = i-1;
+                    break;
+                }
             }
-            dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
+            for (int i = 0; i < EntryNum_; i++) {
+                while(i==ColIndex_[col+1]) {
+                    col++;
+                }
+
+                dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
+//                    printf("dense_matrix[%d] = %10e\n",ColNum_ * RowIndex_[i]+col, MatVal_[i]);
+            }
         }
     }
     else {
-        int col;
-        for(int i = 1; i <ColNum_+1; i++) {
-            if(ColIndex_[i]>0) {
-                col = i-1;
-                break;
+        if(isCompressedRow_) {
+            for(int i = 1; i <RowNum_+1; i++) {
+                if(RowIndex_[i]>0) {
+                    row = i-1;
+                    break;
+                }
+            }
+            for (int i = 0; i < EntryNum_; i++) {
+                while(i==RowIndex_[row+1]) {
+                    row++;
+                }
+                dense_matrix[RowNum_ * ColIndex_[i] + row] = MatVal_[i];
             }
         }
-        for (int i = 0; i < EntryNum_; i++) {
-            if(i==ColIndex_[col+1]) {
-                col++;
+        else {
+            int col;
+            for(int i = 1; i <ColNum_+1; i++) {
+                if(ColIndex_[i]>0) {
+                    col = i-1;
+                    break;
+                }
             }
-            dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
-        }
-    }
+            for (int i = 0; i < EntryNum_; i++) {
+                while(i==ColIndex_[col+1]) {
+                    col++;
+                }
 
+                dense_matrix[RowNum_ * col+RowIndex_[i]] = MatVal_[i];
+            }
+        }
+
+    }
 }
 
 
@@ -537,6 +574,7 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
     }
     else {
 
+
     }
 
 
@@ -558,13 +596,10 @@ void SpHbMat::times(std::shared_ptr<const Vector> p,
         }
         for(int i = 0; i<EntryNum_; i++) {
             //go to the next row
-            if(i==RowIndex_[row+1]) {
+            while(i==RowIndex_[row+1]) {
                 row++;
             }
             result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
-            if(isSymmetric_&&row!=ColIndex_[i]) {
-                result->addNumberAt(ColIndex_[i], MatVal_[i]*p->values(row));
-            }
         }
     }
     else {
@@ -578,9 +613,10 @@ void SpHbMat::times(std::shared_ptr<const Vector> p,
         }
         for(int i = 0; i<EntryNum_; i++) {
             //go to the next col
-            if(i == RowIndex_[col+1]) {
-
+            while(i == ColIndex_[col+1]) {
+                col++;
             }
+            result->addNumberAt(RowIndex_[i], MatVal_[i]*p->values(col));
         }
     }
 }
@@ -625,18 +661,18 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     }
 
     if(!IsNull(jnlst)) {
-//    if (name != nullptr) {
-//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
-//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
-//    }
-//    for (int i = 0; i < RowNum_; i++) {
-//        for (int j = 0; j < ColNum_; j++) {
-//            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
-//               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
-//        }
-//           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
-//    }
-//       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+        //    if (name != nullptr) {
+        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
+        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
+        //    }
+        //    for (int i = 0; i < RowNum_; i++) {
+        //        for (int j = 0; j < ColNum_; j++) {
+        //            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+        //               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
+        //        }
+        //           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
+        //    }
+        //       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
     } else {
         if(name!=nullptr)
             printf("%s =:{\n", name);

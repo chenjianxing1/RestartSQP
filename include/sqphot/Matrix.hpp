@@ -464,7 +464,7 @@ public:
     void setStructure(std::shared_ptr<const SpTripletMat> rhs);
 //@}
 
-    void get_dense_matrix(double* dense_matrix);
+    void get_dense_matrix(double* dense_matrix,bool row_oriented = true);
 
     /**
      * @brief print the matrix information
