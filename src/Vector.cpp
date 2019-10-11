@@ -72,7 +72,7 @@ void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         for (int i = 0; i < size_; i++) {
             if (i == 0)
                 printf("{ ");
-            printf("%9.4e ", values_[i]);
+            printf("%23.16e ", values_[i]);
         }
         printf("}\n\n");
     }

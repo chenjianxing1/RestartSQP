@@ -422,7 +422,7 @@ public:
      * @brief constructor which generate matrix data directly from a dense matrix
      *
      */
-    SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented = true,
+    SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented = true,
             bool isCompressedRow = false);
 
     /**

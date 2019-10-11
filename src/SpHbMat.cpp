@@ -57,7 +57,7 @@ SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow) :
 }
 
 
-SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
+SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
                  bool isCompressedRow):
     RowIndex_(NULL),
     ColIndex_(NULL),
@@ -89,7 +89,7 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
             for(int i = 0; i<RowNum; i++) {
                 for(int j = 0; j<ColNum; j++) {
                     //identify nonzero entry
-                    if(data[i]>m_eps||data[i]<-m_eps) {
+                    if(data[i*ColNum+j]>m_eps||data[i*ColNum+j]<-m_eps) {
                         MatVal_tmp[EntryNum_] = data[i*ColNum+j];
                         ColIndex_tmp[EntryNum_] = j;
                         EntryNum_++;
@@ -128,7 +128,7 @@ SpHbMat::SpHbMat(double* data, int RowNum, int ColNum, bool row_oriented,
             for(int i = 0; i<ColNum; i++) {
                 for(int j = 0; j<RowNum; j++) {
                     //identify nonzero entry
-                    if(data[i]>m_eps||data[i]<-m_eps) {
+                    if(data[i*RowNum+j]>m_eps||data[i*RowNum+j]<-m_eps) {
                         MatVal_tmp[EntryNum_] = data[i*RowNum+j];
                         RowIndex_tmp[EntryNum_] = j;
                         EntryNum_++;
@@ -516,7 +516,7 @@ void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) {
                 }
 
                 dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
-//                    printf("dense_matrix[%d] = %10e\n",ColNum_ * RowIndex_[i]+col, MatVal_[i]);
+                //                    printf("dense_matrix[%d] = %10e\n",ColNum_ * RowIndex_[i]+col, MatVal_[i]);
             }
         }
     }
@@ -570,17 +570,29 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
             }
         }
         for(int i = 0; i<EntryNum_; i++) {
-            if(i==RowIndex_[row+1]) {
+            while(i==RowIndex_[row+1]) {
                 row++;
             }
-            result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
+            result->addNumberAt(ColIndex_[i], MatVal_[i]*p->values(row));
         }
     }
     else {
-
-
+        int col;
+        //find the col corresponding to the first nonzero entry
+        for(int i = 1; i<ColNum_+1; i++) {
+            if(ColIndex_[i]>0) {
+                col = i-1;
+                break;
+            }
+        }
+        for(int i = 0; i<EntryNum_; i++) {
+            //go to the next col
+            while(i == ColIndex_[col+1]) {
+                col++;
+            }
+            result->addNumberAt(col, MatVal_[i]*p->values(RowIndex_[i]));
+        }
     }
-
 
 }
 
