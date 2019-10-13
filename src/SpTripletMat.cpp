@@ -31,12 +31,122 @@ SpTripletMat::SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric,
 
 }
 
+SpTripletMat::SpTripletMat(const double* data, int RowNum, int ColNum,
+                           bool row_oriented):
+    RowIndex_(nullptr),
+    ColIndex_(nullptr),
+    MatVal_(nullptr),
+    order_(nullptr),
+    isAllocated_(true),
+    EntryNum_(0),
+    RowNum_(RowNum),
+    ColNum_(ColNum) {
+    //tuple with nonzero entries specified by <row, col, entry, order>
+    std::vector<std::tuple<int, int, double, int>> nonzero_entries;
+
+    if(row_oriented) {
+        //check if the input matrix is symmetric
+        if(RowNum == ColNum) {
+            isSymmetric_ = true;
+            for(int i = 0; i <RowNum; i++) {
+                for(int j = i+1; j <ColNum; j++) {
+                    if(data[i*ColNum+j]!=data[j*ColNum+i]) {
+                        isSymmetric_ = false;
+                        break;
+                    }
+                }
+            }
+        } else
+            isSymmetric_ = false;
+
+
+
+        if(isSymmetric_) {
+            for(int i = 0; i <RowNum; i++) {
+                for(int j = i; j <ColNum; j++) {
+                    if(abs(data[i*ColNum+j])>m_eps) {
+                        nonzero_entries.push_back(std::make_tuple(i+1, j+1,data[i*ColNum+j],
+                                                  EntryNum_));
+                        EntryNum_++;
+                    }
+                }
+            }
+        }
+        else {
+            for(int i = 0; i <RowNum; i++)
+                for(int j = 0; j <ColNum; j++) {
+                    if(abs(data[i*ColNum+j])>m_eps) {
+                        nonzero_entries.push_back(std::make_tuple(i+1, j+1,data[i*ColNum+j],
+                                                  EntryNum_));
+                        EntryNum_++;
+                    }
+                }
+        }
+    }
+    else { //if the input dense matrix is column oriented
+        //check if the input matrix is symmetric
+        if(RowNum == ColNum) {
+            isSymmetric_ = true;
+            for(int i = 0; i <RowNum; i++) {
+                for(int j = i+1; j <ColNum; j++) {
+                    if(data[j*RowNum+i]!=data[i*RowNum+j]) {
+                        isSymmetric_ = false;
+                        break;
+                    }
+                }
+            }
+        } else
+            isSymmetric_ = false;
+
+        if(isSymmetric_) {
+            for(int i = 0; i <RowNum; i++) {
+                for(int j = i; j <ColNum; j++) {
+                    if(abs(data[j*RowNum+i])>m_eps) {
+                        nonzero_entries.push_back(std::make_tuple(i+1,j+1,data[j*RowNum+i],
+                                                  EntryNum_));
+                        EntryNum_++;
+                    }
+                }
+            }
+        }
+        else {
+            for(int i = 0; i <RowNum; i++)
+                for(int j = 0; j <ColNum; j++) {
+                    if(abs(data[j*RowNum+i])>m_eps) {
+                        nonzero_entries.push_back(std::make_tuple(i+1,j+1,data[j*RowNum+i],
+                                                  EntryNum_));
+                        EntryNum_++;
+                    }
+                }
+        }
+
+    }
+    //allocate memory for RowIndex_, ColIndex, MatVal, and order
+    RowIndex_ = new int[EntryNum_]();
+    ColIndex_ = new int[EntryNum_]();
+    MatVal_ = new double[EntryNum_]();
+    order_ = new int[EntryNum_]();
+
+
+    for(int i = 0; i < EntryNum_; i++) {
+        RowIndex_[i] = std::get<0>(nonzero_entries[i]);
+        ColIndex_[i] = std::get<1>(nonzero_entries[i]);
+        MatVal_[i] = std::get<2>(nonzero_entries[i]);
+        order_[i] = std::get<3>(nonzero_entries[i]);
+
+    }
+    nonzero_entries.clear();
+}
 
 /** Default destructor */
 SpTripletMat::~SpTripletMat() {
     if(isAllocated_)
         freeMemory();
+
 }
+
+
+
 
 
 /**
@@ -75,18 +185,18 @@ SpTripletMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jn
                          1] = MatVal_[i];
     }
     if(!IsNull(jnlst)) {
-//    if (name != nullptr) {
-//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
-//            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
-//    }
-//    for (int i = 0; i < RowNum_; i++) {
-//        for (int j = 0; j < ColNum_; j++) {
-//            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
-//               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
-//        }
-//           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
-//    }
-//       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+        //    if (name != nullptr) {
+        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
+        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
+        //    }
+        //    for (int i = 0; i < RowNum_; i++) {
+        //        for (int j = 0; j < ColNum_; j++) {
+        //            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+        //               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
+        //        }
+        //           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
+        //    }
+        //       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
     } else {
         if(name!=nullptr)
             printf("%s =:{\n", name);
@@ -243,6 +353,26 @@ void SpTripletMat::convert2Triplet(std::shared_ptr<Matrix> rhs) {
     }
 }
 
+
+void SpTripletMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
+
+    if(row_oriented) {
+        for(int i = 0; i<EntryNum_; i++) {
+            dense_matrix[ColNum_* (RowIndex_[i]-1)+(ColIndex_[i] - 1)] = MatVal_[i];
+
+            if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
+                dense_matrix[ColNum_*(ColIndex_[i] - 1) + RowIndex_[i] -
+                             1] = MatVal_[i];
+        }
+    } else {
+        for(int i = 0; i<EntryNum_; i++) {
+            dense_matrix[RowNum_* (ColIndex_[i] - 1)+RowIndex_[i]-1] = MatVal_[i];
+            if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
+                dense_matrix[RowNum_ * (RowIndex_[i] - 1) + ColIndex_[i] -
+                             1] = MatVal_[i];
+        }
+    }
+}
 
 /**
  * qpOASESSparseMatrix

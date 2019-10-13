@@ -124,6 +124,14 @@ public:
                  bool allocate=true);
 
 
+
+    /**
+     *@brief
+     *
+     */
+    SpTripletMat(const double* data, int RowNum, int ColNum, bool row_oriented);
+
+
     /** Default destructor*/
     ~SpTripletMat() override;
     //@}
@@ -167,17 +175,9 @@ public:
      * @brief get the dense matrix corresponding to the matrix data stored in class
      * members. The stored matrix will be column oriented.
      */
-    void get_dense_matrix(double* dense_matrix) {
+    void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
-        for(int i = 0; i<EntryNum_; i++) {
-            dense_matrix[RowNum_* (ColIndex_[i] - 1)+RowIndex_[i]-1] = MatVal_[i];
 
-            if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
-                dense_matrix[RowNum_ * (RowIndex_[i] - 1) + ColIndex_[i] -
-                             1] = MatVal_[i];
-        }
-
-    }
 
     /**
      * @convert the input matrix rhs to a triplet matrix and store its data in the

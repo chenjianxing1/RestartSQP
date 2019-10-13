@@ -89,7 +89,7 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
             for(int i = 0; i<RowNum; i++) {
                 for(int j = 0; j<ColNum; j++) {
                     //identify nonzero entry
-                    if(data[i*ColNum+j]>m_eps||data[i*ColNum+j]<-m_eps) {
+                    if(abs(data[i*ColNum+j])>m_eps) {
                         MatVal_tmp[EntryNum_] = data[i*ColNum+j];
                         ColIndex_tmp[EntryNum_] = j;
                         EntryNum_++;
@@ -101,7 +101,7 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
         else { //if it is condensed column
             for(int j = 0; j<ColNum; j++) {
                 for(int i = 0; i<RowNum; i++) {
-                    if(data[j+i*ColNum]>m_eps||data[j+i*ColNum]<-m_eps) {
+                    if(abs(data[j+i*ColNum])>m_eps) {
                         MatVal_tmp[EntryNum_] = data[j+i*ColNum];
                         RowIndex_tmp[EntryNum_] = i;
                         EntryNum_++;
@@ -115,7 +115,7 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
         if(isCompressedRow) {
             for(int j = 0; j<RowNum; j++) {
                 for(int i = 0; i<ColNum; i++) {
-                    if(data[j+i*RowNum]>m_eps||data[j+i*RowNum]<-m_eps) {
+                    if(abs(data[j+i*RowNum])>m_eps) {
                         MatVal_tmp[EntryNum_] = data[j+i*RowNum];
                         ColIndex_tmp[EntryNum_] = i;
                         EntryNum_++;
@@ -128,7 +128,7 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
             for(int i = 0; i<ColNum; i++) {
                 for(int j = 0; j<RowNum; j++) {
                     //identify nonzero entry
-                    if(data[i*RowNum+j]>m_eps||data[i*RowNum+j]<-m_eps) {
+                    if(abs(data[i*RowNum+j])>m_eps) {
                         MatVal_tmp[EntryNum_] = data[i*RowNum+j];
                         RowIndex_tmp[EntryNum_] = j;
                         EntryNum_++;
@@ -280,7 +280,6 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     // all of its entries one by one
     if (isSymmetric_) {
         for (int i = 0; i < rhs->EntryNum(); i++) {
-
             sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
                                         rhs->ColIndex()[i],
                                         counter));
@@ -291,7 +290,6 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
                                             counter));
                 counter++;
             }
-
         }
         if (EntryNum_ == -1) {
 
@@ -561,8 +559,8 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
 
     result->set_zeros();
 
-    int row;
     if(isCompressedRow_) {
+        int row;
         for(int i = 1; i <RowNum_+1; i++) {
             if(RowIndex_[i]>0) {
                 row = i-1;
@@ -593,7 +591,6 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
             result->addNumberAt(col, MatVal_[i]*p->values(RowIndex_[i]));
         }
     }
-
 }
 
 void SpHbMat::times(std::shared_ptr<const Vector> p,
@@ -654,7 +651,7 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             }
         }
         for (int i = 0; i < EntryNum_; i++) {
-            if(i==RowIndex_[row+1]) {
+            while(i==RowIndex_[row+1]) {
                 row++;
             }
             dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
@@ -669,7 +666,7 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             }
         }
         for (int i = 0; i < EntryNum_; i++) {
-            if(i==ColIndex_[col+1]) {
+            while(i==ColIndex_[col+1]) {
                 col++;
             }
             dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
