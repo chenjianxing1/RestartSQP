@@ -61,6 +61,7 @@ SpTripletMat::SpTripletMat(const double* data, int RowNum, int ColNum,
 
 
 
+
         if(isSymmetric_) {
             for(int i = 0; i <RowNum; i++) {
                 for(int j = i; j <ColNum; j++) {
@@ -119,7 +120,6 @@ SpTripletMat::SpTripletMat(const double* data, int RowNum, int ColNum,
                     }
                 }
         }
-
     }
     //allocate memory for RowIndex_, ColIndex, MatVal, and order
     RowIndex_ = new int[EntryNum_]();
@@ -326,7 +326,6 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
                                 [RowIndex_[i] - 1]);
         }
     }
-
 }
 
 void SpTripletMat::convert2Triplet(std::shared_ptr<Matrix> rhs) {

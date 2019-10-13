@@ -19,6 +19,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
             rowNum, colNum, true);
 
     m_row_oriented->get_dense_matrix(dense_matrix_out->values(),true);
+    
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
                 rowNum * colNum, "row_oriented_matrix")) {
@@ -113,6 +114,7 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
 
     shared_ptr<SpTripletMat> sparse_matrix = make_shared<SpTripletMat>(dense_matrix_in,
             rowNum, colNum, true);
+    
     sparse_matrix->times(vector,result_sparse);
 
     if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)){
@@ -250,8 +252,75 @@ int main(int argc, char* argv[]){
     TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_trans_mult);
 
 
+    isNonzero.clear();
+    /**-------------------------------------------------------**/
+    /**           Testing on Symmetric Matrix                 **/
+    /**-------------------------------------------------------**/
+
+
+    //generate a random symmetric matrix 
+    int dim = rand() %10+2;
+    isNonzero.reserve(dim*(dim-1)/2);
+    for(int i = 0; i<dim*(dim-1)/2; i++)
+        isNonzero.push_back(i);
+    std::shuffle(isNonzero.begin(), isNonzero.end(),g);
+
+    int EntryNum_sym = rand()%(dim*(dim-1)/2)+1;//with nonzero diagonal
+
+    delete [] dense_matrix_in;
+    dense_matrix_in = new double[dim*dim]();
+    
+    int iterator = 0; 
+    for(int i=0; i<dim; i++) {
+        for(int j=i; j<dim; j++) {
+            if(i == j)
+                dense_matrix_in[i*dim+j] = rand()%10+1;
+            else if(isNonzero.at(iterator)<EntryNum_sym){
+                dense_matrix_in[i*dim+j] = rand()%10+1;
+                dense_matrix_in[j*dim+i] = dense_matrix_in[i*dim+j];
+                iterator++;
+            }
+            else
+                iterator++;
+        }
+    }
+
+        printf("\n=========================================================\n");
+        printf("    Testing Methods for Symmetric Triplet Sparse Matrix\n"
+                "   on randomly generated data."); 
+        printf("\n=========================================================\n");
+
+
+    /**-------------------------------------------------------**/
+    /**            Dense-sparse Matrix Conversion             **/
+    /**-------------------------------------------------------**/
+
+
+    TEST_DENSE_SPARSE_MATRIX_CONVERSION(dim,dim,dense_matrix_in);
+
+    /**-------------------------------------------------------**/
+    /**                 Matrix-vector Multiplication          **/
+    /**-------------------------------------------------------**/
+
+    shared_ptr<Vector> vector_sym_mult = make_shared<Vector>(dim);
+
+    for(int i = 0; i < dim; i++) {
+        vector_sym_mult->setValueAt(i,rand() %10+1);
+    }
+
+    TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(dim, dim, dense_matrix_in, vector_sym_mult);
+
+    /**-------------------------------------------------------**/
+    /**      Transposed Matrix-vector Multiplication          **/
+    /**-------------------------------------------------------**/
+
+    TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(dim, dim, dense_matrix_in, vector_sym_mult);
+
+
+
     delete[] dense_matrix_in;
     isNonzero.clear();
 
     return 0;
+
 }
