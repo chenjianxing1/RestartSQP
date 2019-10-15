@@ -9,11 +9,12 @@
 
 #include <algorithm>
 #include <cassert>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <IpJournalist.hpp>
 #include <qpOASES.hpp>
 #include <IpTNLP.hpp>
+#include <sqphot/Utils.hpp>
 #include <sqphot/Types.hpp>
 #include <sqphot/Vector.hpp>
 #include <tuple>
@@ -178,11 +179,6 @@ public:
     void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
 
-
-    /**
-     * @convert the input matrix rhs to a triplet matrix and store its data in the
-     * class members*/
-    void convert2Triplet(std::shared_ptr<Matrix> rhs);
     /**
      * @brief calculate the one norm of the matrix
      *
@@ -337,7 +333,22 @@ public:
 
     //@}
 
-    inline void setMatValAt(int location, int value_to_assign);
+    inline void setMatValAt(int location, double value_to_assign) {
+
+        MatVal_[location] = value_to_assign;
+    }
+
+    inline void setRowIndex(int i, int value) {
+        RowIndex_[i] = value;
+    }
+
+    inline void setColIndex(int i, int value) {
+        ColIndex_[i] = value;
+    }
+
+    inline void setOrderAt(int location, int order_to_assign) {
+        order_[location] = order_to_assign;
+    }
 
     void set_zero() {
         for(int i = 0; i<EntryNum_; i++) {
@@ -348,7 +359,6 @@ public:
         }
     }
 
-    inline void setOrderAt(int location, int order_to_assign);
 
 
 ///////////////////////////////////////////////////////////
@@ -406,7 +416,7 @@ public:
     //@{
 
     /**Default constructor*/
-    SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow = false);
+    SpHbMat(int RowNum, int ColNum, bool isCompressedRow);
 
 
     /**
@@ -442,6 +452,7 @@ public:
                            I_info);
 
 
+
     virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 
 
@@ -469,10 +480,10 @@ public:
     /**
      * @brief print the matrix information
      */
-    void
-    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
-          Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
-          category=Ipopt::J_DBG)
+    void print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst =
+                   nullptr,
+               Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
+               category=Ipopt::J_DBG)
     const
     override;
 
@@ -495,6 +506,13 @@ public:
      */
 
     virtual  void copy(std::shared_ptr<const SpHbMat> rhs);
+
+
+    /**
+     * @convert the matrix data stored in the class members to a triplet matrix
+     * specified by rhs */
+    shared_ptr<SpTripletMat> convert_to_triplet() const ;
+
 
     /** Extract class member information*/
     //@{
@@ -520,7 +538,6 @@ public:
 
         return RowIndex_[i];
     }
-
 
     inline int ColIndex(int i ) override {
 
@@ -635,29 +652,16 @@ private:
     void operator=(const SpHbMat &);
 
 
-    void set_zero() {
-        if(isCompressedRow_) {
-            for (int i = 0; i < EntryNum_; i++) {
-                MatVal_[i] = 0;
-                ColIndex_[i] = 0;
-                order_[i] = i;
-            }
-            for (int i = 0; i < RowNum_ + 1; i++) {
-                RowIndex_[i] = 0;
-            }
-        }
-        else {
-            for (int i = 0; i < EntryNum_; i++) {
-                MatVal_[i] = 0;
-                RowIndex_[i] = 0;
-                order_[i] = i;
-            }
-            for (int i = 0; i < ColNum_ + 1; i++) {
-                ColIndex_[i] = 0;
-            }
+    void set_zero();
+
+
+    template <typename T>
+    static void print_tuple(vector<tuple<int,int,T>> tuple) {
+        for(int i = 0; i<tuple.size(); i++) {
+            printf("%d %d ", std::get<0>(tuple[i]),std::get<1>(tuple[i]));
+            std::cout<<std::get<2>(tuple[i])<<std::endl;
         }
     }
-
 
     /**
      * @brief This is the sorted rule that used to sort data, first based on column

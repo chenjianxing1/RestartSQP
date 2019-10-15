@@ -57,7 +57,9 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
                     A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
 
     assert(rv_ == QPSOLVER_OK);
+
     rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
+
     firstQPsolved_ = true;
     assert(rv_ == QPSOLVER_OK);
     rv_ = QPGetInt(solver_, "status", &status_);
@@ -140,7 +142,7 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
     if (qptype != LP) {
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP,
                     nlp_info.nnz_h_lag);
-        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true,true);
+        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
     } else {
         //if we are solving an LP, the number of nonzero in the Hessian is 0
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
@@ -332,7 +334,9 @@ void QOREInterface::set_solver_options(shared_ptr<const Options> options) {
         //does not print anything
         QPSetInt(solver_, "prtfreq", -1);
     }
-}
 
+    QPSetInt(solver_,"maxiter",options->qp_maxiter);
+
+}
 }//SQP_HOTSTART
 

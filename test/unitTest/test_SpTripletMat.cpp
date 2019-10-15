@@ -9,7 +9,7 @@
 using namespace SQPhotstart;
 using namespace std;
 
-bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* dense_matrix_in){
+bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* dense_matrix_in) {
 
     shared_ptr<Vector> dense_matrix_out = make_shared<Vector>(rowNum * colNum);
     /**-------------------------------------------------------**/
@@ -19,19 +19,19 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
             rowNum, colNum, true);
 
     m_row_oriented->get_dense_matrix(dense_matrix_out->values(),true);
-    
+
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "row_oriented_matrix")) {
+                               rowNum * colNum, "row_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and triplet sparse matrix test passed!   \n");
+               "and triplet sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and triplet sparse matrix failed!   \n");
+               "and triplet sparse matrix failed!   \n");
         printf("    Converting dense matrix to Sparse matrix FAILED!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
@@ -63,16 +63,16 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
 
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "col_oriented_matrix")) {
+                               rowNum * colNum, "col_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and triplet sparse matrix test passed!   \n");
+               "and triplet sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and triplet sparse matrix failed!   \n");
+               "and triplet sparse matrix failed!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
@@ -97,7 +97,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
 
 
 bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
-        shared_ptr<const Vector> vector){
+        shared_ptr<const Vector> vector) {
 
     assert(colNum == vector->Dim());
 
@@ -107,27 +107,27 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
     //compare it with matrix-vector multiplication in dense matrix
     for(int i = 0; i<rowNum; i ++) {
         for(int j = 0; j<colNum; j++) {
-            result_dense->addNumberAt(i, 
-                    dense_matrix_in[i*colNum+j]*vector->values(j));
+            result_dense->addNumberAt(i,
+                                      dense_matrix_in[i*colNum+j]*vector->values(j));
         }
     }
 
     shared_ptr<SpTripletMat> sparse_matrix = make_shared<SpTripletMat>(dense_matrix_in,
             rowNum, colNum, true);
-    
+
     sparse_matrix->times(vector,result_sparse);
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for triplet \n"
-                "   sparse matrix passed!   \n");
+               "   sparse matrix passed!   \n");
         printf("---------------------------------------------------------\n");
         return true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for triplet\n"
-                "   sparse matrix failed!   \n");
+               "   sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -136,7 +136,7 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
 }
 
 bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
-        shared_ptr<const Vector> vector){
+        shared_ptr<const Vector> vector) {
 
     assert(rowNum == vector->Dim());
 
@@ -148,7 +148,7 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     for(int i = 0; i<colNum; i ++) {
         for(int j = 0; j<rowNum; j++) {
             result_dense->addNumberAt(i, dense_matrix_in[j*colNum+i]*
-                    vector->values(j));
+                                      vector->values(j));
         }
     }
 
@@ -157,18 +157,18 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     sparse_matrix->transposed_times(vector,result_sparse);
 
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for triplet\n"
                "   sparse matrix passed!   \n");
-                 
+
         printf("---------------------------------------------------------\n");
         return true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for triplet\n"
-                "   sparse matrix failed!   \n");
+               "   sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -183,7 +183,7 @@ bool TEST_TRIPLET_HB_MATIRX_CONVERSION() {
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
 
 
     /**-------------------------------------------------------**/
@@ -210,13 +210,13 @@ int main(int argc, char* argv[]){
             //generate the entry between 1 to 10
             dense_matrix_in[i] = rand() %10+1;
     }
-    
 
 
-        printf("\n=========================================================\n");
-        printf("    Testing Methods for Triplet Sparse Matrix\n"
-                "   on randomly generated data."); 
-        printf("\n=========================================================\n");
+
+    printf("\n=========================================================\n");
+    printf("    Testing Methods for Triplet Sparse Matrix\n"
+           "   on randomly generated data.");
+    printf("\n=========================================================\n");
 
 
     /**-------------------------------------------------------**/
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]){
     /**-------------------------------------------------------**/
 
 
-    //generate a random symmetric matrix 
+    //generate a random symmetric matrix
     int dim = rand() %10+2;
     isNonzero.reserve(dim*(dim-1)/2);
     for(int i = 0; i<dim*(dim-1)/2; i++)
@@ -269,13 +269,13 @@ int main(int argc, char* argv[]){
 
     delete [] dense_matrix_in;
     dense_matrix_in = new double[dim*dim]();
-    
-    int iterator = 0; 
+
+    int iterator = 0;
     for(int i=0; i<dim; i++) {
         for(int j=i; j<dim; j++) {
             if(i == j)
                 dense_matrix_in[i*dim+j] = rand()%10+1;
-            else if(isNonzero.at(iterator)<EntryNum_sym){
+            else if(isNonzero.at(iterator)<EntryNum_sym) {
                 dense_matrix_in[i*dim+j] = rand()%10+1;
                 dense_matrix_in[j*dim+i] = dense_matrix_in[i*dim+j];
                 iterator++;
@@ -285,10 +285,10 @@ int main(int argc, char* argv[]){
         }
     }
 
-        printf("\n=========================================================\n");
-        printf("    Testing Methods for Symmetric Triplet Sparse Matrix\n"
-                "   on randomly generated data."); 
-        printf("\n=========================================================\n");
+    printf("\n=========================================================\n");
+    printf("    Testing Methods for Symmetric Triplet Sparse Matrix\n"
+           "   on randomly generated data.");
+    printf("\n=========================================================\n");
 
 
     /**-------------------------------------------------------**/

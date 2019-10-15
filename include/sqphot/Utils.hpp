@@ -7,18 +7,20 @@
 #ifndef SQPHOTSTART_UTILS_HPP_
 #define SQPHOTSTART_UTILS_HPP_
 
-#include <iostream>
-#include <memory>
-#include <cstdio>
-#include <stdio.h>
-#include <vector>
-#include <stdlib.h>
-#include <assert.h>
-#include <iterator>
-#include <string>
 #include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
+
 #include <IpTNLP.hpp>
-#include <math.h>
 #include <sqphot/SQPDebug.hpp>
 #include <sqphot/MessageHandling.hpp>
 #include <sqphot/Types.hpp>
@@ -57,6 +59,8 @@ inline void print_(char* name, T* vec, int length) {
     }
     printf("end of %s\n", name);
 }
+
+
 
 
 } // namespace SQPhotstart

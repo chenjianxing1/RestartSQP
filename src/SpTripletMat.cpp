@@ -228,19 +228,6 @@ void SpTripletMat::freeMemory() {
     }
 }
 
-
-void SpTripletMat::setMatValAt(int location, int value_to_assign) {
-
-    MatVal_[location] = value_to_assign;
-}
-
-
-void SpTripletMat::setOrderAt(int location, int order_to_assign) {
-
-    order_[location] = order_to_assign;
-}
-
-
 /**
  * @brief Times a matrix with a vector p, the pointer to the matrix-vector
  * product  will be stored in the class member of another Vector class object
@@ -328,37 +315,11 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
     }
 }
 
-void SpTripletMat::convert2Triplet(std::shared_ptr<Matrix> rhs) {
-    set_zero();
-    int j = 1;
-    if(rhs->isSymmetric())
-        if(EntryNum_<rhs->EntryNum())
-            EntryNum_ = rhs->EntryNum();
-
-    for (int i = 0; i < EntryNum_; i++) {
-        if (rhs->isCompressedRow()) {
-            if (i == rhs->RowIndex(j))
-                j++;
-            RowIndex_[i] = j;
-            ColIndex_[i] = rhs->ColIndex()[i] + 1;
-        } else {
-            if (i == rhs->ColIndex()[j])
-                j++;
-            ColIndex_[i] = j;
-            RowIndex_[i] = rhs->RowIndex()[i] + 1;
-        }
-        MatVal_[i] = rhs->MatVal()[i];
-        order_[i] = rhs->order()[i];
-    }
-}
-
 
 void SpTripletMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
-
     if(row_oriented) {
         for(int i = 0; i<EntryNum_; i++) {
             dense_matrix[ColNum_* (RowIndex_[i]-1)+(ColIndex_[i] - 1)] = MatVal_[i];
-
             if (isSymmetric_ && RowIndex_[i] != ColIndex_[i])
                 dense_matrix[ColNum_*(ColIndex_[i] - 1) + RowIndex_[i] -
                              1] = MatVal_[i];

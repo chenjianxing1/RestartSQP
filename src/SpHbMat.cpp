@@ -3,8 +3,10 @@
 
 namespace SQPhotstart {
 
+/** @name constructor/destructor */
+//@{
 /** Default constructor*/
-SpHbMat::SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow) :
+SpHbMat::SpHbMat(int RowNum, int ColNum, bool isCompressedRow) :
     RowIndex_(NULL),
     ColIndex_(NULL),
     MatVal_(NULL),
@@ -13,7 +15,6 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool isSymmetric, bool isCompressedRow)
     isInitialised_(false),
     RowNum_(RowNum),
     ColNum_(ColNum),
-    isSymmetric_(isSymmetric),
     isCompressedRow_(isCompressedRow) {
 
     if(isCompressedRow_) {
@@ -39,7 +40,6 @@ SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow) :
     EntryNum_(nnz),
     RowNum_(RowNum),
     ColNum_(ColNum),
-    isSymmetric_(false),
     isInitialised_(false),
     isCompressedRow_(isCompressedRow) {
 
@@ -176,13 +176,18 @@ SpHbMat::~SpHbMat() {
     freeMemory();
 }
 
+//@}
 
+
+/** @name setStructure */
+
+//@{
 /**
  * @brief setup the structure of the sparse matrix for solver qpOASES(should
  * be called only for once).
  *
- * This method will convert the strucutre information from the triplet form from a
- * SpMatrix object to the format required by the QPsolver qpOASES.
+ * This method will convert the structure information from the triplet form from a
+ * SpMatrix object to the format required by the QPsolver qpOASES or QORE.
  *
  * @param rhs a SpMatrix object whose content will be copied to the class members
  * (in a different sparse matrix representations)
@@ -193,6 +198,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                            Identity2Info I_info) {
 
 
+    isSymmetric_ = false;
     set_zero();
     assert(isInitialised_ == false);
 
@@ -203,7 +209,6 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                                     rhs->ColIndex()[i], counter));
         counter++;
     }
-
 
     // adding 2 identity matrix to the tuple array.
     if (I_info.irow1 != 0) {
@@ -256,6 +261,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 }
 
 
+
+
 /**
  * @brief setup the structure of the sparse matrix for solver qpOASES(should
  * be called only for once).
@@ -270,48 +277,44 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
     set_zero();
+    isSymmetric_ = rhs->isSymmetric();
+
     assert(isInitialised_ == false);
-    int counter = 0; // the counter for recording the index location
     std::vector<std::tuple<int, int, int>> sorted_index_info;
 
     //if it is symmetric, it will calculate the
     // number of entry and allocate_memory the memory
     // of RowIndex and MatVal by going through
     // all of its entries one by one
-    if (isSymmetric_) {
-        for (int i = 0; i < rhs->EntryNum(); i++) {
-            sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
-                                        rhs->ColIndex()[i],
-                                        counter));
-            counter++;
-            if (rhs->RowIndex()[i] != rhs->ColIndex()[i]) {
-                sorted_index_info.push_back(std::make_tuple(rhs->ColIndex()[i],
-                                            rhs->RowIndex()[i],
-                                            counter));
-                counter++;
-            }
-        }
-        if (EntryNum_ == -1) {
+    for (int i = 0; i < rhs->EntryNum(); i++) {
+        sorted_index_info.emplace_back(rhs->RowIndex()[i],
+                                       rhs->ColIndex()[i],
+                                       sorted_index_info.size());
 
-            EntryNum_ = counter;
-            MatVal_ = new double[counter]();
-            order_ = new int[counter]();
-
-            if (isCompressedRow_) {
-                ColIndex_ = new int[counter]();
-            } else {
-                RowIndex_ = new int[counter]();
-            }
+        if (isSymmetric_&& rhs->RowIndex()[i] != rhs->ColIndex()[i]) {
+            sorted_index_info.emplace_back(rhs->ColIndex()[i],
+                                           rhs->RowIndex()[i],
+                                           sorted_index_info.size());
         }
     }
-    assert(counter == EntryNum_);
 
+
+    if(EntryNum_ <0) {//no memory allocated so far
+        EntryNum_ = sorted_index_info.size();
+        MatVal_ = new double[EntryNum_]();
+        order_ = new int[EntryNum_]();
+
+        if (isCompressedRow_) {
+            ColIndex_ = new int[EntryNum_]();
+        } else {
+            RowIndex_ = new int[EntryNum_]();
+        }
+    }
 
     if (isCompressedRow_) {
         std::sort(sorted_index_info.begin(), sorted_index_info.end(),
                   tuple_sort_rule_compressed_row);
         //copy the order information back
-
         for (int i = 0; i < EntryNum_; i++) {
             ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
             order_[std::get<2>(sorted_index_info[i])]= i;
@@ -334,13 +337,15 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
             }
         }
         ColIndex_[ColNum_] = EntryNum_;
-
     }
     sorted_index_info.clear();
 }
 
+//@}
 
 
+/** @name setMatVal */
+//@{
 /**
  * @brief set the Matrix values to the matrix, convert from triplet format to
  * Harwell-Boeing Matrix format.
@@ -368,7 +373,6 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
             }
             isInitialised_ = true;
         }
-
     }
     //assign each matrix entry to the corresponding position after permutation
     for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
@@ -390,6 +394,8 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
         }
     }
 }
+
+//@}
 
 
 /**
@@ -421,6 +427,88 @@ void SpHbMat::copy(std::shared_ptr<const SpHbMat> rhs) {
     for (int i = 0; i < ColNum_ + 1; i++) {
         ColIndex_[i] = rhs->ColIndex()[i];
     }
+}
+
+void SpHbMat::set_zero() {
+    if(isCompressedRow_) {
+        for (int i = 0; i < EntryNum_; i++) {
+            MatVal_[i] = 0;
+            ColIndex_[i] = 0;
+            order_[i] = i;
+        }
+        for (int i = 0; i < RowNum_ + 1; i++) {
+            RowIndex_[i] = 0;
+        }
+    }
+    else {
+        for (int i = 0; i < EntryNum_; i++) {
+            MatVal_[i] = 0;
+            RowIndex_[i] = 0;
+            order_[i] = i;
+        }
+        for (int i = 0; i < ColNum_ + 1; i++) {
+            ColIndex_[i] = 0;
+        }
+    }
+}
+
+
+shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
+
+    shared_ptr<SpTripletMat> result;
+    int nnz;//number of non-zero entries
+    int j = 1;
+    if(isSymmetric_) {
+        std::vector<std::tuple<int,int,double>>  triplet_vector;
+        for(int i=0; i<EntryNum_; i++) {
+            if(isCompressedRow_) {
+                while(RowIndex_[j] == i)
+                    j++;
+                triplet_vector.emplace_back(j,ColIndex_[i]+1,MatVal_[i]);
+            }
+        }
+        for(int i = 0; i<EntryNum_; i++) //delete repetitive entry
+            if(get<0>(triplet_vector[i])!=get<1>(triplet_vector[i]))
+                for(int k = i; k<triplet_vector.size(); k++) {
+                    if(get<0>(triplet_vector[i])==get<1>(triplet_vector[k])&&
+                            get<1>(triplet_vector[i])==get<0>(triplet_vector[k]))
+                        triplet_vector.erase(triplet_vector.begin()+k);
+                }
+
+        std::sort(triplet_vector.begin(), triplet_vector.end(),
+                  tuple_sort_rule_compressed_row);
+
+
+        result = make_shared<SpTripletMat>(triplet_vector.size(),RowNum_,ColNum_,true,
+                                           true);
+
+
+        for(int i = 0; i<result->EntryNum(); i++) {
+            result->setRowIndex(i,get<0>(triplet_vector[i]));
+            result->setColIndex(i,get<1>(triplet_vector[i]));
+            result->setMatValAt(i,get<2>(triplet_vector[i]));
+        }
+    }
+    else {
+        result = make_shared<SpTripletMat>(EntryNum_, RowNum_, ColNum_, false, true);
+        for (int i = 0; i < EntryNum_; i++) {
+            if(isCompressedRow_) {
+                while(RowIndex_[j] == i)
+                    j++;
+                result->setRowIndex(i,j);
+                result->setColIndex(i,ColIndex_[i]+1);
+            }
+            else {
+                while(ColIndex_[j] == i)
+                    j++;
+                result->setColIndex(i,j);
+                result->setRowIndex(i,RowIndex_[i]+1);
+            }
+
+            result->setMatValAt(i,MatVal_[i]);
+        }
+    }
+    return result;
 }
 
 

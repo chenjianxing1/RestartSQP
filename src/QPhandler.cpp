@@ -736,7 +736,6 @@ bool QPhandler::OptimalityTest(
             A->transposed_times(multiplier_constr, stationary_gap);
         }
 
-        H->print("H");
         shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
         H->times(x, Hx);
         stationary_gap->add_vector(multiplier_bounds->values());

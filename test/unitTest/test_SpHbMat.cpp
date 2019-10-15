@@ -18,16 +18,16 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     m_csc_row_oriented->get_dense_matrix(dense_matrix_out->values());
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "csc_row_oriented_matrix")) {
+                               rowNum * colNum, "csc_row_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and condensed column sparse matrix test passed!   \n");
+               "and condensed column sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and condensed column sparse matrix failed!   \n");
+               "and condensed column sparse matrix failed!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
@@ -54,17 +54,17 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     m_csr_row_oriented->get_dense_matrix(dense_matrix_out->values());
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "csr_row_oriented_matrix")) {
+                               rowNum * colNum, "csr_row_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and condensed row sparse matrix test passed!   \n");
+               "and condensed row sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
 
         printf("---------------------------------------------------------\n");
         printf("    Conversion between row-oriented dense matrix \n    "
-                "and condensed row sparse matrix failed!   \n");
+               "and condensed row sparse matrix failed!   \n");
         printf("    Converting dense matrix to Sparse matrix FAILED!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
@@ -94,17 +94,17 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
 
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "csc_col_oriented_matrix")) {
+                               rowNum * colNum, "csc_col_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and condensed column sparse matrix test passed!   \n");
+               "and condensed column sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
 
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and condensed column sparse matrix failed!   \n");
+               "and condensed column sparse matrix failed!   \n");
         printf("    Converting dense matrix to Sparse matrix FAILED!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
@@ -133,17 +133,17 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
 
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
-                rowNum * colNum, "csr_col_oriented_matrix")) {
+                               rowNum * colNum, "csr_col_oriented_matrix")) {
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and condensed row sparse matrix test passed!   \n");
+               "and condensed row sparse matrix test passed!   \n");
         printf("---------------------------------------------------------\n");
     }
     else {
 
         printf("---------------------------------------------------------\n");
         printf("    Conversion between col-oriented dense matrix \n    "
-                "and condensed row sparse matrix failed!   \n");
+               "and condensed row sparse matrix failed!   \n");
         printf("    Converting dense matrix to Sparse matrix FAILED!   \n");
         printf("\nMatrix in is \n");
         for(int i = 0; i < rowNum; i++) {
@@ -185,27 +185,27 @@ TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* d
     for(int i = 0; i<rowNum; i ++) {
         for(int j = 0; j<colNum; j++) {
             result_dense->addNumberAt(i, dense_matrix_in[i*colNum+j]*
-                    vector->values(j));
+                                      vector->values(j));
         }
     }
 
 
     shared_ptr<SpHbMat> m_csc = make_shared<SpHbMat>(dense_matrix_in,
-            rowNum, colNum, true, false);
+                                rowNum, colNum, true, false);
     m_csc->times(vector,result_sparse);
 
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for condensed column \n"
-                "   sparse matrix passed!   \n");
+               "   sparse matrix passed!   \n");
         printf("---------------------------------------------------------\n");
         is_csc_passed = true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for condensed column\n"
-                "   sparse matrix failed!   \n");
+               "   sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -214,20 +214,20 @@ TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* d
     }
 
     shared_ptr<SpHbMat> m_csr = make_shared<SpHbMat>(dense_matrix_in,
-            rowNum, colNum, true, true);
+                                rowNum, colNum, true, true);
     m_csr->times(vector,result_sparse);
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),rowNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for condensed row \n"
-                "   sparse matrix passed!   \n");
+               "   sparse matrix passed!   \n");
         printf("---------------------------------------------------------\n");
         is_csr_passed = true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Matrix-vector multiplication for condensed row\n"
-                "   sparse matrix failed!   \n");
+               "   sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -243,7 +243,7 @@ TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* d
 
 
 bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
-        shared_ptr<const Vector> vector){
+        shared_ptr<const Vector> vector) {
 
     assert(rowNum == vector->Dim());
 
@@ -256,27 +256,27 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     for(int i = 0; i<colNum; i ++) {
         for(int j = 0; j<rowNum; j++) {
             result_dense->addNumberAt(i, dense_matrix_in[j*colNum+i]*
-                    vector->values(j));
+                                      vector->values(j));
         }
     }
 
     shared_ptr<SpHbMat> m_csc = make_shared<SpHbMat>(dense_matrix_in,
-            rowNum, colNum, true, false);
+                                rowNum, colNum, true, false);
     m_csc->transposed_times(vector,result_sparse);
 
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for condensed \n"
                "   column sparse matrix passed!   \n");
-                 
+
         printf("---------------------------------------------------------\n");
         is_csc_passed = true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for condensed \n"
-                "   column sparse matrix failed!   \n");
+               "   column sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -285,21 +285,21 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     }
 
     shared_ptr<SpHbMat> m_csr = make_shared<SpHbMat>(dense_matrix_in,
-            rowNum, colNum, true, true);
+                                rowNum, colNum, true, true);
     m_csr->transposed_times(vector,result_sparse);
 
-    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)){
+    if(TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(),result_dense->values(),colNum)) {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for condensed \n"
                "   row sparse matrix passed!   \n");
-                 
+
         printf("---------------------------------------------------------\n");
         is_csr_passed = true;
     }
     else {
         printf("---------------------------------------------------------\n");
         printf("   Transposed matrix-vector multiplication for condensed \n"
-                "   row sparse matrix failed!   \n");
+               "   row sparse matrix failed!   \n");
         result_sparse->print("result_sparse");
         result_dense->print("result_dense");
         printf("\n---------------------------------------------------------\n");
@@ -313,17 +313,91 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
 
 }
 
+
+bool TEST_TRIPLET_HB_MATIRX_CONVERSION(int rowNum, int colNum, const double* dense_matrix_in) {
+    shared_ptr<Vector> dense_matrix_out = make_shared<Vector>(rowNum * colNum);
+
+    /**-------------------------------------------------------**/
+    /**             Without Identity Submatrix                **/
+    /**-------------------------------------------------------**/
+    shared_ptr<SpTripletMat> m_triplet_in = make_shared<SpTripletMat>(dense_matrix_in,
+                                            rowNum, colNum, true);//condensed column sparse matrix
+
+    auto m_csc = make_shared<SpHbMat>(rowNum, colNum,false) ;
+    m_csc->setStructure(m_triplet_in);
+    m_csc->setMatVal(m_triplet_in);
+    auto m_triplet_csc_out = m_csc->convert_to_triplet();
+    m_triplet_csc_out->get_dense_matrix(dense_matrix_out->values(),true);
+
+
+    /**-------------------------------------------------------**/
+    /**             Condensed Column matrix                   **/
+    /**-------------------------------------------------------**/
+
+    if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
+                               m_triplet_in->EntryNum())) {
+        printf("---------------------------------------------------------\n");
+        printf("   Testing Triplet and condensed column sparse matrix\n"
+               "    conversion without submatrix passed!       \n");
+        printf("---------------------------------------------------------\n");
+    } else {
+        printf("---------------------------------------------------------\n");
+        printf("---------------------------------------------------------\n");
+        printf("   Testing Triplet and condensed column sparse matrix\n"
+               "    conversion without submatrix FAILED!       \n");
+        m_triplet_in->print("m_triplet_in");
+        m_csc->print("m_triplet_out");
+        m_triplet_csc_out->print("m_triplet_csc_out");
+        printf("---------------------------------------------------------\n");
+    }
+
+    /**-------------------------------------------------------**/
+    /**             Condensed Row matrix                      **/
+    /**-------------------------------------------------------**/
+
+    auto m_csr = make_shared<SpHbMat>(rowNum, colNum,true) ;
+    m_csr->setStructure(m_triplet_in);
+    m_csr->setMatVal(m_triplet_in);
+    auto m_triplet_csr_out = m_csc->convert_to_triplet();
+    m_triplet_csr_out->get_dense_matrix(dense_matrix_out->values(),true);
+
+    if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
+                               m_triplet_in->EntryNum())) {
+        printf("---------------------------------------------------------\n");
+        printf("   Testing Triplet and condensed row sparse matrix\n"
+               "    conversion without submatrix passed!       \n");
+        printf("---------------------------------------------------------\n");
+    } else {
+        printf("---------------------------------------------------------\n");
+        printf("---------------------------------------------------------\n");
+        printf("   Testing Triplet and condensed column sparse matrix\n"
+               "    conversion without submatrix FAILED!       \n");
+        m_triplet_in->print("m_triplet_in");
+        m_csr->print("m_triplet_out");
+        m_triplet_csr_out->print("m_triplet_csr_out");
+        printf("---------------------------------------------------------\n");
+    }
+}
+
+
 bool TEST_MATRIX_ALLOCATION_FROM_PERMUTATIONS() {
 
+
 }
 
 
 
-bool TEST_SET_STRUCTURE(){
+bool TEST_SET_STRUCTURE(int rowNum, int colNum, const double* dense_matrix_in) {
+
+
+
+
+
 }
 
-bool TEST_SET_MATRIX_VALUE(){
+bool TEST_SET_MATRIX_VALUE() {
 }
+
 
 
 
@@ -355,10 +429,10 @@ int main(int argc, char* argv[]) {
             dense_matrix_in[i] = rand() %10+1;
     }
 
-        printf("\n=========================================================\n");
-        printf("    Testing Methods for Harwell-Boeing Sparse Matrix\n"
-                "   on randomly generated data."); 
-        printf("\n=========================================================\n");
+    printf("\n=========================================================\n");
+    printf("    Testing Methods for Harwell-Boeing Sparse Matrix\n"
+           "   on randomly generated data.");
+    printf("\n=========================================================\n");
     /**-------------------------------------------------------**/
     /**            Dense-sparse Matrix Conversion             **/
     /**-------------------------------------------------------**/
@@ -390,6 +464,12 @@ int main(int argc, char* argv[]) {
     }
 
     TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_trans_mult);
+
+    /**-------------------------------------------------------**/
+    /**            Triplet Hb Matrix Conversion               **/
+    /**-------------------------------------------------------**/
+
+    TEST_TRIPLET_HB_MATIRX_CONVERSION(rowNum, colNum, dense_matrix_in);
 
 
     delete[] dense_matrix_in;

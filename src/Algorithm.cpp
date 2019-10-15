@@ -56,7 +56,6 @@ void Algorithm::Optimize() {
 
 
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-        hessian_->print_full("hessian");
         setupQP();
 //        hessian_->print_full("hessian");
         try {
