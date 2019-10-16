@@ -43,19 +43,22 @@ void qpOASESInterface::allocate_memory(NLPInfo nlp_index_info, QPType qptype) {
     ub_ = make_shared<Vector>(nVar_QP_);
     g_ = make_shared<Vector>(nVar_QP_);
     A_ = make_shared<SpHbMat>(
-             nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nConstr_QP_, nVar_QP_);
+             nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nConstr_QP_, nVar_QP_,false);
     x_qp_ = make_shared<Vector>(nVar_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
 
     if (qptype != LP) {
         H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
     }
+
+    //@{
 //TODO: for debugging
     A_triplet_ = make_shared<SpTripletMat>(nlp_index_info
                                            .nnz_jac_g+2*nlp_index_info.nCon,nConstr_QP_,
                                            nVar_QP_,false);
     H_triplet_ = make_shared<SpTripletMat>(nlp_index_info.nnz_h_lag,nConstr_QP_,
                                            nVar_QP_,true);
+    //@}
     //FIXME: the qpOASES does not accept any extra input
     solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
               (qpOASES::int_t) nConstr_QP_);
@@ -327,10 +330,18 @@ void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 
 void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 
+
+	//@for debugging 
+	//@{
+	H_->print("H");
+	rhs->print("rhs");
+	//@}
     if (firstQPsolved_ && !data_change_flags_.Update_H) {
         data_change_flags_.Update_H = true;
     }
     H_->setMatVal(rhs);
+    H_->print("H");
+    
     H_qpOASES_->setVal(H_->MatVal());
     H_qpOASES_->createDiagInfo();
 }

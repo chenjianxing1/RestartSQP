@@ -205,8 +205,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
     int counter = 0; // the counter for recording the index location
     std::vector<std::tuple<int, int, int>> sorted_index_info;
     for (int i = 0; i < rhs->EntryNum(); i++) {
-        sorted_index_info.push_back(std::make_tuple(rhs->RowIndex()[i],
-                                    rhs->ColIndex()[i], counter));
+        sorted_index_info.push_back(std::make_tuple(rhs->RowIndex(i),
+                                    rhs->ColIndex(i), counter));
         counter++;
     }
 
@@ -287,13 +287,13 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     // of RowIndex and MatVal by going through
     // all of its entries one by one
     for (int i = 0; i < rhs->EntryNum(); i++) {
-        sorted_index_info.emplace_back(rhs->RowIndex()[i],
-                                       rhs->ColIndex()[i],
+        sorted_index_info.emplace_back(rhs->RowIndex(i),
+                                       rhs->ColIndex(i),
                                        sorted_index_info.size());
 
-        if (isSymmetric_&& rhs->RowIndex()[i] != rhs->ColIndex()[i]) {
-            sorted_index_info.emplace_back(rhs->ColIndex()[i],
-                                           rhs->RowIndex()[i],
+        if (isSymmetric_&& rhs->RowIndex(i) != rhs->ColIndex(i)) {
+            sorted_index_info.emplace_back(rhs->ColIndex(i),
+                                           rhs->RowIndex(i),
                                            sorted_index_info.size());
         }
     }
@@ -376,23 +376,22 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
     }
     //assign each matrix entry to the corresponding position after permutation
     for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
-        MatVal_[order()[i]] = rhs->MatVal()[i];
+        MatVal_[order(i)] = rhs->MatVal(i);
     }
 }
 
 
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
-
-    int j = 0;
-    for (int i = 0; i < rhs->EntryNum(); i++) {
-        MatVal_[order_[j]] = rhs->MatVal()[i];
-        j++;
-        if (isSymmetric_ && (rhs->ColIndex()[i] != rhs->RowIndex()[i])) {
-            //            MatVal_[order()[j]] = rhs->MatVal()[i];
-            MatVal_[order_[j]] = rhs->MatVal()[i];
-            j++;
-        }
-    }
+	int j = 0;
+	for (int i = 0; i < rhs->EntryNum(); i++) {
+		MatVal_[order_[j]] = rhs->MatVal(i);
+		j++;
+		if (isSymmetric_ && (rhs->ColIndex(i) != rhs->RowIndex(i))) {
+			//            MatVal_[order()[j]] = rhs->MatVal(i);
+			MatVal_[order_[j]] = rhs->MatVal(i);
+			j++;
+		}
+	}
 }
 
 //@}
@@ -419,13 +418,13 @@ void SpHbMat::copy(std::shared_ptr<const SpHbMat> rhs) {
     assert(RowNum_ == rhs->RowNum());
     assert(ColNum_ == rhs->ColNum());
     for (int i = 0; i < EntryNum_; i++) {
-        RowIndex_[i] = rhs->RowIndex()[i];
-        MatVal_[i] = rhs->MatVal()[i];
-        order_[i] = rhs->order()[i];
+        RowIndex_[i] = rhs->RowIndex(i);
+        MatVal_[i] = rhs->MatVal(i);
+        order_[i] = rhs->order(i);
     }
 
     for (int i = 0; i < ColNum_ + 1; i++) {
-        ColIndex_[i] = rhs->ColIndex()[i];
+        ColIndex_[i] = rhs->ColIndex(i);
     }
 }
 
@@ -819,37 +818,37 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
         std::cout<< name <<"= "<<std::endl;
         std::cout << "ColIndex: ";
         for (int i = 0; i < EntryNum_; i++)
-            std::cout << ColIndex()[i] << " ";
+            std::cout << ColIndex(i) << " ";
         std::cout << " " << std::endl;
 
         std::cout << "RowIndex: ";
         for (int i = 0; i < RowNum_+1; i++)
-            std::cout << RowIndex()[i] << " ";
+            std::cout << RowIndex(i) << " ";
         std::cout << " " << std::endl;
     } else {
         //for compressed column format
         std::cout<< name <<"= "<<std::endl;
         std::cout << "ColIndex: ";
         for (int i = 0; i < ColNum_ + 1; i++)
-            std::cout << ColIndex()[i] << " ";
+            std::cout << ColIndex(i) << " ";
 
         std::cout << " " << std::endl;
         std::cout << "RowIndex: ";
 
         for (int i = 0; i < EntryNum_; i++)
-            std::cout << RowIndex()[i] << " ";
+            std::cout << RowIndex(i) << " ";
         std::cout << " " << std::endl;
 
     }
     std::cout << "MatVal:   ";
 
     for (int i = 0; i < EntryNum_; i++)
-        std::cout << MatVal()[i] << " ";
+        std::cout << MatVal(i) << " ";
     std::cout << " " << std::endl;
 
     std::cout << "order:    ";
     for (int i = 0; i < EntryNum_; i++)
-        std::cout << order()[i] << " ";
+        std::cout << order(i) << " ";
     std::cout << " " << std::endl;
 }
 
@@ -861,7 +860,7 @@ const double SpHbMat::oneNorm()const {
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
-            colSums->addNumberAt(ColIndex()[i], abs(MatVal_[i]));
+            colSums->addNumberAt(ColIndex(i), abs(MatVal_[i]));
         }
     }
     else {
@@ -888,7 +887,7 @@ const double SpHbMat::infNorm()const {
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
-            rowSums->addNumberAt(RowIndex()[i], abs(MatVal_[i]));
+            rowSums->addNumberAt(RowIndex(i), abs(MatVal_[i]));
         }
     }
     else {

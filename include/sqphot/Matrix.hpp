@@ -425,7 +425,7 @@ public:
      * @param RowNum the number of rows
      * @param ColNum the number of columns
      */
-    SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow = false);
+    SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow);
 
 
     /**
@@ -537,6 +537,28 @@ public:
     inline int RowNum() const {
 
         return RowNum_;
+    }
+
+    inline const int RowIndex(int i) const {
+
+        return RowIndex_[i];
+    }
+
+    inline const int ColIndex(int i ) const {
+
+        return ColIndex_[i];
+    }
+
+
+    inline const double MatVal(int i)  const {
+
+        return MatVal_[i];
+    }
+
+
+    inline const int order(int i)  const {
+
+        return order_[i];
     }
 
     inline int RowIndex(int i) override {
