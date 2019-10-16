@@ -9,10 +9,10 @@
 #include <memory>
 #include <vector>
 #include <IpException.hpp>
-
 #include <sqphot/Vector.hpp>
 #include <sqphot/Utils.hpp>
-#include <sqphot/Matrix.hpp>
+#include <sqphot/SpHbMat.hpp>
+
 #include <qpOASES.hpp>
 #include <sqphot/Stats.hpp>
 #include <sqphot/Options.hpp>

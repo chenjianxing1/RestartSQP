@@ -11,7 +11,7 @@
 #include <sqphot/Utils.hpp>
 #include <IpTNLP.hpp>
 #include <sqphot/Vector.hpp>
-#include <sqphot/Matrix.hpp>
+#include <sqphot/SpTripletMat.hpp>
 
 namespace SQPhotstart {
 /**

@@ -1,5 +1,5 @@
 #include <unit_test_utils.hpp>
-#include <sqphot/Matrix.hpp>
+#include <sqphot/SpHbMat.hpp>
 #include <sqphot/Vector.hpp>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>
