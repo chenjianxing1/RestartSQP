@@ -202,6 +202,7 @@ void Vector::write_to_file(const char* name,
             jnlst->Printf(level, category, "%23.16e, ", values_[i]);
     }
 #else
+    jnlst->Printf(level, category, "%d\n", size_);
     //print in file
     for (int i = 0; i < Dim(); i++) {
         if (i % 10 == 0 && i > 1)

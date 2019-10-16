@@ -1344,6 +1344,11 @@ void Algorithm::print_final_stats() {
                        "Exitflag:                                                   %23s\n",
                        "STEP_LARGER_THAN_TRUST_REGION");
         break;
+    case QPERROR_UNKNOWN:
+        jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                       "Exitflag:                                                   %23s\n",
+                       "QPERROR_UNKNOWN");
+        break;
     case UNKNOWN :
         jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
                        "Exitflag:                                                   %23s\n",

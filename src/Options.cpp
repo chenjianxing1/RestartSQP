@@ -17,12 +17,12 @@ Options::~Options() {
 
 
 int Options::setToDefault() {
-    iter_max = 500;
+    iter_max = 3000;
     printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
-    QPsolverChoice = QORE;
-    LPsolverChoice = QORE;
-    second_order_correction = true;
+    QPsolverChoice = QPOASES;
+    LPsolverChoice = QPOASES;
+    second_order_correction = false;
     penalty_update = true;
     eta_c = 0.25;
     eta_s = 1.0e-8;
@@ -44,7 +44,7 @@ int Options::setToDefault() {
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
     increase_parm = 10;
-    rho_max = 1.0e16;
+    rho_max = 1.0e8;
     penalty_iter_max = 200;
     eps1 = 0.1;
     eps1_change_parm = 0.1;

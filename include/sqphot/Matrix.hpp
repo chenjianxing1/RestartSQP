@@ -508,10 +508,15 @@ public:
     virtual  void copy(std::shared_ptr<const SpHbMat> rhs);
 
 
+
+    const double oneNorm() const ;
+
+    const double infNorm() const ;
     /**
      * @convert the matrix data stored in the class members to a triplet matrix
      * specified by rhs */
     shared_ptr<SpTripletMat> convert_to_triplet() const ;
+
 
 
     /** Extract class member information*/

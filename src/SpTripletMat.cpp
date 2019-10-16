@@ -260,9 +260,13 @@ void SpTripletMat::times(std::shared_ptr<const Vector> p,
 
 double SpTripletMat::InfNorm() {
     //TODO: test it!
+
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     for (int i = 0; i < EntryNum_; i++) {
         rowSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
+        if(isSymmetric_)
+            rowSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
+
     }
 
     double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
@@ -276,6 +280,9 @@ double SpTripletMat::OneNorm() {
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     for (int i = 0; i < EntryNum_; i++) {
         colSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
+        if(isSymmetric_)
+            colSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
+
     }
 
     double OneNorm = colSums->getInfNorm();//same as calculating the MAX of an array

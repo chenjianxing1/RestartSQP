@@ -394,15 +394,11 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 #endif
 #endif
 
-
-
     solverInterface_->optimizeQP(stats);
     bool isOptimal=OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
-    if(!isOptimal)
-        WriteQPData("QPdata");
-
-    assert(isOptimal);
-
+    if(!isOptimal) {
+        THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
+    }
 }
 
 
@@ -486,6 +482,8 @@ bool QPhandler::OptimalityTest(
     double dual_violation = 0.0;
     double compl_violation = 0.0;
     double statioanrity_violation = 0.0;
+    auto A = qpsolverInterface->getA();
+    auto H = qpsolverInterface->getH();
 
     //create two temporary vector for storage some data if they are needed
     shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
@@ -499,9 +497,6 @@ bool QPhandler::OptimalityTest(
         auto lbA = qpsolverInterface->getLbA();
         auto ubA = qpsolverInterface->getUbA();
         auto g = qpsolverInterface->getG();
-
-        auto A = qpsolverInterface->getA();
-        auto H = qpsolverInterface->getH();
 
         x->copy_vector(qpsolverInterface->get_optimal_solution());
         multiplier_bounds->copy_vector(qpsolverInterface->get_multipliers_bounds());
@@ -570,10 +565,26 @@ bool QPhandler::OptimalityTest(
                 }
             }
         }
+
+
         /**-------------------------------------------------------**/
         /**                   stationarity                        **/
         /**-------------------------------------------------------**/
         //calculate A'*y+lambda-(g+Hx)
+        //for debugging only
+        //@{
+        multiplier_constr->print("multiplier_constr");
+        multiplier_bounds->print("multiplier_bounds");
+        x->print("x");
+        lb->print("lb");
+        ub->print("ub");
+        A->print_full("A");
+        H->print_full("H");
+        g->print("g");
+
+        //@}
+
+
         if (A != nullptr) {
             A->transposed_times(multiplier_constr, stationary_gap);
         }
@@ -640,8 +651,6 @@ bool QPhandler::OptimalityTest(
         auto g = qpsolverInterface->getG();
 
         x->copy_vector(qpsolverInterface->get_optimal_solution());
-        auto A = qpsolverInterface->getA();
-        auto H = qpsolverInterface->getH();
         multiplier_bounds->copy_vector(qpsolverInterface->get_multipliers_bounds());
         multiplier_constr->copy_vector(qpsolverInterface->get_multipliers_constr());
         A->times(x,Ax);
@@ -732,6 +741,16 @@ bool QPhandler::OptimalityTest(
         /**                   stationarity                        **/
         /**-------------------------------------------------------**/
         //calculate A'*y+lambda-g-Hx
+        //for debugging only
+        //@{
+        multiplier_constr->print("multiplier_constr");
+        multiplier_bounds->print("multiplier_bounds");
+        A->print_full("A");
+        x->print("x");
+        H->print_full("H");
+        g->print("g");
+
+        //@}
         if (A != nullptr) {
             A->transposed_times(multiplier_constr, stationary_gap);
         }
@@ -807,7 +826,16 @@ bool QPhandler::OptimalityTest(
 
     qpOptimalStatus_.KKT_error =
         compl_violation + statioanrity_violation + dual_violation + primal_violation;
-    if(qpOptimalStatus_.KKT_error>1.0e-6) {
+
+    double tol;
+    if(A!= nullptr)
+        tol =  (std::max(H->oneNorm(),A->oneNorm())+1)*1.0e-6;
+    else
+        tol =  (H->oneNorm()+1)*1.0e-6;
+
+    printf("tol = %10e\n", tol);
+
+    if(qpOptimalStatus_.KKT_error>tol) {
         printf("comp_violation %10e\n", compl_violation);
         printf("stat_violation %10e\n", statioanrity_violation);
         printf("prim_violation %10e\n", primal_violation);
