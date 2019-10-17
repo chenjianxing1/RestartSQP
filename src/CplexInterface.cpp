@@ -357,12 +357,6 @@ void CplexInterface::set_ubA(shared_ptr<const Vector> rhs) {}
 void CplexInterface::set_g(shared_ptr<const Vector> rhs) {}
 
 
-void CplexInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                                       Ipopt::EJournalLevel level,
-                                       Ipopt::EJournalCategory category) {
-
-}
-
 //@}
 
 /**@name Getters for private members*/

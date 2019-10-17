@@ -306,15 +306,4 @@ const shared_ptr<const SpTripletMat> GurobiInterface::getH() const  {}
 const shared_ptr<const SpTripletMat> GurobiInterface::getA() const  {}
 //@}
 
-/**-------------------------------------------------------**/
-/**                  Data Writer                          **/
-/**-------------------------------------------------------**/
-
-void GurobiInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                                        Ipopt::EJournalLevel level,
-                                        Ipopt::EJournalCategory category) {}
-
-};
-
-
 

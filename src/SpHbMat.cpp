@@ -16,7 +16,6 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool isCompressedRow) :
     RowNum_(RowNum),
     ColNum_(ColNum),
     isCompressedRow_(isCompressedRow) {
-
     if(isCompressedRow_) {
         RowIndex_ = new int[RowNum + 1]();
     } else
@@ -452,6 +451,7 @@ void SpHbMat::set_zero() {
 }
 
 
+
 shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
 
     shared_ptr<SpTripletMat> result;
@@ -514,7 +514,6 @@ shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
     return result;
 }
 
-
 void SpHbMat::write_to_file(const char* name,
                             Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                             Ipopt::EJournalLevel level,
@@ -554,12 +553,9 @@ void SpHbMat::write_to_file(const char* name,
         else
             jnlst->Printf(level, category, "%23.16e, ", MatVal_[i]);
     }
-
 #else
     int i;
     if(solver == QORE) {
-        jnlst->Printf(level, category, "%d\n", RowNum_);
-        jnlst->Printf(level, category, "%d\n", EntryNum_);
         for (i = 0; i < RowNum_ + 1; i++) {
             jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
         }
@@ -571,13 +567,11 @@ void SpHbMat::write_to_file(const char* name,
         }
     }
     else if(solver ==QPOASES) {
-        jnlst->Printf(level, category, "%d\n", ColNum_);
-        jnlst->Printf(level, category, "%d\n", EntryNum_);
-        for (i = 0; i < ColNum_ + 1; i++) {
-            jnlst->Printf(level, category, "%d\n", ColIndex_[i]);
-        }
         for (i = 0; i < EntryNum_; i++) {
             jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
+        }
+        for (i = 0; i < ColNum_ + 1; i++) {
+            jnlst->Printf(level, category, "%d\n", ColIndex_[i]);
         }
         for (i = 0; i < EntryNum_; i++) {
             jnlst->Printf(level, category, "%23.16e\n", MatVal_[i]);
@@ -586,6 +580,8 @@ void SpHbMat::write_to_file(const char* name,
 #endif
 #endif
 }
+
+
 
 
 
@@ -856,7 +852,7 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 /** @name norms */
 //@{
 const double SpHbMat::oneNorm()const {
-
+	//TODO: test on it! 
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
@@ -864,7 +860,7 @@ const double SpHbMat::oneNorm()const {
         }
     }
     else {
-        int col;
+        int col = 0;
         for(int i = 1; i<ColNum_+1; i++) {
             if(ColIndex_[i]>0) {
                 col = i-1;
@@ -884,6 +880,7 @@ const double SpHbMat::oneNorm()const {
 }
 
 const double SpHbMat::infNorm()const {
+	//TODO: test on it! 
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
@@ -891,7 +888,7 @@ const double SpHbMat::infNorm()const {
         }
     }
     else {
-        int row;
+        int row = 0;
         for(int i = 1; i<RowNum_+1; i++) {
             if(RowIndex_[i]>0) {
                 row = i-1;

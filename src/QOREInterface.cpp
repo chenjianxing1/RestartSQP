@@ -68,7 +68,6 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     if (status_ != QPSOLVER_OPTIMAL) {
         THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
     }
-
     /**-------------------------------------------------------**/
     /**               Get Primal and Dual Solution            **/
     /**-------------------------------------------------------**/
@@ -232,21 +231,20 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
 
 
 
-void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                                      Ipopt::EJournalLevel level,
+void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
                                       Ipopt::EJournalCategory category,
                                       const string filename) {
 
 
 #if DEBUG
-    jnlst_->DeleteAllJournals();
-    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst->AddFileJournal("QPdata",
-            filename,Ipopt::J_WARNING);
-    QPdata_jrnl->SetAllPrintLevels(level);
-    QPdata_jrnl->SetPrintLevel(category,level);
 #if PRINT_OUT_QP_WITH_ERROR
 #if PRINT_QP_IN_CPP
-    jnlst->Printf(level, category, "#include <stdio.h>\n"
+    jnlst_->DeleteAllJournals();
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+            "QORE_cpp_"+filename,Ipopt::J_WARNING);
+    QPdata_jrnl->SetAllPrintLevels(level);
+    QPdata_jrnl->SetPrintLevel(category,level);
+    jnlst_->Printf(level, category, "#include <stdio.h>\n"
                   "#include <assert.h>\n"
                   "#include <stdlib.h>\n"
                   "#include <string.h>\n"
@@ -256,47 +254,89 @@ void QOREInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                   "\n"
                   "int main(){\n"
                   "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
-#else
-    jnlst->Printf(level, category, "%d\n", nVar_QP_);
-    jnlst->Printf(level, category, "%d\n", nConstr_QP_);
-    jnlst->Printf(level, category, "%d\n", A_->EntryNum());
-    jnlst->Printf(level, category, "%d\n", H_->EntryNum());
-#endif
-    lb_->write_to_file("lb",jnlst,level,category,QORE);
-    ub_->write_to_file("ub",jnlst,level,category,QORE);
-    g_->write_to_file("g",jnlst,level,category,QORE);
-    A_->write_to_file("A",jnlst,level,category,QORE);
-    H_->write_to_file("H",jnlst,level,category,QORE);
+    lb_->write_to_file("lb",jnlst_,level,category,QORE);
+    ub_->write_to_file("ub",jnlst_,level,category,QORE);
+    g_->write_to_file("g",jnlst_,level,category,QORE);
+    A_->write_to_file("A",jnlst_,level,category,QORE);
+    H_->write_to_file("H",jnlst_,level,category,QORE);
 
-#if PRINT_QP_IN_CPP
-    jnlst->Printf(level,category,"QoreProblem * qp = 0;\n");
-    jnlst->Printf(level,category,"qp_int rv = QPNew( &qp, NV, NC, %i, %i );\n",
+    jnlst_->Printf(level,category,"QoreProblem * qp = 0;\n");
+    jnlst_->Printf(level,category,"qp_int rv = QPNew( &qp, NV, NC, %i, %i );\n",
                   A_->EntryNum(), H_->EntryNum());
-    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
-    jnlst->Printf(level,category,"assert( qp!= 0 );\n");
-    jnlst->Printf(level,category,"QPSetInt(qp, \"prtfreq\", 0); \n");
+    jnlst_->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    jnlst_->Printf(level,category,"assert( qp!= 0 );\n");
+    jnlst_->Printf(level,category,"QPSetInt(qp, \"prtfreq\", 0); \n");
     // pass problem data to solver
-    jnlst->Printf(level, category, "rv = QPSetData( qp, NV, NC, A_jc, A_ir, A_val, H_jc,"
+    jnlst_->Printf(level, category, "rv = QPSetData( qp, NV, NC, A_jc, A_ir, A_val, H_jc,"
                   " H_ir, H_val );\n");
 
-    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    jnlst_->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
     // solve first QP
-    jnlst->Printf(level, category,"rv = QPOptimize( qp, lb, ub, g, 0, 0 );\n");
+    jnlst_->Printf(level, category,"rv = QPOptimize( qp, lb, ub, g, 0, 0 );\n");
 
-    jnlst->Printf(level,category,"qp_int status;\n");
-    jnlst->Printf(level,category,"QPGetInt(qp, \"status\", &status);\n");
-    jnlst->Printf(level,category,"if(status!=QPSOLVER_OPTIMAL){\n)");
-    jnlst->Printf(level,category,"    printf(\"Warning! The QP is not solved to optimality!\");\n");
-    jnlst->Printf(level,category,"}\n");
-    jnlst->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
+    jnlst_->Printf(level,category,"qp_int status;\n");
+    jnlst_->Printf(level,category,"QPGetInt(qp, \"status\", &status);\n");
+    jnlst_->Printf(level,category,"if(status!=QPSOLVER_OPTIMAL){\n)");
+    jnlst_->Printf(level,category,"    printf(\"Warning! The QP is not solved to optimality!\");\n");
+    jnlst_->Printf(level,category,"}\n");
+    jnlst_->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
     // get and print primal solution
 
-    jnlst->Printf(level, category, "QPFree(&qp);\n"
+    jnlst_->Printf(level, category, "QPFree(&qp);\n"
                   "\n return 0; \n"
                   "}\n");
+
+#else
+#if PRINT_DATA_FOR_QPOASES
+    jnlst_->DeleteAllJournals();
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+            "QPOASES_"+filename,Ipopt::J_WARNING);
+    QPdata_jrnl->SetAllPrintLevels(level);
+    QPdata_jrnl->SetPrintLevel(category,level);
+
+    jnlst_->Printf(level, category, "%d\n", nVar_QP_);
+    jnlst_->Printf(level, category, "%d\n", nConstr_QP_);
+    jnlst_->Printf(level, category, "%d\n", A_->EntryNum());
+    jnlst_->Printf(level, category, "%d\n", H_->EntryNum());
+    lb_->write_to_file("lb",jnlst_,level,category,QORE);
+    ub_->write_to_file("ub",jnlst_,level,category,QORE);
+    g_->write_to_file("g",jnlst_,level,category,QORE);
+
+
+
+    shared_ptr<Vector> A_dense = make_shared<Vector>(nVar_QP_*nConstr_QP_);
+    shared_ptr<Vector> H_dense = make_shared<Vector>(nVar_QP_*nVar_QP_);
+
+    A_->get_dense_matrix(A_dense->values());
+    shared_ptr<SpHbMat> A_out = make_shared<SpHbMat>(A_dense->values(),nConstr_QP_,nVar_QP_,true,false);
+    A_out->write_to_file("A",jnlst_,level,category,QPOASES);
+
+    H_->get_dense_matrix(H_dense->values());
+
+    shared_ptr<SpHbMat> H_out = make_shared<SpHbMat>(H_dense->values(),nVar_QP_,nVar_QP_,true,false);
+    H_out->write_to_file("H",jnlst_,level,category,QPOASES);
+
+#elif PRINT_DATA_FOR_QORE
+    jnlst_->DeleteAllJournals();
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+            "QORE_"+filename,Ipopt::J_WARNING);
+    QPdata_jrnl->SetAllPrintLevels(level);
+    QPdata_jrnl->SetPrintLevel(category,level);
+
+    jnlst_->Printf(level, category, "%d\n", nVar_QP_);
+    jnlst_->Printf(level, category, "%d\n", nConstr_QP_);
+    jnlst_->Printf(level, category, "%d\n", A_->EntryNum());
+    jnlst_->Printf(level, category, "%d\n", H_->EntryNum());
+    lb_->write_to_file("lb",jnlst_,level,category,QORE);
+    ub_->write_to_file("ub",jnlst_,level,category,QORE);
+    g_->write_to_file("g",jnlst_,level,category,QORE);
+    A_->write_to_file("A",jnlst_,level,category,QORE);
+    H_->write_to_file("H",jnlst_,level,category,QORE);
+
 #endif
 #endif
-    jnlst->DeleteAllJournals();
+#endif 
+    jnlst_->DeleteAllJournals();
 #endif
 
 }

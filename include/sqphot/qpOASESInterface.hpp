@@ -139,8 +139,7 @@ public:
 
     //@}
 
-    void WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                           Ipopt::EJournalLevel level,
+    void WriteQPDataToFile(Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category,
                            const string filename) override ;
 

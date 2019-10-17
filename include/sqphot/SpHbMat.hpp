@@ -129,10 +129,9 @@ public:
 
     const double infNorm() const ;
     /**
-     * @convert the matrix data stored in the class members to a triplet matrix
-     * specified by rhs */
+     * @brief convert the matrix data stored in the class members to a triplet matrix
+     * speci fied by rhs */
     shared_ptr<SpTripletMat> convert_to_triplet() const ;
-
 
 
     /** Extract class member information*/

@@ -18,10 +18,12 @@ namespace SQPhotstart {
  */
 qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
                                    shared_ptr<const Options> options,
-                                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+                                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst):
     nConstr_QP_(nlp_index_info.nCon),
+    jnlst_(jnlst),
     nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
-    options_(options) {
+    options_(options)
+    {
     allocate_memory(nlp_index_info, qptype);
 }
 
@@ -48,7 +50,7 @@ void qpOASESInterface::allocate_memory(NLPInfo nlp_index_info, QPType qptype) {
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
 
     if (qptype != LP) {
-        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
+        H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, false);
     }
 
     //@{
@@ -333,14 +335,13 @@ void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 
 	//@for debugging 
 	//@{
-	H_->print("H");
-	rhs->print("rhs");
+//	H_->print("H");
+//	rhs->print("rhs");
 	//@}
     if (firstQPsolved_ && !data_change_flags_.Update_H) {
         data_change_flags_.Update_H = true;
     }
     H_->setMatVal(rhs);
-    H_->print("H");
     
     H_qpOASES_->setVal(H_->MatVal());
     H_qpOASES_->createDiagInfo();
@@ -493,28 +494,27 @@ void qpOASESInterface::set_solver_options() {
 }
 
 
-void qpOASESInterface::WriteQPDataToFile(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-        Ipopt::EJournalLevel level,
-        Ipopt::EJournalCategory category,
-        const string filename) {
-//TODO: can be write as a cpp file ....
+void qpOASESInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
+		Ipopt::EJournalCategory category,
+		const string filename) {
 #if DEBUG
-    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl = jnlst->GetJournal("QPdata");
-//    if (IsNull(QPdata_jrnl)) {
-//        QPdata_jrnl= jnlst->AddFileJournal("QPdata", "qpdata.out",
-//                                           Ipopt::J_WARNING);
-//    }
+#if PRINT_OUT_QP_WITH_ERROR
+    jnlst_->DeleteAllJournals();
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+            "qpOASES"+filename,Ipopt::J_WARNING);
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
 
-    lb_->write_to_file("lb",jnlst,level,category,QPOASES);
-    ub_->write_to_file("ub",jnlst,level,category,QPOASES);
-    lbA_->write_to_file("lbA",jnlst,level,category,QPOASES);
-    ubA_->write_to_file("ubA",jnlst,level,category,QPOASES);
-    g_->write_to_file("g",jnlst,level,category,QPOASES);
-    A_->write_to_file("A",jnlst,level,category,QPOASES);
-    H_->write_to_file("H",jnlst,level,category,QPOASES);
-    jnlst->DeleteAllJournals();
+    lb_->write_to_file("lb",jnlst_,level,category,QPOASES);
+    lbA_->write_to_file("lbA",jnlst_,level,category,QPOASES);
+    ub_->write_to_file("ub",jnlst_,level,category,QPOASES);
+    ubA_->write_to_file("ubA",jnlst_,level,category,QPOASES);
+
+    g_->write_to_file("g",jnlst_,level,category,QPOASES);
+    A_->write_to_file("A",jnlst_,level,category,QPOASES);
+    H_->write_to_file("H",jnlst_,level,category,QPOASES);
+    jnlst_->DeleteAllJournals();
+#endif 
 #endif
 
 }

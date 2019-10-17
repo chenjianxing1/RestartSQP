@@ -41,7 +41,6 @@ QPhandler::QPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
 
         break;
     case GUROBI:
-        printf("interfacing with GUROBI");
 #ifdef USE_GUROBI
         solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
 #endif
@@ -461,8 +460,8 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
 }
 
 void QPhandler::WriteQPData(const string filename ) {
-    solverInterface_->WriteQPDataToFile(jnlst_, Ipopt::J_LAST_LEVEL, Ipopt::J_USER1,
-                                        filename);
+	solverInterface_->WriteQPDataToFile(Ipopt::J_LAST_LEVEL, Ipopt::J_USER1,filename);
+
 }
 
 Exitflag QPhandler::get_status() {
@@ -573,15 +572,15 @@ bool QPhandler::OptimalityTest(
         //calculate A'*y+lambda-(g+Hx)
         //for debugging only
         //@{
-        multiplier_constr->print("multiplier_constr");
-        multiplier_bounds->print("multiplier_bounds");
-        x->print("x");
-        lb->print("lb");
-        ub->print("ub");
-        A->print_full("A");
-        H->print_full("H");
-        g->print("g");
-
+//        multiplier_constr->print("multiplier_constr");
+//        multiplier_bounds->print("multiplier_bounds");
+//        x->print("x");
+//        lb->print("lb");
+//        ub->print("ub");
+//        A->print_full("A");
+//        H->print_full("H");
+//        g->print("g");
+//
         //@}
 
 
@@ -827,13 +826,12 @@ bool QPhandler::OptimalityTest(
     qpOptimalStatus_.KKT_error =
         compl_violation + statioanrity_violation + dual_violation + primal_violation;
 
-    double tol;
-    if(A!= nullptr)
-        tol =  (std::max(H->oneNorm(),A->oneNorm())+1)*1.0e-6;
-    else
-        tol =  (H->oneNorm()+1)*1.0e-6;
-
-    printf("tol = %10e\n", tol);
+    double tol= 1.0e-6;
+//    if(A!= nullptr)
+//        tol =  (std::max(H->oneNorm(),A->oneNorm())+1)*1.0e-6;
+//    else
+//        tol =  (H->oneNorm()+1)*1.0e-6;
+//
 
     if(qpOptimalStatus_.KKT_error>tol) {
         printf("comp_violation %10e\n", compl_violation);
