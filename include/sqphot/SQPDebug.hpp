@@ -10,7 +10,7 @@
 #ifndef __SQPDEBUG_HPP__
 #define __SQPDEBUG_HPP__
 
-#define DEBUG true
+#define DEBUG false
 
 #ifdef DEBUG
 #define COMPARE_QP_SOLVER false
@@ -25,7 +25,7 @@
 #define PRINT_OUT_QP_WITH_ERROR true
 #if PRINT_OUT_QP_WITH_ERROR
 #define PRINT_DATA_FOR_QPOASES  true
-#define PRINT_DATA_FOR_QORE true 
+#define PRINT_DATA_FOR_QORE true
 #define PRINT_QP_IN_CPP false
 #endif
 #endif

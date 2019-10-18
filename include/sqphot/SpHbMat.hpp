@@ -11,7 +11,7 @@
 
 #include <sqphot/SpTripletMat.hpp>
 
-namespace SQPhotstart{
+namespace SQPhotstart {
 
 //forward declaration
 
@@ -26,7 +26,7 @@ class SpHbMat :
     public Matrix {
 
 
-	
+
 public:
     /** constructor/destructor */
     //@{

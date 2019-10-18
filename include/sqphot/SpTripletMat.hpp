@@ -10,7 +10,7 @@
 
 #include <sqphot/Matrix.hpp>
 
-namespace SQPhotstart{
+namespace SQPhotstart {
 /**
  *
  * This is the class for SparseMatrix, it stores the sparse matrix data in triplet,

@@ -381,16 +381,16 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
 
 
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
-	int j = 0;
-	for (int i = 0; i < rhs->EntryNum(); i++) {
-		MatVal_[order_[j]] = rhs->MatVal(i);
-		j++;
-		if (isSymmetric_ && (rhs->ColIndex(i) != rhs->RowIndex(i))) {
-			//            MatVal_[order()[j]] = rhs->MatVal(i);
-			MatVal_[order_[j]] = rhs->MatVal(i);
-			j++;
-		}
-	}
+    int j = 0;
+    for (int i = 0; i < rhs->EntryNum(); i++) {
+        MatVal_[order_[j]] = rhs->MatVal(i);
+        j++;
+        if (isSymmetric_ && (rhs->ColIndex(i) != rhs->RowIndex(i))) {
+            //            MatVal_[order()[j]] = rhs->MatVal(i);
+            MatVal_[order_[j]] = rhs->MatVal(i);
+            j++;
+        }
+    }
 }
 
 //@}
@@ -618,7 +618,6 @@ void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) {
                 }
 
                 dense_matrix[ColNum_ * RowIndex_[i]+col] = MatVal_[i];
-                //                    printf("dense_matrix[%d] = %10e\n",ColNum_ * RowIndex_[i]+col, MatVal_[i]);
             }
         }
     }
@@ -852,7 +851,7 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
 /** @name norms */
 //@{
 const double SpHbMat::oneNorm()const {
-	//TODO: test on it! 
+    //TODO: test on it!
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
@@ -880,7 +879,7 @@ const double SpHbMat::oneNorm()const {
 }
 
 const double SpHbMat::infNorm()const {
-	//TODO: test on it! 
+    //TODO: test on it!
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {

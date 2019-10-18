@@ -394,6 +394,8 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 #endif
 
     solverInterface_->optimizeQP(stats);
+
+    //manually check if the optimality condition is satisfied
     bool isOptimal=OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
     if(!isOptimal) {
         THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
@@ -460,7 +462,8 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
 }
 
 void QPhandler::WriteQPData(const string filename ) {
-	solverInterface_->WriteQPDataToFile(Ipopt::J_LAST_LEVEL, Ipopt::J_USER1,filename);
+
+    solverInterface_->WriteQPDataToFile(Ipopt::J_LAST_LEVEL, Ipopt::J_USER1,filename);
 
 }
 
@@ -593,7 +596,7 @@ bool QPhandler::OptimalityTest(
         stationary_gap->add_vector(multiplier_bounds->values());
         stationary_gap->subtract_vector(g->values());
         stationary_gap->subtract_vector(Hx->values());
-        statioanrity_violation += stationary_gap->getOneNorm();
+        statioanrity_violation = stationary_gap->getOneNorm();
 
 
         /**-------------------------------------------------------**/
@@ -742,13 +745,13 @@ bool QPhandler::OptimalityTest(
         //calculate A'*y+lambda-g-Hx
         //for debugging only
         //@{
-        multiplier_constr->print("multiplier_constr");
-        multiplier_bounds->print("multiplier_bounds");
-        A->print_full("A");
-        x->print("x");
-        H->print_full("H");
-        g->print("g");
-
+//        multiplier_constr->print("multiplier_constr");
+//        multiplier_bounds->print("multiplier_bounds");
+//        A->print_full("A");
+//        x->print("x");
+//        H->print_full("H");
+//        g->print("g");
+//
         //@}
         if (A != nullptr) {
             A->transposed_times(multiplier_constr, stationary_gap);
@@ -832,13 +835,13 @@ bool QPhandler::OptimalityTest(
 //    else
 //        tol =  (H->oneNorm()+1)*1.0e-6;
 //
-
     if(qpOptimalStatus_.KKT_error>tol) {
         printf("comp_violation %10e\n", compl_violation);
         printf("stat_violation %10e\n", statioanrity_violation);
         printf("prim_violation %10e\n", primal_violation);
         printf("dual_violation %10e\n", dual_violation);
         printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+
         return false;
 
     }

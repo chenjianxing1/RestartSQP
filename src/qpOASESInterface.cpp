@@ -23,7 +23,7 @@ qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
     jnlst_(jnlst),
     nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
     options_(options)
-    {
+{
     allocate_memory(nlp_index_info, qptype);
 }
 
@@ -78,19 +78,18 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
     qpOASES::int_t nWSR = options_->qp_maxiter;
 
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
-
         set_solver_options();
-#if DEBUG
-#if PRINT_QP_DATA
-        H_qpOASES_->print("H_qp_oases");
-        A_qpOASES_->print("A_qpoases");
-        g_->print("g");
-        lbA_->print("LbA");
-        ubA_->print("ubA");
-        lb_->print("lb");
-        ub_->print("ub");
-#endif
-#endif
+//@{
+//for debugging
+//        H_qpOASES_->print("H_qp_oases");
+//        A_qpOASES_->print("A_qpoases");
+//        g_->print("g");
+//        lbA_->print("LbA");
+//        ubA_->print("ubA");
+//        lb_->print("lb");
+//        ub_->print("ub");
+        //@}
+
         solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(), lb_->values(),
                       ub_->values(), lbA_->values(), ubA_->values(), nWSR);
 
@@ -102,6 +101,16 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
         }
     }
     else {
+//for debugging
+//@{
+        //     H_qpOASES_->print("H_qp_oases");
+        //     A_qpOASES_->print("A_qpoases");
+        //     g_->print("g");
+        //     lbA_->print("LbA");
+        //     ubA_->print("ubA");
+        //     lb_->print("lb");
+        //     ub_->print("ub");
+        //@}
         get_Matrix_change_status();
         if (new_QP_matrix_status_ == UNDEFINED) {
             assert(old_QP_matrix_status_ != UNDEFINED);
@@ -150,12 +159,6 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 
 
 void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
-// g_->print("g_lp");
-// A_->print("A_lp");
-// lbA_->print("lbA");
-// ubA_->print("ubA");
-// lb_->print("lb");
-// ub_->print("ub");
     qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
     if (!firstQPsolved_) {
         set_solver_options();
@@ -264,6 +267,9 @@ Exitflag qpOASESInterface::get_status() {
     else if (solver_->isUnbounded()) {
         return  QPERROR_UNBOUNDED;
     }
+    else if(solver_->isSolved()) {
+        return QP_OPTIMAL;
+    }
     else
         switch (finalStatus) {
         case qpOASES::QPS_NOTINITIALISED:
@@ -331,18 +337,16 @@ void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
 
 
 void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
-
-
-	//@for debugging 
-	//@{
+    //@for debugging
+    //@{
 //	H_->print("H");
 //	rhs->print("rhs");
-	//@}
+    //@}
     if (firstQPsolved_ && !data_change_flags_.Update_H) {
         data_change_flags_.Update_H = true;
     }
     H_->setMatVal(rhs);
-    
+
     H_qpOASES_->setVal(H_->MatVal());
     H_qpOASES_->createDiagInfo();
 }
@@ -495,8 +499,8 @@ void qpOASESInterface::set_solver_options() {
 
 
 void qpOASESInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
-		Ipopt::EJournalCategory category,
-		const string filename) {
+        Ipopt::EJournalCategory category,
+        const string filename) {
 #if DEBUG
 #if PRINT_OUT_QP_WITH_ERROR
     jnlst_->DeleteAllJournals();
@@ -514,7 +518,7 @@ void qpOASESInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
     A_->write_to_file("A",jnlst_,level,category,QPOASES);
     H_->write_to_file("H",jnlst_,level,category,QPOASES);
     jnlst_->DeleteAllJournals();
-#endif 
+#endif
 #endif
 
 }

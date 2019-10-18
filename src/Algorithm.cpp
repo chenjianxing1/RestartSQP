@@ -54,13 +54,19 @@ Algorithm::~Algorithm() {
  */
 void Algorithm::Optimize() {
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-      setupQP();
+        setupQP();
+        //for debugging
+        //@{
+        //hessian_->print_full("hessian");
+        //jacobian_->print_full("jacobian");
+        //@}
         try {
             myQP_->solveQP(stats_,
                            options_);//solve the QP subproblem and update the stats_
         }
         catch (QP_NOT_OPTIMAL) {
             myQP_->WriteQPData(problem_name_+"qpdata.log");
+//            printf("QP is not optimal!");
             exitflag_ = myQP_->get_status();
             break;
         }
@@ -131,7 +137,7 @@ void Algorithm::Optimize() {
 
     }
 
-  //check if the current iterates get_status before exiting
+    //check if the current iterates get_status before exiting
     if (stats_->iter == options_->iter_max)
         exitflag_ = EXCEED_MAX_ITER;
 
@@ -1271,6 +1277,11 @@ void Algorithm::print_final_stats() {
         jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
                        "Exitflag:                                                   %23s\n",
                        "EXCEED_MAX_ITER");
+        break;
+    case QP_OPTIMAL:
+        jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,
+                       "Exitflag:                                                   %23s\n",
+                       "QP_SOL_IS_NOT_KKT_POINT");
         break;
     case QPERROR_INTERNAL_ERROR :
         jnlst_->Printf(Ipopt::J_SUMMARY, Ipopt::J_MAIN,

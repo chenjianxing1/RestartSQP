@@ -177,6 +177,8 @@ Exitflag QOREInterface::get_status() {
         return QPERROR_INFEASIBLE;
     case QPSOLVER_UNBOUNDED:
         return QPERROR_UNBOUNDED;
+    case QPSOLVER_OPTIMAL:
+        return QP_OPTIMAL;
     default:
         return QPERROR_UNKNOWN;
 
@@ -245,15 +247,15 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
     QPdata_jrnl->SetAllPrintLevels(level);
     QPdata_jrnl->SetPrintLevel(category,level);
     jnlst_->Printf(level, category, "#include <stdio.h>\n"
-                  "#include <assert.h>\n"
-                  "#include <stdlib.h>\n"
-                  "#include <string.h>\n"
-                  "#include <math.h>\n"
-                  "#include <matrixconversion.h>\n"
-                  "#include <qpsolver.h>\n"
-                  "\n"
-                  "int main(){\n"
-                  "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
+                   "#include <assert.h>\n"
+                   "#include <stdlib.h>\n"
+                   "#include <string.h>\n"
+                   "#include <math.h>\n"
+                   "#include <matrixconversion.h>\n"
+                   "#include <qpsolver.h>\n"
+                   "\n"
+                   "int main(){\n"
+                   "#define NV %i\n#define NC %i\n", nVar_QP_, nConstr_QP_);
     lb_->write_to_file("lb",jnlst_,level,category,QORE);
     ub_->write_to_file("ub",jnlst_,level,category,QORE);
     g_->write_to_file("g",jnlst_,level,category,QORE);
@@ -262,13 +264,13 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 
     jnlst_->Printf(level,category,"QoreProblem * qp = 0;\n");
     jnlst_->Printf(level,category,"qp_int rv = QPNew( &qp, NV, NC, %i, %i );\n",
-                  A_->EntryNum(), H_->EntryNum());
+                   A_->EntryNum(), H_->EntryNum());
     jnlst_->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
     jnlst_->Printf(level,category,"assert( qp!= 0 );\n");
     jnlst_->Printf(level,category,"QPSetInt(qp, \"prtfreq\", 0); \n");
     // pass problem data to solver
     jnlst_->Printf(level, category, "rv = QPSetData( qp, NV, NC, A_jc, A_ir, A_val, H_jc,"
-                  " H_ir, H_val );\n");
+                   " H_ir, H_val );\n");
 
     jnlst_->Printf(level,category,"assert( rv == QPSOLVER_OK );\n");
     // solve first QP
@@ -283,16 +285,16 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
     // get and print primal solution
 
     jnlst_->Printf(level, category, "QPFree(&qp);\n"
-                  "\n return 0; \n"
-                  "}\n");
+                   "\n return 0; \n"
+                   "}\n");
 
 #else
 #if PRINT_DATA_FOR_QPOASES
     jnlst_->DeleteAllJournals();
-    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_qpOASES_jrnl= jnlst_->AddFileJournal("QPdata",
             "QPOASES_"+filename,Ipopt::J_WARNING);
-    QPdata_jrnl->SetAllPrintLevels(level);
-    QPdata_jrnl->SetPrintLevel(category,level);
+    QPdata_qpOASES_jrnl->SetAllPrintLevels(level);
+    QPdata_qpOASES_jrnl->SetPrintLevel(category,level);
 
     jnlst_->Printf(level, category, "%d\n", nVar_QP_);
     jnlst_->Printf(level, category, "%d\n", nConstr_QP_);
@@ -301,8 +303,6 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
     lb_->write_to_file("lb",jnlst_,level,category,QORE);
     ub_->write_to_file("ub",jnlst_,level,category,QORE);
     g_->write_to_file("g",jnlst_,level,category,QORE);
-
-
 
     shared_ptr<Vector> A_dense = make_shared<Vector>(nVar_QP_*nConstr_QP_);
     shared_ptr<Vector> H_dense = make_shared<Vector>(nVar_QP_*nVar_QP_);
@@ -315,13 +315,14 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 
     shared_ptr<SpHbMat> H_out = make_shared<SpHbMat>(H_dense->values(),nVar_QP_,nVar_QP_,true,false);
     H_out->write_to_file("H",jnlst_,level,category,QPOASES);
+#endif
 
-#elif PRINT_DATA_FOR_QORE
+#if PRINT_DATA_FOR_QORE
     jnlst_->DeleteAllJournals();
-    Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
+    Ipopt::SmartPtr<Ipopt::Journal> QPdata_qore_jrnl= jnlst_->AddFileJournal("QPdata",
             "QORE_"+filename,Ipopt::J_WARNING);
-    QPdata_jrnl->SetAllPrintLevels(level);
-    QPdata_jrnl->SetPrintLevel(category,level);
+    QPdata_qore_jrnl->SetAllPrintLevels(level);
+    QPdata_qore_jrnl->SetPrintLevel(category,level);
 
     jnlst_->Printf(level, category, "%d\n", nVar_QP_);
     jnlst_->Printf(level, category, "%d\n", nConstr_QP_);
@@ -335,7 +336,7 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 
 #endif
 #endif
-#endif 
+#endif
     jnlst_->DeleteAllJournals();
 #endif
 
