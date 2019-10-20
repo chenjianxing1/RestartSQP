@@ -195,7 +195,7 @@ private:
     /**
      * @brief Handle errors based on current status
      */
-    void handle_error(QPType qptype);
+    void handle_error(QPType qptype, shared_ptr<Stats> stats);
     /**
      * @brief Allocate memory for the class members
      * @param nlp_index_info  the struct that stores simple nlp dimension info

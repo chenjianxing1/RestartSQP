@@ -10,7 +10,7 @@
 #ifndef __SQPDEBUG_HPP__
 #define __SQPDEBUG_HPP__
 
-#define DEBUG false
+#define DEBUG true
 
 #ifdef DEBUG
 #define COMPARE_QP_SOLVER false

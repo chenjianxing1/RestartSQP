@@ -103,13 +103,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
     else {
 //for debugging
 //@{
-        //     H_qpOASES_->print("H_qp_oases");
-        //     A_qpOASES_->print("A_qpoases");
-        //     g_->print("g");
-        //     lbA_->print("LbA");
-        //     ubA_->print("ubA");
-        //     lb_->print("lb");
-        //     ub_->print("ub");
+        //          H_qpOASES_->print("H_qp_oases");
+        //          A_qpOASES_->print("A_qpoases");
+        //          g_->print("g");
+        //          lbA_->print("LbA");
+        //          ubA_->print("ubA");
+        //          lb_->print("lb");
+        //          ub_->print("ub");
         //@}
         get_Matrix_change_status();
         if (new_QP_matrix_status_ == UNDEFINED) {
@@ -258,7 +258,6 @@ inline double qpOASESInterface::get_obj_value() {
 
 
 Exitflag qpOASESInterface::get_status() {
-
     qpOASES::QProblemStatus finalStatus = solver_->getStatus();
 
     if (solver_->isInfeasible()) {
@@ -439,29 +438,69 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
 
     if (qptype == LP) {
         qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
-        solver_->init(0, g_->values(), A_qpOASES_.get(),
-                      lb_->values(), ub_->values(), lbA_->values(),
-                      ubA_->values(), nWSR);
+        if (solver_->isInfeasible()) {
+            shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
+            shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
+            x_0->copy_vector(x_qp_);
+            A_->times(x_0,Ax);
 
+            for(int i=0; i<nConstr_QP_; i++) {
+                x_0->setValueAt(i+nVar_QP_-2*nConstr_QP_,max(0.0,lbA_->values(i)));
+                x_0->setValueAt(i+nVar_QP_-nConstr_QP_,-min(0.0,ubA_->values(i)));
+            }
+            solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR,NULL, x_0->values());
+        }
+        else {
+            solver_->init(0, g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR);
+
+        }
         old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
         stats->qp_iter_addValue((int) nWSR);
-
         if (!solver_->isSolved()) {
             THROW_EXCEPTION(LP_NOT_OPTIMAL,LP_NOT_OPTIMAL_MSG);
         }
-
     }
     else {
+        qpOASES::int_t nWSR = options_->qp_maxiter;//TODO modify it
+        if (solver_->isInfeasible()) {
+            shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
+            for(int i=0; i<nConstr_QP_; i++) {
+                x_0->setValueAt(i+nVar_QP_-2*nConstr_QP_,max(0.0,lbA_->values(i)));
+                x_0->setValueAt(i+nVar_QP_-nConstr_QP_,-min(0.0,ubA_->values(i)));
+            }
+            solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR,NULL, x_0->values());
+            //for debugging
+            //@{
+//            H_qpOASES_->print("H_qp_oases");
+//            A_qpOASES_->print("A_qpoases");
+//            g_->print("g");
+//            lbA_->print("LbA");
+//            ubA_->print("ubA");
+//            lb_->print("lb");
+//            ub_->print("ub");
+//            x_0->print("x_0");
+//            shared_ptr<Vector> Ax= make_shared<Vector>(nConstr_QP_);
+//
+//            A_->times(x_0, Ax);
+//            Ax->print("Ax");
 
-        qpOASES::int_t nWSR = options_->lp_maxiter;//TODO modify it
-        solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
-                      lb_->values(), ub_->values(), lbA_->values(),
-                      ubA_->values(), nWSR);
+            //@}
+        }
+        else {
+            solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
+                          lb_->values(), ub_->values(), lbA_->values(),
+                          ubA_->values(), nWSR);
+        }
         old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
         stats->qp_iter_addValue((int) nWSR);
         if (!solver_->isSolved()) {
             THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
-
         }
     }
 }

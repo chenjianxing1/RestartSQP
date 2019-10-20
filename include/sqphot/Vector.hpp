@@ -93,6 +93,9 @@ public:
     /** subtract a vector @rhs from the class member @_vector*/
     void subtract_vector(const double* rhs);
 
+    /** subtract class member @vector_ to a vector @rhs, modified @vector_ to be the result*/
+    void subtract_vector_to(const double* rhs);
+
     /**
      *
      * subtract  a subvector with length @subvec_size from the class member @_vector

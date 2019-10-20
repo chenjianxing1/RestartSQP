@@ -124,6 +124,13 @@ void Vector::subtract_vector(const double* rhs) {
     }
 }
 
+void Vector::subtract_vector_to(const double* rhs) {
+    for(int i = 0; i< size_; i++) {
+        values_[i] = rhs[i] - values_[i];
+    }
+}
+
+
 
 /**
  * subtract  a subvector with length @subvec_size from the class member @_vector

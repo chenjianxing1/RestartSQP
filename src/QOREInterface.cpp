@@ -64,7 +64,7 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     assert(rv_ == QPSOLVER_OK);
     rv_ = QPGetInt(solver_, "status", &status_);
     assert(rv_ == QPSOLVER_OK);
-    handle_error(QP);
+    handle_error(QP,stats);
     if (status_ != QPSOLVER_OPTIMAL) {
         THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
     }
@@ -81,7 +81,6 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     /**-------------------------------------------------------**/
     QPGetInt(solver_, "itercount", qpiter_);
     stats->qp_iter_addValue(qpiter_[0]);
-
 }
 
 
@@ -100,7 +99,7 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
 
     rv_ = QPGetInt(solver_, "status", &status_);
     assert(rv_ == QPSOLVER_OK);
-    handle_error(LP);
+    handle_error(LP,stats);
     if (status_ != QPSOLVER_OPTIMAL)
         THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
 
@@ -342,16 +341,13 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 
 }
 
-void QOREInterface::handle_error(QPType qptype) {
+void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
     switch(status_) {
     case QPSOLVER_OPTIMAL:
         //do nothing here
         break;
     case QPSOLVER_INFEASIBLE:
         shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
-        shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
-        x_0->copy_vector(x_qp_);
-        A_->times(x_0,Ax);
         //setup the slack variables to satisfy the bound constraints
         for(int i=0; i<nConstr_QP_; i++) {
             x_0->setValueAt(i+nVar_QP_-2*nConstr_QP_,max(0.0,lb_->values(nVar_QP_+i)));
@@ -360,6 +356,9 @@ void QOREInterface::handle_error(QPType qptype) {
 
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          x_0->values(), NULL);//
+        QPGetInt(solver_, "itercount", qpiter_);
+        stats->qp_iter_addValue(qpiter_[0]);
+
         assert(rv_ == QPSOLVER_OK);
         break;
     }

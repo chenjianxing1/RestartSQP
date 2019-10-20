@@ -66,7 +66,7 @@ void Algorithm::Optimize() {
         }
         catch (QP_NOT_OPTIMAL) {
             myQP_->WriteQPData(problem_name_+"qpdata.log");
-//            printf("QP is not optimal!");
+            printf("QP is not optimal!");
             exitflag_ = myQP_->get_status();
             break;
         }
@@ -104,7 +104,7 @@ void Algorithm::Optimize() {
             jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
         }
         else {
-
+            jnlst_->DeleteAllJournals();
             Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
             if(IsNull(logout_jrnl)) {
                 jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
@@ -112,7 +112,7 @@ void Algorithm::Optimize() {
 
             }
             if (IsValid(logout_jrnl)) {
-                logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+                logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
             }
             if (stats_->iter % 10 == 0) {
                 jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
@@ -445,35 +445,13 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
     cal_infea(); //calculate the infeasibility measure for x_k
 
     /*-----------------------------------------------------*/
-    /*                      JOURNAL INIT                   */
+    /*             JOURNAL INIT & OUTPUT                   */
     /*-----------------------------------------------------*/
 
 
     if(options_->printLevel>1) {
         Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl =
             jnlst_->AddFileJournal("console", "stdout", Ipopt::J_ITERSUMMARY);
-
-    }
-    else {
-        string  output_file_name = problem_name_+"_output.log";
-        jnlst_->AddFileJournal("file_output", output_file_name.c_str(),
-                               Ipopt::J_ITERSUMMARY);
-    }
-
-#if DEBUG
-    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl =
-        jnlst_->AddFileJournal("Debug", problem_name_+"debug.log",
-                               Ipopt::J_MOREDETAILED);
-    debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_MOREDETAILED);
-#endif
-
-    /*-----------------------------------------------------*/
-    /*                      OUTPUT                         */
-    /*------------------------------------------*-----------*/
-
-
-    if (options_->printLevel > 1) {
-        Ipopt::SmartPtr<Ipopt::Journal> stdout_jrnl = jnlst_->GetJournal("console");
         if (IsValid(stdout_jrnl)) {
             // Set printlevel for stdout
             stdout_jrnl->SetAllPrintLevels(options_->print_level);
@@ -483,10 +461,15 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-    } else {
-        Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+
+    }
+    else {
+        string  output_file_name = problem_name_+"_output.log";
+        Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl =
+            jnlst_->AddFileJournal("file_output", output_file_name.c_str(),
+                                   Ipopt::J_ITERSUMMARY);
         if (IsValid(logout_jrnl)) {
-            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
         }
 
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
@@ -494,6 +477,15 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
     }
+
+//#if DEBUG
+//    Ipopt::SmartPtr<Ipopt::Journal> debug_jrnl =
+//        jnlst_->AddFileJournal("Debug", problem_name_+"debug.log",
+//                               Ipopt::J_MOREDETAILED);
+//    debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_MOREDETAILED);
+//#endif
+
+
 
 }
 
@@ -507,7 +499,6 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
-
     nlp_ = make_shared<SQPTNLP>(nlp);
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
@@ -1128,26 +1119,26 @@ void Algorithm::second_order_correction() {
         isaccept_ = false;
 
 #if DEBUG
-#if CHECK_SOC
-        EJournalLevel debug_print_level = options_->debug_print_level;
-        SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
-        if (IsNull(debug_jrnl)) {
-            debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", Ipopt::J_ITERSUMMARY);
-        }
-        debug_jrnl->SetAllPrintLevels(debug_print_level);
-        debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_ALL);
-
-
-        cout << "       Entering the SOC STEP calculation\n";
-        cout << "       class member isaccept is ";
-        if (isaccept_)
-            cout << "TRUE" << endl;
-        else
-            cout << "FALSE" << endl;
-        cout << "---------------------------------------------------------\n";
-
-        cout << endl;
-#endif
+//#if CHECK_SOC
+//        EJournalLevel debug_print_level = options_->debug_print_level;
+//        SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
+//        if (IsNull(debug_jrnl)) {
+//            debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", Ipopt::J_ITERSUMMARY);
+//        }
+//        debug_jrnl->SetAllPrintLevels(debug_print_level);
+//        debug_jrnl->SetPrintLevel(Ipopt::J_DBG, Ipopt::J_ALL);
+//
+//
+//        cout << "       Entering the SOC STEP calculation\n";
+//        cout << "       class member isaccept is ";
+//        if (isaccept_)
+//            cout << "TRUE" << endl;
+//        else
+//            cout << "FALSE" << endl;
+//        cout << "---------------------------------------------------------\n";
+//
+//        cout << endl;
+//#endif
 #endif
 
         shared_ptr<Vector> p_k_tmp = make_shared<Vector>(nVar_); //for temporarily storing data for p_k
@@ -1245,13 +1236,12 @@ void Algorithm::print_final_stats() {
     }
     else {
         Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
-
         if(IsNull(logout_jrnl)) {
             string  output_file_name = problem_name_+"_output.log";
             jnlst_->AddFileJournal("file_output", output_file_name.c_str(), Ipopt::J_ITERSUMMARY);
         }
         if (IsValid(logout_jrnl)) {
-            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_LAST_LEVEL);
+            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
         }
 
     }
