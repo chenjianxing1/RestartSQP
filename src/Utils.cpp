@@ -45,6 +45,23 @@ ConstraintType classify_single_constraint(double lower_bound, double upper_bound
 }
 
 
+bool is_int_array_equal(const int* a, const int* b, int length) {
+    for (int i = 0; i <length; i++) {
+        if(a[i] != b[i])
+            return false;
+    }
+    return true;
+}
+
+bool is_double_array_equal(const double* a, const double* b, int length) {
+    for (int i = 0; i <length; i++) {
+        if(fabs(a[i] - b[i])>1.0e-8)
+            return false;
+    }
+    return true;
+}
+
+
 double oneNorm(const double* x, int n) {
     double sum = 0;
     for (int i = 0; i < n; i++) {

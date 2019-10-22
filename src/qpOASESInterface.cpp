@@ -532,7 +532,6 @@ void qpOASESInterface::set_solver_options() {
         qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
         break;
     }
-
     solver_->setOptions(qp_options);
 }
 

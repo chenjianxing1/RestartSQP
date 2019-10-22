@@ -586,7 +586,7 @@ void SpHbMat::write_to_file(const char* name,
 
 
 
-void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) {
+void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
 
     int row;
     if(row_oriented) {
@@ -777,18 +777,18 @@ SpHbMat::print_full(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
     }
 
     if(!IsNull(jnlst)) {
-        //    if (name != nullptr) {
-        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,name);
-        //            jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX," =: {\n");
-        //    }
-        //    for (int i = 0; i < RowNum_; i++) {
-        //        for (int j = 0; j < ColNum_; j++) {
-        //            sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
-        //               jnlst->Print(Ipopt::J_DBG,Ipopt::J_MATRIX,mat_val);
-        //        }
-        //           jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"\n");
-        //    }
-        //       jnlst->Printf(Ipopt::J_DBG,Ipopt::J_MATRIX,"}\n\n");
+        if (name != nullptr) {
+            jnlst->Printf(level, category,name);
+            jnlst->Printf(level, category," =: {\n");
+        }
+        for (int i = 0; i < RowNum_; i++) {
+            for (int j = 0; j < ColNum_; j++) {
+                sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+                jnlst->Printf(level, category,mat_val);
+            }
+            jnlst->Printf(level, category,"\n");
+        }
+        jnlst->Printf(level, category,"}\n\n");
     } else {
         if(name!=nullptr)
             printf("%s =:{\n", name);

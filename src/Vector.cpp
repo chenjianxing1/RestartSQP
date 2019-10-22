@@ -250,6 +250,5 @@ double Vector::getOneNorm() const {
     return oneNorm;
 }
 
-
 }
 

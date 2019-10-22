@@ -66,7 +66,6 @@ void Algorithm::Optimize() {
         }
         catch (QP_NOT_OPTIMAL) {
             myQP_->WriteQPData(problem_name_+"qpdata.log");
-            printf("QP is not optimal!");
             exitflag_ = myQP_->get_status();
             break;
         }

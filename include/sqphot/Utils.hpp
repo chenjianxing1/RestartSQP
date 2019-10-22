@@ -49,6 +49,10 @@ double infNorm(const double* x, int n);
 ConstraintType classify_single_constraint(double lower_bound, double upper_bound);
 
 
+bool is_int_array_equal(const int* a, const int* b, int length);
+
+bool is_double_array_equal(const double* a, const double* b, int length);
+
 
 //debug tool print things out
 template<typename T>

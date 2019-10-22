@@ -397,9 +397,9 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
 
     //manually check if the optimality condition is satisfied
     bool isOptimal=OptimalityTest(solverInterface_,QPsolverChoice_,W_b_,W_c_);
-    if(!isOptimal) {
-        THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
-    }
+//    if(!isOptimal) {
+//        THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
+//    }
 }
 
 

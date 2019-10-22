@@ -57,7 +57,35 @@ public:
     ~SpHbMat() override;
     //@}
 
+//@{
+    inline void setMatValAt(int i, double value) {
+        assert(i<EntryNum_);
+        MatVal_[i] = value;
+    }
 
+    inline void setRowIndexAt(int i, int value) {
+        if(isCompressedRow_) {
+            assert(i<RowNum_+1);
+        }
+        else {
+            assert(i<EntryNum_);
+        }
+
+        RowIndex_[i] = value;
+    }
+
+    inline void setColIndexAt(int i, int value) {
+        if(isCompressedRow_) {
+            assert(i<EntryNum_);
+        }
+        else {
+            assert(i<ColNum_+1);
+        }
+
+        ColIndex_[i] = value;
+    }
+
+    //@}
     /**
      * @brief set the Matrix values to the matrix, convert from triplet format to
      * Harwell-Boeing Matrix format.
@@ -91,7 +119,7 @@ public:
     void setStructure(std::shared_ptr<const SpTripletMat> rhs);
 //@}
 
-    void get_dense_matrix(double* dense_matrix,bool row_oriented = true);
+    void get_dense_matrix(double* dense_matrix,bool row_oriented = true) const ;
 
     /**
      * @brief print the matrix information

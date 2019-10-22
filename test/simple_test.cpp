@@ -43,10 +43,10 @@ public:
     }
 
     /**
-     * @brief Write a brief summary for each problem being solved, 
+     * @brief Write a brief summary for each problem being solved,
      */
     void write_in_brief(const std::string& pname, /**<name of the problem*/
-                         Algorithm& alg) {
+                        Algorithm& alg) {
 
         std::size_t found = pname.find_last_of("/\\");
         OptimalityStatus opt_status = alg.get_opt_status();
