@@ -225,9 +225,6 @@ private:
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     int rv_;//temporarily placed here, for recording the return value from the solver
     int* working_set_;
-    //TODO: for debugging use only
-    shared_ptr<SpTripletMat> H_triplet_;
-    shared_ptr<SpTripletMat> A_triplet_;
 };
 
 

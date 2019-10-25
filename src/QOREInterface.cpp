@@ -146,14 +146,7 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
         rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
     }
 
-
     assert(rv_ == QPSOLVER_OK);
-
-
-    A_triplet_ = make_shared<SpTripletMat>(nnz_g_QP,nConstr_QP_,
-                                           nVar_QP_);
-    H_triplet_ = make_shared<SpTripletMat>(nlp_info.nnz_h_lag,nVar_QP_,
-                                           nVar_QP_);
 }
 
 
@@ -180,7 +173,6 @@ Exitflag QOREInterface::get_status() {
         return QP_OPTIMAL;
     default:
         return QPERROR_UNKNOWN;
-
     }
 }
 
@@ -362,18 +354,15 @@ void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
         assert(rv_ == QPSOLVER_OK);
         break;
     }
-
 }
 
 
 void QOREInterface::set_solver_options(shared_ptr<const Options> options) {
 
-
     if(options->qpPrintLevel==0) {
         //does not print anything
         QPSetInt(solver_, "prtfreq", -1);
     }
-
     QPSetInt(solver_,"maxiter",options->qp_maxiter);
 
 }
