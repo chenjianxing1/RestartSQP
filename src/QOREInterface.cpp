@@ -179,7 +179,7 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 }
 
 
-bool QOREInterface::test_optimality() {
+bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     int i;
     //create local variables and set all violation values to be 0
     double primal_violation = 0.0;
@@ -191,12 +191,14 @@ bool QOREInterface::test_optimality() {
     shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
 
 
-    auto W_c = new ActiveType[nConstr_QP_];
-    auto W_b = new ActiveType[nVar_QP_];
+    if(W_c==NULL&&W_b==NULL) {
+        W_c = new ActiveType[nConstr_QP_];
+        W_b = new ActiveType[nVar_QP_];
+    }
+
     get_working_set(W_c,W_b);
 
 
-    get_working_set(W_c,W_b);
 
     /**-------------------------------------------------------**/
     /**                    primal feasibility                 **/
@@ -336,10 +338,15 @@ bool QOREInterface::test_optimality() {
     qpOptimalStatus_.compl_violation = compl_violation;
     qpOptimalStatus_.stationarity_violation = statioanrity_violation;
     qpOptimalStatus_.dual_violation = dual_violation;
-    qpOptimalStatus_.primal_feasibility = primal_violation;
+    qpOptimalStatus_.primal_violation = primal_violation;
 
     qpOptimalStatus_.KKT_error =
         compl_violation + statioanrity_violation + dual_violation + primal_violation;
+
+    if(W_c==NULL&&W_b == NULL) {
+        delete[] W_c;
+        delete[] W_b;
+    }
 
     double tol= 1.0e-6;
 //    if(A!= nullptr)
@@ -348,15 +355,16 @@ bool QOREInterface::test_optimality() {
 //        tol =  (H->oneNorm()+1)*1.0e-6;
 //
     if(qpOptimalStatus_.KKT_error>tol) {
-        printf("comp_violation %10e\n", compl_violation);
-        printf("stat_violation %10e\n", statioanrity_violation);
-        printf("prim_violation %10e\n", primal_violation);
-        printf("dual_violation %10e\n", dual_violation);
-        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+//        printf("comp_violation %10e\n", compl_violation);
+//        printf("stat_violation %10e\n", statioanrity_violation);
+//        printf("prim_violation %10e\n", primal_violation);
+//        printf("dual_violation %10e\n", dual_violation);
+//        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
 
         return false;
 
     }
+
     return true;
 
 

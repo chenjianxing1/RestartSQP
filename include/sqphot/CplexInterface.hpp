@@ -52,16 +52,16 @@ public:
      * @brief Solve a regular QP with given data and options.
      *
      */
-    void
-    optimizeQP(shared_ptr<Stats> stats) override;
+    void optimizeQP(shared_ptr<Stats> stats) override;
 
     /**
      * @brief Solve a regular LP with given data and options
      */
 
-    void
-    optimizeLP(shared_ptr<Stats> stats) override;
+    void optimizeLP(shared_ptr<Stats> stats) override;
 
+
+    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
 
     /**-------------------------------------------------------**/
     /**                    Getters                            **/

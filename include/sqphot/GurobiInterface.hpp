@@ -62,6 +62,8 @@ public:
     void optimizeLP(shared_ptr<Stats> stats) override;
 
 
+    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
+
     /**-------------------------------------------------------**/
     /**                    Getters                            **/
     /**-------------------------------------------------------**/

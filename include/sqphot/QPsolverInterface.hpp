@@ -129,6 +129,13 @@ public:
 
     virtual Exitflag get_status() = 0;
 
+    virtual bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) = 0;
+
+
+    OptimalityStatus get_optimality_status() {
+        return qpOptimalStatus_;
+    }
+
     //@}
 
     /**-------------------------------------------------------**/
@@ -182,6 +189,9 @@ public:
     virtual void WriteQPDataToFile(Ipopt::EJournalLevel level,
                                    Ipopt::EJournalCategory category,
                                    const string filename) = 0;
+
+protected:
+    OptimalityStatus qpOptimalStatus_;
 
 private:
     /** Copy Constructor */

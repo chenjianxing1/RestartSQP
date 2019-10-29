@@ -56,7 +56,7 @@ public:
 
     void optimizeLP(shared_ptr<Stats> stats = nullptr) override;
 
-    bool test_optimality();
+    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
 
     /**@name Getters */
     //@{
@@ -235,7 +235,7 @@ private:
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
-    OptimalityStatus qpOptimalStatus_;
+//    OptimalityStatus qpOptimalStatus_;
     shared_ptr<SpHbMat> A_;
     shared_ptr<SpHbMat> H_;
     shared_ptr<Vector> g_;

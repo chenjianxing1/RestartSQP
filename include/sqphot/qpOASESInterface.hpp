@@ -188,7 +188,7 @@ public:
     };
     //@}
 
-    bool test_optimality();
+    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) override ;
 
 
     ///////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ private:
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
     int nConstr_QP_;  /**< number of constraints for QP*/
     int nVar_QP_;  /**< number of variables for QP*/
-    OptimalityStatus qpOptimalStatus_;
+//    OptimalityStatus qpOptimalStatus_;
     shared_ptr<const Options> options_;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
