@@ -145,6 +145,45 @@ public:
 
     void transposed_times(std::shared_ptr<const Vector> p,
                           std::shared_ptr<Vector> result) const;
+
+    void transposed_times(const double* p, double* result) const {
+        for(int i = 0; i<ColNum_; i++)
+            result[i] = 0.0;
+
+        if(isCompressedRow_) {
+            int row;
+            for(int i = 1; i <RowNum_+1; i++) {
+                if(RowIndex_[i]>0) {
+                    row = i-1;
+                    break;
+                }
+            }
+            for(int i = 0; i<EntryNum_; i++) {
+                while(i==RowIndex_[row+1]) {
+                    row++;
+                }
+                result[ColIndex_[i]] +=MatVal_[i]*p[row];
+            }
+        }
+        else {
+            int col;
+            //find the col corresponding to the first nonzero entry
+            for(int i = 1; i<ColNum_+1; i++) {
+                if(ColIndex_[i]>0) {
+                    col = i-1;
+                    break;
+                }
+            }
+            for(int i = 0; i<EntryNum_; i++) {
+                //go to the next col
+                while(i == ColIndex_[col+1]) {
+                    col++;
+                }
+                result[col] += MatVal_[i]*p[RowIndex_[i]];
+            }
+        }
+
+    }
     /**
      * @brief make a deep copy of a matrix information
      */
@@ -314,8 +353,8 @@ private:
     void freeMemory();
 
 
-    /** Copy Constructor */
-    SpHbMat(const SpHbMat &);
+//    /** Copy Constructor */
+//    SpHbMat(const SpHbMat &);
 
 
     /** Overloaded Equals Operator */

@@ -25,35 +25,6 @@ class QOREInterface :
 public:
 
 
-    const shared_ptr<Vector>& getG() const override {
-        return g_;
-    };
-
-    const shared_ptr<Vector>& getLb() const override {
-        return lb_;
-    };
-
-    const shared_ptr<Vector>& getUb() const override {
-        return ub_;
-    };
-
-    const shared_ptr<Vector>& getLbA() const override {
-        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
-    }
-
-    const shared_ptr<Vector>& getUbA() const override {
-        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
-    }
-
-    shared_ptr<const SpHbMat> getH()const override {
-        return H_;
-    };
-
-    shared_ptr<const SpHbMat> getA() const override {
-        return A_;
-    };
-
-
     /**Constructor*/
 
     QOREInterface(NLPInfo nlp_info,
@@ -61,6 +32,12 @@ public:
                   shared_ptr<const Options> options,
                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
+    QOREInterface(shared_ptr<SpHbMat> H,
+                  shared_ptr<SpHbMat> A,
+                  shared_ptr<Vector> g,
+                  shared_ptr<Vector> lb,
+                  shared_ptr<Vector> ub,
+                  shared_ptr<const Options> options = nullptr);
 
     /** Default destructor*/
     ~QOREInterface();
@@ -70,14 +47,16 @@ public:
      * @brief Solve a regular QP with given data and options.
      */
 
-    void optimizeQP(shared_ptr<Stats> stats) override;
+    void optimizeQP(shared_ptr<Stats> stats = nullptr) override;
 
 
     /**
      * @brief Solve a regular LP with given data and options
      */
 
-    void optimizeLP(shared_ptr<Stats> stats) override;
+    void optimizeLP(shared_ptr<Stats> stats = nullptr) override;
+
+    bool test_optimality();
 
     /**@name Getters */
     //@{
@@ -114,11 +93,43 @@ public:
 
     Exitflag get_status() override;
 
+
+
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
     //@}
     //
 
+    /**@name Getters */
+//@{
+    const shared_ptr<Vector>& getG() const override {
+        return g_;
+    };
+
+    const shared_ptr<Vector>& getLb() const override {
+        return lb_;
+    };
+
+    const shared_ptr<Vector>& getUb() const override {
+        return ub_;
+    };
+
+    const shared_ptr<Vector>& getLbA() const override {
+        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
+    }
+
+    const shared_ptr<Vector>& getUbA() const override {
+        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
+    }
+
+    shared_ptr<const SpHbMat> getH()const override {
+        return H_;
+    };
+
+    shared_ptr<const SpHbMat> getA() const override {
+        return A_;
+    };
+//@}
     /** @name Setters */
     //@{
     void set_g(int location, double value) override {
@@ -146,6 +157,7 @@ public:
         A_->setMatVal(rhs, I_info);
     };
 
+
     void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
         H_->setStructure(rhs);
     };
@@ -159,18 +171,28 @@ public:
                            Ipopt::EJournalCategory category,
                            const string filename) override ;
 
-
-
-    /** Just overload from base class, does not use them here though..*/
     //@{
-    void set_g(shared_ptr<const Vector> rhs) override {};
-    void set_lb(shared_ptr<const Vector> rhs) override {};
-    void set_ub(shared_ptr<const Vector> rhs) override {};
+    void set_g(shared_ptr<const Vector> rhs) override {
+        g_->copy_vector(rhs);
+    };
+
+    void set_lb(shared_ptr<const Vector> rhs) override {
+        lb_->copy_vector(rhs);
+    };
+
+    void set_ub(shared_ptr<const Vector> rhs) override {
+        ub_->copy_vector(rhs);
+    };
+
     void set_lbA(int location, double value) override {};
     void set_lbA(shared_ptr<const Vector> rhs) override {};
     void set_ubA(int location, double value) override {};
     void set_ubA(shared_ptr<const Vector> rhs) override {};
-    void reset_constraints() override {};
+
+    void reset_constraints() override {
+        lb_->set_zeros();
+        ub_->set_zeros();
+    };
     //@}
 
     ///////////////////////////////////////////////////////////
@@ -195,7 +217,7 @@ private:
     /**
      * @brief Handle errors based on current status
      */
-    void handle_error(QPType qptype, shared_ptr<Stats> stats);
+    void handle_error(QPType qptype, shared_ptr<Stats> stats=nullptr);
     /**
      * @brief Allocate memory for the class members
      * @param nlp_index_info  the struct that stores simple nlp dimension info
@@ -213,6 +235,7 @@ private:
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
+    OptimalityStatus qpOptimalStatus_;
     shared_ptr<SpHbMat> A_;
     shared_ptr<SpHbMat> H_;
     shared_ptr<Vector> g_;

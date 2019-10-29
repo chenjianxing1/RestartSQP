@@ -251,10 +251,6 @@ public:
         ColIndex_[i] = value;
     }
 
-    inline void setOrderAt(int location, int order_to_assign) {
-        order_[location] = order_to_assign;
-    }
-
     void set_zero() {
         for(int i = 0; i<EntryNum_; i++) {
             order_[i] = 0;

@@ -28,6 +28,34 @@ QOREInterface::QOREInterface(NLPInfo nlp_info,
     set_solver_options(options);
 }
 
+QOREInterface::QOREInterface(shared_ptr<SpHbMat> H,
+                             shared_ptr<SpHbMat> A,
+                             shared_ptr<Vector> g,
+                             shared_ptr<Vector> lb,
+                             shared_ptr<Vector> ub,
+                             shared_ptr<const Options> options):
+    A_(A),
+    H_(H),
+    g_(g),
+    lb_(lb),
+    ub_(ub),
+    nVar_QP_(A->ColNum()),
+    nConstr_QP_(A->RowNum()),
+    firstQPsolved_(false),
+    solver_(0) {
+    x_qp_= make_shared<Vector>(nVar_QP_+ nConstr_QP_);
+    y_qp_= make_shared<Vector>(nVar_QP_+ nConstr_QP_);
+    working_set_ = new int[nVar_QP_+ nConstr_QP_]();
+    qpiter_[0] = 0;
+    rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, A->EntryNum(),H->EntryNum());
+    assert(rv_ == QPSOLVER_OK);
+    if(options!=nullptr)
+        set_solver_options(options);
+}
+
+
+
+
 /**
  * @brief Destructor
  */
@@ -80,7 +108,8 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     /**                     Update Stats                      **/
     /**-------------------------------------------------------**/
     QPGetInt(solver_, "itercount", qpiter_);
-    stats->qp_iter_addValue(qpiter_[0]);
+    if(stats!=nullptr)
+        stats->qp_iter_addValue(qpiter_[0]);
 }
 
 
@@ -149,6 +178,189 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
     assert(rv_ == QPSOLVER_OK);
 }
 
+
+bool QOREInterface::test_optimality() {
+    int i;
+    //create local variables and set all violation values to be 0
+    double primal_violation = 0.0;
+    double dual_violation = 0.0;
+    double compl_violation = 0.0;
+    double statioanrity_violation = 0.0;
+
+    shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
+    shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
+
+
+    auto W_c = new ActiveType[nConstr_QP_];
+    auto W_b = new ActiveType[nVar_QP_];
+    get_working_set(W_c,W_b);
+
+
+    get_working_set(W_c,W_b);
+
+    /**-------------------------------------------------------**/
+    /**                    primal feasibility                 **/
+    /**-------------------------------------------------------**/
+    for (i = 0; i < nVar_QP_; i++) {
+        primal_violation += max(0.0, (lb_->values(i) - x_qp_->values(i)));
+        primal_violation += -min(0.0, (ub_->values(i) - x_qp_->values(i)));
+    }
+    if (A_ != nullptr) {
+        A_->times(x_qp_, Ax); //tmp_vec_nCon=A*x
+        for (i = 0; i < nConstr_QP_; i++) {
+            primal_violation += max(0.0, (lb_->values(i + nVar_QP_) -
+                                          Ax->values(i)));
+            primal_violation += -min(0.0, (ub_->values(i + nVar_QP_) -
+                                           Ax->values(i)));
+        }
+    }
+    /**-------------------------------------------------------**/
+    /**                    dual feasibility                   **/
+    /**-------------------------------------------------------**/
+    for (i = 0; i < nVar_QP_; i++) {
+        switch (W_b[i]) {
+        case INACTIVE://the constraint is inactive, then the dual multiplier
+            // should be 0
+            dual_violation += fabs(y_qp_->values(i));
+            break;
+        case ACTIVE_BELOW://the constraint is active at the lower bound, so the
+            // multiplier should be positive
+            dual_violation += -min(0.0, y_qp_->values(i));
+            break;
+        case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
+            // multiplier should be negavie
+            dual_violation += max(0.0, y_qp_->values(i));
+            break;
+        case ACTIVE_BOTH_SIDE:
+            break;
+        default:
+            printf("failed in dual fea test, the working set  for qore at the "
+                   "bounds is %i", W_b[i]);
+            THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        }
+    }
+    if (A_ != nullptr) {
+        for (i = 0; i < nConstr_QP_; i++) {
+            switch (W_c[i]) {
+            case INACTIVE://the constraint is inactive, then the dual multiplier
+                // should be 0
+                dual_violation += fabs(y_qp_->values(i+ nVar_QP_));
+                break;
+            case ACTIVE_BELOW://the constraint is active at the lower bound, so the
+                // multiplier should be positive
+                dual_violation += -min(0.0, y_qp_->values(i+ nVar_QP_));
+                break;
+            case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
+                // multiplier should be negavie
+                dual_violation += max(0.0, y_qp_->values(i+ nVar_QP_));
+                break;
+            case ACTIVE_BOTH_SIDE:
+                break;
+            default:
+                printf("failed in dual fea test, the working set  for qore at the "
+                       "constr is %i", W_c[i]);
+                THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+            }
+        }
+    }
+    /**-------------------------------------------------------**/
+    /**                   stationarity                        **/
+    /**-------------------------------------------------------**/
+    //calculate A'*y+lambda-g-Hx
+    A_->transposed_times(y_qp_->values()+nVar_QP_, stationary_gap->values());
+
+    shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
+    H_->times(x_qp_, Hx);
+    stationary_gap->add_vector(y_qp_->values());
+    stationary_gap->subtract_vector(g_->values());
+    stationary_gap->subtract_vector(Hx->values());
+    statioanrity_violation = stationary_gap->getOneNorm();
+
+
+    /**-------------------------------------------------------**/
+    /**                    Complemtarity                      **/
+    /**-------------------------------------------------------**/
+    for (i = 0; i < nVar_QP_; i++) {
+        switch (W_b[i]) {
+        case INACTIVE: //constraint is inactive, multiplier should be 0
+            compl_violation += abs(y_qp_->values(i));
+            break;
+        case ACTIVE_BELOW://the constraint is active at the lower bound
+            compl_violation += abs(y_qp_->values(i) *
+                                   (x_qp_->values(i) - lb_->values(i)));
+            break;
+        case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
+            // multiplier should be negavie
+            compl_violation += abs(y_qp_->values(i) *
+                                   (ub_->values(i) - x_qp_->values(i)));
+            break;
+        case ACTIVE_BOTH_SIDE:
+            break;
+        default:
+            printf("failed in compl test, the working set  for qore at "
+                   "the bounds is %i", W_b[i]);
+            THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        }
+    }
+    if (A_ != nullptr) {
+        for (i = 0; i < nConstr_QP_; i++) {
+            switch (W_c[i]) {
+            case INACTIVE: //constraint is inactive, multiplier should be 0
+                compl_violation += abs(y_qp_->values(i+nVar_QP_));
+                break;
+            case ACTIVE_BELOW://the constraint is active at the lower bound
+                compl_violation += abs(y_qp_->values(i+nVar_QP_) *
+                                       (Ax->values(i) -
+                                        lb_->values(i + nVar_QP_)));
+                break;
+            case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
+                // multiplier should be negavie
+                compl_violation += abs(y_qp_->values(i+nVar_QP_) *
+                                       (ub_->values(i + nVar_QP_) -
+                                        Ax->values(i)));
+                break;
+            case ACTIVE_BOTH_SIDE:
+                break;
+            default:
+                printf("failed in compl test, the working set  for qpOASES at "
+                       "the constr is %i", W_c[i]);
+                THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+            }
+        }
+    }
+
+    /**-------------------------------------------------------**/
+    /**             Decide if x_k is optimal                  **/
+    /**-------------------------------------------------------**/
+
+    qpOptimalStatus_.compl_violation = compl_violation;
+    qpOptimalStatus_.stationarity_violation = statioanrity_violation;
+    qpOptimalStatus_.dual_violation = dual_violation;
+    qpOptimalStatus_.primal_feasibility = primal_violation;
+
+    qpOptimalStatus_.KKT_error =
+        compl_violation + statioanrity_violation + dual_violation + primal_violation;
+
+    double tol= 1.0e-6;
+//    if(A!= nullptr)
+//        tol =  (std::max(H->oneNorm(),A->oneNorm())+1)*1.0e-6;
+//    else
+//        tol =  (H->oneNorm()+1)*1.0e-6;
+//
+    if(qpOptimalStatus_.KKT_error>tol) {
+        printf("comp_violation %10e\n", compl_violation);
+        printf("stat_violation %10e\n", statioanrity_violation);
+        printf("prim_violation %10e\n", primal_violation);
+        printf("dual_violation %10e\n", dual_violation);
+        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+
+        return false;
+
+    }
+    return true;
+
+
+}
 
 
 /**@name Getters*/
@@ -349,7 +561,8 @@ void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
                          x_0->values(), NULL);//
         QPGetInt(solver_, "itercount", qpiter_);
-        stats->qp_iter_addValue(qpiter_[0]);
+        if(stats!=nullptr)
+            stats->qp_iter_addValue(qpiter_[0]);
 
         assert(rv_ == QPSOLVER_OK);
         break;

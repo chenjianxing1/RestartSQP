@@ -376,8 +376,6 @@ private:
                                           *x_trial = x_k+p_k*/
 
     shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
-    Ipopt::EJournalLevel jnrl_level_;
-
 
 };//END_OF_ALG_CLASS
 

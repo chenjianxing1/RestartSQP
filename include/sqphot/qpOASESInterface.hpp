@@ -40,13 +40,23 @@ public:
                      shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
+
+    qpOASESInterface(shared_ptr<SpHbMat> H,
+                     shared_ptr<SpHbMat> A,
+                     shared_ptr<Vector> g,
+                     shared_ptr<Vector> lb,
+                     shared_ptr<Vector> ub,
+                     shared_ptr<Vector> lbA,
+                     shared_ptr<Vector> ubA,
+                     shared_ptr<Options> options = nullptr);
+
     /** Defualt Destructor */
     ~qpOASESInterface() override;
 
 
 
 
-    void optimizeQP(shared_ptr<Stats> stats) override;
+    void optimizeQP(shared_ptr<Stats> stats = nullptr) override;
 
 
 
@@ -55,7 +65,7 @@ public:
      * in the class members.
      */
 
-    void optimizeLP(shared_ptr<Stats> stats) override;
+    void optimizeLP(shared_ptr<Stats> stats = nullptr) override;
 
     /** @name Getters*/
 //@{
@@ -178,6 +188,9 @@ public:
     };
     //@}
 
+    bool test_optimality();
+
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
     ///////////////////////////////////////////////////////////
@@ -188,7 +201,7 @@ private:
 
 
 
-    void handle_error(QPType qptype, shared_ptr<Stats> stats);
+    void handle_error(QPType qptype, shared_ptr<Stats> stats = nullptr);
 
 
     void reset_flags();
@@ -229,6 +242,7 @@ private:
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
     int nConstr_QP_;  /**< number of constraints for QP*/
     int nVar_QP_;  /**< number of variables for QP*/
+    OptimalityStatus qpOptimalStatus_;
     shared_ptr<const Options> options_;
     shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
@@ -251,10 +265,8 @@ private:
                                           * Harwell-Boeing Sparse Matrix format*/
     shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
-    //TODO: for debugging use only,
-    shared_ptr<SpTripletMat> H_triplet_;
-    shared_ptr<SpTripletMat> A_triplet_;
 
 };
 }
 #endif
+

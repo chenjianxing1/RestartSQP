@@ -693,7 +693,7 @@ void Algorithm::ratio_test() {
     double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
     actual_reduction_ = P1_x - P1_x_trial;
-    pred_reduction_ = rho_ * infea_measure_ - qp_obj_;
+    pred_reduction_ = rho_ * infea_measure_ - myQP_->get_objective();
 
 
 #if DEBUG
@@ -946,7 +946,7 @@ void Algorithm::update_penalty_parameter() {
                 }
                 //if any change occurs
                 if (rho_trial > rho_) {
-                    if (rho_trial * infea_measure_ - qp_obj_>=
+                    if (rho_trial * infea_measure_ - myQP_->get_objective()>=
                             options_->eps2 * rho_trial *
                             (infea_measure_ - infea_measure_model_)) {
                         stats_->penalty_change_Succ_addone();
