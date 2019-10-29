@@ -236,7 +236,7 @@ public:
     /**
      * @brief Test the KKT conditions for the certain qpsolver
      */
-    bool OptimalityTest(
+    bool test_optimality(
         shared_ptr<QPSolverInterface> qpsolverInterface,
         Solver qpSolver,
         ActiveType* W_b,

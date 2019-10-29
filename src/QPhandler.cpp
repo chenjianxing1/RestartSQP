@@ -301,7 +301,6 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
 
         for (int i = 0; i < nlp_info_.nCon; i++) {
             solverInterface_->set_lbA(i, c_l->values(i) - c_k->values(i));
-            solverInterface_->set_ubA(i, c_u->values(i) - c_k->values(i));
         }
 
         for (int i = 0; i < nlp_info_.nVar; i++) {
@@ -396,7 +395,7 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
     solverInterface_->optimizeQP(stats);
 
     //manually check if the optimality condition is satisfied
-    bool isOptimal=OptimalityTest(solverInterface_,QPsolverChoice_, W_b_,W_c_);
+    bool isOptimal= test_optimality(solverInterface_, QPsolverChoice_, W_b_, W_c_);
     if(!isOptimal) {
         THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
     }
@@ -472,7 +471,7 @@ Exitflag QPhandler::get_status() {
 }
 
 
-bool QPhandler::OptimalityTest(
+bool QPhandler::test_optimality(
     shared_ptr<QPSolverInterface> qpsolverInterface,
     Solver qpSolver,
     ActiveType* W_b,
@@ -480,8 +479,6 @@ bool QPhandler::OptimalityTest(
 
     qpOptimalStatus_ = qpsolverInterface->get_optimality_status();
     return (qpsolverInterface->test_optimality(W_c,W_b));
-
-
 }
 
 

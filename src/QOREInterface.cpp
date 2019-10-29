@@ -219,18 +219,29 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     /**-------------------------------------------------------**/
     /**                    dual feasibility                   **/
     /**-------------------------------------------------------**/
+
+
+//    x_qp_->print("x_qp");
+//    Ax->print("Ax");
+//    lb_->print("lb");
+//    ub_->print("ub");
+//    y_qp_->print("y_qp");
+
     for (i = 0; i < nVar_QP_; i++) {
         switch (W_b[i]) {
         case INACTIVE://the constraint is inactive, then the dual multiplier
             // should be 0
+//            printf("0\n");
             dual_violation += fabs(y_qp_->values(i));
             break;
         case ACTIVE_BELOW://the constraint is active at the lower bound, so the
             // multiplier should be positive
+//            printf("-1\n");
             dual_violation += -min(0.0, y_qp_->values(i));
             break;
         case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
             // multiplier should be negavie
+//            printf("1\n");
             dual_violation += max(0.0, y_qp_->values(i));
             break;
         case ACTIVE_BOTH_SIDE:
@@ -241,20 +252,24 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
         }
     }
+
     if (A_ != nullptr) {
         for (i = 0; i < nConstr_QP_; i++) {
             switch (W_c[i]) {
             case INACTIVE://the constraint is inactive, then the dual multiplier
                 // should be 0
                 dual_violation += fabs(y_qp_->values(i+ nVar_QP_));
+//                    printf("0\n");
                 break;
             case ACTIVE_BELOW://the constraint is active at the lower bound, so the
                 // multiplier should be positive
                 dual_violation += -min(0.0, y_qp_->values(i+ nVar_QP_));
+//                    printf("-1\n");
                 break;
             case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
                 // multiplier should be negavie
                 dual_violation += max(0.0, y_qp_->values(i+ nVar_QP_));
+//                    printf("1\n");
                 break;
             case ACTIVE_BOTH_SIDE:
                 break;
@@ -348,18 +363,18 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
         delete[] W_b;
     }
 
-    double tol= 1.0e-6;
+    double tol= 1.0e-5;
 //    if(A!= nullptr)
 //        tol =  (std::max(H->oneNorm(),A->oneNorm())+1)*1.0e-6;
 //    else
 //        tol =  (H->oneNorm()+1)*1.0e-6;
 //
     if(qpOptimalStatus_.KKT_error>tol) {
-//        printf("comp_violation %10e\n", compl_violation);
-//        printf("stat_violation %10e\n", statioanrity_violation);
-//        printf("prim_violation %10e\n", primal_violation);
-//        printf("dual_violation %10e\n", dual_violation);
-//        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+        printf("comp_violation %10e\n", compl_violation);
+        printf("stat_violation %10e\n", statioanrity_violation);
+        printf("prim_violation %10e\n", primal_violation);
+        printf("dual_violation %10e\n", dual_violation);
+        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
 
         return false;
 
@@ -402,10 +417,16 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
         if(i<nVar_QP_) {
             switch (working_set_[i]) {
             case -1:
-                W_bounds[i] = ACTIVE_ABOVE;
+                if(fabs(x_qp_->values(i)-lb_->values(i))<sqrt_m_eps)
+                    W_bounds[i] = ACTIVE_BOTH_SIDE;
+                else
+                    W_bounds[i] = ACTIVE_ABOVE;
                 break;
             case 1:
-                W_bounds[i] = ACTIVE_BELOW;
+                if(fabs(x_qp_->values(i)-ub_->values(i))<sqrt_m_eps)
+                    W_bounds[i] = ACTIVE_BOTH_SIDE;
+                else
+                    W_bounds[i] = ACTIVE_BELOW;
                 break;
             case 0:
                 W_bounds[i] = INACTIVE;
@@ -416,12 +437,20 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
             }
         }
         else {
+           auto Ax = make_shared<Vector>(nConstr_QP_);
+           A_->times(x_qp_, Ax); //tmp_vec_nCon=A*x
             switch (working_set_[i]) {
             case -1:
+                if(fabs(Ax->values(i)-lb_->values(i-nVar_QP_)<sqrt_m_eps))
+                    W_constr[i-nVar_QP_] = ACTIVE_BOTH_SIDE;
+                else
                 W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
             case 1:
-                W_constr[i-nVar_QP_] = ACTIVE_BELOW;
+                if(fabs(Ax->values(i)-ub_->values(i-nVar_QP_)<sqrt_m_eps))
+                    W_constr[i-nVar_QP_] =ACTIVE_BOTH_SIDE;
+                else
+                    W_constr[i-nVar_QP_] = ACTIVE_BELOW;
                 break;
             case 0:
                 W_constr[i-nVar_QP_] = INACTIVE;

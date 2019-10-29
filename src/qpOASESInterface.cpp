@@ -788,10 +788,17 @@ void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
     for (int i = 0; i < nVar_QP_; i++) {
         switch((int)tmp_W_b[i]) {
         case 1:
-            W_bounds[i] = ACTIVE_ABOVE;
+            if(fabs(x_qp_->values(i)-lb_->values(i))<sqrt_m_eps)
+                W_bounds[i] = ACTIVE_BOTH_SIDE;
+            else
+                W_bounds[i] = ACTIVE_ABOVE;
             break;
         case -1:
-            W_bounds[i] = ACTIVE_BELOW;
+            if(fabs(x_qp_->values(i)-ub_->values(i))<sqrt_m_eps)
+                W_bounds[i] = ACTIVE_BOTH_SIDE;
+            else
+                W_bounds[i] = ACTIVE_BELOW;
+
             break;
         case 0:
             W_bounds[i] = INACTIVE;
@@ -801,13 +808,21 @@ void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
             THROW_EXCEPTION(INVALID_WORKING_SET,INVALID_WORKING_SET_MSG);
         }
     }
+    auto Ax = make_shared<Vector>(nConstr_QP_);
+    A_->times(x_qp_, Ax); //tmp_vec_nCon=A*x
     for (int i = 0; i < nConstr_QP_; i++) {
         switch((int)tmp_W_c[i]) {
         case 1:
-            W_constr[i] = ACTIVE_ABOVE;
+            if(fabs(Ax->values(i)-lbA_->values(i)<sqrt_m_eps))
+                W_constr[i] = ACTIVE_BOTH_SIDE;
+            else
+                W_constr[i] = ACTIVE_ABOVE;
             break;
         case -1:
-            W_constr[i] = ACTIVE_BELOW;
+            if(fabs(Ax->values(i)-ubA_->values(i)<sqrt_m_eps))
+                W_constr[i] = ACTIVE_BOTH_SIDE;
+            else
+                W_constr[i] = ACTIVE_BELOW;
             break;
         case 0:
             W_constr[i] = INACTIVE;

@@ -24,7 +24,7 @@
 #define GET_QP_INTERFACE_MEMBERS false
 #define PRINT_OUT_QP_WITH_ERROR true
 #if PRINT_OUT_QP_WITH_ERROR
-#define PRINT_DATA_FOR_QPOASES  true
+#define PRINT_DATA_FOR_QPOASES false
 #define PRINT_DATA_FOR_QORE true
 #define PRINT_QP_IN_CPP false
 #endif

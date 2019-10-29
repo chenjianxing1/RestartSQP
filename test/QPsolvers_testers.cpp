@@ -162,6 +162,7 @@ int main(int argc, char* argv[]) {
 //    nlp_info.nnz_jac_g = Annz;
 //    nlp_info.nnz_h_lag = Hnnz;
 
+    shared_ptr<SQPhotstart::Stats> stats_qore = make_shared<SQPhotstart::Stats>();
     shared_ptr<SQPhotstart::Options> options = make_shared<SQPhotstart::Options>();
     options->qpPrintLevel = 0;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst = new Ipopt::Journalist();
@@ -169,7 +170,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<QOREInterface> qore_inferface = make_shared<QOREInterface>(H_qore, A_qore, g,
             lb_qore, ub_qore, options);
     try {
-        qore_inferface->optimizeQP();
+        qore_inferface->optimizeQP(stats_qore);
     }
     catch(...) {
 
@@ -190,6 +191,7 @@ int main(int argc, char* argv[]) {
     default:
         exitflag_qore = "UNKNOWN";
     }
+    qore_inferface->test_optimality();
     x_qore->copy_vector(qore_inferface->get_optimal_solution());
     y_qore_constr->copy_vector(qore_inferface->get_multipliers_constr());
     y_qore_bounds->copy_vector(qore_inferface->get_multipliers_bounds());
@@ -198,6 +200,7 @@ int main(int argc, char* argv[]) {
     ///////////////////////////////////////////////////////////
     //                     QPOASES                           //
     ///////////////////////////////////////////////////////////
+    shared_ptr<SQPhotstart::Stats> stats_qpOASES = make_shared<SQPhotstart::Stats>();
     auto A_qpOASES = convert_csr_to_csc(A_qore);
     auto H_qpOASES = convert_csr_to_csc(H_qore);
 
@@ -205,6 +208,8 @@ int main(int argc, char* argv[]) {
     auto ub_qpOASES = make_shared<Vector>(nVar);
     auto lbA_qpOASES = make_shared<Vector>(nCon);
     auto ubA_qpOASES = make_shared<Vector>(nCon);
+
+
     lb_qpOASES->copy_vector(lb_qore->values());
     ub_qpOASES->copy_vector(ub_qore->values());
     lbA_qpOASES->copy_vector(lb_qore->values()+nVar);
@@ -213,7 +218,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<qpOASESInterface> qpoases_interface= make_shared<qpOASESInterface>(H_qpOASES,
             A_qpOASES, g, lb_qore, ub_qore, lbA_qpOASES, ubA_qpOASES,options);
     try {
-        qpoases_interface->optimizeQP();
+        qpoases_interface->optimizeQP(stats_qpOASES);
     }
     catch(...) {
 
@@ -222,6 +227,7 @@ int main(int argc, char* argv[]) {
     y_qore_constr->copy_vector(qpoases_interface->get_multipliers_constr());
     y_qpOASES_bounds->copy_vector(qpoases_interface->get_multipliers_bounds());
 
+    qpoases_interface->test_optimality();
     double obj_qpOASES = qpoases_interface->get_obj_value();
     switch (qpoases_interface->get_status()) {
     case QPERROR_EXCEED_MAX_ITER:
@@ -269,9 +275,17 @@ int main(int argc, char* argv[]) {
     printf(DOUBLE_LONG_DIVIDER);
     printf("%20s    %23s    %23s\n","","QORE","QPOASES");
     printf("%20s    %23s    %23s\n","Exitflag",exitflag_qore.c_str(),exitflag_qpOASES.c_str());
-//    printf("%20s    %23d    %23d\n","Iteration",iter_count_qore,(int)iter_qpOASES);
+    printf("%20s    %23d    %23d\n","Iteration",stats_qore->qp_iter,stats_qpOASES->qp_iter);
     printf("%20s    %23.16e    %23.16e\n","Objective",obj_qore,obj_qpOASES);
-//    printf("%20s    %23.16e    %23.16e\n","KKT Error","QORE","QPOASES");
+    printf("%20s    %23.16e    %23.16e\n","||x||",x_qore->getOneNorm(),
+           x_qpOASES->getOneNorm());
+    printf("%20s    %23.16e    %23.16e\n","||y_b||",y_qore_bounds->getInfNorm(),
+           y_qpOASES_bounds->getInfNorm());
+    printf("%20s    %23.16e    %23.16e\n","||y_c||",y_qore_constr->getInfNorm(),
+           y_qpOASES_constr->getInfNorm());
+    printf("%20s    %23.16e    %23.16e\n","KKT Error",
+           qore_inferface->get_optimality_status().KKT_error,
+           qpoases_interface->get_optimality_status().KKT_error);
     printf(DOUBLE_LONG_DIVIDER);
 
     delete pname;
