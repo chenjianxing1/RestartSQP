@@ -64,7 +64,6 @@ public:
 
     void set_g(double rho);;
 
-
     void set_A(shared_ptr<const SpTripletMat> jacobian) override;
     //@}
 
@@ -116,10 +115,10 @@ private:
 
     Solver LPsolverChoice_;
     //bounds that can be represented as vectors
-    Identity2Info I_info_A;
+    IdentityInfo I_info_A_;
     const NLPInfo nlp_info_;
-    const int nConstr_LP_;
-    const int nVar_LP_;
+    int nConstr_LP_;
+    int nVar_LP_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/

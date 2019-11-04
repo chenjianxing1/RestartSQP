@@ -11,7 +11,7 @@
 //OUTPUTS
 #define DOUBLE_DIVIDER "===============================================================\n"
 #define SINGLE_DIVIDER "---------------------------------------------------------------\n"
-#define DOUBLE_LONG_DIVIDER"======================================================================================================\n"
+#define DOUBLE_LONG_DIVIDER "======================================================================================================\n"
 
 #define STANDARD_HEADER "%6s  %23s    %9s    %9s    %9s    %9s    %9s  \n", "iter", "f", "||p_k||","||c_k||", "Delta","rho", "QP_KKT_Error"
 #define STANDARD_OUTPUT "%6i  %23.16e  %9.6e  %9.6e  %9.6e  %9.6e  %9.6e\n",stats_->iter,obj_value_,norm_p_k_, infea_measure_, delta_, rho_, myQP_->get_QpOptimalStatus().KKT_error

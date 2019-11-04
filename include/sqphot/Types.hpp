@@ -33,6 +33,15 @@ enum PrintLevel {
 //};
 
 
+typedef struct {
+    int length;
+    int* irow;
+    int* jcol;
+    int* size;
+    double* value;
+} IdentityInfo;
+
+
 enum QPType {
     LP = 1,/** solving a linear program*/
     QP = 2/**solving a regular qp subproblem **/

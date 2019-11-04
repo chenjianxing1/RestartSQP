@@ -82,7 +82,6 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
         MatVal_tmp = new double[RowNum*ColNum]();
     }
 
-    EntryNum_ = 0;
     if(row_oriented) {
         if(isCompressedRow) {
             for(int i = 0; i<RowNum; i++) {
@@ -194,7 +193,7 @@ SpHbMat::~SpHbMat() {
  *
  */
 void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
-                           Identity2Info I_info) {
+                           IdentityInfo I_info) {
 
 
     isSymmetric_ = false;
@@ -209,26 +208,24 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         counter++;
     }
 
-    // adding 2 identity matrix to the tuple array.
-    if (I_info.irow1 != 0) {
-        for (int j = 0; j < I_info.size; j++) {
+    // adding identity matrices info to the tuple array.
+    for(int i = 0; i<I_info.length; i++) {
+        for (int j = 0; j < I_info.size[i]; j++) {
             sorted_index_info.push_back(
-                std::make_tuple(I_info.irow1 + j, I_info.jcol1 + j, counter));
-            sorted_index_info.push_back(
-                std::make_tuple(I_info.irow2 + j, I_info.jcol2 + j,
-                                counter + 1));
-            counter += 2;
+                std::make_tuple(I_info.irow[i] + j, I_info.jcol[i] + j, counter));
+            counter++;
         }
 
     }
 
-    //  for(int i = 0; i <sorted_index_info.size(); i++) {
-    //      printf("%i ", std::get<0>(sorted_index_info[i]));
-    //      printf("%i ", std::get<1>(sorted_index_info[i]));
-    //      printf("%i \n", std::get<2>(sorted_index_info[i]));
-    //  }
+    assert(counter==EntryNum_);
 
-    assert(counter == EntryNum_);
+//      for(int i = 0; i <sorted_index_info.size(); i++) {
+//          printf("%i ", std::get<0>(sorted_index_info[i]));
+//          printf("%i ", std::get<1>(sorted_index_info[i]));
+//          printf("%i \n", std::get<2>(sorted_index_info[i]));
+//      }
+
 
     if(isCompressedRow_) {
         std::sort(sorted_index_info.begin(), sorted_index_info.end(),
@@ -349,10 +346,12 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
  * @brief set the Matrix values to the matrix, convert from triplet format to
  * Harwell-Boeing Matrix format.
  * @param rhs entry values(orders are not yet under permutation)
- * @param I_info the 2 identity matrices information
+ * @param I_info struct which stores identity matrices information
  */
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
-                        Identity2Info I_info) {                       //adding the value to the matrix
+                        IdentityInfo I_info) {
+    //adding identity submatrices  to the matrix
+#if not NEW_FORMULATION
     if(isCompressedRow_) {
         if (isInitialised_ == false) {
             int i = rhs->EntryNum();
@@ -366,17 +365,49 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
     }
     else {
         if (isInitialised_ == false) {
-            for (int i = 0; i < I_info.size; i++) {
+            for (int i = 0; i < I_info.size[0]; i++) {
                 MatVal_[EntryNum_ - i - 1] = -1;
-                MatVal_[EntryNum_ - i - I_info.size - 1] = 1;
+                MatVal_[EntryNum_ - i - I_info.size[0] - 1] = 1;
             }
             isInitialised_ = true;
         }
     }
     //assign each matrix entry to the corresponding position after permutation
-    for (int i = 0; i < EntryNum_ - 2 * I_info.size; i++) {
+    for (int i = 0; i < EntryNum_ - 2 * I_info.size[0]; i++) {
         MatVal_[order(i)] = rhs->MatVal(i);
     }
+#else
+    if(isCompressedRow_) {
+        if (isInitialised_ == false) {
+            int i = rhs->EntryNum();
+            while(i<EntryNum_) {
+                MatVal_[order_[i]] = 1;
+                MatVal_[order_[i+1]] = -1;
+                MatVal_[order_[i+2]] = 1;
+                MatVal_[order_[i+3]] = -1;
+                i += 4;
+            }
+            isInitialised_ = true;
+        }
+    }
+    else {
+        //    if (isInitialised_ == false) {
+        //        for (int i = 0; i < I_info.size[0]; i++) {
+        //            MatVal_[EntryNum_ - i - 1] = -1;
+        //            MatVal_[EntryNum_ - i - I_info.size[0] - 1] = 1;
+        //        }
+        //        isInitialised_ = true;
+        //    }
+    }
+    //assign each matrix entry to the corresponding position after permutation
+    for (int i = 0; i < EntryNum_ - 2 * I_info.size[0]-2*I_info.size[3]; i++) {
+        MatVal_[order(i)] = rhs->MatVal(i);
+    }
+#endif
+
+    //DEBUG
+    print_full("A");
+
 }
 
 
@@ -386,7 +417,6 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs) {
         MatVal_[order_[j]] = rhs->MatVal(i);
         j++;
         if (isSymmetric_ && (rhs->ColIndex(i) != rhs->RowIndex(i))) {
-            //            MatVal_[order()[j]] = rhs->MatVal(i);
             MatVal_[order_[j]] = rhs->MatVal(i);
             j++;
         }

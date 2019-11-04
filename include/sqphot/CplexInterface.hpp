@@ -141,10 +141,10 @@ public:
 
     void set_H_values(shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info
+    void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                          I_info) override;
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                       I_info) override;
     //@}
 
@@ -179,7 +179,7 @@ private:
     /**-------------------------------------------------------**/
 
 private:
-    Identity2Info I_info_;
+    IdentityInfo I_info_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     Exitflag status_;
     QPType qptype_;

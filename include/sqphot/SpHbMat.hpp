@@ -92,7 +92,7 @@ public:
      * @param rhs entry values(orders are not yet under permutation)
      * @param I_info the 2 identity matrices information
      */
-    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs, Identity2Info
+    virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                            I_info);
 
 
@@ -113,7 +113,7 @@ public:
      *
      */
 //@{
-    void setStructure(std::shared_ptr<const SpTripletMat> rhs, Identity2Info I_info);
+    void setStructure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info);
 
 
     void setStructure(std::shared_ptr<const SpTripletMat> rhs);

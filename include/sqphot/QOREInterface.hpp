@@ -151,11 +151,11 @@ public:
     };
 
     void set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                         Identity2Info I_info) override {
+                         IdentityInfo I_info) override {
         A_->setStructure(rhs, I_info);
     };
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                       I_info) override {
         A_->setMatVal(rhs, I_info);
     };
