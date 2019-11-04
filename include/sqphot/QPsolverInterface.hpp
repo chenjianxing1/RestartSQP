@@ -132,9 +132,7 @@ public:
     virtual bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) = 0;
 
 
-    OptimalityStatus get_optimality_status() {
-        return qpOptimalStatus_;
-    }
+    virtual OptimalityStatus get_optimality_status() = 0;
 
     //@}
 
@@ -191,7 +189,6 @@ public:
                                    const string filename) = 0;
 
 protected:
-    OptimalityStatus qpOptimalStatus_;
 
 private:
     /** Copy Constructor */

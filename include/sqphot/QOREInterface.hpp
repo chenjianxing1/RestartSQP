@@ -97,6 +97,9 @@ public:
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
+    OptimalityStatus get_optimality_status() override {
+        return qpOptimalStatus_;
+    }
     //@}
     //
 
@@ -184,6 +187,8 @@ public:
         ub_->copy_vector(rhs);
     };
 
+
+
     void set_lbA(int location, double value) override {};
     void set_lbA(shared_ptr<const Vector> rhs) override {};
     void set_ubA(int location, double value) override {};
@@ -226,6 +231,7 @@ private:
     void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
 
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
@@ -235,7 +241,7 @@ private:
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
-//    OptimalityStatus qpOptimalStatus_;
+    OptimalityStatus qpOptimalStatus_;
     shared_ptr<SpHbMat> A_;
     shared_ptr<SpHbMat> H_;
     shared_ptr<Vector> g_;

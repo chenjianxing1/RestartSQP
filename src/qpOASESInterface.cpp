@@ -52,6 +52,21 @@ qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H,
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
     solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
               (qpOASES::int_t) nConstr_QP_);
+    H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
+                 H_->ColNum(),
+                 H_->RowIndex(),
+                 H_->ColIndex(),
+                 H_->MatVal());
+    H_qpOASES_->createDiagInfo();
+
+    A_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(A_->RowNum(),
+                 A_->ColNum(),
+                 A_->RowIndex(),
+                 A_->ColIndex(),
+                 A_->MatVal());
+
+
+
 }
 
 /**Default destructor*/
@@ -96,6 +111,7 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
 
     if (!firstQPsolved_) {//if haven't solve any QP before then initialize the first QP
         set_solver_options();
+
 //@{
 //for debugging
 //        H_qpOASES_->print("H_qp_oases");
@@ -239,7 +255,6 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
  * @brief get the pointer to the multipliers to the bounds constraints.
  */
 double* qpOASESInterface::get_multipliers_bounds() {
-
     return y_qp_->values();
 }
 
@@ -256,7 +271,6 @@ double* qpOASESInterface::get_multipliers_constr() {
  * @brief copy the optimal solution of the QP to the input pointer
  */
 double* qpOASESInterface::get_optimal_solution() {
-//    x_qp_->print("x_qp_");
     return x_qp_->values();
 }
 
@@ -502,6 +516,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             // multiplier should be negavie
             dual_violation += max(0.0, y_qp_->values(i));
             break;
+        case ACTIVE_BOTH_SIDE:
+            break;
         default:
             printf("failed in dual fea test, the working set  for qpOASES at "
                    "the bounds is %i", W_b[i]);
@@ -523,6 +539,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
                 // multiplier should be negavie
                 dual_violation += max(0.0, y_qp_->values(i+nVar_QP_));
                 break;
+            case ACTIVE_BOTH_SIDE:
+                break;
             default:
                 printf("failed in dual fea test, the working set  for qpOASES at "
                        "the constr is %i", W_c[i]);
@@ -536,10 +554,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     /**                   stationarity                        **/
     /**-------------------------------------------------------**/
     //calculate A'*y+lambda-(g+Hx)
-
-
     if (A_ != nullptr) {
-        A_->transposed_times(y_qp_, stationary_gap);
+        A_->transposed_times(y_qp_->values()+nVar_QP_, stationary_gap->values());
     }
     shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
     H_->times(x_qp_, Hx);
@@ -568,6 +584,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             compl_violation += abs(y_qp_->values(i) *
                                    (ub_->values(i) - x_qp_->values(i)));
             break;
+        case ACTIVE_BOTH_SIDE:
+            break;
         default:
             printf("failed in compl test, the working set  for qpOASES at "
                    "the "
@@ -589,6 +607,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
                 // multiplier should be negavie
                 compl_violation += abs(y_qp_->values(i+ nVar_QP_) *
                                        (ubA_->values(i) - Ax->values(i)));
+                break;
+            case ACTIVE_BOTH_SIDE:
                 break;
             default:
                 printf("failed in compl test, the working set  for qpOASES at "

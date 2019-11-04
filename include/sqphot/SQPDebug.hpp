@@ -15,7 +15,7 @@
 #ifdef DEBUG
 #define COMPARE_QP_SOLVER false
 #define CHECK_TERMINATION false
-#define CHECK_TR_ALG false //check trust region algorithm
+#define CHECK_TR_ALG true //check trust region algorithm
 #define CHECK_SOC false
 #define CHECK_INFEA_CAL false
 #define CHECK_QP_SOLVER false

@@ -175,7 +175,6 @@ void Algorithm::check_optimality() {
         /**               Check the KKT conditions                **/
         /**-------------------------------------------------------**/
 
-        //TODO: can just use the working set information from the QPsolver?
         /**-------------------------------------------------------**/
         /**                    Identify Active Set                **/
         /**-------------------------------------------------------**/
@@ -737,12 +736,10 @@ void Algorithm::ratio_test() {
             && actual_reduction_ >= -options_->tol)
 #else
     if (pred_reduction_ < -1.0e-8) {
-        myQP_->WriteQPData(problem_name_+"qpdata.log");
+        //    myQP_->WriteQPData(problem_name_+"qpdata.log");
         exitflag_ = PRED_REDUCTION_NEGATIVE;
         return;
     }
-
-
     if (actual_reduction_ >= (options_->eta_s * pred_reduction_))
 #endif
     {
@@ -788,7 +785,6 @@ void Algorithm::ratio_test() {
 
 
 void Algorithm::update_radius() {
-    assert(pred_reduction_ >= -1.0e-8);
     if (actual_reduction_ < options_->eta_c * pred_reduction_) {
         delta_ = options_->gamma_c * delta_;
         QPinfoFlag_.Update_delta = true;
