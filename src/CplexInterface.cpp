@@ -311,7 +311,7 @@ void CplexInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
     }
 }
 
-void CplexInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info
+void CplexInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                      I_info) {
 }
 
@@ -324,7 +324,7 @@ void CplexInterface::reset_constraints() {
 
 }
 
-void CplexInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+void CplexInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                   I_info) {
     A_ = rhs;
     I_info_ = I_info;

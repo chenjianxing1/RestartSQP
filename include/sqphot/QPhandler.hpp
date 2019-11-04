@@ -299,10 +299,10 @@ private:
 private:
     Solver QPsolverChoice_;
     //bounds that can be represented as vectors
-    Identity2Info I_info_A;
+    IdentityInfo I_info_A_;
     const NLPInfo nlp_info_;
-    const int nConstr_QP_;
-    const int nVar_QP_;
+    int nConstr_QP_;
+    int nVar_QP_;
     ActiveType* W_c_;//working set for constraints;
     ActiveType* W_b_;//working set for bounds;
     shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard

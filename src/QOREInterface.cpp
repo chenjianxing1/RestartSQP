@@ -20,9 +20,14 @@ QOREInterface::QOREInterface(NLPInfo nlp_info,
                              Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
     jnlst_(jnlst),
     firstQPsolved_(false),
-    solver_(0),
-    nVar_QP_(nlp_info.nVar + nlp_info.nCon * 2),
-    nConstr_QP_(nlp_info.nCon) {
+    solver_(0) {
+#if NEW_FORMULATION
+    nConstr_QP_ = nlp_info.nCon+nlp_info.nVar;
+    nVar_QP_ = nlp_info.nVar*3+2*nlp_info.nCon;
+#else
+    nConstr_QP_ = nlp_info.nCon;
+    nVar_QP_ = nlp_info.nVar+2*nlp_info.nCon;
+#endif
     qpiter_[0] = 0;
     allocate_memory(nlp_info, qptype);
     set_solver_options(options);
@@ -155,10 +160,16 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
  */
 
 void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
+
+#if NEW_FORMULATION
+    int nnz_g_QP = nlp_info.nnz_jac_g+2*nlp_info.nCon+2*nlp_info.nVar;
+#else
     int nnz_g_QP = nlp_info.nnz_jac_g +
                    2 * nlp_info.nCon;//number of nonzero variables in jacobian
     //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr
     //nonzero elements
+#endif
+
     lb_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     ub_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
     g_ = make_shared<Vector>(nVar_QP_);
@@ -437,14 +448,14 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
             }
         }
         else {
-           auto Ax = make_shared<Vector>(nConstr_QP_);
-           A_->times(x_qp_, Ax); //tmp_vec_nCon=A*x
+            auto Ax = make_shared<Vector>(nConstr_QP_);
+            A_->times(x_qp_, Ax); //tmp_vec_nCon=A*x
             switch (working_set_[i]) {
             case -1:
                 if(fabs(Ax->values(i)-lb_->values(i-nVar_QP_)<sqrt_m_eps))
                     W_constr[i-nVar_QP_] = ACTIVE_BOTH_SIDE;
                 else
-                W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
+                    W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
             case 1:
                 if(fabs(Ax->values(i)-ub_->values(i-nVar_QP_)<sqrt_m_eps))
@@ -462,8 +473,6 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
             }
         }
     }
-//    for(int i= 0; i<nVar_QP_+nConstr_QP_; i++)
-//        std::cout<<"W_"<<i<<"="<<working_set_[i]<<std::endl;
 
 }
 

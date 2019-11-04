@@ -13,19 +13,42 @@ namespace SQPhotstart {
 
 /**
  * @brief Constructor which also initializes the qpOASES SQProblem objects
+ *
+ * It will either formulate the SQP subproblem as
+ * 		\minimize 1/2*p^T*H_k*p + g_k^T*p + rho*(e^T u_1 + e^Tu_2 +e^T v_1 e^T v_2)
+ * 		\subject  c_l-c_k <= J_k*p + u_1 - u_2 <= c_u-c_k,
+ * 			  x_l-x_k <= p + v_1 -v_2 <= x_u -x_k, *
+ * 			  ||p||<=\delta,
+ * 			  u_1,u_2,v_1,v_2>=0.
+ * Or
+ * 		\minimize 1/2*p^T*H_k*p + g_k^T*p + rho*(e^T u_1 + e^Tu_2)
+ * 		\subject  c_l-c_k <= J_k*p + u_1 - u_2 <= c_u-c_k,
+ * 			  x_l-x_k <= p <= x_u -x_k, *
+ * 			  ||p||<=\delta,
+ * 			  u_1,u_2.
+ *
+ * depending on user's choice.
+ *
  * @param nlp_index_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
 qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
                                    shared_ptr<const Options> options,
                                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst):
-    nConstr_QP_(nlp_index_info.nCon),
     jnlst_(jnlst),
-    nVar_QP_(nlp_index_info.nVar+2*nlp_index_info.nCon),
     options_(options)
 {
+
+#if NEW_FORMULATION
+    nConstr_QP_ = nlp_index_info.nCon+nlp_index_info.nVar;
+    nVar_QP_ = nlp_index_info.nVar+2*nlp_index_info.nCon+2*nlp_index_info.nVar;
+#else
+    nConstr_QP_ = nlp_index_info.nCon;
+    nVar_QP_ = nlp_index_info.nVar+2*nlp_index_info.nCon;
+#endif
     allocate_memory(nlp_index_info, qptype);
 }
+
 
 
 qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H,
@@ -65,6 +88,7 @@ qpOASESInterface::~qpOASESInterface() = default;
  * @return
  */
 void qpOASESInterface::allocate_memory(NLPInfo nlp_index_info, QPType qptype) {
+
     lbA_ = make_shared<Vector>(nConstr_QP_);
     ubA_ = make_shared<Vector>(nConstr_QP_);
     lb_ = make_shared<Vector>(nVar_QP_);
@@ -371,7 +395,7 @@ void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 
 
 void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                                       Identity2Info I_info) {
+                                       IdentityInfo I_info) {
 
     A_->setStructure(rhs, I_info);
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
@@ -384,7 +408,7 @@ void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
 
 void qpOASESInterface::set_A_values(
 
-    shared_ptr<const SQPhotstart::SpTripletMat> rhs, Identity2Info I_info) {
+    shared_ptr<const SQPhotstart::SpTripletMat> rhs, IdentityInfo I_info) {
 
     if (firstQPsolved_ && !data_change_flags_.Update_A) {
         data_change_flags_.Update_A = true;

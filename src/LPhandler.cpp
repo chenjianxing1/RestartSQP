@@ -14,9 +14,38 @@ LPhandler::LPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
     QPhandler(nlp_info, options,jnlst),
     nlp_info_(nlp_info),
     jnlst_(jnlst),
-    nConstr_LP_(nlp_info.nCon),
-    nVar_LP_(nlp_info.nVar + 2 * nlp_info.nCon),
     LPsolverChoice_(options->LPsolverChoice) {
+
+#if NEW_FORMULATION
+    nConstr_LP_ = nlp_info.nCon+nlp_info.nVar;
+    nVar_LP_ = nlp_info.nVar*3+2*nlp_info.nCon;
+    I_info_A_.length = 4;
+    I_info_A_.irow = new int[4];
+    I_info_A_.jcol = new int[4];
+    I_info_A_.size = new int[4];
+    I_info_A_.value = new double[4];
+    I_info_A_.irow[0] = I_info_A_.irow[1] = 1;
+    I_info_A_.irow[2] = I_info_A_.irow[3] = nlp_info.nCon+1;
+    I_info_A_.jcol[0] = nlp_info.nVar+1;
+    I_info_A_.jcol[1] = nlp_info_.nVar+nlp_info.nCon+1;
+    I_info_A_.jcol[2] = nlp_info_.nVar+nlp_info.nCon*2+1;
+    I_info_A_.jcol[3] = nlp_info_.nVar*2+nlp_info.nCon*2+1;
+    I_info_A_.size[0] = I_info_A_.size[1] = nlp_info.nCon;
+    I_info_A_.size[2] = I_info_A_.size[3] = nlp_info.nVar;
+
+#else
+    nConstr_LP_ = nlp_info.nCon;
+    nVar_LP_ = nlp_info.nVar+2*nlp_info.nCon;
+    I_info_A_.length = 2;
+    I_info_A_.irow = new int[2];
+    I_info_A_.jcol = new int[2];
+    I_info_A_.size = new int[2];
+    I_info_A_.value = new double[2];
+    I_info_A_.irow[0] = I_info_A_.irow[1] = 1;
+    I_info_A_.jcol[0] = nlp_info.nVar+1;
+    I_info_A_.jcol[1] = nlp_info_.nVar+nlp_info.nCon+1;
+    I_info_A_.size[0] = I_info_A_.size[1] = nlp_info.nCon;
+#endif
 
     switch(LPsolverChoice_) {
     case QPOASES:
@@ -70,15 +99,10 @@ void LPhandler::solveLP(shared_ptr<SQPhotstart::Stats> stats) {
 
 void LPhandler::set_A(shared_ptr<const SpTripletMat> jacobian) {
     if (!isAinitialised) {
-        I_info_A.irow1 = 1;
-        I_info_A.irow2 = 1;
-        I_info_A.jcol1 = nlp_info_.nVar + 1;
-        I_info_A.jcol2 = nlp_info_.nVar + nlp_info_.nCon + 1;
-        I_info_A.size = nlp_info_.nCon;
-        solverInterface_->set_A_structure(jacobian, I_info_A);
+        solverInterface_->set_A_structure(jacobian, I_info_A_);
         isAinitialised = true;
-    };
-    solverInterface_->set_A_values(jacobian, I_info_A);
+    }
+    solverInterface_->set_A_values(jacobian, I_info_A_);
 }
 
 void LPhandler::set_g(double rho) {

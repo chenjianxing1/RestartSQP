@@ -23,15 +23,6 @@
 
 namespace SQPhotstart {
 
-typedef struct {
-    int irow1 = 0;
-    int jcol1 = 0;
-    int size = 0;
-    int irow2 = 0;
-    int jcol2 = 0;
-} Identity2Info;
-
-
 /**
  *@brief
  * This is a virtual base class...

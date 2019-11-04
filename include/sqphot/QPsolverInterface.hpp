@@ -173,10 +173,10 @@ public:
 
     virtual void set_H_values(shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info
+    virtual void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                  I_info) = 0;
 
-    virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+    virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                               I_info) = 0;
     //@}
 

@@ -236,7 +236,7 @@ void GurobiInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
     }
 }
 
-void GurobiInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, Identity2Info
+void GurobiInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                       I_info) {
 }
 
@@ -248,7 +248,7 @@ void GurobiInterface::reset_constraints() {
 
 }
 
-void GurobiInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, Identity2Info
+void GurobiInterface::set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                    I_info) {
 
     A_ = rhs;
