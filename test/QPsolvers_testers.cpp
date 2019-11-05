@@ -151,6 +151,8 @@ int main(int argc, char* argv[]) {
 
 
 
+//    H_qore->print_full("H");
+
     //read matrix data
     ///////////////////////////////////////////////////////////
     //                     QORE                              //
@@ -224,7 +226,7 @@ int main(int argc, char* argv[]) {
 
     }
     x_qpOASES->copy_vector(qpoases_interface->get_optimal_solution());
-    y_qore_constr->copy_vector(qpoases_interface->get_multipliers_constr());
+    y_qpOASES_constr->copy_vector(qpoases_interface->get_multipliers_constr());
     y_qpOASES_bounds->copy_vector(qpoases_interface->get_multipliers_bounds());
 
     qpoases_interface->test_optimality();
@@ -273,19 +275,31 @@ int main(int argc, char* argv[]) {
     printf("                         Solving QP Problem stored in %10s\n",
            pname->substr(found + 1).c_str());
     printf(DOUBLE_LONG_DIVIDER);
-    printf("%20s    %23s    %23s\n","","QORE","QPOASES");
-    printf("%20s    %23s    %23s\n","Exitflag",exitflag_qore.c_str(),exitflag_qpOASES.c_str());
-    printf("%20s    %23d    %23d\n","Iteration",stats_qore->qp_iter,stats_qpOASES->qp_iter);
-    printf("%20s    %23.16e    %23.16e\n","Objective",obj_qore,obj_qpOASES);
-    printf("%20s    %23.16e    %23.16e\n","||x||",x_qore->getOneNorm(),
+    printf("%30s    %23s    %23s\n","","QORE","QPOASES");
+    printf("%30s    %23s    %23s\n","Exitflag",exitflag_qore.c_str(),exitflag_qpOASES.c_str());
+    printf("%30s    %23d    %23d\n","Iteration",stats_qore->qp_iter,stats_qpOASES->qp_iter);
+    printf("%30s    %23.16e    %23.16e\n","Objective",obj_qore,obj_qpOASES);
+    printf("%30s    %23.16e    %23.16e\n","||x||",x_qore->getOneNorm(),
            x_qpOASES->getOneNorm());
-    printf("%20s    %23.16e    %23.16e\n","||y_b||",y_qore_bounds->getInfNorm(),
+    printf("%30s    %23.16e    %23.16e\n","||y_b||",y_qore_bounds->getInfNorm(),
            y_qpOASES_bounds->getInfNorm());
-    printf("%20s    %23.16e    %23.16e\n","||y_c||",y_qore_constr->getInfNorm(),
+    printf("%30s    %23.16e    %23.16e\n","||y_c||",y_qore_constr->getInfNorm(),
            y_qpOASES_constr->getInfNorm());
-    printf("%20s    %23.16e    %23.16e\n","KKT Error",
+    printf("%30s    %23.16e    %23.16e\n","KKT Error",
            qore_inferface->get_optimality_status().KKT_error,
            qpoases_interface->get_optimality_status().KKT_error);
+    printf("%30s    %23.16e    %23.16e\n","Primal Feasibility Violation",
+           qore_inferface->get_optimality_status().primal_violation,
+           qpoases_interface->get_optimality_status().primal_violation);
+    printf("%30s    %23.16e    %23.16e\n","Dual Feasibility  Violation",
+           qore_inferface->get_optimality_status().dual_violation,
+           qpoases_interface->get_optimality_status().dual_violation);
+    printf("%30s    %23.16e    %23.16e\n","Stationarity Violation",
+           qore_inferface->get_optimality_status().stationarity_violation,
+           qpoases_interface->get_optimality_status().stationarity_violation);
+    printf("%30s    %23.16e    %23.16e\n","Complemtarity Violation",
+           qore_inferface->get_optimality_status().compl_violation,
+           qpoases_interface->get_optimality_status().compl_violation);
     printf(DOUBLE_LONG_DIVIDER);
 
     delete pname;
