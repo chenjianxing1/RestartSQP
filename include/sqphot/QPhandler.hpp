@@ -72,14 +72,14 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    virtual double* get_optimal_solution();
+    double* get_optimal_solution();
 
 
     /**
      * @brief Get the infeasibility measure of the quadratic model
      * @return The one norm of the last (2*nConstr) varaibles of the QP solution
      */
-    virtual double get_infea_measure_model();
+    double get_infea_measure_model();
     /**
      *@brief Get the multipliers corresponding to the bound variables
      */
@@ -133,10 +133,10 @@ public:
     * @param c_l        the lower bounds for constraints
     * @param c_u        the upper bounds for constraints
     */
-    virtual void set_bounds(double delta, shared_ptr<const Vector> x_l,
-                            shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
-                            shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                            shared_ptr<const Vector> c_k);
+    void set_bounds(double delta, shared_ptr<const Vector> x_l,
+                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+                    shared_ptr<const Vector> c_k);
 
 
     /**
@@ -169,7 +169,7 @@ public:
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    virtual void set_A(shared_ptr<const SpTripletMat> jacobian);
+    void set_A(shared_ptr<const SpTripletMat> jacobian);
 
     //@}
 
@@ -296,17 +296,22 @@ private:
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
+
+protected:
+    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+                                                              QP solver specified by the user*/
+
+    IdentityInfo I_info_A_;
+
 private:
     Solver QPsolverChoice_;
     //bounds that can be represented as vectors
-    IdentityInfo I_info_A_;
     const NLPInfo nlp_info_;
     int nConstr_QP_;
     int nVar_QP_;
     ActiveType* W_c_;//working set for constraints;
     ActiveType* W_b_;//working set for bounds;
-    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
-                                                              QP solver specified by the user*/
+
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     OptimalityStatus qpOptimalStatus_;
 

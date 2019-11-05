@@ -78,76 +78,76 @@ void Algorithm::Optimize() {
 
     //Update the penalty parameter if necessary
 
-    update_penalty_parameter();
-
-    //calculate the infinity norm of the search direction
-    norm_p_k_ = p_k_->getInfNorm();
-
-    get_trial_point_info();
-
-    ratio_test();
-
-    // Calculate the second-order-correction steps
-    second_order_correction();
-
-    // Update the radius and the QP bounds if the radius has been changed
-    stats_->iter_addone();
-    /* output some information to the console*/
-
-    //check if the current iterates is optimal and decide to
-    //exit the loop or not
-    if (options_->printLevel >= 2) {
-        if (stats_->iter % 10 == 0) {
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-        }
-        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-    }
-    else {
-//                jnlst_->DeleteAllJournals();
-        Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
-        if(IsNull(logout_jrnl)) {
-            jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
-                                   Ipopt::J_ITERSUMMARY);
-
-        }
-        if (IsValid(logout_jrnl)) {
-            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
-        }
-        if (stats_->iter % 10 == 0) {
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-        }
-        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-    }
-
-
-    check_optimality();
-    if (exitflag_ != UNKNOWN) {
-        //      break;
-    }
-
-    try {
-        update_radius();
-    }
-    catch (SMALL_TRUST_REGION) {
-        check_optimality();
-        //       break;
-    }
-
-    //}
-
-    //check if the current iterates get_status before exiting
-    if (stats_->iter == options_->iter_max)
-        exitflag_ = EXCEED_MAX_ITER;
-
-    //    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-    //        check_optimality();
-    //    }
-
-    // print the final summary message to the console
-    print_final_stats();
-    jnlst_->FlushBuffer();
+//    update_penalty_parameter();
+//
+//    //calculate the infinity norm of the search direction
+//    norm_p_k_ = p_k_->getInfNorm();
+//
+//    get_trial_point_info();
+//
+//    ratio_test();
+//
+//    // Calculate the second-order-correction steps
+//    second_order_correction();
+//
+//    // Update the radius and the QP bounds if the radius has been changed
+//    stats_->iter_addone();
+//    /* output some information to the console*/
+//
+//    //check if the current iterates is optimal and decide to
+//    //exit the loop or not
+//    if (options_->printLevel >= 2) {
+//        if (stats_->iter % 10 == 0) {
+//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+//        }
+//        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+//    }
+//    else {
+////                jnlst_->DeleteAllJournals();
+//        Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+//        if(IsNull(logout_jrnl)) {
+//            jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
+//                                   Ipopt::J_ITERSUMMARY);
+//
+//        }
+//        if (IsValid(logout_jrnl)) {
+//            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
+//        }
+//        if (stats_->iter % 10 == 0) {
+//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+//        }
+//        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+//    }
+//
+//
+//    check_optimality();
+//    if (exitflag_ != UNKNOWN) {
+//        //      break;
+//    }
+//
+//    try {
+//        update_radius();
+//    }
+//    catch (SMALL_TRUST_REGION) {
+//        check_optimality();
+//        //       break;
+//    }
+//
+//    //}
+//
+//    //check if the current iterates get_status before exiting
+//    if (stats_->iter == options_->iter_max)
+//        exitflag_ = EXCEED_MAX_ITER;
+//
+//    //    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+//    //        check_optimality();
+//    //    }
+//
+//    // print the final summary message to the console
+//    print_final_stats();
+//    jnlst_->FlushBuffer();
 }
 
 

@@ -58,11 +58,20 @@ public:
     //@}
 
 //@{
+    void setStructure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info);
+
+
+    void setStructure(std::shared_ptr<const SpTripletMat> rhs);
+//@}
+
+
+//@{
     inline void setMatValAt(int i, double value) {
         assert(i<EntryNum_);
         MatVal_[i] = value;
     }
 
+//
     inline void setRowIndexAt(int i, int value) {
         if(isCompressedRow_) {
             assert(i<RowNum_+1);
@@ -100,24 +109,6 @@ public:
     virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
 
 
-    /**
-     * @brief setup the structure of the sparse matrix for solver qpOASES(should
-     * be called only for once).
-     *
-     * This method will convert the strucutre information from the triplet form from a
-     * SpMatrix object to the format required by the QPsolver qpOASES.
-     *
-     * @param rhs a SpMatrix object whose content will be copied to the class members
-     * (in a different sparse matrix representations)
-     * @param I_info the information of 2 identity sub matrices.
-     *
-     */
-//@{
-    void setStructure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info);
-
-
-    void setStructure(std::shared_ptr<const SpTripletMat> rhs);
-//@}
 
     void get_dense_matrix(double* dense_matrix,bool row_oriented = true) const ;
 
@@ -377,8 +368,8 @@ private:
      * index then based on row index
      */
     static bool
-    tuple_sort_rule_compressed_column(const std::tuple<int, int, int> left,
-                                      const std::tuple<int, int, int> right) {
+    tuple_sort_rule_compressed_column(const std::tuple<int, int, double,int> left,
+                                      const std::tuple<int, int, double,int> right) {
 
 
         if (std::get<1>(left) < std::get<1>(right)) return true;
@@ -393,8 +384,8 @@ private:
      * index then based on column index
      */
     static bool
-    tuple_sort_rule_compressed_row(const std::tuple<int, int, int> left,
-                                   const std::tuple<int, int, int> right) {
+    tuple_sort_rule_compressed_row(const std::tuple<int, int, double,int> left,
+                                   const std::tuple<int, int, double,int> right) {
 
 
         if (std::get<0>(left) < std::get<0>(right)) return true;
@@ -418,6 +409,20 @@ private:
     double * MatVal_;
     int * ColIndex_;
     int *RowIndex_;
+
+
+    /**
+     * @brief setup the structure of the sparse matrix for QPsolvrs
+     * This method should be only called for once
+     *
+     * This method will convert the strucutre information from the triplet form from a
+     * SpMatrix object to the format required by the corresponding QPsolvers
+     *
+     * @param rhs a SpMatrix object whose content will be copied to the class members
+     * (in a different sparse matrix representations)
+     * @param I_info the information of 2 identity sub matrices.
+     *
+     */
 };
 
 }
