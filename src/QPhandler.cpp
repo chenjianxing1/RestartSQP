@@ -10,8 +10,8 @@
 namespace SQPhotstart {
 using namespace std;
 
-QPhandler::QPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
-                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst) :
+QPhandler::QPhandler(NLPInfo nlp_info, QPType qptype, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                     shared_ptr<const Options> options) :
     nlp_info_(nlp_info),
     jnlst_(jnlst),
     QPsolverChoice_(options->QPsolverChoice) {
@@ -57,29 +57,29 @@ QPhandler::QPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
 
     switch (QPsolverChoice_) {
     case QPOASES:
-        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, QP, options,
+        solverInterface_ = make_shared<qpOASESInterface>(nlp_info, qptype, options,
                            jnlst);
         break;
     case QORE:
-        solverInterface_ = make_shared<QOREInterface>(nlp_info, QP, options, jnlst);
+        solverInterface_ = make_shared<QOREInterface>(nlp_info, qptype, options, jnlst);
         break;
     case GUROBI:
 #ifdef USE_GUROBI
-        solverInterface_ = make_shared<GurobiInterface>(nlp_info, QP, options, jnlst);
+        isolverInterface_ = make_shared<GurobiInterface>(nlp_info, qptype, options, jnlst);
 #endif
 
         break;
     case CPLEX:
 #ifdef USE_CPLEX
-        solverInterface_ = make_shared<CplexInterface>(nlp_info, QP, options, jnlst);
+        solverInterface_ = make_shared<CplexInterface>(nlp_info, qptype, options, jnlst);
 #endif
         break;
     }
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
-    qpOASESInterface_ = make_shared<qpOASESInterface>(nlp_info, QP,options);
-    QOREInterface_= make_shared<QOREInterface>(nlp_info,QP,options,jnlst);
+    qpOASESInterface_ = make_shared<qpOASESInterface>(nlp_info, qptype,options);
+    QOREInterface_= make_shared<QOREInterface>(nlp_info,qptype,options,jnlst);
     W_b_qpOASES_ = new ActiveType[nVar_QP_];
     W_c_qpOASES_ = new ActiveType[nConstr_QP_];
     W_b_qore_ = new ActiveType[nVar_QP_];
@@ -618,6 +618,11 @@ void QPhandler::get_active_set(ActiveType* A_c, ActiveType* A_b, shared_ptr<Vect
                 A_c[i] = INACTIVE;
         }
     }
+}
+
+void QPhandler::set_g(double rho) {
+    for (int i = nlp_info_.nVar; i < nVar_QP_; i++)
+        solverInterface_->set_g(i, rho);
 }
 
 #if DEBUG

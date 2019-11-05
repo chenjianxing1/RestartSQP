@@ -528,8 +528,8 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     options_ = make_shared<Options>();
     stats_ = make_shared<Stats>();
 
-    myQP_ = make_shared<QPhandler>(nlp_->nlp_info_, options_, jnlst_);
-    myLP_ = make_shared<LPhandler>(nlp_->nlp_info_, options_, jnlst_);
+    myQP_ = make_shared<QPhandler>(nlp_->nlp_info_,QP, jnlst_, options_);
+    myLP_ = make_shared<QPhandler>(nlp_->nlp_info_,LP, jnlst_, options_);
 
 
 }
