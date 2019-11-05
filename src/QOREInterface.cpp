@@ -162,10 +162,10 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
 void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 
 #if NEW_FORMULATION
-    int nnz_g_QP = nlp_info.nnz_jac_g+2*nlp_info.nCon+2*nlp_info.nVar;
+    int nnz_g_QP = nlp_info.nnz_jac_g+2*nlp_info.nCon+3*nlp_info.nVar;
 #else
-    int nnz_g_QP = nlp_info.nnz_jac_g +
-                   2 * nlp_info.nCon;//number of nonzero variables in jacobian
+    int nnz_g_QP = nlp_info.nnz_jac_g + 2 * nlp_info.nCon;
+    //number of nonzero variables in jacobian
     //The Jacobian has the structure [J I -I], so it will contains extra 2*number_constr
     //nonzero elements
 #endif
@@ -191,6 +191,7 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 
 
 bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
+#if not NEW_FORMULATION
     int i;
     //create local variables and set all violation values to be 0
     double primal_violation = 0.0;
@@ -393,6 +394,8 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 
     return true;
 
+#endif
+    return true;
 
 }
 

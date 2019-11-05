@@ -180,39 +180,45 @@ SpHbMat::~SpHbMat() {
 /** @name setStructure */
 
 //@{
+
 /**
- * @brief setup the structure of the sparse matrix for solver qpOASES(should
- * be called only for once).
+ * @brief setup the structure of the sparse matrix for QPsolvrs
+ * This method should be only called for once
  *
- * This method will convert the structure information from the triplet form from a
- * SpMatrix object to the format required by the QPsolver qpOASES or QORE.
+ * This method will convert the strucutre information from the triplet form from a
+ * SpMatrix object to the format required by the corresponding QPsolvers
  *
  * @param rhs a SpMatrix object whose content will be copied to the class members
  * (in a different sparse matrix representations)
  * @param I_info the information of 2 identity sub matrices.
  *
  */
-void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
-                           IdentityInfo I_info) {
-
-
-    isSymmetric_ = false;
+void SpHbMat::setStructure(
+    std::shared_ptr<const SpTripletMat> rhs,
+    IdentityInfo I_info) {
     set_zero();
+    isSymmetric_ = false;
     assert(isInitialised_ == false);
 
     int counter = 0; // the counter for recording the index location
-    std::vector<std::tuple<int, int, int>> sorted_index_info;
+    std::vector<std::tuple<int, int, double, int>> sorted_index_info;
     for (int i = 0; i < rhs->EntryNum(); i++) {
-        sorted_index_info.push_back(std::make_tuple(rhs->RowIndex(i),
-                                    rhs->ColIndex(i), counter));
+        sorted_index_info.push_back(std::make_tuple(
+                                        rhs->RowIndex(i),
+                                        rhs->ColIndex(i),
+                                        rhs->MatVal(i),
+                                        counter));
         counter++;
     }
 
     // adding identity matrices info to the tuple array.
     for(int i = 0; i<I_info.length; i++) {
         for (int j = 0; j < I_info.size[i]; j++) {
-            sorted_index_info.push_back(
-                std::make_tuple(I_info.irow[i] + j, I_info.jcol[i] + j, counter));
+            sorted_index_info.push_back(std::make_tuple(
+                                            I_info.irow[i] + j,
+                                            I_info.jcol[i] + j,
+                                            I_info.value[i],
+                                            counter));
             counter++;
         }
 
@@ -220,11 +226,13 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 
     assert(counter==EntryNum_);
 
-//      for(int i = 0; i <sorted_index_info.size(); i++) {
-//          printf("%i ", std::get<0>(sorted_index_info[i]));
-//          printf("%i ", std::get<1>(sorted_index_info[i]));
-//          printf("%i \n", std::get<2>(sorted_index_info[i]));
-//      }
+    //  for(int i = 0; i <sorted_index_info.size(); i++) {
+    //      printf("%i ", std::get<0>(sorted_index_info[i]));
+    //      printf("%i ", std::get<1>(sorted_index_info[i]));
+    //      printf("%5.2e ", std::get<2>(sorted_index_info[i]));
+    //      printf("%i \n", std::get<3>(sorted_index_info[i]));
+
+    //  }
 
 
     if(isCompressedRow_) {
@@ -232,7 +240,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                   tuple_sort_rule_compressed_row);
         for (int i = 0; i < EntryNum_; i++) {
             ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-            order_[std::get<2>(sorted_index_info[i])]= i;
+            MatVal_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<3>(sorted_index_info[i])]= i;
 
             for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
                 RowIndex_[j]++;
@@ -244,8 +253,9 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         std::sort(sorted_index_info.begin(), sorted_index_info.end(),
                   tuple_sort_rule_compressed_column);
         for (int i = 0; i < EntryNum_; i++) {
+            MatVal_[i] = std::get<2>(sorted_index_info[i]);
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-            order_[std::get<2>(sorted_index_info[i])] =i;
+            order_[std::get<3>(sorted_index_info[i])] =i;
 
             for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
                 ColIndex_[j]++;
@@ -253,6 +263,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
         }
         ColIndex_[ColNum_] = EntryNum_;
     }
+    isInitialised_ = true;
     sorted_index_info.clear();
 }
 
@@ -276,7 +287,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     isSymmetric_ = rhs->isSymmetric();
 
     assert(isInitialised_ == false);
-    std::vector<std::tuple<int, int, int>> sorted_index_info;
+    std::vector<std::tuple<int, int, double, int>> sorted_index_info;
 
     //if it is symmetric, it will calculate the
     // number of entry and allocate_memory the memory
@@ -285,12 +296,15 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
     for (int i = 0; i < rhs->EntryNum(); i++) {
         sorted_index_info.emplace_back(rhs->RowIndex(i),
                                        rhs->ColIndex(i),
+                                       rhs->MatVal(i),
                                        sorted_index_info.size());
 
         if (isSymmetric_&& rhs->RowIndex(i) != rhs->ColIndex(i)) {
-            sorted_index_info.emplace_back(rhs->ColIndex(i),
-                                           rhs->RowIndex(i),
-                                           sorted_index_info.size());
+            sorted_index_info.emplace_back(
+                rhs->ColIndex(i),
+                rhs->RowIndex(i),
+                rhs->MatVal(i),
+                sorted_index_info.size());
         }
     }
 
@@ -313,7 +327,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
         //copy the order information back
         for (int i = 0; i < EntryNum_; i++) {
             ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-            order_[std::get<2>(sorted_index_info[i])]= i;
+            MatVal_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<3>(sorted_index_info[i])]= i;
             for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
                 RowIndex_[j]++;
             }
@@ -326,7 +341,8 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 
         for (int i = 0; i < EntryNum_; i++) {
             RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-            order_[std::get<2>(sorted_index_info[i])] = i;
+            MatVal_[i] = std::get<2>(sorted_index_info[i]);
+            order_[std::get<3>(sorted_index_info[i])] = i;
 
             for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
                 ColIndex_[j]++;
@@ -334,6 +350,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
         }
         ColIndex_[ColNum_] = EntryNum_;
     }
+    isInitialised_ = true;
     sorted_index_info.clear();
 }
 
@@ -352,62 +369,18 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
                         IdentityInfo I_info) {
     //adding identity submatrices  to the matrix
 #if not NEW_FORMULATION
-    if(isCompressedRow_) {
-        if (isInitialised_ == false) {
-            int i = rhs->EntryNum();
-            while(i<EntryNum_) {
-                MatVal_[order_[i]] = 1;
-                MatVal_[order_[i+1]] = -1;
-                i +=2;
-            }
-            isInitialised_ = true;
-        }
-    }
-    else {
-        if (isInitialised_ == false) {
-            for (int i = 0; i < I_info.size[0]; i++) {
-                MatVal_[EntryNum_ - i - 1] = -1;
-                MatVal_[EntryNum_ - i - I_info.size[0] - 1] = 1;
-            }
-            isInitialised_ = true;
-        }
-    }
     //assign each matrix entry to the corresponding position after permutation
     for (int i = 0; i < EntryNum_ - 2 * I_info.size[0]; i++) {
         MatVal_[order(i)] = rhs->MatVal(i);
     }
 #else
     if(isCompressedRow_) {
-        if (isInitialised_ == false) {
-            int i = rhs->EntryNum();
-            while(i<EntryNum_) {
-                MatVal_[order_[i]] = 1;
-                MatVal_[order_[i+1]] = -1;
-                MatVal_[order_[i+2]] = 1;
-                MatVal_[order_[i+3]] = -1;
-                i += 4;
-            }
-            isInitialised_ = true;
+        for (int i = 0; i < EntryNum_ - 3* I_info.size[0]-2*I_info.size[3]; i++) {
+            MatVal_[order(i)] = rhs->MatVal(i);
         }
-    }
-    else {
-        //    if (isInitialised_ == false) {
-        //        for (int i = 0; i < I_info.size[0]; i++) {
-        //            MatVal_[EntryNum_ - i - 1] = -1;
-        //            MatVal_[EntryNum_ - i - I_info.size[0] - 1] = 1;
-        //        }
-        //        isInitialised_ = true;
-        //    }
-    }
-    //assign each matrix entry to the corresponding position after permutation
-    for (int i = 0; i < EntryNum_ - 2 * I_info.size[0]-2*I_info.size[3]; i++) {
-        MatVal_[order(i)] = rhs->MatVal(i);
-    }
 #endif
 
-    //DEBUG
-    print_full("A");
-
+}
 }
 
 
@@ -488,12 +461,12 @@ shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
     int nnz;//number of non-zero entries
     int j = 1;
     if(isSymmetric_) {
-        std::vector<std::tuple<int,int,double>>  triplet_vector;
+        std::vector<std::tuple<int,int,double,int>>  triplet_vector;
         for(int i=0; i<EntryNum_; i++) {
             if(isCompressedRow_) {
                 while(RowIndex_[j] == i)
                     j++;
-                triplet_vector.emplace_back(j,ColIndex_[i]+1,MatVal_[i]);
+                triplet_vector.emplace_back(j,ColIndex_[i]+1,MatVal_[i],order_[i]);
             }
         }
         for(int i = 0; i<EntryNum_; i++) //delete repetitive entry
@@ -520,6 +493,7 @@ shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
             result->setRowIndex(i,get<0>(triplet_vector[i]));
             result->setColIndex(i,get<1>(triplet_vector[i]));
             result->setMatValAt(i,get<2>(triplet_vector[i]));
+//            result->setOrderAt(i,get<3>(triplet_vector[i]));
         }
     }
     else {

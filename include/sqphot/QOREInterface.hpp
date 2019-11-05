@@ -149,21 +149,28 @@ public:
 
     void set_A_structure(shared_ptr<const SpTripletMat> rhs,
                          IdentityInfo I_info) override {
-        A_->setStructure(rhs, I_info);
+//       A_->setStructure(rhs, I_info);
     };
 
     void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
                       I_info) override {
-        A_->setMatVal(rhs, I_info);
+        if(!A_->isinitialized())
+            A_->setStructure(rhs, I_info);
+        else
+            A_->setMatVal(rhs, I_info);
     };
 
 
     void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
-        H_->setStructure(rhs);
+//        H_->setStructure(rhs);
     };
 
     void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
-        H_->setMatVal(rhs);
+        if(!H_->isinitialized())
+            H_->setStructure(rhs);
+        else
+            H_->setMatVal(rhs);
+
     };
 
     //@}

@@ -56,15 +56,15 @@ public:
 
     /**@name Setters */
     //@{
-    void set_bounds(double delta, shared_ptr<const Vector> x_l,
-                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
-                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                    shared_ptr<const Vector> c_k) override;
+//    void set_bounds(double delta, shared_ptr<const Vector> x_l,
+//                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
+//                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
+//                    shared_ptr<const Vector> c_k);
 
 
     void set_g(double rho);;
 
-    void set_A(shared_ptr<const SpTripletMat> jacobian) override;
+//    void set_A(shared_ptr<const SpTripletMat> jacobian) override;
     //@}
 
     /**
@@ -74,13 +74,6 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    double* get_optimal_solution() override;
-
-
-    double get_infea_measure_model() override {
-        oneNorm(solverInterface_->get_optimal_solution() + nVar_LP_ - 2 * nConstr_LP_,
-                2 * nConstr_LP_);
-    }
 
     ///////////////////////////////////////////////////////////
     //                      PRIVATE METHODS                  //
@@ -120,10 +113,10 @@ private:
     int nConstr_LP_;
     int nVar_LP_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
-                                                              QP solver specified by the user*/
+//    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+//                                                              QP solver specified by the user*/
     //bounds that can be represented as vectors
-    bool isAinitialised = false;//TODO: delete it later
+    bool isinitialised = false;
 };
 
 
