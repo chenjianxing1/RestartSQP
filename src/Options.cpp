@@ -40,7 +40,7 @@ int Options::setToDefault() {
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
-    rho = 10;
+    rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
     increase_parm = 2;

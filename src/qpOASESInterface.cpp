@@ -29,10 +29,10 @@ namespace SQPhotstart {
  *
  * depending on user's choice.
  *
- * @param nlp_index_info the struct that stores simple nlp dimension info
+ * @param nlp_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
+qpOASESInterface::qpOASESInterface(NLPInfo nlp_info, QPType qptype,
                                    shared_ptr<const Options> options,
                                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst):
     jnlst_(jnlst),
@@ -40,13 +40,13 @@ qpOASESInterface::qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
 {
 
 #if NEW_FORMULATION
-    nConstr_QP_ = nlp_index_info.nCon+nlp_index_info.nVar;
-    nVar_QP_ = nlp_index_info.nVar+2*nlp_index_info.nCon+2*nlp_index_info.nVar;
+    nConstr_QP_ = nlp_info.nCon+nlp_info.nVar;
+    nVar_QP_ = nlp_info.nVar*3+2*nlp_info.nCon;
 #else
-    nConstr_QP_ = nlp_index_info.nCon;
-    nVar_QP_ = nlp_index_info.nVar+2*nlp_index_info.nCon;
+    nConstr_QP_ = nlp_info.nCon;
+    nVar_QP_ = nlp_info.nVar+2*nlp_info.nCon;
 #endif
-    allocate_memory(nlp_index_info, qptype);
+    allocate_memory(nlp_info, qptype);
 }
 
 
@@ -83,19 +83,23 @@ qpOASESInterface::~qpOASESInterface() = default;
 
 /**
  * @brief Allocate memory for the class members
- * @param nlp_index_info  the struct that stores simple nlp dimension info
+ * @param nlp_info  the struct that stores simple nlp dimension info
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-void qpOASESInterface::allocate_memory(NLPInfo nlp_index_info, QPType qptype) {
+void qpOASESInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 
+#if NEW_FORMULATION
+    int nnz_g_QP = nlp_info.nnz_jac_g+2*nlp_info.nCon+3*nlp_info.nVar;
+#else
+    int nnz_g_QP = nlp_info.nnz_jac_g + 2 * nlp_info.nCon;
+#endif
     lbA_ = make_shared<Vector>(nConstr_QP_);
     ubA_ = make_shared<Vector>(nConstr_QP_);
     lb_ = make_shared<Vector>(nVar_QP_);
     ub_ = make_shared<Vector>(nVar_QP_);
     g_ = make_shared<Vector>(nVar_QP_);
-    A_ = make_shared<SpHbMat>(
-             nlp_index_info.nnz_jac_g + 2 * nlp_index_info.nCon, nConstr_QP_, nVar_QP_,false);
+    A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_,false);
     x_qp_ = make_shared<Vector>(nVar_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
 
@@ -144,13 +148,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
     else {
 //for debugging
 //@{
-        //          H_qpOASES_->print("H_qp_oases");
-        //          A_qpOASES_->print("A_qpoases");
-        //          g_->print("g");
-        //          lbA_->print("LbA");
-        //          ubA_->print("ubA");
-        //          lb_->print("lb");
-        //          ub_->print("ub");
+//                  H_qpOASES_->print("H_qp_oases");
+//                  A_qpOASES_->print("A_qpoases");
+//                  g_->print("g");
+//                  lbA_->print("LbA");
+//                  ubA_->print("ubA");
+//                  lb_->print("lb");
+//                  ub_->print("ub");
         //@}
         get_Matrix_change_status();
         if (new_QP_matrix_status_ == UNDEFINED) {
@@ -256,6 +260,7 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
         stats->qp_iter_addValue((int) nWSR);
     solver_->getPrimalSolution(x_qp_->values());
     solver_->getDualSolution(y_qp_->values());
+
 }
 
 
@@ -367,59 +372,51 @@ void qpOASESInterface::set_g(int location, double value) {
 }
 
 
-void qpOASESInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {
-
-    H_->setStructure(rhs);//TODO: move to somewhere else?
-    H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
-                 H_->ColNum(),
-                 H_->RowIndex(),
-                 H_->ColIndex(),
-                 H_->MatVal());
-}
 
 
-void qpOASESInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
+void qpOASESInterface::set_H(shared_ptr<const SpTripletMat> rhs) {
     //@for debugging
     //@{
-//	H_->print("H");
-//	rhs->print("rhs");
+    //	H_->print("H");
+    //	rhs->print("rhs");
     //@}
+
     if (firstQPsolved_ && !data_change_flags_.Update_H) {
         data_change_flags_.Update_H = true;
     }
-    H_->setMatVal(rhs);
-
-    H_qpOASES_->setVal(H_->MatVal());
+    if(!H_->isinitialized()) {
+        H_->setStructure(rhs);//TODO: move to somewhere else?
+        H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
+                     H_->ColNum(),
+                     H_->RowIndex(),
+                     H_->ColIndex(),
+                     H_->MatVal());
+    }
+    else {
+        H_->setMatVal(rhs);
+        H_qpOASES_->setVal(H_->MatVal());
+    }
     H_qpOASES_->createDiagInfo();
 }
 
 
-void qpOASESInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                                       IdentityInfo I_info) {
-
-    A_->setStructure(rhs, I_info);
-    A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
-                 A_->ColNum(),
-                 A_->RowIndex(),
-                 A_->ColIndex(),
-                 A_->MatVal());
-}
-
-
-void qpOASESInterface::set_A_values(
-
-    shared_ptr<const SQPhotstart::SpTripletMat> rhs, IdentityInfo I_info) {
+void qpOASESInterface::set_A(shared_ptr<const SQPhotstart::SpTripletMat> rhs, IdentityInfo I_info) {
 
     if (firstQPsolved_ && !data_change_flags_.Update_A) {
         data_change_flags_.Update_A = true;
     }
-    A_->setMatVal(rhs, I_info);
-    A_qpOASES_->setVal(A_->MatVal());
-#if DEBUG
-#if COMPARE_QP_SOLVER
-    A_triplet_->convert2Triplet(A_);
-#endif
-#endif
+    if(!A_->isinitialized()) {
+        A_->setStructure(rhs, I_info);
+        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
+                     A_->ColNum(),
+                     A_->RowIndex(),
+                     A_->ColIndex(),
+                     A_->MatVal());
+    }
+    else {
+        A_->setMatVal(rhs, I_info);
+        A_qpOASES_->setVal(A_->MatVal());
+    }
 }
 
 
@@ -485,7 +482,6 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     double compl_violation = 0.0;
     double statioanrity_violation = 0.0;
     shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
-    shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
 
 
     if(W_c==NULL&& W_b==NULL) {
@@ -526,6 +522,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             // multiplier should be negavie
             dual_violation += max(0.0, y_qp_->values(i));
             break;
+        case ACTIVE_BOTH_SIDE:
+            break;
         default:
             printf("failed in dual fea test, the working set  for qpOASES at "
                    "the bounds is %i", W_b[i]);
@@ -547,6 +545,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
                 // multiplier should be negavie
                 dual_violation += max(0.0, y_qp_->values(i+nVar_QP_));
                 break;
+            case ACTIVE_BOTH_SIDE:
+                break;
             default:
                 printf("failed in dual fea test, the working set  for qpOASES at "
                        "the constr is %i", W_c[i]);
@@ -562,8 +562,16 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     //calculate A'*y+lambda-(g+Hx)
 
 
+    shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
+//    A_->print("A");
+//    H_->print("H");
+//    x_qp_->print("x_qp");
+//    lb_->print("lb");
+//    ub_->print("ub");
+//    y_qp_->print("y_qp");
+
     if (A_ != nullptr) {
-        A_->transposed_times(y_qp_, stationary_gap);
+        A_->transposed_times(y_qp_->values()+nVar_QP_, stationary_gap->values());
     }
     shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
     H_->times(x_qp_, Hx);
@@ -592,6 +600,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             compl_violation += abs(y_qp_->values(i) *
                                    (ub_->values(i) - x_qp_->values(i)));
             break;
+        case ACTIVE_BOTH_SIDE:
+            break;
         default:
             printf("failed in compl test, the working set  for qpOASES at "
                    "the "
@@ -613,6 +623,8 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
                 // multiplier should be negavie
                 compl_violation += abs(y_qp_->values(i+ nVar_QP_) *
                                        (ubA_->values(i) - Ax->values(i)));
+                break;
+            case ACTIVE_BOTH_SIDE:
                 break;
             default:
                 printf("failed in compl test, the working set  for qpOASES at "
@@ -637,11 +649,11 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     }
 
     if(qpOptimalStatus_.KKT_error>1.0e-6) {
-//        printf("comp_violation %10e\n", compl_violation);
-//        printf("stat_violation %10e\n", statioanrity_violation);
-//        printf("prim_violation %10e\n", primal_violation);
-//        printf("dual_violation %10e\n", dual_violation);
-//        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+        printf("comp_violation %10e\n", compl_violation);
+        printf("stat_violation %10e\n", statioanrity_violation);
+        printf("prim_violation %10e\n", primal_violation);
+        printf("dual_violation %10e\n", dual_violation);
+        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
         return false;
     }
 

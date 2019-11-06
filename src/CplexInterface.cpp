@@ -291,7 +291,6 @@ void CplexInterface::set_g(int location, double value) {
 
 /**@name Setters for matrix*/
 //@{
-void CplexInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {}
 
 void CplexInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 
@@ -309,10 +308,6 @@ void CplexInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
 
         }
     }
-}
-
-void CplexInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                                     I_info) {
 }
 
 void CplexInterface::reset_constraints() {

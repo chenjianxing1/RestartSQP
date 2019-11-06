@@ -167,7 +167,12 @@ private:
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
-    void cal_infea();
+    double cal_infea(shared_ptr<const Vector> c_k_,
+                     shared_ptr<const Vector> c_l,
+                     shared_ptr<const Vector> c_u,
+                     shared_ptr<const Vector> x_k = nullptr,
+                     shared_ptr<const Vector> x_l = nullptr,
+                     shared_ptr<const Vector> x_u = nullptr);
 
     /**
      * @brief This function calculates the infeasibility measure for  current
@@ -177,7 +182,7 @@ private:
      *
      *
      */
-    void cal_infea_trial();
+    // void cal_infea_trial();
 
     /**
      * @brief Calculate the trial point based on current search direction,

@@ -215,7 +215,6 @@ void GurobiInterface::set_g(int location, double value) {
 
 /**@name Setters for matrix*/
 //@{
-void GurobiInterface::set_H_structure(shared_ptr<const SpTripletMat> rhs) {}
 
 void GurobiInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
     qobj_=0;
@@ -236,9 +235,6 @@ void GurobiInterface::set_H_values(shared_ptr<const SpTripletMat> rhs) {
     }
 }
 
-void GurobiInterface::set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                                      I_info) {
-}
 
 void GurobiInterface::reset_constraints() {
     for(int i =0; i<nConstr_QP_; i++) {
