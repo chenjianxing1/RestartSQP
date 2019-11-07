@@ -405,7 +405,7 @@ void Algorithm::get_trial_point_info() {
 #if NEW_FORMULATION
     infea_measure_trial_ = cal_infea(c_trial_,c_l_,c_u_, x_trial_,x_l_, x_u_);
 #else
-    infea_measure_=cal_infea(c_trial_, c_l_, c_u_); //calculate the infeasibility measure for x_k
+    infea_measure_trial_=cal_infea(c_trial_, c_l_, c_u_); //calculate the infeasibility measure for x_k
 #endif
 }
 
@@ -577,16 +577,6 @@ double Algorithm::cal_infea(shared_ptr<const Vector> c_k,
     return infea_measure;
 
 }
-//void Algorithm::cal_infea() {
-//
-//    infea_measure_ = 0.0;
-//    for (int i = 0; i < c_k_->Dim(); i++) {
-//        if (c_k_->values(i) < c_l_->values(i))
-//            infea_measure_ += (c_l_->values(i) - c_k_->values(i));
-//        else if (c_k_->values(i) > c_u_->values(i))
-//            infea_measure_ += (c_k_->values(i) - c_u_->values(i));
-//    }
-//}
 
 
 /**
@@ -715,9 +705,10 @@ void Algorithm::ratio_test() {
     double P1_x = obj_value_ + rho_ * infea_measure_;
     double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
+
+
     actual_reduction_ = P1_x - P1_x_trial;
     pred_reduction_ = rho_ * infea_measure_ - myQP_->get_objective();
-
 
 #if DEBUG
 #if CHECK_TR_ALG

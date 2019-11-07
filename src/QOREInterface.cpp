@@ -97,7 +97,6 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     if(rv_!=QPSOLVER_OK) {
         QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
-            std::cout<<"status is "<< status_<< std::endl;
             THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
         }
     }
