@@ -33,10 +33,10 @@ public:
 
     /**
      * @brief Constructor which also initializes the qpOASES SQProblem objects
-     * @param nlp_index_info the struct that stores simple nlp dimension info
+     * @param nlp_info the struct that stores simple nlp dimension info
      * @param qptype  is the problem to be solved QP or LP?
      */
-    qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
+    qpOASESInterface(NLPInfo nlp_info, QPType qptype,
                      shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
@@ -140,16 +140,9 @@ public:
     void set_g(shared_ptr<const Vector> rhs) override;
 
 
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override;
+    void set_H(shared_ptr<const SpTripletMat> rhs) override;
 
-
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override;
-
-
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info)
-    override;
-
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
+    void set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
 
     //@}
 
@@ -213,10 +206,10 @@ private:
 
     /**
      * @brief Allocate memory for the class members
-     * @param nlp_index_info  the struct that stores simple nlp dimension info
+     * @param nlp_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate_memory(NLPInfo nlp_index_info, QPType qptype);
+    void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
 
     void set_solver_options();

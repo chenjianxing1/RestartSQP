@@ -15,7 +15,7 @@
 #include <sqphot/Types.hpp>
 #include <sqphot/Options.hpp>
 #include <sqphot/QPhandler.hpp>
-#include <sqphot/LPhandler.hpp>
+//#include <sqphot/LPhandler.hpp>
 #include <sqphot/Utils.hpp>
 #include <sqphot/SQPTNLP.hpp>
 #include <sqphot/Vector.hpp>
@@ -167,7 +167,12 @@ private:
      *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
      *
      */
-    void cal_infea();
+    double cal_infea(shared_ptr<const Vector> c_k_,
+                     shared_ptr<const Vector> c_l,
+                     shared_ptr<const Vector> c_u,
+                     shared_ptr<const Vector> x_k = nullptr,
+                     shared_ptr<const Vector> x_l = nullptr,
+                     shared_ptr<const Vector> x_u = nullptr);
 
     /**
      * @brief This function calculates the infeasibility measure for  current
@@ -177,7 +182,7 @@ private:
      *
      *
      */
-    void cal_infea_trial();
+    // void cal_infea_trial();
 
     /**
      * @brief Calculate the trial point based on current search direction,
@@ -353,7 +358,7 @@ private:
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
-    shared_ptr<LPhandler> myLP_;
+    shared_ptr<QPhandler> myLP_;
     shared_ptr<Options> options_;/**< the default options used for now. */
     shared_ptr<QPhandler> myQP_;
     shared_ptr<SQPTNLP> nlp_;

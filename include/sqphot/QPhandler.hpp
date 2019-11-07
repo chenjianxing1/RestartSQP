@@ -15,7 +15,6 @@
 
 namespace SQPhotstart {
 /** Forward Declaration */
-class LPhandler;
 
 /**
  *
@@ -50,8 +49,8 @@ class QPhandler {
 public:
 
 
-    QPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
-              Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+    QPhandler(NLPInfo nlp_info, QPType qptype, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+              shared_ptr<const Options> options);
 
     /** Default destructor */
     virtual ~QPhandler();
@@ -63,6 +62,10 @@ public:
 
     void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
 
+
+    void solveLP(shared_ptr<SQPhotstart::Stats> stats) {
+        solverInterface_->optimizeLP(stats);
+    }
     /** @name Getters */
     //@{
     /**
@@ -148,6 +151,8 @@ public:
      */
     void set_g(shared_ptr<const Vector> grad, double rho);
 
+
+    void set_g(double rho);
 
     /**
      * Set up the H for the first time in the QP

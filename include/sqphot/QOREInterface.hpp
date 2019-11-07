@@ -150,13 +150,8 @@ public:
         ub_->setValueAt(location, value);
     };
 
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs,
-                         IdentityInfo I_info) override {
-//       A_->setStructure(rhs, I_info);
-    };
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                      I_info) override {
+    void set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override {
         if(!A_->isinitialized())
             A_->setStructure(rhs, I_info);
         else
@@ -164,17 +159,8 @@ public:
     };
 
 
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
-//        H_->setStructure(rhs);
-    };
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
-        if(!H_->isinitialized())
-            H_->setStructure(rhs);
-        else
-            H_->setMatVal(rhs);
-
-    };
+    void set_H(shared_ptr<const SpTripletMat> rhs) override;;
 
     //@}
     void WriteQPDataToFile(Ipopt::EJournalLevel level,

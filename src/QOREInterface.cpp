@@ -94,7 +94,12 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
 
     firstQPsolved_ = true;
-    assert(rv_ == QPSOLVER_OK);
+    if(rv_!=QPSOLVER_OK) {
+        QPGetInt(solver_, "status", &status_);
+        if (status_ != QPSOLVER_OPTIMAL) {
+            THROW_EXCEPTION(QP_NOT_OPTIMAL,QP_NOT_OPTIMAL_MSG);
+        }
+    }
     rv_ = QPGetInt(solver_, "status", &status_);
     assert(rv_ == QPSOLVER_OK);
     handle_error(QP,stats);
@@ -191,7 +196,6 @@ void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 
 
 bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
-#if not NEW_FORMULATION
     int i;
     //create local variables and set all violation values to be 0
     double primal_violation = 0.0;
@@ -381,7 +385,6 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 
     return true;
 
-#endif
     return true;
 
 }
@@ -611,6 +614,14 @@ void QOREInterface::set_solver_options(shared_ptr<const Options> options) {
         QPSetInt(solver_, "prtfreq", -1);
     }
     QPSetInt(solver_,"maxiter",options->qp_maxiter);
+
+}
+
+void QOREInterface::set_H(shared_ptr<const SpTripletMat> rhs) {
+    if(!H_->isinitialized())
+        H_->setStructure(rhs);
+    else
+        H_->setMatVal(rhs);
 
 }
 }//SQP_HOTSTART

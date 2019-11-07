@@ -167,15 +167,10 @@ public:
 
     /**@name Setters for matrix*/
     //@{
-    virtual void set_H_structure(shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_H_values(shared_ptr<const SpTripletMat> rhs) = 0;
+    virtual void set_H(shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                                 I_info) = 0;
-
-    virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                              I_info) = 0;
+    virtual void set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) = 0;
     //@}
 
     virtual void reset_constraints() =0;

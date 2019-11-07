@@ -53,101 +53,100 @@ Algorithm::~Algorithm() {
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::Optimize() {
-//    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
-    setupQP();
-    jacobian_->print_full("jacobian");
-    //for debugging
-    //@{
-    //hessian_->print_full("hessian");
-    //jacobian_->print_full("jacobian");
-    //@}
-    try {
-        myQP_->solveQP(stats_,
-                       options_);//solve the QP subproblem and update the stats_
+    while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+        setupQP();
+        //for debugging
+        //@{
+//    hessian_->print_full("hessian");
+//    jacobian_->print_full("jacobian");
+        //@}
+        try {
+            myQP_->solveQP(stats_,
+                           options_);//solve the QP subproblem and update the stats_
+        }
+        catch (QP_NOT_OPTIMAL) {
+            myQP_->WriteQPData(problem_name_+"qpdata.log");
+            exitflag_ = myQP_->get_status();
+            //break;
+        }
+
+
+        //get the search direction from the solution of the QPsubproblem
+        get_search_direction();
+        get_obj_QP();
+
+        //Update the penalty parameter if necessary
+
+        update_penalty_parameter();
+
+        //calculate the infinity norm of the search direction
+        norm_p_k_ = p_k_->getInfNorm();
+
+        get_trial_point_info();
+
+        ratio_test();
+
+        // Calculate the second-order-correction steps
+        second_order_correction();
+
+        // Update the radius and the QP bounds if the radius has been changed
+        stats_->iter_addone();
+        /* output some information to the console*/
+
+        //check if the current iterates is optimal and decide to
+        //exit the loop or not
+        if (options_->printLevel >= 2) {
+            if (stats_->iter % 10 == 0) {
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+            }
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+        }
+        else {
+            jnlst_->DeleteAllJournals();
+            Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+            if(IsNull(logout_jrnl)) {
+                jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
+                                       Ipopt::J_ITERSUMMARY);
+
+            }
+            if (IsValid(logout_jrnl)) {
+                logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
+            }
+            if (stats_->iter % 10 == 0) {
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+            }
+            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+        }
+
+
+        check_optimality();
+        if (exitflag_ != UNKNOWN) {
+            break;
+        }
+
+        try {
+            update_radius();
+        }
+        catch (SMALL_TRUST_REGION) {
+            check_optimality();
+            break;
+        }
+
     }
-    catch (QP_NOT_OPTIMAL) {
-        myQP_->WriteQPData(problem_name_+"qpdata.log");
-        exitflag_ = myQP_->get_status();
-        //break;
-    }
 
+    //check if the current iterates get_status before exiting
+    if (stats_->iter == options_->iter_max)
+        exitflag_ = EXCEED_MAX_ITER;
 
-    //get the search direction from the solution of the QPsubproblem
-    get_search_direction();
-    get_obj_QP();
+    //    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
+    //        check_optimality();
+    //    }
 
-    //Update the penalty parameter if necessary
-
-//    update_penalty_parameter();
-//
-//    //calculate the infinity norm of the search direction
-//    norm_p_k_ = p_k_->getInfNorm();
-//
-//    get_trial_point_info();
-//
-//    ratio_test();
-//
-//    // Calculate the second-order-correction steps
-//    second_order_correction();
-//
-//    // Update the radius and the QP bounds if the radius has been changed
-//    stats_->iter_addone();
-//    /* output some information to the console*/
-//
-//    //check if the current iterates is optimal and decide to
-//    //exit the loop or not
-//    if (options_->printLevel >= 2) {
-//        if (stats_->iter % 10 == 0) {
-//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-//        }
-//        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-//    }
-//    else {
-////                jnlst_->DeleteAllJournals();
-//        Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
-//        if(IsNull(logout_jrnl)) {
-//            jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
-//                                   Ipopt::J_ITERSUMMARY);
-//
-//        }
-//        if (IsValid(logout_jrnl)) {
-//            logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
-//        }
-//        if (stats_->iter % 10 == 0) {
-//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-//            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
-//        }
-//        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
-//    }
-//
-//
-//    check_optimality();
-//    if (exitflag_ != UNKNOWN) {
-//        //      break;
-//    }
-//
-//    try {
-//        update_radius();
-//    }
-//    catch (SMALL_TRUST_REGION) {
-//        check_optimality();
-//        //       break;
-//    }
-//
-//    //}
-//
-//    //check if the current iterates get_status before exiting
-//    if (stats_->iter == options_->iter_max)
-//        exitflag_ = EXCEED_MAX_ITER;
-//
-//    //    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
-//    //        check_optimality();
-//    //    }
-//
-//    // print the final summary message to the console
-//    print_final_stats();
-//    jnlst_->FlushBuffer();
+    // print the final summary message to the console
+    print_final_stats();
+    jnlst_->FlushBuffer();
 }
 
 
@@ -402,7 +401,11 @@ void Algorithm::get_trial_point_info() {
     nlp_->Eval_f(x_trial_, obj_value_trial_);
     nlp_->Eval_constraints(x_trial_, c_trial_);
 
-    cal_infea_trial();
+#if NEW_FORMULATION
+    infea_measure_trial_ = cal_infea(c_trial_,c_l_,c_u_, x_trial_,x_l_, x_u_);
+#else
+    infea_measure_trial_=cal_infea(c_trial_, c_l_, c_u_); //calculate the infeasibility measure for x_k
+#endif
 }
 
 
@@ -431,7 +434,9 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
     nlp_->Get_starting_point(x_k_, multiplier_cons_);
 
     //shift starting point to satisfy the bound constraint
+#if not NEW_FORMULATION
     nlp_->shift_starting_point(x_k_, x_l_, x_u_);
+#endif
     nlp_->Eval_f(x_k_, obj_value_);
     nlp_->Eval_gradient(x_k_, grad_f_);
     nlp_->Eval_constraints(x_k_, c_k_);
@@ -441,7 +446,11 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
     nlp_->Eval_Jacobian(x_k_, jacobian_);
     classify_constraints_types();
 
-    cal_infea(); //calculate the infeasibility measure for x_k
+#if NEW_FORMULATION
+    infea_measure_=cal_infea(c_k_, c_l_, c_u_, x_k_, x_l_, x_u_); //calculate the infeasibility measure for x_k
+#else
+    infea_measure_=cal_infea(c_k_, c_l_, c_u_); //calculate the infeasibility measure for x_k
+#endif
 
     /*-----------------------------------------------------*/
     /*             JOURNAL INIT & OUTPUT                   */
@@ -527,42 +536,45 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     options_ = make_shared<Options>();
     stats_ = make_shared<Stats>();
 
-    myQP_ = make_shared<QPhandler>(nlp_->nlp_info_, options_, jnlst_);
-    myLP_ = make_shared<LPhandler>(nlp_->nlp_info_, options_, jnlst_);
+    myQP_ = make_shared<QPhandler>(nlp_->nlp_info_,QP, jnlst_, options_);
+    myLP_ = make_shared<QPhandler>(nlp_->nlp_info_,LP, jnlst_, options_);
 
 
 }
 
 
-/**
- * @brief This function calculates the infeasibility measure for the trial point
- */
-void Algorithm::cal_infea_trial() {
-
-    infea_measure_trial_ = 0.0;
-    for (int i = 0; i < c_k_->Dim(); i++) {
-        if (c_trial_->values(i) < c_l_->values(i))
-            infea_measure_trial_ += (c_l_->values(i) - c_trial_->values(i));
-        else if (c_trial_->values(i) > c_u_->values(i))
-            infea_measure_trial_ += (c_trial_->values(i) - c_u_->values(i));
-    }
-
-}
 
 /**
  * @brief This function calculates the infeasibility measure for the current iterate
  * point x_k_
  */
 
-void Algorithm::cal_infea() {
-
-    infea_measure_ = 0.0;
+double Algorithm::cal_infea(shared_ptr<const Vector> c_k,
+                            shared_ptr<const Vector> c_l,
+                            shared_ptr<const Vector> c_u,
+                            shared_ptr<const Vector> x_k,
+                            shared_ptr<const Vector> x_l,
+                            shared_ptr<const Vector> x_u) {
+    double infea_measure = 0.0;
     for (int i = 0; i < c_k_->Dim(); i++) {
-        if (c_k_->values(i) < c_l_->values(i))
-            infea_measure_ += (c_l_->values(i) - c_k_->values(i));
-        else if (c_k_->values(i) > c_u_->values(i))
-            infea_measure_ += (c_k_->values(i) - c_u_->values(i));
+        if (c_k->values(i) < c_l->values(i))
+            infea_measure += (c_l->values(i) - c_k->values(i));
+        else if (c_k->values(i) > c_u->values(i))
+            infea_measure += (c_k->values(i) - c_u->values(i));
     }
+
+    if(x_k!=nullptr) {
+        for (int i = 0; i < x_k_->Dim(); i++) {
+            if (x_k->values(i) < x_l->values(i))
+                infea_measure += (x_l->values(i) - x_k->values(i));
+            else if (x_k->values(i) > x_u->values(i))
+                infea_measure += (x_k->values(i) - x_u->values(i));
+
+        }
+    }
+
+    return infea_measure;
+
 }
 
 
@@ -692,9 +704,10 @@ void Algorithm::ratio_test() {
     double P1_x = obj_value_ + rho_ * infea_measure_;
     double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
+
+
     actual_reduction_ = P1_x - P1_x_trial;
     pred_reduction_ = rho_ * infea_measure_ - myQP_->get_objective();
-
 
 #if DEBUG
 #if CHECK_TR_ALG

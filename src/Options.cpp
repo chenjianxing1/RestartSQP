@@ -23,10 +23,10 @@ int Options::setToDefault() {
     QPsolverChoice = QORE;
     LPsolverChoice = QORE;
     second_order_correction = false;
-    penalty_update = true;
+    penalty_update = false;
     eta_c = 0.25;
     eta_s = 1.0e-8;
-    eta_e = 0.5;
+    eta_e = 0.75;
     gamma_c = 0.5;
     gamma_e = 2;
     delta = 1;
@@ -40,7 +40,7 @@ int Options::setToDefault() {
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
-    rho = 100;
+    rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
     increase_parm = 2;

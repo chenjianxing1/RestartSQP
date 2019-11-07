@@ -131,11 +131,11 @@ public:
     double times(std::shared_ptr<Vector> rhs);
 
 
-    const double* negative_of_values() const {
-        std::shared_ptr<Vector> negative_values = std::make_shared<Vector>(size_);
-        for (int i = 0; i < size_; i++)
-            negative_values->values()[i] = -values_[i];
-        return negative_values->values();
+
+    void scale(double scaling_factor){
+	    for(int i=0; i<size_; i++){
+		    values_[i]*=scaling_factor;
+	    }
     }
 
     /**
