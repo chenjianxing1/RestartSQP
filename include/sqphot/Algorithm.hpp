@@ -161,12 +161,11 @@ private:
 
 
     /**
-     * @brief This function calculates the infeasibility measure for  current
-     * iterate x_k
-     *
-     *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
-     *
-     */
+    * @brief This function calculates the infeasibility for given x_k and c_k with respect
+    * to their corresponding bounds
+    * @return infea_measure = ||-max(c_k-c_u),0||_1 +||-min(c_k-c_l),0||_1+
+                      ||-max(x_k-x_u),0||_1 +||-min(x_k-x_l),0||_1
+    */
     double cal_infea(shared_ptr<const Vector> c_k_,
                      shared_ptr<const Vector> c_l,
                      shared_ptr<const Vector> c_u,
@@ -182,7 +181,6 @@ private:
      *
      *
      */
-    // void cal_infea_trial();
 
     /**
      * @brief Calculate the trial point based on current search direction,
@@ -258,8 +256,12 @@ private:
 
 
 
-
-    void get_obj_QP();
+    /**
+     *@brief get the objective value of QP from myQP object
+     *@relates QPhandler.hpp
+     *@return QP obejctive
+     */
+    double get_obj_QP();
     //@}
 
     /**

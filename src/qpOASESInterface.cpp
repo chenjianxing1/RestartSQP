@@ -198,10 +198,13 @@ qpOASESInterface::optimizeQP(shared_ptr<Stats> stats) {
                                   ubA_->values(), nWSR);
             }
             else if (new_QP_matrix_status_ != old_QP_matrix_status_) {
+                qpOASES::Bounds tmp_bounds;
+                solver_->getBounds(tmp_bounds);
                 solver_->init(H_qpOASES_.get(), g_->values(), A_qpOASES_.get(),
                               lb_->values(),
-                              ub_->values(), lbA_->values(), ubA_->values(), nWSR);
+                              ub_->values(), lbA_->values(), ubA_->values(), nWSR,0,         x_qp_->values(),y_qp_->values(),&tmp_bounds);
                 new_QP_matrix_status_ = old_QP_matrix_status_ = UNDEFINED;
+
             }
         }
     }
@@ -379,7 +382,6 @@ void qpOASESInterface::set_ubA(int location, double value) {
 
 
 void qpOASESInterface::set_g(int location, double value) {
-
     if (firstQPsolved_ && !data_change_flags_.Update_g)
         data_change_flags_.Update_g = true;
     g_->setValueAt(location, value);
@@ -415,7 +417,6 @@ void qpOASESInterface::set_H(shared_ptr<const SpTripletMat> rhs) {
 
 
 void qpOASESInterface::set_A(shared_ptr<const SQPhotstart::SpTripletMat> rhs, IdentityInfo I_info) {
-
     if (firstQPsolved_ && !data_change_flags_.Update_A) {
         data_change_flags_.Update_A = true;
     }
@@ -663,11 +664,11 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     }
 
     if(qpOptimalStatus_.KKT_error>1.0e-6) {
-        printf("comp_violation %10e\n", compl_violation);
-        printf("stat_violation %10e\n", statioanrity_violation);
-        printf("prim_violation %10e\n", primal_violation);
-        printf("dual_violation %10e\n", dual_violation);
-        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+//        printf("comp_violation %10e\n", compl_violation);
+//        printf("stat_violation %10e\n", statioanrity_violation);
+//        printf("prim_violation %10e\n", primal_violation);
+//        printf("dual_violation %10e\n", dual_violation);
+//        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
         return false;
     }
 

@@ -90,10 +90,18 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
                     A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
 
     assert(rv_ == QPSOLVER_OK);
-
+    if(firstQPsolved_) {
+        if(matrix_change_flag_)
+        {
+            rv_ = QPAdjust(solver_, 1.0);
+        }
+        else {
+            rv_ = QPAdjust(solver_, -1.0);
+        }
+    }
     rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
 
-    firstQPsolved_ = true;
+
     if(rv_!=QPSOLVER_OK) {
         QPGetInt(solver_, "status", &status_);
         if (status_ != QPSOLVER_OPTIMAL) {
@@ -120,6 +128,9 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats) {
     QPGetInt(solver_, "itercount", qpiter_);
     if(stats!=nullptr)
         stats->qp_iter_addValue(qpiter_[0]);
+
+    if(!firstQPsolved_)
+        firstQPsolved_ = true;
 }
 
 
@@ -133,6 +144,16 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
     rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
                     A_->MatVal(), NULL, NULL, NULL);
     assert(rv_ == QPSOLVER_OK);
+    if(firstQPsolved_) {
+        if(matrix_change_flag_)
+        {
+            rv_ = QPAdjust(solver_, 1.0);
+        }
+        else {
+            rv_ = QPAdjust(solver_, -1.0);
+        }
+    }
+
     rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0);//
     assert(rv_ == QPSOLVER_OK);
 
@@ -155,6 +176,9 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
     /**-------------------------------------------------------**/
     QPGetInt(solver_, "itercount", qpiter_);
     stats->qp_iter_addValue(qpiter_[0]);
+
+    if(!firstQPsolved_)
+        firstQPsolved_ = true;
 }
 
 
@@ -382,8 +406,6 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
         return false;
 
     }
-
-    return true;
 
     return true;
 
@@ -617,12 +639,23 @@ void QOREInterface::set_solver_options(shared_ptr<const Options> options) {
 
 }
 
+
+void QOREInterface::set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) {
+    if(!A_->isinitialized())
+        A_->setStructure(rhs, I_info);
+    else {
+        matrix_change_flag_ = true;
+        A_->setMatVal(rhs, I_info);
+    }
+}
+
 void QOREInterface::set_H(shared_ptr<const SpTripletMat> rhs) {
     if(!H_->isinitialized())
         H_->setStructure(rhs);
-    else
+    else {
+        matrix_change_flag_=true;
         H_->setMatVal(rhs);
-
+    }
 }
 }//SQP_HOTSTART
 

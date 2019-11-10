@@ -101,10 +101,10 @@ public:
      * subtract  a subvector with length @subvec_size from the class member @_vector
      * from the location @iloc
      *
-     * @param iloc the starting location to subtract the subvector
+     * @param begin  the starting location to subtract the subvector
      * @param subvec_size the size of the subvector
      */
-    void subtract_subvector(int iloc, int subvec_size, const double* subvector);
+    void subtract_subvector(int begin, int subvec_size, const double* subvector);
 
     /**copy all the entries from another vector*/
     void copy_vector(const double* rhs);
@@ -132,10 +132,10 @@ public:
 
 
 
-    void scale(double scaling_factor){
-	    for(int i=0; i<size_; i++){
-		    values_[i]*=scaling_factor;
-	    }
+    void scale(double scaling_factor) {
+        for(int i=0; i<size_; i++) {
+            values_[i]*=scaling_factor;
+        }
     }
 
     /**

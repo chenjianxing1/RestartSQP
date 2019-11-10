@@ -139,9 +139,9 @@ void Vector::subtract_vector_to(const double* rhs) {
  * @param iloc the starting location to subtract the subvector
  * @param subvec_size the size of the subvector
  */
-void Vector::subtract_subvector(int iloc, int subvec_size, const double* subvector) {
+void Vector::subtract_subvector(int begin, int subvec_size, const double* subvector) {
     for (int i = 0; i < subvec_size; i++) {
-        values_[i + iloc - 1] -= subvector[i];
+        values_[i + begin - 1] -= subvector[i];
     }
 }
 

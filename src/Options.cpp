@@ -17,13 +17,13 @@ Options::~Options() {
 
 
 int Options::setToDefault() {
-    iter_max = 3000;
+    iter_max = 300;
     printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
     QPsolverChoice = QORE;
     LPsolverChoice = QORE;
     second_order_correction = false;
-    penalty_update = false;
+    penalty_update = true;
     eta_c = 0.25;
     eta_s = 1.0e-8;
     eta_e = 0.75;

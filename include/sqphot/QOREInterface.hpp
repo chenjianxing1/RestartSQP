@@ -81,7 +81,11 @@ public:
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
     inline double* get_multipliers_bounds()override {
+#if NEW_FORMULATION
+        return y_qp_->values()+nVar_QP_+(3*nConstr_QP_-nVar_QP_);//3*nConstr_QP-nVar_QP = nlp_info.nCon
+#else
         return y_qp_->values();
+#endif
     };
 
     /**
@@ -151,16 +155,9 @@ public:
     };
 
 
-    void set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override {
-        if(!A_->isinitialized())
-            A_->setStructure(rhs, I_info);
-        else
-            A_->setMatVal(rhs, I_info);
-    };
+    void set_A(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
 
-
-
-    void set_H(shared_ptr<const SpTripletMat> rhs) override;;
+    void set_H(shared_ptr<const SpTripletMat> rhs) override;
 
     //@}
     void WriteQPDataToFile(Ipopt::EJournalLevel level,
@@ -179,8 +176,6 @@ public:
     void set_ub(shared_ptr<const Vector> rhs) override {
         ub_->copy_vector(rhs);
     };
-
-
 
     void set_lbA(int location, double value) override {};
     void set_lbA(shared_ptr<const Vector> rhs) override {};
@@ -234,6 +229,7 @@ private:
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
+    bool matrix_change_flag_ = false;
     OptimalityStatus qpOptimalStatus_;
     shared_ptr<SpHbMat> A_;
     shared_ptr<SpHbMat> H_;

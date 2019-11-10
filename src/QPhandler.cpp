@@ -67,7 +67,6 @@ QPhandler::QPhandler(NLPInfo nlp_info, QPType qptype, Ipopt::SmartPtr<Ipopt::Jou
 #ifdef USE_GUROBI
         isolverInterface_ = make_shared<GurobiInterface>(nlp_info, qptype, options, jnlst);
 #endif
-
         break;
     case CPLEX:
 #ifdef USE_CPLEX
@@ -84,7 +83,6 @@ QPhandler::QPhandler(NLPInfo nlp_info, QPType qptype, Ipopt::SmartPtr<Ipopt::Jou
     W_c_qpOASES_ = new ActiveType[nConstr_QP_];
     W_b_qore_ = new ActiveType[nVar_QP_];
     W_c_qore_ = new ActiveType[nConstr_QP_];
-
 #endif
 #endif
 }
@@ -353,38 +351,42 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
 #endif
 #endif
 #if not NEW_FORMULATION
-    if(QPsolverChoice_!=QORE){
-	    if(QPsolverChoice_==GUROBI||QPsolverChoice_==CPLEX)
-		    solverInterface_->reset_constraints();
+    if(QPsolverChoice_!=QORE) {
+        if(QPsolverChoice_==GUROBI||QPsolverChoice_==CPLEX)
+            solverInterface_->reset_constraints();
 
-	    for (int i = 0; i < nlp_info_.nCon; i++) {
-		    solverInterface_->set_lbA(i, c_l->values(i) - c_k->values(i));
-	    }
+        for (int i = 0; i < nlp_info_.nCon; i++) {
+            solverInterface_->set_lbA(i, c_l->values(i) - c_k->values(i));
+        }
 
-	    for (int i = 0; i < nlp_info_.nVar; i++) {
-		    solverInterface_->set_lb(i, std::max(
-					    x_l->values(i) - x_k->values(i), -delta));
-		    solverInterface_->set_ub(i, std::min(
-					    x_u->values(i) - x_k->values(i), delta));
-	    }
+        for (int i = 0; i < nlp_info_.nVar; i++) {
+            solverInterface_->set_lb(i, std::max(
+                                         x_l->values(i) - x_k->values(i), -delta));
+            solverInterface_->set_ub(i, std::min(
+                                         x_u->values(i) - x_k->values(i), delta));
+        }
     }
-    else{
-	    for (int i = 0; i < nlp_info_.nVar; i++) {
-		    solverInterface_->set_lb(i, std::max(
-					    x_l->values(i) - x_k->values(i), -delta));
-		    solverInterface_->set_ub(i, std::min(
-					    x_u->values(i) - x_k->values(i), delta));
+    else {
+        for (int i = 0; i < nlp_info_.nVar; i++) {
+            solverInterface_->set_lb(i, std::max(
+                                         x_l->values(i) - x_k->values(i), -delta));
+            solverInterface_->set_ub(i, std::min(
+                                         x_u->values(i) - x_k->values(i), delta));
 
-	    }
-	    for (int i = 0; i < nlp_info_.nCon; i++) {
-		    solverInterface_->set_lb(nlp_info_.nVar +2*nlp_info_.nCon+i, c_l->values(i)
-				    - c_k->values(i));
-		    solverInterface_->set_ub(nlp_info_.nVar +2*nlp_info_.nCon+i, c_u->values(i)
-				    - c_k->values(i));
-	    }
+        }
+        for (int i = 0; i < nlp_info_.nCon; i++) {
+            solverInterface_->set_lb(nlp_info_.nVar +2*nlp_info_.nCon+i, c_l->values(i)
+                                     - c_k->values(i));
+            solverInterface_->set_ub(nlp_info_.nVar +2*nlp_info_.nCon+i, c_u->values(i)
+                                     - c_k->values(i));
+        }
     }
 #else
     if(QPsolverChoice_==QORE) {
+        for(int i = 0; i< nlp_info_.nVar; i++) {
+            solverInterface_->set_lb(i,-delta);
+            solverInterface_->set_ub(i,delta);
+        }
         for (int i = 0; i < nlp_info_.nCon; i++) {
             solverInterface_->set_lb(nVar_QP_+i, c_l->values(i)- c_k->values(i));
             solverInterface_->set_ub(nVar_QP_+i, c_u->values(i)- c_k->values(i));
@@ -398,6 +400,11 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
         }
     }
     else {
+        for(int i = 0; i< nlp_info_.nVar; i++) {
+            solverInterface_->set_lb(i,-delta);
+            solverInterface_->set_ub(i,delta);
+        }
+
         for (int i = 0; i < nlp_info_.nCon; i++) {
             solverInterface_->set_lbA(i, c_l->values(i) - c_k->values(i));
             solverInterface_->set_ubA(i, c_u->values(i) - c_k->values(i));
@@ -540,6 +547,14 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
     }
 #endif
 #endif
+
+#if NEW_FORMULATION
+    for(int i = 0; i< nlp_info_.nVar; i++) {
+        solverInterface_->set_lb(i,-delta);
+        solverInterface_->set_ub(i,delta);
+    }
+#else
+
     for (int i = 0; i < nlp_info_.nVar; i++) {
         solverInterface_->set_lb(i, std::max(
                                      x_l->values(i) - x_k->values(i), -delta));
@@ -547,6 +562,7 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
                                      x_u->values(i) - x_k->values(i), delta));
     }
 
+#endif
 }
 
 void QPhandler::WriteQPData(const string filename ) {
