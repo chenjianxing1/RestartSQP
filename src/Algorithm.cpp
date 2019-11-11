@@ -312,6 +312,13 @@ void Algorithm::check_optimality() {
     //@{
     shared_ptr<Vector> difference = make_shared<Vector>(nVar_);
     // the difference of g-J^T y -\lambda
+    //
+//    grad_f_->print("grad_f_");
+//
+//    jacobian_->print_full("jacobian");
+//
+//    multiplier_cons_->print("multiplier_cons_");
+//    multiplier_vars_->print("multiplier_vars_");
     jacobian_->transposed_times(multiplier_cons_, difference);
     difference->add_vector(multiplier_vars_->values());
     difference->subtract_vector(grad_f_->values());
@@ -707,8 +714,6 @@ void Algorithm::ratio_test() {
     double P1_x = obj_value_ + rho_ * infea_measure_;
     double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
 
-
-
     actual_reduction_ = P1_x - P1_x_trial;
     pred_reduction_ = rho_ * infea_measure_ - get_obj_QP();
 
@@ -972,6 +977,11 @@ void Algorithm::update_penalty_parameter() {
                     rho_ = rho_trial; //update to the class variable
                     get_trial_point_info();
                     qp_obj_ = get_obj_QP();
+                    double P1_x = obj_value_ + rho_ * infea_measure_;
+                    double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
+
+                    actual_reduction_ = P1_x - P1_x_trial;
+                    pred_reduction_ = rho_ * infea_measure_ - get_obj_QP();
 
                 } else {
 //                    printf("rho_trial = %23.16e\n",rho_trial);
