@@ -77,10 +77,10 @@ public:
      * subtract  a subvector with length @subvec_size from the class member @_vector
      * from the location @iloc
      *
-     * @param iloc the starting location to subtract the subvector
+     * @param begin  the starting location to subtract the subvector
      * @param subvec_size the size of the subvector
      */
-    void subtract_subvector(int iloc, int subvec_size, const double* subvector);
+    void subtract_subvector(int begin, int subvec_size, const double* subvector);
 
     /**copy all the entries from another vector*/
     void copy_vector(const double* rhs);
@@ -107,11 +107,11 @@ public:
     double times(std::shared_ptr<Vector> rhs);
 
 
-    const double* negative_of_values() const {
-        std::shared_ptr<Vector> negative_values = std::make_shared<Vector>(size_);
-        for (int i = 0; i < size_; i++)
-            negative_values->values()[i] = -values_[i];
-        return negative_values->values();
+
+    void scale(double scaling_factor) {
+        for(int i=0; i<size_; i++) {
+            values_[i]*=scaling_factor;
+        }
     }
 
     /**

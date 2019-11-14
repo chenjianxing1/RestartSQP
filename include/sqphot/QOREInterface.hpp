@@ -81,7 +81,11 @@ public:
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
     inline double* get_multipliers_bounds()override {
+#if NEW_FORMULATION
+        return y_qp_->values()+nVar_QP_+(3*nConstr_QP_-nVar_QP_);//3*nConstr_QP-nVar_QP = nlp_info.nCon
+#else
         return y_qp_->values();
+#endif
     };
 
     /**
@@ -97,6 +101,9 @@ public:
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
+    OptimalityStatus get_optimality_status() override {
+        return qpOptimalStatus_;
+    }
     //@}
     //
 
@@ -147,31 +154,9 @@ public:
         ub_->setValueAt(location, value);
     };
 
-    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs,
-                         IdentityInfo I_info) override {
-//       A_->setStructure(rhs, I_info);
-    };
+    void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
 
-    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                      I_info) override {
-        if(!A_->isinitialized())
-            A_->setStructure(rhs, I_info);
-        else
-            A_->setMatVal(rhs, I_info);
-    };
-
-
-    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override {
-//        H_->setStructure(rhs);
-    };
-
-    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override {
-        if(!H_->isinitialized())
-            H_->setStructure(rhs);
-        else
-            H_->setMatVal(rhs);
-
-    };
+    void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
 
     //@}
     void WriteQPDataToFile(Ipopt::EJournalLevel level,
@@ -233,6 +218,7 @@ private:
     void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
 
+
     ///////////////////////////////////////////////////////////
     //                      PRIVATE MEMBERS                  //
     ///////////////////////////////////////////////////////////
@@ -242,7 +228,8 @@ private:
     bool firstQPsolved_ = false;
     int nConstr_QP_;
     int nVar_QP_;
-//    OptimalityStatus qpOptimalStatus_;
+    bool matrix_change_flag_ = false;
+    OptimalityStatus qpOptimalStatus_;
     std::shared_ptr<SpHbMat> A_;
     std::shared_ptr<SpHbMat> H_;
     std::shared_ptr<Vector> g_;

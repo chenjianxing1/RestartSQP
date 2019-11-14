@@ -15,7 +15,6 @@
 #include "sqphot/Types.hpp"
 #include "sqphot/Options.hpp"
 #include "sqphot/QPhandler.hpp"
-#include "sqphot/LPhandler.hpp"
 #include "sqphot/Utils.hpp"
 #include "sqphot/SQPTNLP.hpp"
 #include "sqphot/Vector.hpp"
@@ -161,13 +160,17 @@ private:
 
 
     /**
-     * @brief This function calculates the infeasibility measure for  current
-     * iterate x_k
-     *
-     *	infea_measure = norm(-max(c-cu,0),1)+norm(-min(c-cl,0),1);
-     *
-     */
-    void cal_infea();
+    * @brief This function calculates the infeasibility for given x_k and c_k with respect
+    * to their corresponding bounds
+    * @return infea_measure = ||-max(c_k-c_u),0||_1 +||-min(c_k-c_l),0||_1+
+                      ||-max(x_k-x_u),0||_1 +||-min(x_k-x_l),0||_1
+    */
+    double cal_infea(std::shared_ptr<const Vector> c_k_,
+                     std::shared_ptr<const Vector> c_l,
+                     std::shared_ptr<const Vector> c_u,
+                     std::shared_ptr<const Vector> x_k = nullptr,
+                     std::shared_ptr<const Vector> x_l = nullptr,
+                     std::shared_ptr<const Vector> x_u = nullptr);
 
     /**
      * @brief This function calculates the infeasibility measure for  current
@@ -177,7 +180,6 @@ private:
      *
      *
      */
-    void cal_infea_trial();
 
     /**
      * @brief Calculate the trial point based on current search direction,
@@ -253,8 +255,12 @@ private:
 
 
 
-
-    void get_obj_QP();
+    /**
+     *@brief get the objective value of QP from myQP object
+     *@relates QPhandler.hpp
+     *@return QP obejctive
+     */
+    double get_obj_QP();
     //@}
 
     /**
@@ -353,7 +359,7 @@ private:
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
-    std::shared_ptr<LPhandler> myLP_;
+    std::shared_ptr<QPhandler> myLP_;
     std::shared_ptr<Options> options_;/**< the default options used for now. */
     std::shared_ptr<QPhandler> myQP_;
     std::shared_ptr<SQPTNLP> nlp_;

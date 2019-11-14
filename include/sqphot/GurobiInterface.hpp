@@ -138,15 +138,9 @@ public:
 
     /**@name Setters for matrix*/
     //@{
-    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override;
+    void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override;
-
-    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                         I_info) override;
-
-    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                      I_info) override;
+    void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
     //@}
 
 

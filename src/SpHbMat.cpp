@@ -369,19 +369,15 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs) {
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
                         IdentityInfo I_info) {
     //adding identity submatrices  to the matrix
-#if not NEW_FORMULATION
+    int total_I_entries = 0;
+    for(int i=0; i<I_info.length; i++) {
+        total_I_entries += I_info.size[i];
+    }
+
     //assign each matrix entry to the corresponding position after permutation
-    for (int i = 0; i < EntryNum_ - 2 * I_info.size[0]; i++) {
+    for (int i = 0; i < EntryNum_ - total_I_entries; i++) {
         MatVal_[order(i)] = rhs->MatVal(i);
     }
-#else
-    if(isCompressedRow_) {
-        for (int i = 0; i < EntryNum_ - 3* I_info.size[0]-2*I_info.size[3]; i++) {
-            MatVal_[order(i)] = rhs->MatVal(i);
-        }
-#endif
-
-}
 }
 
 

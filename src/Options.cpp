@@ -26,7 +26,7 @@ int Options::setToDefault() {
     penalty_update = true;
     eta_c = 0.25;
     eta_s = 1.0e-8;
-    eta_e = 0.5;
+    eta_e = 0.75;
     gamma_c = 0.5;
     gamma_e = 2;
     delta = 1;
@@ -40,13 +40,13 @@ int Options::setToDefault() {
     opt_second_tol = 1.0e-8;
     tol = 1.0e-8;
     penalty_update_tol = 1.0e-8;
-    rho = 10;
+    rho = 1;
     qp_maxiter = 1000;
     //penalty_tol = 1.0e-8;
-    increase_parm = 2;
+    increase_parm = 10;
     rho_max = 1.0e8;
     penalty_iter_max = 200;
-    eps1 = 0.3;
+    eps1 = 0.1;
     eps1_change_parm = 0.1;
     eps2 = 1.0e-6;
     EnablePertubation = false;

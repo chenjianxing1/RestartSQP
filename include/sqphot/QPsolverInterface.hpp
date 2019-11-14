@@ -130,9 +130,7 @@ public:
     virtual bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) = 0;
 
 
-    OptimalityStatus get_optimality_status() {
-        return qpOptimalStatus_;
-    }
+    virtual OptimalityStatus get_optimality_status() = 0;
 
     //@}
 
@@ -167,15 +165,9 @@ public:
 
     /**@name Setters for matrix*/
     //@{
-    virtual void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) = 0;
+    virtual void set_H(std::shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_H_values(std::shared_ptr<const SpTripletMat> rhs) = 0;
-
-    virtual void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                                 I_info) = 0;
-
-    virtual void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
-                              I_info) = 0;
+    virtual void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) = 0;
     //@}
 
     virtual void reset_constraints() =0;
@@ -189,7 +181,6 @@ public:
                                    const std::string filename) = 0;
 
 protected:
-    OptimalityStatus qpOptimalStatus_;
 
 private:
     /** Copy Constructor */

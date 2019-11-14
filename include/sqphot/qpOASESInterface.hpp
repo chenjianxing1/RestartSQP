@@ -33,10 +33,10 @@ public:
 
     /**
      * @brief Constructor which also initializes the qpOASES SQProblem objects
-     * @param nlp_index_info the struct that stores simple nlp dimension info
+     * @param nlp_info the struct that stores simple nlp dimension info
      * @param qptype  is the problem to be solved QP or LP?
      */
-    qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
+    qpOASESInterface(NLPInfo nlp_info, QPType qptype,
                      std::shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
@@ -102,6 +102,10 @@ public:
      */
 
     Exitflag get_status() override;
+
+    OptimalityStatus get_optimality_status() override {
+        return qpOptimalStatus_;
+    }
 //@}
 
     /** @name Setters */
@@ -136,16 +140,9 @@ public:
     void set_g(std::shared_ptr<const Vector> rhs) override;
 
 
-    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override;
+    void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
 
-
-    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override;
-
-
-    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info)
-    override;
-
-    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
+    void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
 
     //@}
 
@@ -209,10 +206,10 @@ private:
 
     /**
      * @brief Allocate memory for the class members
-     * @param nlp_index_info  the struct that stores simple nlp dimension info
+     * @param nlp_info  the struct that stores simple nlp dimension info
      * @param qptype is the problem to be solved QP or LP?
      */
-    void allocate_memory(NLPInfo nlp_index_info, QPType qptype);
+    void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
 
     void set_solver_options();
@@ -242,7 +239,7 @@ private:
     bool firstQPsolved_ = false; /**< if the first QP has been solved? */
     int nConstr_QP_;  /**< number of constraints for QP*/
     int nVar_QP_;  /**< number of variables for QP*/
-//    OptimalityStatus qpOptimalStatus_;
+    OptimalityStatus qpOptimalStatus_;
     std::shared_ptr<const Options> options_;
     std::shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the

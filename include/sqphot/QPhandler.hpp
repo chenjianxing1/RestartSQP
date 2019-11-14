@@ -2,20 +2,19 @@
 #define SQPHOTSTART_QPHANDLER_HPP_
 
 
-#include <sqphot/Options.hpp>
-#include <sqphot/SQPTNLP.hpp>
-#include <sqphot/Stats.hpp>
-#include <sqphot/Utils.hpp>
+#include "sqphot/Options.hpp"
+#include "sqphot/SQPTNLP.hpp"
+#include "sqphot/Stats.hpp"
+#include "sqphot/Utils.hpp"
 
-#include <sqphot/QPsolverInterface.hpp>
-#include <sqphot/qpOASESInterface.hpp>
-#include <sqphot/GurobiInterface.hpp>
-#include <sqphot/QOREInterface.hpp>
-#include <sqphot/CplexInterface.hpp>
+#include "sqphot/QPsolverInterface.hpp"
+#include "sqphot/qpOASESInterface.hpp"
+#include "sqphot/GurobiInterface.hpp"
+#include "sqphot/QOREInterface.hpp"
+#include "sqphot/CplexInterface.hpp"
 
 namespace SQPhotstart {
 /** Forward Declaration */
-class LPhandler;
 
 /**
  *
@@ -50,8 +49,8 @@ class QPhandler {
 public:
 
 
-    QPhandler(NLPInfo nlp_info, std::shared_ptr<const Options> options,
-              Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+    QPhandler(NLPInfo nlp_info, QPType qptype, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+              std::shared_ptr<const Options> options);
 
     /** Default destructor */
     virtual ~QPhandler();
@@ -63,6 +62,10 @@ public:
 
     void solveQP(std::shared_ptr<SQPhotstart::Stats> stats, std::shared_ptr<Options> options);
 
+
+    void solveLP(std::shared_ptr<SQPhotstart::Stats> stats) {
+        solverInterface_->optimizeLP(stats);
+    }
     /** @name Getters */
     //@{
     /**
@@ -149,6 +152,8 @@ public:
     void set_g(std::shared_ptr<const Vector> grad, double rho);
 
 
+    void set_g(double rho);
+
     /**
      * Set up the H for the first time in the QP
      * problem.
@@ -231,7 +236,7 @@ public:
     /**
      * @brief Write QP data to a file
      */
-  void WriteQPData(const std::string filename);
+    void WriteQPData(const std::string filename);
 
     /**
      * @brief Test the KKT conditions for the certain qpsolver
