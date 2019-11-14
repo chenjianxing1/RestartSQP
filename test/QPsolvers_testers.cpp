@@ -5,13 +5,14 @@
 extern "C" {
 #include <qpsolver.h>
 }
+
 #include <memory>
-#include <sqphot/SpHbMat.hpp>
-#include <sqphot/QOREInterface.hpp>
-#include <sqphot/qpOASESInterface.hpp>
-#include <sqphot/Vector.hpp>
-#include <sqphot/Options.hpp>
-#include <sqphot/MessageHandling.hpp>
+#include "sqphot/SpHbMat.hpp"
+#include "sqphot/QOREInterface.hpp"
+#include "sqphot/qpOASESInterface.hpp"
+#include "sqphot/Vector.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/MessageHandling.hpp"
 
 
 using namespace SQPhotstart;

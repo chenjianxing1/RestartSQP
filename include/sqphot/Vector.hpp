@@ -21,55 +21,31 @@ namespace SQPhotstart {
 class Vector {
 public:
 
-    /**
-     * Default constructor
-     * @name initialize the size of the vector and allocate the memory to the array
-     */
-    Vector(int vector_size, bool allocate = true);
+  /** Constructor.
+   *
+   *  Initialize the size of the vector and allocate the memory.
+   */
+  Vector(int size);
 
+  /** Constructor that initializes the size of the vector, allocates
+   *  memory, and copies the values in vector_values to its internal
+   *  array.
+   */
+  Vector(int size, const double* values);
+  
+  /** Default destructor*/
+  virtual ~Vector();
 
-    void swp(double* rhs) {
-        assert(!isAllocated());
-        this->values_ = rhs;
-    }
-
-    void free() {
-        delete[] values_;
-        values_ = NULL;
-        isAllocated_ = false;
-    }
-
-    /**
-     * constructor that initializes the _size and make a deep copy from vector_value to
-     * class member _vector
-     */
-    Vector(int vector_size, const double* vector_value);
-
-
-    void allocate_memory(int size = 0) {
-        isAllocated_ = true;
-
-        if (size != 0) {
-            assert(size_ == size);
-            values_ = new double[size]();
-        } else {
-            values_ = new double[size_]();
-        }
-    }
-
-    /** Default destructor*/
-    virtual ~Vector();
-
-
-    /** assign a sub-vector into the class member vector without shifting elements' positions
-     * */
-    void assign(int Location, int subvector_size, const double* subvector);
-
+#if 0
+  /** assign a sub-vector into the class member vector without shifting elements' positions
+   * */
+  void assign(int Location, int subvector_size, const double* subvector);
 
     /** assign a sub-vector with a specific size to the class member vector at a specific location.
      * The sub-vector will have all elements equal to the scaling factor
      * */
     void assign_n(int Location, int subvector_size, double scaling_factor);
+#endif
 
     /** print the vector*/
     void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst= nullptr,
@@ -180,10 +156,6 @@ public:
                        Solver qpsolver);
 
 
-    bool isAllocated() {
-        return isAllocated_;
-    }
-
 //    double operator[int i](const Vector&){
 //        return values_[i];
 //    }
@@ -200,7 +172,6 @@ private:
     void operator=(const Vector &);
 
 private:
-    bool isAllocated_;
     int size_; /* the size of an vector*/
     double* values_;/*the array stored vector information*/
 };

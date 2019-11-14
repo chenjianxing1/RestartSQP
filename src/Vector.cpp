@@ -5,7 +5,7 @@
  * Date:2019-07
  */
 
-#include <sqphot/Vector.hpp>
+#include "sqphot/Vector.hpp"
 
 namespace SQPhotstart {
 /**
@@ -13,37 +13,43 @@ namespace SQPhotstart {
  * @name initialize the size of the vector and allocate
  * the memory to the array
  */
-Vector::Vector(int vector_size, bool allocate)
-    :
-    isAllocated_(allocate),
-    size_(vector_size),
-    values_(NULL) {
-    if (allocate)
-        allocate_memory();
+Vector::Vector(int size)
+  :
+  size_(size),
+  values_(NULL)
+{
+  // Initialize the memory
+  values_ = new double[size_];
 }
-
 
 /**
  * constructor that initializes the size of the vector
  * and initializes @vector_ to be @vector_value
  */
 
-Vector::Vector(int vector_size, const double* vector_value)
-    :
-    isAllocated_(true),
-    size_(vector_size),
-    values_(NULL) {
-    allocate_memory();
-    std::copy(vector_value, vector_value + size_, values_);
+Vector::Vector(int size, const double* values)
+  :
+  size_(size),
+  values_(NULL)
+{
+  // Initialize the memory
+  values_ = new double[size_];
+
+  // Initialize the values from provded values
+  for (int i=0; i<size_; i++) {
+    values_[i] = values[i];
+  }
 }
 
 /** Default destructor*/
 Vector::~Vector() {
-    if (isAllocated())
-        free();
+
+  // Free the memory
+  delete[] values_;
+  values_ = NULL;
 }
 
-
+#if 0
 /** assign a sub-vector into the class member vector
  * without shifting elements' positions*/
 void Vector::assign(int Location, int subvector_size, const double* subvector) {
@@ -60,6 +66,7 @@ void Vector::assign_n(int Location, int subvector_size, double scaling_factor) {
         values_[Location + i - 1] = scaling_factor;
     }
 }
+#endif
 
 /** print the vector*/
 void Vector::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
@@ -139,34 +146,41 @@ void Vector::subtract_vector_to(const double* rhs) {
  * @param iloc the starting location to subtract the subvector
  * @param subvec_size the size of the subvector
  */
-void Vector::subtract_subvector(int iloc, int subvec_size, const double* subvector) {
-    for (int i = 0; i < subvec_size; i++) {
-        values_[i + iloc - 1] -= subvector[i];
-    }
+void Vector::subtract_subvector(int iloc, int subvec_size, const double* subvector)
+{
+  for (int i = 0; i < subvec_size; i++) {
+    values_[i + iloc - 1] -= subvector[i];
+  }
 }
 
 /*copy all the entries from another vector*/
-void Vector::copy_vector(const double* rhs) {
-    for (int i = 0; i < size_; i++) {
-        values_[i] = (double) rhs[i];
-    }
+void Vector::copy_vector(const double* rhs)
+{
+  for (int i = 0; i < size_; i++) {
+    values_[i] = (double) rhs[i];
+  }
 }
 
 /*copy all the entries from another vector*/
-void Vector::copy_vector(std::shared_ptr<const Vector> rhs) {
-    assert(size_ <= rhs->Dim());
-    for (int i = 0; i < size_; i++) {
-        values_[i] = rhs->values()[i];
-    }
+void Vector::copy_vector(std::shared_ptr<const Vector> rhs)
+{
+  assert(size_ <= rhs->Dim());
+  for (int i = 0; i < size_; i++) {
+    values_[i] = rhs->values()[i];
+  }
 }
 
 
 /** copy a subvector from member_vector from (Location) to (Location+subvector_size) to the pointer (results)*/
 void Vector::get_subVector(int Location, int subvector_size,
-                           std::shared_ptr<Vector> rhs) const {
-    //TODO::test it! not sure if it will work...
-    double* tmp = &(values_[Location - 1]);
-    rhs->assign(1, subvector_size, tmp);
+                           std::shared_ptr<Vector> rhs) const
+{
+  //TODO::test it! not sure if it will work...
+  double* tmp = &(values_[Location - 1]);
+  for (int i=0; i<subvector_size; i++) {
+    tmp[i] = rhs->values()[i];
+  }
+  //    rhs->assign(1, subvector_size, tmp);
 }
 
 
