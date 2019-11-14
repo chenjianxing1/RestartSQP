@@ -1,6 +1,4 @@
-#include <sqphot/SpTripletMat.hpp>
-
-
+#include "sqphot/SpTripletMat.hpp"
 
 namespace SQPhotstart {
 /** Constructor for an empty matrix with N non-zero

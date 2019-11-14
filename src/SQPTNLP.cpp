@@ -4,8 +4,9 @@
 * Authors: Xinyi Luo
 * Date:2019-07
 */
-#include <sqphot/SQPTNLP.hpp>
+#include "sqphot/SQPTNLP.hpp"
 
+using namespace std;
 
 namespace SQPhotstart {
 

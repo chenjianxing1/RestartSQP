@@ -7,7 +7,7 @@
 #ifndef SQPHOTSTART_VECTOR_HPP
 #define SQPHOTSTART_VECTOR_HPP
 
-#include <sqphot/Utils.hpp>
+#include "sqphot/Utils.hpp"
 
 namespace SQPhotstart {
 

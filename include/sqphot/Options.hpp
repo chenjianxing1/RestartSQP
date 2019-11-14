@@ -7,8 +7,8 @@
 #define SQPHOTSTART_OPTIONS_HPP
 
 #include <string>
-#include <sqphot/Types.hpp>
-#include <IpJournalist.hpp>
+#include "sqphot/Types.hpp"
+#include "IpJournalist.hpp"
 
 namespace SQPhotstart {
 class Options {

@@ -8,10 +8,10 @@
 #define SQPHOTSTART_SQPTNLP_HPP
 
 #include <memory>
-#include <sqphot/Utils.hpp>
-#include <IpTNLP.hpp>
-#include <sqphot/Vector.hpp>
-#include <sqphot/SpTripletMat.hpp>
+#include "sqphot/Utils.hpp"
+#include "IpTNLP.hpp"
+#include "sqphot/Vector.hpp"
+#include "sqphot/SpTripletMat.hpp"
 
 namespace SQPhotstart {
 /**
@@ -34,48 +34,48 @@ public:
     /**
      *@brief get the bounds information from the NLP object
      */
-    virtual bool Get_bounds_info(shared_ptr<Vector> x_l,
-                                 shared_ptr<Vector> x_u,
-                                 shared_ptr<Vector> c_l,
-                                 shared_ptr<Vector> c_u);
+    virtual bool Get_bounds_info(std::shared_ptr<Vector> x_l,
+                                 std::shared_ptr<Vector> x_u,
+                                 std::shared_ptr<Vector> c_l,
+                                 std::shared_ptr<Vector> c_u);
 
     /*
      * @brief Get the starting point from the NLP object.
      * TODO: add options_ to enable user to choose if to use default input or not
      */
     virtual bool
-    Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0);
+    Get_starting_point(std::shared_ptr<Vector> x_0, std::shared_ptr<Vector> lambda_0);
 
     /**
      *@brief Evaluate the objective value
      */
-    virtual bool Eval_f(shared_ptr<const Vector> x, double& obj_value);
+    virtual bool Eval_f(std::shared_ptr<const Vector> x, double& obj_value);
 
     /**
      * @brief Evaluate the constraints at point x
      *
      */
     virtual bool
-    Eval_constraints(shared_ptr<const Vector> x, shared_ptr<Vector> constraints);
+    Eval_constraints(std::shared_ptr<const Vector> x, std::shared_ptr<Vector> constraints);
 
     /**
      *@brief Evaluate gradient at point x
      */
     virtual bool
-    Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradient);
+    Eval_gradient(std::shared_ptr<const Vector> x, std::shared_ptr<Vector> gradient);
 
     /**
      * @brief Get the matrix structure of the Jacobian
      * Always call this before the first time using @Eval_Jacobian
      */
-    virtual bool Get_Strucutre_Jacobian(shared_ptr<const Vector> x,
-                                        shared_ptr<SpTripletMat> Jacobian);
+    virtual bool Get_Strucutre_Jacobian(std::shared_ptr<const Vector> x,
+                                        std::shared_ptr<SpTripletMat> Jacobian);
 
     /**
      *@brief Evaluate Jacobian at point x
      */
     virtual bool
-    Eval_Jacobian(shared_ptr<const Vector> x, shared_ptr<SpTripletMat> Jacobian);
+    Eval_Jacobian(std::shared_ptr<const Vector> x, std::shared_ptr<SpTripletMat> Jacobian);
 
 
     /**
@@ -83,15 +83,15 @@ public:
      * Always call this before the first time using @Eval_Hessian
      */
     virtual bool
-    Get_Structure_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
-                          shared_ptr<SpTripletMat> Hessian);
+    Get_Structure_Hessian(std::shared_ptr<const Vector> x, std::shared_ptr<const Vector> lambda,
+                          std::shared_ptr<SpTripletMat> Hessian);
 
     /**
      *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
      */
     virtual bool
-    Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
-                 shared_ptr<SpTripletMat> Hessian);
+    Eval_Hessian(std::shared_ptr<const Vector> x, std::shared_ptr<const Vector> lambda,
+                 std::shared_ptr<SpTripletMat> Hessian);
 
     /**
      * @brief This function shifts the initial starting point to be feasible to the bound constraints
@@ -100,8 +100,8 @@ public:
      * @param x_u upper bound constraints
      */
     virtual bool
-    shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l,
-                         shared_ptr<const Vector> x_u);
+    shift_starting_point(std::shared_ptr<Vector> x, std::shared_ptr<const Vector> x_l,
+                         std::shared_ptr<const Vector> x_u);
 
 public:
     NLPInfo nlp_info_; /**< the struct record the number of variables, number of

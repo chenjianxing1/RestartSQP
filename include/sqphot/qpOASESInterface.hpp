@@ -8,7 +8,7 @@
 #ifndef __QPOASES_INTERFACE_HPP__
 #define __QPOASES_INTERFACE_HPP__
 
-#include <sqphot/QPsolverInterface.hpp>
+#include "sqphot/QPsolverInterface.hpp"
 
 
 namespace SQPhotstart {
@@ -37,18 +37,18 @@ public:
      * @param qptype  is the problem to be solved QP or LP?
      */
     qpOASESInterface(NLPInfo nlp_index_info, QPType qptype,
-                     shared_ptr<const Options> options,
+                     std::shared_ptr<const Options> options,
                      Ipopt::SmartPtr<Ipopt::Journalist> jnlst);    //number of constraints in the QP problem
 
 
-    qpOASESInterface(shared_ptr<SpHbMat> H,
-                     shared_ptr<SpHbMat> A,
-                     shared_ptr<Vector> g,
-                     shared_ptr<Vector> lb,
-                     shared_ptr<Vector> ub,
-                     shared_ptr<Vector> lbA,
-                     shared_ptr<Vector> ubA,
-                     shared_ptr<Options> options = nullptr);
+    qpOASESInterface(std::shared_ptr<SpHbMat> H,
+                     std::shared_ptr<SpHbMat> A,
+                     std::shared_ptr<Vector> g,
+                     std::shared_ptr<Vector> lb,
+                     std::shared_ptr<Vector> ub,
+                     std::shared_ptr<Vector> lbA,
+                     std::shared_ptr<Vector> ubA,
+                     std::shared_ptr<Options> options = nullptr);
 
     /** Defualt Destructor */
     ~qpOASESInterface() override;
@@ -56,7 +56,7 @@ public:
 
 
 
-    void optimizeQP(shared_ptr<Stats> stats = nullptr) override;
+    void optimizeQP(std::shared_ptr<Stats> stats = nullptr) override;
 
 
 
@@ -65,7 +65,7 @@ public:
      * in the class members.
      */
 
-    void optimizeLP(shared_ptr<Stats> stats = nullptr) override;
+    void optimizeLP(std::shared_ptr<Stats> stats = nullptr) override;
 
     /** @name Getters*/
 //@{
@@ -109,81 +109,81 @@ public:
     void set_lb(int location, double value) override;
 
 
-    void set_lb(shared_ptr<const Vector> rhs) override;
+    void set_lb(std::shared_ptr<const Vector> rhs) override;
 
 
     void set_ub(int location, double value) override;
 
 
-    void set_ub(shared_ptr<const Vector> rhs) override;
+    void set_ub(std::shared_ptr<const Vector> rhs) override;
 
 
     void set_lbA(int location, double value) override;
 
 
-    void set_lbA(shared_ptr<const Vector> rhs) override;
+    void set_lbA(std::shared_ptr<const Vector> rhs) override;
 
 
     void set_ubA(int location, double value) override;
 
 
-    void set_ubA(shared_ptr<const Vector> rhs) override;
+    void set_ubA(std::shared_ptr<const Vector> rhs) override;
 
 
     void set_g(int location, double value) override;
 
 
-    void set_g(shared_ptr<const Vector> rhs) override;
+    void set_g(std::shared_ptr<const Vector> rhs) override;
 
 
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override;
+    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override;
 
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override;
+    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override;
 
 
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info)
+    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info)
     override;
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
+    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
 
     //@}
 
     void WriteQPDataToFile(Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category,
-                           const string filename) override ;
+                           const std::string filename) override ;
 
 
     void reset_constraints() override;
 
     //@{
-    const shared_ptr<Vector>& getLb() const override {
+    const std::shared_ptr<Vector>& getLb() const override {
         return lb_;
     };
 
-    const shared_ptr<Vector>& getUb() const override {
+    const std::shared_ptr<Vector>& getUb() const override {
         return ub_;
     };
 
 
-    const shared_ptr<Vector>& getLbA() const override {
+    const std::shared_ptr<Vector>& getLbA() const override {
         return lbA_;
     };
 
-    const shared_ptr<Vector>& getUbA() const override {
+    const std::shared_ptr<Vector>& getUbA() const override {
         return ubA_;
     };
 
-    const shared_ptr<Vector>& getG() const override {
+    const std::shared_ptr<Vector>& getG() const override {
         return g_;
     };
 
 
-    shared_ptr<const SpHbMat> getH() const override {
+    std::shared_ptr<const SpHbMat> getH() const override {
         return H_;
     };
 
-    shared_ptr<const SpHbMat> getA() const override {
+    std::shared_ptr<const SpHbMat> getA() const override {
         return A_;
     };
     //@}
@@ -201,7 +201,7 @@ private:
 
 
 
-    void handle_error(QPType qptype, shared_ptr<Stats> stats = nullptr);
+    void handle_error(QPType qptype, std::shared_ptr<Stats> stats = nullptr);
 
 
     void reset_flags();
@@ -243,27 +243,27 @@ private:
     int nConstr_QP_;  /**< number of constraints for QP*/
     int nVar_QP_;  /**< number of variables for QP*/
 //    OptimalityStatus qpOptimalStatus_;
-    shared_ptr<const Options> options_;
-    shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
+    std::shared_ptr<const Options> options_;
+    std::shared_ptr<qpOASES::SymSparseMat> H_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
                                                        * the class members of H_*/
 
-    shared_ptr<qpOASES::SQProblem> solver_;/**< the qpOASES object used for solving a qp*/
-    shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
+    std::shared_ptr<qpOASES::SQProblem> solver_;/**< the qpOASES object used for solving a qp*/
+    std::shared_ptr<qpOASES::SparseMatrix> A_qpOASES_;/**< the Matrix object that qpOASES
                                                        * taken in, it only contains the
                                                        * pointers to array stored in
                                                        * the class members of A_*/
-    shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
-    shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
-    shared_ptr<Vector> lb_;  /**< lower bounds of x */
-    shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
-    shared_ptr<Vector> ub_;  /**< upper bounds of x */
-    shared_ptr<Vector> x_qp_; /** the qp solution */
-    shared_ptr<Vector> y_qp_; /** the multiplier corresponding to the optimal solution */
-    shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
+    std::shared_ptr<Vector> g_;   /**< the grad used for QPsubproblem*/
+    std::shared_ptr<Vector> lbA_; /**< lower bounds of Ax */
+    std::shared_ptr<Vector> lb_;  /**< lower bounds of x */
+    std::shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
+    std::shared_ptr<Vector> ub_;  /**< upper bounds of x */
+    std::shared_ptr<Vector> x_qp_; /** the qp solution */
+    std::shared_ptr<Vector> y_qp_; /** the multiplier corresponding to the optimal solution */
+    std::shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
                                           * Harwell-Boeing Sparse Matrix format*/
-    shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
+    std::shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in
                                           * Harwell-Boeing Sparse Matrix format*/
 
 };

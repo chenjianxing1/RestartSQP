@@ -1,12 +1,12 @@
 #ifndef SQPHOTSTART_LPHANDLER_HPP_
 #define SQPHOTSTART_LPHANDLER_HPP_
 
-#include <qpOASES.hpp>
-#include <sqphot/Options.hpp>
-#include <sqphot/QPhandler.hpp>
-#include <sqphot/SQPTNLP.hpp>
-#include <sqphot/Stats.hpp>
-#include <sqphot/Utils.hpp>
+#include "qpOASES.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/QPhandler.hpp"
+#include "sqphot/SQPTNLP.hpp"
+#include "sqphot/Stats.hpp"
+#include "sqphot/Utils.hpp"
 
 namespace SQPhotstart {
 /**
@@ -41,7 +41,7 @@ class LPhandler : public QPhandler {
 
 public:
 
-    LPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
+    LPhandler(NLPInfo nlp_info, std::shared_ptr<const Options> options,
               Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
     /** Default destructor */
@@ -52,19 +52,19 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    void solveLP(shared_ptr<SQPhotstart::Stats> stats);
+    void solveLP(std::shared_ptr<SQPhotstart::Stats> stats);
 
     /**@name Setters */
     //@{
-//    void set_bounds(double delta, shared_ptr<const Vector> x_l,
-//                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
-//                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-//                    shared_ptr<const Vector> c_k);
+//    void set_bounds(double delta, std::shared_ptr<const Vector> x_l,
+//                    std::shared_ptr<const Vector> x_u, std::shared_ptr<const Vector> x_k,
+//                    std::shared_ptr<const Vector> c_l, std::shared_ptr<const Vector> c_u,
+//                    std::shared_ptr<const Vector> c_k);
 
 
     void set_g(double rho);;
 
-//    void set_A(shared_ptr<const SpTripletMat> jacobian) override;
+//    void set_A(std::shared_ptr<const SpTripletMat> jacobian) override;
     //@}
 
     /**
@@ -113,7 +113,7 @@ private:
     int nConstr_LP_;
     int nVar_LP_;
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-//    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+//    std::shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
 //                                                              QP solver specified by the user*/
     //bounds that can be represented as vectors
     bool isinitialised = false;

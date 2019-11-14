@@ -1,12 +1,14 @@
-#include <unit_test_utils.hpp>
-#include <sqphot/SpHbMat.hpp>
-#include <sqphot/Vector.hpp>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>
 #include <random>
 #include <iterator>
 
+#include "unit_test_utils.hpp"
+#include "sqphot/SpHbMat.hpp"
+#include "sqphot/Vector.hpp"
+
 using namespace SQPhotstart;
+using namespace std;
 
 
 bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* dense_matrix_in) {

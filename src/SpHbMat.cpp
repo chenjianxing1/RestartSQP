@@ -1,5 +1,6 @@
-#include <sqphot/SpHbMat.hpp>
+#include "sqphot/SpHbMat.hpp"
 
+using namespace std;
 
 namespace SQPhotstart {
 

@@ -7,9 +7,9 @@
 #ifndef SQPHOTSTART_TYPES_HPP
 #define SQPHOTSTART_TYPES_HPP
 
-/* Declaration of all non-built in types (except for classes) */
-namespace SQPhotstart {
+/** Declaration of all non-built in types (except for classes) */
 
+namespace SQPhotstart {
 
 enum PrintLevel {
     NO_PRINT = 0,

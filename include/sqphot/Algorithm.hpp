@@ -7,19 +7,19 @@
 #ifndef SQPHOTSTART_ALG_HPP_
 #define SQPHOTSTART_ALG_HPP_
 
-#include <sqphot/SQPDebug.hpp>
-#include <IpTNLP.hpp>
-#include <IpRegOptions.hpp>
-#include <IpOptionsList.hpp>
-#include <sqphot/Stats.hpp>
-#include <sqphot/Types.hpp>
-#include <sqphot/Options.hpp>
-#include <sqphot/QPhandler.hpp>
-#include <sqphot/LPhandler.hpp>
-#include <sqphot/Utils.hpp>
-#include <sqphot/SQPTNLP.hpp>
-#include <sqphot/Vector.hpp>
-#include <sqphot/Matrix.hpp>
+#include "sqphot/SQPDebug.hpp"
+#include "IpTNLP.hpp"
+#include "IpRegOptions.hpp"
+#include "IpOptionsList.hpp"
+#include "sqphot/Stats.hpp"
+#include "sqphot/Types.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/QPhandler.hpp"
+#include "sqphot/LPhandler.hpp"
+#include "sqphot/Utils.hpp"
+#include "sqphot/SQPTNLP.hpp"
+#include "sqphot/Vector.hpp"
+#include "sqphot/Matrix.hpp"
 
 
 namespace SQPhotstart {
@@ -113,7 +113,7 @@ public:
         return obj_value_;
     }
 
-    inline shared_ptr<Stats> get_stats() const {
+    inline std::shared_ptr<Stats> get_stats() const {
         return stats_;
     }
 
@@ -353,29 +353,29 @@ private:
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?
-    shared_ptr<LPhandler> myLP_;
-    shared_ptr<Options> options_;/**< the default options used for now. */
-    shared_ptr<QPhandler> myQP_;
-    shared_ptr<SQPTNLP> nlp_;
-    shared_ptr<SpTripletMat> hessian_;/**< the SparseMatrix object for hessain
+    std::shared_ptr<LPhandler> myLP_;
+    std::shared_ptr<Options> options_;/**< the default options used for now. */
+    std::shared_ptr<QPhandler> myQP_;
+    std::shared_ptr<SQPTNLP> nlp_;
+    std::shared_ptr<SpTripletMat> hessian_;/**< the SparseMatrix object for hessain
                                                 *of  f(x)-sum_{i=1}^m lambda_i c_i(x)*/
-    shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian
+    std::shared_ptr<SpTripletMat> jacobian_;/** <the SparseMatrix object for Jacobian
                                                  *from c(x)*/
-    shared_ptr<Stats> stats_;
-    shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
-    shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
-    shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
-    shared_ptr<Vector> c_u_; /* the upper constraints vector*/
-    shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
-    shared_ptr<Vector> multiplier_cons_;/**< multiplier for constraints*/
-    shared_ptr<Vector> multiplier_vars_;/**< multipliers for variables*/
-    shared_ptr<Vector> p_k_; /* search direction at x_k*/
-    shared_ptr<Vector> x_k_; /**< current iterate point*/
-    shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
-    shared_ptr<Vector> x_trial_;/**< the trial point from the search direction
+    std::shared_ptr<Stats> stats_;
+    std::shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
+    std::shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
+    std::shared_ptr<Vector> c_trial_;/* the constraints' value evaluated at x_trial_*/
+    std::shared_ptr<Vector> c_u_; /* the upper constraints vector*/
+    std::shared_ptr<Vector> grad_f_;/**< gradient evaluated at x_k*/
+    std::shared_ptr<Vector> multiplier_cons_;/**< multiplier for constraints*/
+    std::shared_ptr<Vector> multiplier_vars_;/**< multipliers for variables*/
+    std::shared_ptr<Vector> p_k_; /* search direction at x_k*/
+    std::shared_ptr<Vector> x_k_; /**< current iterate point*/
+    std::shared_ptr<Vector> x_l_; /* the lower bounds for variables*/
+    std::shared_ptr<Vector> x_trial_;/**< the trial point from the search direction
                                           *x_trial = x_k+p_k*/
 
-    shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
+    std::shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
 
 };//END_OF_ALG_CLASS
 

@@ -11,15 +11,15 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include <IpJournalist.hpp>
-#include <qpOASES.hpp>
-#include <IpTNLP.hpp>
-#include <sqphot/Utils.hpp>
-#include <sqphot/Types.hpp>
-#include <sqphot/Vector.hpp>
 #include <tuple>
 #include <vector>
 
+#include "IpJournalist.hpp"
+#include "IpTNLP.hpp"
+#include "qpOASES.hpp"
+#include "sqphot/Utils.hpp"
+#include "sqphot/Types.hpp"
+#include "sqphot/Vector.hpp"
 
 namespace SQPhotstart {
 
@@ -36,22 +36,21 @@ class Matrix {
 
 public:
 
-    /** Default constructor*/
-    Matrix() = default;
+  /** Default constructor*/
+  Matrix() = default;
 
+  /** Default destructor*/
+  virtual ~Matrix() = default;
 
-    /** Default destructor*/
-    virtual ~Matrix() = default;
-
-    /**
-     * @brief Print Matrix. If matrix is sparse, then print it in sparse form.
-     */
-    virtual void
-    print(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
-          Ipopt::EJournalLevel level = Ipopt::J_ALL, Ipopt::EJournalCategory category
-          =Ipopt::J_DBG)
+  /**
+   * @brief Print Matrix. If matrix is sparse, then print it in sparse form.
+   */
+  virtual void
+  print(const char* name = nullptr,
+        Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+        Ipopt::EJournalLevel level = Ipopt::J_ALL,
+        Ipopt::EJournalCategory category = Ipopt::J_DBG)
     const = 0;
-
 
     virtual void
     print_full(const char* name = nullptr, Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
@@ -64,9 +63,9 @@ public:
 
     virtual int EntryNum() const = 0;
 
-    virtual bool isSymmetric() const =0;
+    virtual bool isSymmetric() const = 0;
 
-    virtual double MatVal(int i) =0;
+    virtual double MatVal(int i) = 0;
 
     virtual int ColIndex(int i) = 0;
 
@@ -74,7 +73,7 @@ public:
 
     virtual int order(int i) = 0;
 
-    virtual double* MatVal() =0;
+    virtual double* MatVal() = 0;
 
     virtual int* ColIndex() = 0;
 
@@ -89,13 +88,9 @@ private:
     /** Copy Constructor */
     Matrix(const Matrix &);
 
-
     /** Overloaded Equals Operator */
     void operator=(const Matrix &);
-
 };
-
-
 
 
 }

@@ -4,7 +4,7 @@
  * Date:    2019-08-15
  */
 
-#include <sqphot/QOREInterface.hpp>
+#include "sqphot/QOREInterface.hpp"
 using namespace std;
 namespace SQPhotstart {
 /**

@@ -11,8 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+
 using namespace Ipopt;
 using namespace SQPhotstart;
+using namespace std;
+
 inline bool exist (const std::string& name) {
     struct stat buffer;
     return (stat (name.c_str(), &buffer) == 0);

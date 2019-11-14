@@ -20,16 +20,16 @@
 #include <tuple>
 #include <vector>
 
-#include <IpTNLP.hpp>
-#include <sqphot/SQPDebug.hpp>
-#include <sqphot/MessageHandling.hpp>
-#include <sqphot/Types.hpp>
+#include "IpTNLP.hpp"
+#include "sqphot/SQPDebug.hpp"
+#include "sqphot/MessageHandling.hpp"
+#include "sqphot/Types.hpp"
 
-using namespace std;
 namespace SQPhotstart {
 #define MAX(a,b) (a>b)? a :b
 #define ABS(a) MAX(a,-a)
-/*Print a matrix with given size*/
+
+/*Print a dense matrix with given size*/
 void print_matrix(double* M, int length, int width);
 
 const double INF = 1.0e18;
@@ -48,7 +48,6 @@ double infNorm(const double* x, int n);
 
 ConstraintType classify_single_constraint(double lower_bound, double upper_bound);
 
-
 bool is_int_array_equal(const int* a, const int* b, int length);
 
 bool is_double_array_equal(const double* a, const double* b, int length);
@@ -63,8 +62,6 @@ inline void print_(char* name, T* vec, int length) {
     }
     printf("end of %s\n", name);
 }
-
-
 
 
 } // namespace SQPhotstart

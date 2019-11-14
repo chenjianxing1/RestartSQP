@@ -50,7 +50,7 @@ class QPhandler {
 public:
 
 
-    QPhandler(NLPInfo nlp_info, shared_ptr<const Options> options,
+    QPhandler(NLPInfo nlp_info, std::shared_ptr<const Options> options,
               Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
     /** Default destructor */
@@ -61,7 +61,7 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    void solveQP(shared_ptr<SQPhotstart::Stats> stats, shared_ptr<Options> options);
+    void solveQP(std::shared_ptr<SQPhotstart::Stats> stats, std::shared_ptr<Options> options);
 
     /** @name Getters */
     //@{
@@ -104,8 +104,8 @@ public:
      * @param Ax   constraint evaluation at current QP solution x(optional)
      */
     void get_active_set(ActiveType* A_c, ActiveType* A_b,
-                        shared_ptr<Vector> x = nullptr,
-                        shared_ptr<Vector> Ax = nullptr);
+                        std::shared_ptr<Vector> x = nullptr,
+                        std::shared_ptr<Vector> Ax = nullptr);
 
 
 
@@ -133,10 +133,10 @@ public:
     * @param c_l        the lower bounds for constraints
     * @param c_u        the upper bounds for constraints
     */
-    void set_bounds(double delta, shared_ptr<const Vector> x_l,
-                    shared_ptr<const Vector> x_u, shared_ptr<const Vector> x_k,
-                    shared_ptr<const Vector> c_l, shared_ptr<const Vector> c_u,
-                    shared_ptr<const Vector> c_k);
+    void set_bounds(double delta, std::shared_ptr<const Vector> x_l,
+                    std::shared_ptr<const Vector> x_u, std::shared_ptr<const Vector> x_k,
+                    std::shared_ptr<const Vector> c_l, std::shared_ptr<const Vector> c_u,
+                    std::shared_ptr<const Vector> c_k);
 
 
     /**
@@ -146,7 +146,7 @@ public:
      * @param grad 	Gradient vector from nlp class
      * @param rho  	Penalty Parameter
      */
-    void set_g(shared_ptr<const Vector> grad, double rho);
+    void set_g(std::shared_ptr<const Vector> grad, double rho);
 
 
     /**
@@ -164,12 +164,12 @@ public:
      * @return
      */
 
-    void set_H(shared_ptr<const SpTripletMat> hessian);
+    void set_H(std::shared_ptr<const SpTripletMat> hessian);
 
 
     /** @brief setup the matrix A for the QP subproblems according to the
      * information from current iterate*/
-    void set_A(shared_ptr<const SpTripletMat> jacobian);
+    void set_A(std::shared_ptr<const SpTripletMat> jacobian);
 
     //@}
 
@@ -177,21 +177,21 @@ public:
 
 //@{
     void update_delta(double delta,
-                      shared_ptr<const Vector> x_l,
-                      shared_ptr<const Vector> x_u,
-                      shared_ptr<const Vector> x_k);
+                      std::shared_ptr<const Vector> x_l,
+                      std::shared_ptr<const Vector> x_u,
+                      std::shared_ptr<const Vector> x_k);
 
 
     /**
      * @brief This function updates the bounds on x if there is any changes to the
      * values of trust-region or the iterate
      */
-    virtual void update_bounds(double delta, shared_ptr<const Vector> x_l,
-                               shared_ptr<const Vector> x_u,
-                               shared_ptr<const Vector> x_k,
-                               shared_ptr<const Vector> c_l,
-                               shared_ptr<const Vector> c_u,
-                               shared_ptr<const Vector> c_k);
+    virtual void update_bounds(double delta, std::shared_ptr<const Vector> x_l,
+                               std::shared_ptr<const Vector> x_u,
+                               std::shared_ptr<const Vector> x_k,
+                               std::shared_ptr<const Vector> c_l,
+                               std::shared_ptr<const Vector> c_u,
+                               std::shared_ptr<const Vector> c_k);
 
 
     /**
@@ -209,7 +209,7 @@ public:
      *
      * @param grad		the gradient vector from NLP
      */
-    void update_grad(shared_ptr<const Vector> grad);
+    void update_grad(std::shared_ptr<const Vector> grad);
 
 
     /*  @brief Update the SparseMatrix H of the QP
@@ -217,27 +217,27 @@ public:
      *  true function Hessian
      *
      *  */
-    void update_H(shared_ptr<const SpTripletMat> Hessian);
+    void update_H(std::shared_ptr<const SpTripletMat> Hessian);
 
 
     /**
      * @brief Update the Matrix H of the QP problems
      * when there is any change to the Jacobian to the constraints.
      */
-    void update_A(shared_ptr<const SpTripletMat> Jacobian);
+    void update_A(std::shared_ptr<const SpTripletMat> Jacobian);
 
 //@}
 
     /**
      * @brief Write QP data to a file
      */
-    void WriteQPData(const string filename);
+  void WriteQPData(const std::string filename);
 
     /**
      * @brief Test the KKT conditions for the certain qpsolver
      */
     bool test_optimality(
-        shared_ptr<QPSolverInterface> qpsolverInterface,
+        std::shared_ptr<QPSolverInterface> qpsolverInterface,
         Solver qpSolver,
         ActiveType* W_b,
         ActiveType* W_c);
@@ -248,12 +248,12 @@ public:
 #if COMPARE_QP_SOLVER
 
 
-    void set_bounds_debug(double delta, shared_ptr<const Vector> x_k,
-                          shared_ptr<const Vector> x_l,
-                          shared_ptr<const Vector> x_u,
-                          shared_ptr<const Vector> c_k,
-                          shared_ptr<const Vector> c_l,
-                          shared_ptr<const Vector> c_u);
+    void set_bounds_debug(double delta, std::shared_ptr<const Vector> x_k,
+                          std::shared_ptr<const Vector> x_l,
+                          std::shared_ptr<const Vector> x_u,
+                          std::shared_ptr<const Vector> c_k,
+                          std::shared_ptr<const Vector> c_l,
+                          std::shared_ptr<const Vector> c_u);
 
     bool testQPsolverDifference();
 
@@ -298,7 +298,7 @@ private:
     ///////////////////////////////////////////////////////////
 
 protected:
-    shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
+    std::shared_ptr<QPSolverInterface> solverInterface_; /**<an interface to the standard
                                                               QP solver specified by the user*/
 
     IdentityInfo I_info_A_;
@@ -317,8 +317,8 @@ private:
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
-    shared_ptr<qpOASESInterface> qpOASESInterface_;
-    shared_ptr<QOREInterface> QOREInterface_;
+    std::shared_ptr<qpOASESInterface> qpOASESInterface_;
+    std::shared_ptr<QOREInterface> QOREInterface_;
     ActiveType* W_c_qpOASES_;//working set for constraints;
     ActiveType* W_b_qpOASES_;//working set for bounds;
     ActiveType* W_c_qore_;//working set for constraints;

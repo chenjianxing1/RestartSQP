@@ -8,7 +8,7 @@
 #define _SQPHOTSTART_GUROBI_INTERFACE_
 
 
-#include <sqphot/QPsolverInterface.hpp>
+#include "sqphot/QPsolverInterface.hpp"
 
 #ifdef USE_GUROBI
 #include <gurobi_c++.h>
@@ -23,26 +23,26 @@ public:
 
     GurobiInterface(NLPInfo nlp_info,
                     QPType qptype,
-                    shared_ptr<const Options> options,
+                    std::shared_ptr<const Options> options,
                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
 
 
     /**@name Getters for private members*/
     //@{
-    const shared_ptr<Vector>& getLb() const override;
+    const std::shared_ptr<Vector>& getLb() const override;
 
-    const shared_ptr<Vector>& getUb() const override;
+    const std::shared_ptr<Vector>& getUb() const override;
 
-    const shared_ptr<Vector>& getLbA() const  override;
+    const std::shared_ptr<Vector>& getLbA() const  override;
 
-    const shared_ptr<Vector>& getUbA() const  override;
+    const std::shared_ptr<Vector>& getUbA() const  override;
 
-    const shared_ptr<Vector>& getG() const  override;
+    const std::shared_ptr<Vector>& getG() const  override;
 
-    shared_ptr<const SpHbMat> getH() const  override;
+    std::shared_ptr<const SpHbMat> getH() const  override;
 
-    shared_ptr<const SpHbMat> getA() const  override;
+    std::shared_ptr<const SpHbMat> getA() const  override;
     //@}
 
 
@@ -52,14 +52,14 @@ public:
     /**
      * @brief Solve a regular QP with given data and options.
      */
-    void optimizeQP(shared_ptr<Stats> stats)  override;
+    void optimizeQP(std::shared_ptr<Stats> stats)  override;
 
     /**
      * @brief Solve a regular LP with given data and options
      *
      */
 
-    void optimizeLP(shared_ptr<Stats> stats) override;
+    void optimizeLP(std::shared_ptr<Stats> stats) override;
 
 
     bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
@@ -125,27 +125,27 @@ public:
 
     /**@name Setters for dense vector, by vector value*/
     //@{
-    void set_ub(shared_ptr<const Vector> rhs) override;
+    void set_ub(std::shared_ptr<const Vector> rhs) override;
 
-    void set_lb(shared_ptr<const Vector> rhs) override;
+    void set_lb(std::shared_ptr<const Vector> rhs) override;
 
-    void set_lbA(shared_ptr<const Vector> rhs) override;
+    void set_lbA(std::shared_ptr<const Vector> rhs) override;
 
-    void set_ubA(shared_ptr<const Vector> rhs) override;
+    void set_ubA(std::shared_ptr<const Vector> rhs) override;
 
-    void set_g(shared_ptr<const Vector> rhs) override;
+    void set_g(std::shared_ptr<const Vector> rhs) override;
     //@}
 
     /**@name Setters for matrix*/
     //@{
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override;
+    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override;
+    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
+    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                          I_info) override;
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
+    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                       I_info) override;
     //@}
 
@@ -158,7 +158,7 @@ public:
 
     void WriteQPDataToFile(Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category,
-                           const string filename) override {};
+                           const std::string filename) override {};
 
 
 private:
@@ -195,10 +195,10 @@ private:
     QPType qptype_;
     int nConstr_QP_;
     int nVar_QP_;
-    shared_ptr<Vector> x_qp;
-    shared_ptr<Vector> y_qp;
-    shared_ptr<const Options> options_;
-    shared_ptr<const SpTripletMat> A_;
+    std::shared_ptr<Vector> x_qp;
+    std::shared_ptr<Vector> y_qp;
+    std::shared_ptr<const Options> options_;
+    std::shared_ptr<const SpTripletMat> A_;
 
 };
 

@@ -4,7 +4,7 @@
  * Authors: Xinyi Luo
  * Date:2019-09-06
  */
-#include <sqphot/GurobiInterface.hpp>
+#include "sqphot/GurobiInterface.hpp"
 
 namespace SQPhotstart {
 

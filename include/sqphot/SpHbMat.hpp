@@ -9,11 +9,9 @@
 #ifndef SQPHOTSTART_SPHBMAT_HPP_
 #define SQPHOTSTART_SPHBMAT_HPP_
 
-#include <sqphot/SpTripletMat.hpp>
+#include "sqphot/SpTripletMat.hpp"
 
 namespace SQPhotstart {
-
-//forward declaration
 
 /**
  *@brief This is a derived class of Matrix.
@@ -189,7 +187,7 @@ public:
     /**
      * @brief convert the matrix data stored in the class members to a triplet matrix
      * speci fied by rhs */
-    shared_ptr<SpTripletMat> convert_to_triplet() const ;
+  std::shared_ptr<SpTripletMat> convert_to_triplet() const ;
 
 
     /** Extract class member information*/
@@ -356,7 +354,7 @@ private:
 
 
     template <typename T>
-    static void print_tuple(vector<tuple<int,int,T>> tuple) {
+    static void print_tuple(std::vector<std::tuple<int,int,T>> tuple) {
         for(int i = 0; i<tuple.size(); i++) {
             printf("%d %d ", std::get<0>(tuple[i]),std::get<1>(tuple[i]));
             std::cout<<std::get<2>(tuple[i])<<std::endl;

@@ -4,7 +4,7 @@
 * Authors: Xinyi Luo
 * Date:2019-05
 */
-#include <sqphot/Utils.hpp>
+#include "sqphot/Utils.hpp"
 namespace SQPhotstart {
 
 void print_matrix(double *M, int length, int width) {

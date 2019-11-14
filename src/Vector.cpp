@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:2019-07
  */
-#include <sqphot/Vector.hpp>
 
+#include <sqphot/Vector.hpp>
 
 namespace SQPhotstart {
 /**

@@ -11,7 +11,7 @@ extern "C" {
 #include "qpsolver.h"
 }
 
-#include <sqphot/QPsolverInterface.hpp>
+#include "sqphot/QPsolverInterface.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 
@@ -29,15 +29,15 @@ public:
 
     QOREInterface(NLPInfo nlp_info,
                   QPType qptype,
-                  shared_ptr<const Options> options,
+                  std::shared_ptr<const Options> options,
                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
-    QOREInterface(shared_ptr<SpHbMat> H,
-                  shared_ptr<SpHbMat> A,
-                  shared_ptr<Vector> g,
-                  shared_ptr<Vector> lb,
-                  shared_ptr<Vector> ub,
-                  shared_ptr<const Options> options = nullptr);
+    QOREInterface(std::shared_ptr<SpHbMat> H,
+                  std::shared_ptr<SpHbMat> A,
+                  std::shared_ptr<Vector> g,
+                  std::shared_ptr<Vector> lb,
+                  std::shared_ptr<Vector> ub,
+                  std::shared_ptr<const Options> options = nullptr);
 
     /** Default destructor*/
     ~QOREInterface();
@@ -47,14 +47,14 @@ public:
      * @brief Solve a regular QP with given data and options.
      */
 
-    void optimizeQP(shared_ptr<Stats> stats = nullptr) override;
+    void optimizeQP(std::shared_ptr<Stats> stats = nullptr) override;
 
 
     /**
      * @brief Solve a regular LP with given data and options
      */
 
-    void optimizeLP(shared_ptr<Stats> stats = nullptr) override;
+    void optimizeLP(std::shared_ptr<Stats> stats = nullptr) override;
 
     bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
 
@@ -102,31 +102,31 @@ public:
 
     /**@name Getters */
 //@{
-    const shared_ptr<Vector>& getG() const override {
+    const std::shared_ptr<Vector>& getG() const override {
         return g_;
     };
 
-    const shared_ptr<Vector>& getLb() const override {
+    const std::shared_ptr<Vector>& getLb() const override {
         return lb_;
     };
 
-    const shared_ptr<Vector>& getUb() const override {
+    const std::shared_ptr<Vector>& getUb() const override {
         return ub_;
     };
 
-    const shared_ptr<Vector>& getLbA() const override {
+    const std::shared_ptr<Vector>& getLbA() const override {
         THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
     }
 
-    const shared_ptr<Vector>& getUbA() const override {
+    const std::shared_ptr<Vector>& getUbA() const override {
         THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
     }
 
-    shared_ptr<const SpHbMat> getH()const override {
+    std::shared_ptr<const SpHbMat> getH()const override {
         return H_;
     };
 
-    shared_ptr<const SpHbMat> getA() const override {
+    std::shared_ptr<const SpHbMat> getA() const override {
         return A_;
     };
 //@}
@@ -147,12 +147,12 @@ public:
         ub_->setValueAt(location, value);
     };
 
-    void set_A_structure(shared_ptr<const SpTripletMat> rhs,
+    void set_A_structure(std::shared_ptr<const SpTripletMat> rhs,
                          IdentityInfo I_info) override {
 //       A_->setStructure(rhs, I_info);
     };
 
-    void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
+    void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                       I_info) override {
         if(!A_->isinitialized())
             A_->setStructure(rhs, I_info);
@@ -161,11 +161,11 @@ public:
     };
 
 
-    void set_H_structure(shared_ptr<const SpTripletMat> rhs) override {
+    void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) override {
 //        H_->setStructure(rhs);
     };
 
-    void set_H_values(shared_ptr<const SpTripletMat> rhs) override {
+    void set_H_values(std::shared_ptr<const SpTripletMat> rhs) override {
         if(!H_->isinitialized())
             H_->setStructure(rhs);
         else
@@ -176,25 +176,25 @@ public:
     //@}
     void WriteQPDataToFile(Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category,
-                           const string filename) override ;
+                           const std::string filename) override ;
 
     //@{
-    void set_g(shared_ptr<const Vector> rhs) override {
+    void set_g(std::shared_ptr<const Vector> rhs) override {
         g_->copy_vector(rhs);
     };
 
-    void set_lb(shared_ptr<const Vector> rhs) override {
+    void set_lb(std::shared_ptr<const Vector> rhs) override {
         lb_->copy_vector(rhs);
     };
 
-    void set_ub(shared_ptr<const Vector> rhs) override {
+    void set_ub(std::shared_ptr<const Vector> rhs) override {
         ub_->copy_vector(rhs);
     };
 
     void set_lbA(int location, double value) override {};
-    void set_lbA(shared_ptr<const Vector> rhs) override {};
+    void set_lbA(std::shared_ptr<const Vector> rhs) override {};
     void set_ubA(int location, double value) override {};
-    void set_ubA(shared_ptr<const Vector> rhs) override {};
+    void set_ubA(std::shared_ptr<const Vector> rhs) override {};
 
     void reset_constraints() override {
         lb_->set_zeros();
@@ -219,12 +219,12 @@ private:
     /**
      * @brief set options of QP solver based on the user-defined values
      */
-    void set_solver_options(shared_ptr<const Options> options);
+    void set_solver_options(std::shared_ptr<const Options> options);
 
     /**
      * @brief Handle errors based on current status
      */
-    void handle_error(QPType qptype, shared_ptr<Stats> stats=nullptr);
+    void handle_error(QPType qptype, std::shared_ptr<Stats> stats=nullptr);
     /**
      * @brief Allocate memory for the class members
      * @param nlp_index_info  the struct that stores simple nlp dimension info
@@ -243,13 +243,13 @@ private:
     int nConstr_QP_;
     int nVar_QP_;
 //    OptimalityStatus qpOptimalStatus_;
-    shared_ptr<SpHbMat> A_;
-    shared_ptr<SpHbMat> H_;
-    shared_ptr<Vector> g_;
-    shared_ptr<Vector> lb_;
-    shared_ptr<Vector> ub_;
-    shared_ptr<Vector> x_qp_;
-    shared_ptr<Vector> y_qp_;
+    std::shared_ptr<SpHbMat> A_;
+    std::shared_ptr<SpHbMat> H_;
+    std::shared_ptr<Vector> g_;
+    std::shared_ptr<Vector> lb_;
+    std::shared_ptr<Vector> ub_;
+    std::shared_ptr<Vector> x_qp_;
+    std::shared_ptr<Vector> y_qp_;
 
     int qpiter_[1];
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;

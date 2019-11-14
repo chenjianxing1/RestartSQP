@@ -5,7 +5,7 @@
  * Data: 2019-09-09
  */
 
-#include <sqphot/CplexInterface.hpp>
+#include "sqphot/CplexInterface.hpp"
 
 namespace SQPhotstart {
 /** Constructor*/

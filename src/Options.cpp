@@ -4,7 +4,7 @@
  * Authors: Xinyi Luo
  * Date:2019-07
  */
-#include <sqphot/Options.hpp>
+#include "sqphot/Options.hpp"
 
 namespace SQPhotstart {
 

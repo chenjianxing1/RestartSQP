@@ -8,19 +8,17 @@
 
 #include <memory>
 #include <vector>
-#include <IpException.hpp>
-#include <sqphot/Vector.hpp>
-#include <sqphot/Utils.hpp>
-#include <sqphot/SpHbMat.hpp>
+#include "IpException.hpp"
+#include "sqphot/Vector.hpp"
+#include "sqphot/Utils.hpp"
+#include "sqphot/SpHbMat.hpp"
 
-#include <qpOASES.hpp>
-#include <sqphot/Stats.hpp>
-#include <sqphot/Options.hpp>
-#include <sqphot/Types.hpp>
-//#include <sqphot/SQPDebug.hpp>
+#include "qpOASES.hpp"
+#include "sqphot/Stats.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/Types.hpp"
+//#include "<sqphot/SQPDebug.hpp"
 
-
-using namespace std;
 namespace SQPhotstart {
 
 DECLARE_STD_EXCEPTION(QP_NOT_OPTIMAL);
@@ -44,19 +42,19 @@ class QPSolverInterface {
 public:
 
     /**@name Getters for private members*/
-    virtual const shared_ptr<Vector>& getLb() const = 0;
+    virtual const std::shared_ptr<Vector>& getLb() const = 0;
 
-    virtual const shared_ptr<Vector>& getUb() const = 0;
+    virtual const std::shared_ptr<Vector>& getUb() const = 0;
 
-    virtual const shared_ptr<Vector>& getLbA() const =0;
+    virtual const std::shared_ptr<Vector>& getLbA() const =0;
 
-    virtual const shared_ptr<Vector>& getUbA() const =0;
+    virtual const std::shared_ptr<Vector>& getUbA() const =0;
 
-    virtual const shared_ptr<Vector>& getG() const = 0;
+    virtual const std::shared_ptr<Vector>& getG() const = 0;
 
-    virtual shared_ptr<const SpHbMat> getH() const =0;
+    virtual std::shared_ptr<const SpHbMat> getH() const =0;
 
-    virtual shared_ptr<const SpHbMat> getA() const =0;
+    virtual std::shared_ptr<const SpHbMat> getA() const =0;
     //@}
 
     /** Default constructor*/
@@ -72,7 +70,7 @@ public:
      * stats by adding the iteration number used to solve this QP to stats.qp_iter
      */
     virtual void
-    optimizeQP(shared_ptr<Stats> stats) = 0;
+    optimizeQP(std::shared_ptr<Stats> stats) = 0;
 
     /**
      * @brief Solve a regular LP with given data and options
@@ -82,7 +80,7 @@ public:
      */
 
     virtual void
-    optimizeLP(shared_ptr<Stats> stats) = 0;
+    optimizeLP(std::shared_ptr<Stats> stats) = 0;
 
 
     /**-------------------------------------------------------**/
@@ -156,27 +154,27 @@ public:
 
     /**@name Setters for dense vector, by vector value*/
     //@{
-    virtual void set_ub(shared_ptr<const Vector> rhs) = 0;
+    virtual void set_ub(std::shared_ptr<const Vector> rhs) = 0;
 
-    virtual void set_lb(shared_ptr<const Vector> rhs) = 0;
+    virtual void set_lb(std::shared_ptr<const Vector> rhs) = 0;
 
-    virtual void set_lbA(shared_ptr<const Vector> rhs) = 0;
+    virtual void set_lbA(std::shared_ptr<const Vector> rhs) = 0;
 
-    virtual void set_ubA(shared_ptr<const Vector> rhs) = 0;
+    virtual void set_ubA(std::shared_ptr<const Vector> rhs) = 0;
 
-    virtual void set_g(shared_ptr<const Vector> rhs) = 0;
+    virtual void set_g(std::shared_ptr<const Vector> rhs) = 0;
     //@}
 
     /**@name Setters for matrix*/
     //@{
-    virtual void set_H_structure(shared_ptr<const SpTripletMat> rhs) = 0;
+    virtual void set_H_structure(std::shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_H_values(shared_ptr<const SpTripletMat> rhs) = 0;
+    virtual void set_H_values(std::shared_ptr<const SpTripletMat> rhs) = 0;
 
-    virtual void set_A_structure(shared_ptr<const SpTripletMat> rhs, IdentityInfo
+    virtual void set_A_structure(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                                  I_info) = 0;
 
-    virtual void set_A_values(shared_ptr<const SpTripletMat> rhs, IdentityInfo
+    virtual void set_A_values(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo
                               I_info) = 0;
     //@}
 
@@ -188,7 +186,7 @@ public:
 
     virtual void WriteQPDataToFile(Ipopt::EJournalLevel level,
                                    Ipopt::EJournalCategory category,
-                                   const string filename) = 0;
+                                   const std::string filename) = 0;
 
 protected:
     OptimalityStatus qpOptimalStatus_;

@@ -8,28 +8,25 @@
 #ifndef SQPHOTSTART_SPTRIPLETMAT_HPP_
 #define SQPHOTSTART_SPTRIPLETMAT_HPP_
 
-#include <sqphot/Matrix.hpp>
+#include "sqphot/Matrix.hpp"
 
 namespace SQPhotstart {
-/**
- *
- * This is the class for SparseMatrix, it stores the sparse matrix data in triplet,
- * in class member @values_. It contains the methods that can copy a Matrix,
- * allocate data to the class member, and perform a matrix vector multiplication.
- *
+
+/** This is the class for SparseMatrix, it stores the sparse matrix
+ *  data in triplet, in class member @values_. It contains the methods
+ *  that can copy a Matrix, allocate data to the class member, and
+ *  perform a matrix vector multiplication.
  */
 
-class SpTripletMat :
-    public Matrix {
+class SpTripletMat : public Matrix {
 public:
 
-    /** constructor/destructor */
-    //@{
-    /** Constructor for an empty Sparse Matrix with N non-zero entries*/
-    SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric=false,
-                 bool allocate=true);
-
-
+  /** constructor/destructor */
+  //@{
+  /** Constructor for an empty Sparse Matrix with N non-zero entries.
+   *  It sets the property of the matrix, but */
+  SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false,
+               bool allocate = true);
 
     /**
      *@brief

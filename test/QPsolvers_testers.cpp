@@ -15,6 +15,8 @@ extern "C" {
 
 
 using namespace SQPhotstart;
+using namespace std;
+
 shared_ptr<SpHbMat> convert_csr_to_csc(                 shared_ptr<const SpHbMat> csr_matrix) {
 
     double* dense_matrix;

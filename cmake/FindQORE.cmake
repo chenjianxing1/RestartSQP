@@ -44,7 +44,7 @@ find_library(QORE_LIBRARY
 
 elseif(UNIX)
 find_library(QORE_LIBRARY 
-	libqore.so
+	libqore.a
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
 	HINTS ${QORE_ROOT_DIR}/build//lib
