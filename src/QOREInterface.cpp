@@ -5,7 +5,9 @@
  */
 
 #include "sqphot/QOREInterface.hpp"
+
 using namespace std;
+
 namespace SQPhotstart {
 /**
  * @brief Constructor
@@ -21,7 +23,7 @@ QOREInterface::QOREInterface(NLPInfo nlp_info,
     jnlst_(jnlst),
     firstQPsolved_(false),
     solver_(0) {
-#if NEW_FORMULATION
+#ifdef NEW_FORMULATION
     nConstr_QP_ = nlp_info.nCon+nlp_info.nVar;
     nVar_QP_ = nlp_info.nVar*3+2*nlp_info.nCon;
 #else
@@ -190,7 +192,7 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats) {
 
 void QOREInterface::allocate_memory(NLPInfo nlp_info, QPType qptype) {
 
-#if NEW_FORMULATION
+#ifdef NEW_FORMULATION
     int nnz_g_QP = nlp_info.nnz_jac_g+2*nlp_info.nCon+3*nlp_info.nVar;
 #else
     int nnz_g_QP = nlp_info.nnz_jac_g + 2 * nlp_info.nCon;
@@ -244,8 +246,8 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     /**                    primal feasibility                 **/
     /**-------------------------------------------------------**/
     for (i = 0; i < nVar_QP_+nConstr_QP_; i++) {
-        primal_violation += max(0.0, (lb_->values(i) - x_qp_->values(i)));
-        primal_violation += -min(0.0, (ub_->values(i) - x_qp_->values(i)));
+        primal_violation += max(0.0, (lb_->value(i) - x_qp_->value(i)));
+        primal_violation += -min(0.0, (ub_->value(i) - x_qp_->value(i)));
 //        printf("primal_violation[%d]=%f\n",i,primal_violation);
     }
     /**-------------------------------------------------------**/
@@ -258,17 +260,17 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
         case INACTIVE://the constraint is inactive, then the dual multiplier
             // should be 0
             //printf("0\n");
-            dual_violation += fabs(y_qp_->values(i));
+            dual_violation += fabs(y_qp_->value(i));
             break;
         case ACTIVE_BELOW://the constraint is active at the lower bound, so the
             // multiplier should be positive
 //            printf("-1\n");
-            dual_violation += -min(0.0, y_qp_->values(i));
+            dual_violation += -min(0.0, y_qp_->value(i));
             break;
         case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
             // multiplier should be negavie
 //            printf("1\n");
-            dual_violation += max(0.0, y_qp_->values(i));
+            dual_violation += max(0.0, y_qp_->value(i));
             break;
         case ACTIVE_BOTH_SIDE:
 //           printf("99\n");
@@ -285,17 +287,17 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
             switch (W_c[i]) {
             case INACTIVE://the constraint is inactive, then the dual multiplier
                 // should be 0
-                dual_violation += fabs(y_qp_->values(i+ nVar_QP_));
+                dual_violation += fabs(y_qp_->value(i+ nVar_QP_));
                 //                  printf("0\n");
                 break;
             case ACTIVE_BELOW://the constraint is active at the lower bound, so the
                 // multiplier should be positive
-                dual_violation += -min(0.0, y_qp_->values(i+ nVar_QP_));
+                dual_violation += -min(0.0, y_qp_->value(i+ nVar_QP_));
                 //                 printf("-1\n");
                 break;
             case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
                 // multiplier should be negavie
-                dual_violation += max(0.0, y_qp_->values(i+ nVar_QP_));
+                dual_violation += max(0.0, y_qp_->value(i+ nVar_QP_));
                 //                printf("1\n");
                 break;
             case ACTIVE_BOTH_SIDE:
@@ -316,10 +318,10 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 
     shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
     H_->times(x_qp_, Hx);
-    stationary_gap->add_vector(y_qp_->values());
-    stationary_gap->subtract_vector(g_->values());
-    stationary_gap->subtract_vector(Hx->values());
-    statioanrity_violation = stationary_gap->getOneNorm();
+    stationary_gap->add_vector(1., get_bounds_multipliers());
+    stationary_gap->add_vector(-1., g_);
+    stationary_gap->add_vector(-1., Hx);
+    statioanrity_violation = stationary_gap->one_norm();
 
 
     /**-------------------------------------------------------**/
@@ -328,16 +330,16 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
     for (i = 0; i < nVar_QP_; i++) {
         switch (W_b[i]) {
         case INACTIVE: //constraint is inactive, multiplier should be 0
-            compl_violation += abs(y_qp_->values(i));
+            compl_violation += abs(y_qp_->value(i));
             break;
         case ACTIVE_BELOW://the constraint is active at the lower bound
-            compl_violation += abs(y_qp_->values(i) *
-                                   (x_qp_->values(i) - lb_->values(i)));
+            compl_violation += abs(y_qp_->value(i) *
+                                   (x_qp_->value(i) - lb_->value(i)));
             break;
         case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
             // multiplier should be negavie
-            compl_violation += abs(y_qp_->values(i) *
-                                   (ub_->values(i) - x_qp_->values(i)));
+            compl_violation += abs(y_qp_->value(i) *
+                                   (ub_->value(i) - x_qp_->value(i)));
             break;
         case ACTIVE_BOTH_SIDE:
             break;
@@ -351,18 +353,18 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
         for (i = 0; i < nConstr_QP_; i++) {
             switch (W_c[i]) {
             case INACTIVE: //constraint is inactive, multiplier should be 0
-                compl_violation += abs(y_qp_->values(i+nVar_QP_));
+                compl_violation += abs(y_qp_->value(i+nVar_QP_));
                 break;
             case ACTIVE_BELOW://the constraint is active at the lower bound
-                compl_violation += abs(y_qp_->values(i+nVar_QP_) *
-                                       (x_qp_->values(i+nVar_QP_) -
-                                        lb_->values(i + nVar_QP_)));
+                compl_violation += abs(y_qp_->value(i+nVar_QP_) *
+                                       (x_qp_->value(i+nVar_QP_) -
+                                        lb_->value(i + nVar_QP_)));
                 break;
             case ACTIVE_ABOVE: //the contraint is active at the upper bounds, so the
                 // multiplier should be negavie
-                compl_violation += abs(y_qp_->values(i+nVar_QP_) *
-                                       (ub_->values(i + nVar_QP_) -
-                                        x_qp_->values(i+nVar_QP_)));
+                compl_violation += abs(y_qp_->value(i+nVar_QP_) *
+                                       (ub_->value(i + nVar_QP_) -
+                                        x_qp_->value(i+nVar_QP_)));
                 break;
             case ACTIVE_BOTH_SIDE:
                 break;
@@ -411,6 +413,43 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 
 }
 
+  
+shared_ptr<const Vector> QOREInterface::get_optimal_solution() const
+{
+  shared_ptr<const Vector> retval = make_shared<Vector>(*x_qp_);
+  return retval;
+}
+
+/**
+ * @brief get the pointer to the multipliers to the bounds constraints.
+ */
+shared_ptr<const Vector> QOREInterface::get_bounds_multipliers() const
+{  
+  // create a new vector with the data
+  shared_ptr<Vector> retval = make_shared<Vector>(nVar_QP_);
+  
+  // copy the values from the beginning of the y_qp_ vector
+  retval->copy_values(y_qp_->non_const_values());
+  
+  return retval;
+}
+
+
+/**
+ * @brief get the pointer to the multipliers to the regular constraints.
+ */
+shared_ptr<const Vector> QOREInterface::get_constraints_multipliers() const
+{  
+  // create a new vector with the data
+  shared_ptr<Vector> retval = make_shared<Vector>(nConstr_QP_);
+  
+  // copy the value from the second part of the y_qp_ vector
+  retval->copy_values(y_qp_->non_const_values()+nConstr_QP_);
+  
+  return retval;
+}
+
+
 
 /**@name Getters*/
 //@{
@@ -418,7 +457,7 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 double QOREInterface::get_obj_value() {
     shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
     H_->times(x_qp_,Hx);
-    return (Hx->times(x_qp_)*0.5+g_->times(x_qp_));
+    return (Hx->inner_product(x_qp_)*0.5+g_->inner_product(x_qp_));
 }
 
 
@@ -443,13 +482,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
         if(i<nVar_QP_) {
             switch (working_set_[i]) {
             case -1:
-                if(fabs(x_qp_->values(i)-lb_->values(i))<sqrt_m_eps)
+                if(fabs(x_qp_->value(i)-lb_->value(i))<sqrt_m_eps)
                     W_bounds[i] = ACTIVE_BOTH_SIDE;
                 else
                     W_bounds[i] = ACTIVE_ABOVE;
                 break;
             case 1:
-                if(fabs(x_qp_->values(i)-ub_->values(i))<sqrt_m_eps)
+                if(fabs(x_qp_->value(i)-ub_->value(i))<sqrt_m_eps)
                     W_bounds[i] = ACTIVE_BOTH_SIDE;
                 else
                     W_bounds[i] = ACTIVE_BELOW;
@@ -465,13 +504,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds) 
         else {
             switch (working_set_[i]) {
             case -1:
-                if(fabs(x_qp_->values(i)-lb_->values(i)<sqrt_m_eps))
+                if(fabs(x_qp_->value(i)-lb_->value(i)<sqrt_m_eps))
                     W_constr[i-nVar_QP_] = ACTIVE_BOTH_SIDE;
                 else
                     W_constr[i-nVar_QP_] = ACTIVE_ABOVE;
                 break;
             case 1:
-                if(fabs(x_qp_->values(i)-ub_->values(i)<sqrt_m_eps))
+                if(fabs(x_qp_->value(i)-ub_->value(i)<sqrt_m_eps))
                     W_constr[i-nVar_QP_] =ACTIVE_BOTH_SIDE;
                 else
                     W_constr[i-nVar_QP_] = ACTIVE_BELOW;
@@ -500,9 +539,9 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
                                       const string filename) {
 
 
-#if DEBUG
-#if PRINT_OUT_QP_WITH_ERROR
-#if PRINT_QP_IN_CPP
+#ifdef DEBUG
+#ifdef PRINT_OUT_QP_WITH_ERROR
+#ifdef PRINT_QP_IN_CPP
     jnlst_->DeleteAllJournals();
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl= jnlst_->AddFileJournal("QPdata",
             "QORE_cpp_"+filename,Ipopt::J_WARNING);
@@ -551,7 +590,7 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
                    "}\n");
 
 #else
-#if PRINT_DATA_FOR_QPOASES
+#ifdef PRINT_DATA_FOR_QPOASES
     jnlst_->DeleteAllJournals();
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_qpOASES_jrnl= jnlst_->AddFileJournal("QPdata",
             "QPOASES_"+filename,Ipopt::J_WARNING);
@@ -579,7 +618,7 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
     H_out->write_to_file("H",jnlst_,level,category,QPOASES);
 #endif
 
-#if PRINT_DATA_FOR_QORE
+#ifdef PRINT_DATA_FOR_QORE
     jnlst_->DeleteAllJournals();
     Ipopt::SmartPtr<Ipopt::Journal> QPdata_qore_jrnl= jnlst_->AddFileJournal("QPdata",
             "QORE_"+filename,Ipopt::J_WARNING);
@@ -613,8 +652,8 @@ void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats) {
         shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
         //setup the slack variables to satisfy the bound constraints
         for(int i=0; i<nConstr_QP_; i++) {
-            x_0->setValueAt(i+nVar_QP_-2*nConstr_QP_,max(0.0,lb_->values(nVar_QP_+i)));
-            x_0->setValueAt(i+nVar_QP_-nConstr_QP_,-min(0.0,ub_->values(nVar_QP_+i)));
+            x_0->set_value(i+nVar_QP_-2*nConstr_QP_,max(0.0,lb_->value(nVar_QP_+i)));
+            x_0->set_value(i+nVar_QP_-nConstr_QP_,-min(0.0,ub_->value(nVar_QP_+i)));
         }
 
         rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),

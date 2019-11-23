@@ -59,7 +59,7 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
         THROW_EXCEPTION(GRB_SOLVER_FAILS,"Gurobi Fails due to internal errors");
     }
     for(int i =0; i<nVar_QP_; i++) {
-        x_qp->setValueAt(i,grb_vars_[i].get(GRB_DoubleAttr_X));
+        x_qp->set_value(i,grb_vars_[i].get(GRB_DoubleAttr_X));
     }
 
     if(grb_mod_->get(GRB_IntAttr_Status)!=GRB_OPTIMAL) {
@@ -68,9 +68,9 @@ void GurobiInterface::optimizeQP(shared_ptr<Stats> stats)  {
     }
     for(int i=0; i<nConstr_QP_*2; i++) {
         if(grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi)>0)
-            y_qp->setValueAt((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
+            y_qp->set_value((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
         else if(grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi)<0)
-            y_qp->setValueAt((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
+            y_qp->set_value((int)i/2,grb_mod_->getConstr(i).get(GRB_DoubleAttr_Pi));
     }
 
 
@@ -90,19 +90,6 @@ void GurobiInterface::optimizeLP(shared_ptr<Stats> stats) {
 }
 
 
-/**-------------------------------------------------------**/
-/**                    Getters                            **/
-/**-------------------------------------------------------**/
-/**@name Getters*/
-//@{
-/**
- * @return the pointer to the optimal solution
- *
- */
-double* GurobiInterface::get_optimal_solution()  {
-    return x_qp->values();
-
-}
 
 /**
  *@brief get the objective value from the QP solvers
@@ -117,7 +104,7 @@ double GurobiInterface::get_obj_value()  {
 /**
  * @brief get the pointer to the multipliers to the bounds constraints.
  */
-double* GurobiInterface::get_multipliers_bounds()  {
+shared_ptr<const Vector> GurobiInterface::get_bounds_multipliers() const {
     return nullptr;
 }
 
@@ -126,8 +113,9 @@ double* GurobiInterface::get_multipliers_bounds()  {
 /**
  * @brief get the pointer to the multipliers to the regular constraints.
  */
-double* GurobiInterface::get_multipliers_constr()  {
-    return y_qp->values();
+shared_ptr<const Vector> GurobiInterface::get_constraints_multipliers() const {
+  shared_ptr<const Vector> retval = make_shared<Vector> retval(y_qp);
+  return retval;
 }
 
 /**

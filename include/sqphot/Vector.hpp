@@ -4,18 +4,23 @@
  * Authors: Xinyi Luo
  * Date:2019-06
  */
+
 #ifndef SQPHOTSTART_VECTOR_HPP
 #define SQPHOTSTART_VECTOR_HPP
 
-#include "sqphot/Utils.hpp"
+#include <cassert>
+#include <cmath>
+#include <memory>
+
+#include "sqphot/Types.hpp"
+#include "IpJournalist.hpp"
+
 
 namespace SQPhotstart {
 
-
 /**
- * This is part of SQPhotstart.
- * @Vector This is a class for handling vectors and some operations that are used in the
- * SQP algorithms
+ *  This class implements numerical vectors, with some basic
+ *  functionality.
  */
 
 class Vector {
@@ -32,153 +37,220 @@ public:
    *  array.
    */
   Vector(int size, const double* values);
-  
-  /** Default destructor*/
+
+  /** Copy Constructor */
+  Vector(const Vector &);
+
+  /** Destructor*/
   virtual ~Vector();
 
-#if 0
-  /** assign a sub-vector into the class member vector without shifting elements' positions
-   * */
-  void assign(int Location, int subvector_size, const double* subvector);
+  /** Print the vector*/
+  void print(const std::string name,
+             Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+             Ipopt::EJournalLevel level = Ipopt::J_ALL,
+             Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
-    /** assign a sub-vector with a specific size to the class member vector at a specific location.
-     * The sub-vector will have all elements equal to the scaling factor
-     * */
-    void assign_n(int Location, int subvector_size, double scaling_factor);
-#endif
-
-    /** print the vector*/
-    void print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst= nullptr,
-               Ipopt::EJournalLevel level=Ipopt::J_ALL, Ipopt::EJournalCategory
-               category =Ipopt::J_DBG) const;
-
-
-    /* add all the element in the array by a number*/
-    void addNumber(double increase_amount);
-
-    /* add the element in a specific location by a number*/
-    void addNumberAt(int Location, double increase_amount);
-
-    /** add all elements from the initial location to the end location  specified
-     * by user by a number*/
-    void add_number(int initloc, int endloc, double increase_amount);
-
-    /** add _vector with another vector, store the results in _vector*/
-    void add_vector(const double* rhs);
-
-    /** subtract a vector @rhs from the class member @_vector*/
-    void subtract_vector(const double* rhs);
-
-    /** subtract class member @vector_ to a vector @rhs, modified @vector_ to be the result*/
-    void subtract_vector_to(const double* rhs);
-
-    /**
-     *
-     * subtract  a subvector with length @subvec_size from the class member @_vector
-     * from the location @iloc
-     *
-     * @param begin  the starting location to subtract the subvector
-     * @param subvec_size the size of the subvector
-     */
-    void subtract_subvector(int begin, int subvec_size, const double* subvector);
-
-    /**copy all the entries from another vector*/
-    void copy_vector(const double* rhs);
-
-    /**copy all the entries from another vector*/
-    void copy_vector(std::shared_ptr<const Vector> rhs);
-
-    /**
-     * copy a subvector from member_vector from (Location) to (Location+subvector_size)
-     * to the pointer (results)
-     */
-    void get_subVector(int Location, int subvector_size,
-                       std::shared_ptr<Vector> rhs) const;
-
-    /** set all entries to be 0*/
-    void set_zeros();
-
-    /** calculate one norm of the member _vector*/
-    double getOneNorm() const;;
-
-    /** calculate the infinity norm of the member _vector*/
-    double getInfNorm() const;
-
-    double times(std::shared_ptr<Vector> rhs);
-
-
-
-    void scale(double scaling_factor) {
-        for(int i=0; i<size_; i++) {
-            values_[i]*=scaling_factor;
-        }
+  /** add the element in a specific location by a number*/
+  void add_number_to_element(int index, double increase_amount)
+  {
+    if (increase_amount != 0.) {
+      values_[index] += increase_amount;
     }
+  }
 
-    /**
-     * get the class member
-     */
+  /** Add a vector to this vector.
+   *
+   *  This vector += factor * rhs */
+  void add_vector(double factor, std::shared_ptr<const Vector> rhs)
+  {
+    add_vector(factor, *rhs);
+  }
 
-    inline int Dim() {
-        return size_;
+  /** Add a vector to this vector.
+   *
+   *  This vector += factor * rhs */
+  void add_vector(double factor, const Vector& rhs)
+  {
+    assert(size_ == rhs.size_);
+    if (factor == 1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] += rhs.values_[i];
+      }
     }
-
-    inline int Dim() const {
-        return size_;
+    else if (factor == -1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] -= rhs.values_[i];
+      }
     }
-
-    inline double* values() {
-        return values_;
+    else {
+      for (int i = 0; i < size_; i++) {
+        values_[i] += factor * rhs.values_[i];
+      }
     }
+  }
 
-    inline const double* values() const {
-        return values_;
+  /** The values to the sum of two vectors.
+   *
+   *  this vector = fact1*vec1 + fact2*vec2 */
+  void set_to_sum_of_vectors(double fact1, std::shared_ptr<const Vector> vec1,
+                             double fact2, std::shared_ptr<const Vector> vec2)
+  {
+    set_to_sum_of_vectors(fact1, *vec1, fact2, *vec2);
+  }
+
+  /** The values to the sum of two vectors.
+   *
+   *  this vector = fact1*vec1 + fact2*vec2 */
+  void set_to_sum_of_vectors(double fact1, const Vector& vec1,
+                             double fact2, const Vector& vec2)
+  {
+    assert(size_ == vec1.size_);
+    assert(size_ == vec2.size_);
+    if (fact1 == 1. && fact2 == 1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = vec1.values_[i] + vec2.values_[i];
+      }
     }
-
-    inline const double values(int i) const {
-        return values_[i];
+    else {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = fact1*vec1.values_[i] + fact2*vec2.values_[i];
+      }
     }
-    inline void setValueAt(int location, double value) {
-        values_[location] = value;
+  }
+
+  /** Copy all the entries from another vector */
+  void copy_vector(std::shared_ptr<const Vector> rhs)
+  {
+    copy_vector(*rhs);
+  }
+
+  /** Copy all the entries from another vector */
+  void copy_vector(const Vector& rhs)
+  {
+    assert(size_ == rhs.size_);
+    for (int i = 0; i < size_; i++) {
+      values_[i] = rhs.values_[i];
     }
+  }
 
-//        /**
-//         * @brief overload equal operator
-//         * @param rhs
-//         */
-//        void operator=(const Vector &rhs) {
-//            size_ = rhs.size_;
-//            values_ = rhs.values_;
-//        }
-    void write_to_file(const char* name,
-                       Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                       Ipopt::EJournalLevel level,
-                       Ipopt::EJournalCategory category,
-                       Solver qpsolver);
+  /** Copy the values from a double* array */
+  void copy_values(const double* values) {
+    for (int i = 0; i < size_; i++) {
+      values_[i] = values[i];
+    }
+  }
 
+  /** set all entries to be 0*/
+  void set_to_zero()
+  {
+    for (int i = 0; i < size_; i++) {
+      values_[i] = 0;
+    }
+  }
 
-//    double operator[int i](const Vector&){
-//        return values_[i];
-//    }
+  /** Calculate the one-norm of this vector. */
+  double one_norm() const
+  {
+    return one_norm(0, size_);
+  }
+
+  /** calculate one norm of a subvector of this vector.  The subvector
+      starts at element first_element and has a length of length */
+  double one_norm(int first_element, int length) const
+  {
+    assert(first_element>=0);
+    assert(first_element+length<=size_);
+    double oneNorm = 0;
+    for(int i=first_element; i<first_element+length; i++) {
+        oneNorm += fabs(values_[i]);
+    }
+    return oneNorm;
+  }
+
+  /** calculate the infinity norm of the member _vector*/
+  double inf_norm() const
+  {
+    double inf_norm = 0;
+    for (int i = 0; i < size_; i++) {
+      inf_norm = std::max(inf_norm, fabs(values_[i]));
+    }
+    return inf_norm;
+  }
+
+  /** Compute the inner product of this vector with another */
+  double inner_product(std::shared_ptr<Vector> rhs) const
+  {
+    double product = 0;
+    for (int i = 0; i < size_; i++) {
+      product += values_[i] * rhs->values()[i];
+    }
+    return product;
+  }
+
+  /** Scale vector by given scalar */
+  void scale(double scaling_factor)
+  {
+    if (scaling_factor != 1.) {
+      for(int i=0; i<size_; i++) {
+        values_[i] *= scaling_factor;
+      }
+    }
+  }
+
+  /** Return the dimension of the vector. */
+  int dim() const
+  {
+    return size_;
+  }
+
+  /** Return the array with the vector elements (const version) */
+  double* values() const
+  {
+    return values_;
+  }
+
+  /** Return the array with the vector elements (non-const version) */
+  double* non_const_values()
+  {
+    return values_;
+  }
+
+  /** Return the value of the i-th vector element */
+  double value(int i) const
+  {
+    return values_[i];
+  }
+
+  /** Set the value of the i-th element */
+  void set_value(int location, double value)
+  {
+    values_[location] = value;
+  }
+
+  /** Print vector or write to a file. */
+  void write_to_file(std::string name,
+                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                     Ipopt::EJournalLevel level,
+                     Ipopt::EJournalCategory category,
+                     Solver qpsolver) const;
+  // AW: Replace qpsolver argument
+  // Also, why are the both a print and a write_to_file method
+
 private:
+  /** Default Constructor.  Make this private so that it is not
+   *  automatically generated. */
+  Vector();
 
+  /** Overloaded Equals Operator.  Make this private so that it is
+   *  not automatically generated. */
+  void operator=(const Vector &);
 
-    /** Default Constructor*/
-    Vector();
+  /** Dimension of the vector */
+  int size_;
 
-    /** Copy Constructor */
-    Vector(const Vector &);
-
-    /** Overloaded Equals Operator */
-    void operator=(const Vector &);
-
-private:
-    int size_; /* the size of an vector*/
-    double* values_;/*the array stored vector information*/
+  /** Array with the elements of the vector. */
+  double* values_;
 };
 
 }
-
 #endif
-
-
-

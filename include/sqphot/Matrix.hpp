@@ -7,19 +7,7 @@
 #ifndef SQPHOTSTART_MATRIX_HPP_
 #define SQPHOTSTART_MATRIX_HPP_
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <memory>
-#include <tuple>
-#include <vector>
-
 #include "IpJournalist.hpp"
-#include "IpTNLP.hpp"
-#include "qpOASES.hpp"
-#include "sqphot/Utils.hpp"
-#include "sqphot/Types.hpp"
-#include "sqphot/Vector.hpp"
 
 namespace SQPhotstart {
 

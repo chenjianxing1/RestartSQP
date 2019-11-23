@@ -352,7 +352,7 @@ private:
 
     void set_zero();
 
-
+#if 0
     template <typename T>
     static void print_tuple(std::vector<std::tuple<int,int,T>> tuple) {
         for(int i = 0; i<tuple.size(); i++) {
@@ -360,7 +360,7 @@ private:
             std::cout<<std::get<2>(tuple[i])<<std::endl;
         }
     }
-
+#endif
     /**
      * @brief This is the sorted rule that used to sort data, first based on column
      * index then based on row index

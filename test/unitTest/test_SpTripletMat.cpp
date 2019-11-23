@@ -5,6 +5,7 @@
 #include <time.h>
 #include <random>
 #include <iterator>
+#include <algorithm>
 
 using namespace SQPhotstart;
 using namespace std;
@@ -43,7 +44,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -58,7 +59,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     shared_ptr<SpTripletMat> m_col_oriented = make_shared<SpTripletMat>(dense_matrix_in,
             rowNum, colNum, false);
 
-    dense_matrix_out->set_zeros();
+    dense_matrix_out->set_to_zero();
     m_col_oriented->get_dense_matrix(dense_matrix_out->values(),false);
 
 
@@ -83,7 +84,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -99,7 +100,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
 bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
         shared_ptr<const Vector> vector) {
 
-    assert(colNum == vector->Dim());
+    assert(colNum == vector->dim());
 
     shared_ptr<Vector> result_dense = make_shared<Vector>(rowNum);
     shared_ptr<Vector> result_sparse = make_shared<Vector>(rowNum);
@@ -107,8 +108,8 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
     //compare it with matrix-vector multiplication in dense matrix
     for(int i = 0; i<rowNum; i ++) {
         for(int j = 0; j<colNum; j++) {
-            result_dense->addNumberAt(i,
-                                      dense_matrix_in[i*colNum+j]*vector->values(j));
+            result_dense->add_number_to_element(i,
+                                      dense_matrix_in[i*colNum+j]*vector->value(j));
         }
     }
 
@@ -138,7 +139,7 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
 bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
         shared_ptr<const Vector> vector) {
 
-    assert(rowNum == vector->Dim());
+    assert(rowNum == vector->dim());
 
 
     shared_ptr<Vector> result_dense = make_shared<Vector>(colNum);
@@ -147,8 +148,8 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     //compare it with matrix-vector multiplication in dense matrix
     for(int i = 0; i<colNum; i ++) {
         for(int j = 0; j<rowNum; j++) {
-            result_dense->addNumberAt(i, dense_matrix_in[j*colNum+i]*
-                                      vector->values(j));
+            result_dense->add_number_to_element(i, dense_matrix_in[j*colNum+i]*
+                                      vector->value(j));
         }
     }
 
@@ -233,7 +234,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<Vector> vector_mult = make_shared<Vector>(colNum);
 
     for(int i = 0; i < colNum; i++) {
-        vector_mult->setValueAt(i,rand() %10+1);
+        vector_mult->set_value(i,rand() %10+1);
     }
 
     TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_mult);
@@ -246,7 +247,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<Vector> vector_trans_mult = make_shared<Vector>(rowNum);
 
     for(int i = 0; i < rowNum; i++) {
-        vector_trans_mult->setValueAt(i,rand() %10+1);
+        vector_trans_mult->set_value(i,rand() %10+1);
     }
 
     TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_trans_mult);
@@ -305,7 +306,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<Vector> vector_sym_mult = make_shared<Vector>(dim);
 
     for(int i = 0; i < dim; i++) {
-        vector_sym_mult->setValueAt(i,rand() %10+1);
+        vector_sym_mult->set_value(i,rand() %10+1);
     }
 
     TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(dim, dim, dense_matrix_in, vector_sym_mult);

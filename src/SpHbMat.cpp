@@ -1,4 +1,9 @@
+
+#include <iostream>
+#include <algorithm>
+
 #include "sqphot/SpHbMat.hpp"
+
 
 using namespace std;
 
@@ -520,8 +525,8 @@ void SpHbMat::write_to_file(const char* name,
                             Ipopt::EJournalLevel level,
                             Ipopt::EJournalCategory category,
                             Solver solver) {
-#if DEBUG
-#if PRINT_QP_IN_CPP
+#ifdef DEBUG
+#ifdef PRINT_QP_IN_CPP
     const char* var_type_int;
     const char* var_type_double;
     var_type_int = (solver == QPOASES) ? "sparse_int_t" : "qp_int";
@@ -661,7 +666,7 @@ void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
 void SpHbMat::transposed_times(shared_ptr<const Vector> p,
                                shared_ptr<Vector> result) const {
 
-    result->set_zeros();
+  result->set_to_zero();
 
     if(isCompressedRow_) {
         int row;
@@ -675,7 +680,7 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
             while(i==RowIndex_[row+1]) {
                 row++;
             }
-            result->addNumberAt(ColIndex_[i], MatVal_[i]*p->values(row));
+            result->add_number_to_element(ColIndex_[i], MatVal_[i]*p->value(row));
         }
     }
     else {
@@ -692,7 +697,7 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
             while(i == ColIndex_[col+1]) {
                 col++;
             }
-            result->addNumberAt(col, MatVal_[i]*p->values(RowIndex_[i]));
+            result->add_number_to_element(col, MatVal_[i]*p->value(RowIndex_[i]));
         }
     }
 }
@@ -700,7 +705,7 @@ void SpHbMat::transposed_times(shared_ptr<const Vector> p,
 void SpHbMat::times(std::shared_ptr<const Vector> p,
                     std::shared_ptr<Vector> result) const {
 
-    result->set_zeros();
+    result->set_to_zero();
 
     if(isCompressedRow_) {
         int row;
@@ -716,7 +721,7 @@ void SpHbMat::times(std::shared_ptr<const Vector> p,
             while(i==RowIndex_[row+1]) {
                 row++;
             }
-            result->addNumberAt(row, MatVal_[i]*p->values(ColIndex_[i]));
+            result->add_number_to_element(row, MatVal_[i]*p->value(ColIndex_[i]));
         }
     }
     else {
@@ -733,7 +738,7 @@ void SpHbMat::times(std::shared_ptr<const Vector> p,
             while(i == ColIndex_[col+1]) {
                 col++;
             }
-            result->addNumberAt(RowIndex_[i], MatVal_[i]*p->values(col));
+            result->add_number_to_element(RowIndex_[i], MatVal_[i]*p->value(col));
         }
     }
 }
@@ -856,7 +861,7 @@ const double SpHbMat::oneNorm()const {
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
-            colSums->addNumberAt(ColIndex(i), abs(MatVal_[i]));
+            colSums->add_number_to_element(ColIndex(i), abs(MatVal_[i]));
         }
     }
     else {
@@ -870,11 +875,11 @@ const double SpHbMat::oneNorm()const {
         for (int i = 0; i < EntryNum_; i++) {
             while(ColIndex_[col+1])
                 col++;
-            colSums->addNumberAt(col, abs(MatVal_[i]));
+            colSums->add_number_to_element(col, abs(MatVal_[i]));
         }
     }
 
-    double oneNorm = colSums->getInfNorm();//same as calculating the MAX of an array
+    double oneNorm = colSums->inf_norm();//same as calculating the MAX of an array
     return oneNorm;
 
 }
@@ -884,7 +889,7 @@ const double SpHbMat::infNorm()const {
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     if(isCompressedRow_) {
         for (int i = 0; i < EntryNum_; i++) {
-            rowSums->addNumberAt(RowIndex(i), abs(MatVal_[i]));
+            rowSums->add_number_to_element(RowIndex(i), abs(MatVal_[i]));
         }
     }
     else {
@@ -898,14 +903,12 @@ const double SpHbMat::infNorm()const {
         for (int i = 0; i < EntryNum_; i++) {
             while(RowIndex_[row+1])
                 row++;
-            rowSums->addNumberAt(row, abs(MatVal_[i]));
+            rowSums->add_number_to_element(row, abs(MatVal_[i]));
         }
     }
 
-    double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
+    double InfNorm = rowSums->inf_norm();//same as calculating the MAX of an array
     return InfNorm;
 }
 //@}
 }//END_OF_NAMESPACE
-
-

@@ -7,17 +7,10 @@
 #define SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 
 #include <memory>
-#include <vector>
-#include "IpException.hpp"
 #include "sqphot/Vector.hpp"
-#include "sqphot/Utils.hpp"
-#include "sqphot/SpHbMat.hpp"
-
-#include "qpOASES.hpp"
+#include "IpException.hpp"
 #include "sqphot/Stats.hpp"
-#include "sqphot/Options.hpp"
-#include "sqphot/Types.hpp"
-//#include "<sqphot/SQPDebug.hpp"
+#include "sqphot/SpHbMat.hpp"
 
 namespace SQPhotstart {
 
@@ -92,7 +85,7 @@ public:
      * @return the pointer to the optimal solution
      *
      */
-    virtual double* get_optimal_solution() = 0;
+  virtual std::shared_ptr<const Vector> get_optimal_solution() const = 0;
 
     /**
      *@brief get the objective value from the QP solvers
@@ -105,12 +98,12 @@ public:
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    virtual double* get_multipliers_bounds() = 0;
+    virtual std::shared_ptr<const Vector>  get_bounds_multipliers() const = 0;
 
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    virtual double* get_multipliers_constr() = 0;
+    virtual std::shared_ptr<const Vector> get_constraints_multipliers() const = 0;
 
     /**
      * @brief copy the working set information

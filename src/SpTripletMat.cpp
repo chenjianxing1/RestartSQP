@@ -1,3 +1,5 @@
+
+#include <iostream>
 #include "sqphot/SpTripletMat.hpp"
 
 namespace SQPhotstart {
@@ -235,21 +237,21 @@ void SpTripletMat::freeMemory() {
 void SpTripletMat::times(std::shared_ptr<const Vector> p,
                          std::shared_ptr<Vector> result) const {
 
-    assert(ColNum_ == p->Dim());
+    assert(ColNum_ == p->dim());
     if (isSymmetric_) {
-        result->set_zeros();
+        result->set_to_zero();
         for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
+            result->add_number_to_element(RowIndex_[i] - 1, MatVal_[i] * p->values()
                                 [ColIndex_[i] - 1]);
             if (RowIndex_[i] != ColIndex_[i]) {
-                result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
+                result->add_number_to_element(ColIndex_[i] - 1, MatVal_[i] * p->values()
                                     [RowIndex_[i] - 1]);
             }
         }
     } else {
-        result->set_zeros(); //set all entries to be 0
+        result->set_to_zero(); //set all entries to be 0
         for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(RowIndex_[i] - 1, MatVal_[i] * p->values()
+            result->add_number_to_element(RowIndex_[i] - 1, MatVal_[i] * p->values()
                                 [ColIndex_[i] - 1]);
         }
     }
@@ -261,13 +263,13 @@ double SpTripletMat::InfNorm() {
 
     std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
     for (int i = 0; i < EntryNum_; i++) {
-        rowSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
+        rowSums->add_number_to_element(RowIndex()[i] - 1, abs(MatVal_[i]));
         if(isSymmetric_)
-            rowSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
+            rowSums->add_number_to_element(ColIndex()[i] - 1, abs(MatVal_[i]));
 
     }
 
-    double InfNorm = rowSums->getInfNorm();//same as calculating the MAX of an array
+    double InfNorm = rowSums->inf_norm();//same as calculating the MAX of an array
 
     return InfNorm;
 }
@@ -277,13 +279,13 @@ double SpTripletMat::OneNorm() {
 
     std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
     for (int i = 0; i < EntryNum_; i++) {
-        colSums->addNumberAt(ColIndex()[i] - 1, abs(MatVal_[i]));
+        colSums->add_number_to_element(ColIndex()[i] - 1, abs(MatVal_[i]));
         if(isSymmetric_)
-            colSums->addNumberAt(RowIndex()[i] - 1, abs(MatVal_[i]));
+            colSums->add_number_to_element(RowIndex()[i] - 1, abs(MatVal_[i]));
 
     }
 
-    double OneNorm = colSums->getInfNorm();//same as calculating the MAX of an array
+    double OneNorm = colSums->inf_norm();//same as calculating the MAX of an array
 
     return OneNorm;
 }
@@ -312,9 +314,9 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
     if (isSymmetric_) {
         times(p, result);
     } else {
-        result->set_zeros(); //set all entries to be 0
+        result->set_to_zero(); //set all entries to be 0
         for (int i = 0; i < EntryNum_; i++) {
-            result->addNumberAt(ColIndex_[i] - 1, MatVal_[i] * p->values()
+            result->add_number_to_element(ColIndex_[i] - 1, MatVal_[i] * p->values()
                                 [RowIndex_[i] - 1]);
         }
     }

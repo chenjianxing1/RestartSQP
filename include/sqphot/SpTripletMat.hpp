@@ -8,7 +8,10 @@
 #ifndef SQPHOTSTART_SPTRIPLETMAT_HPP_
 #define SQPHOTSTART_SPTRIPLETMAT_HPP_
 
+#include <memory>
 #include "sqphot/Matrix.hpp"
+#include "sqphot/Utils.hpp"
+#include "sqphot/Vector.hpp"
 
 namespace SQPhotstart {
 

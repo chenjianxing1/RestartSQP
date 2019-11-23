@@ -6,7 +6,9 @@
 */
 #ifndef SQPHOTSTART_STATS_HPP
 #define SQPHOTSTART_STATS_HPP
+
 namespace SQPhotstart {
+
 class Stats {
 public:
     /* Default constructor*/

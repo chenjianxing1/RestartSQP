@@ -72,7 +72,10 @@ public:
      * @return the pointer to the optimal solution
      *
      */
-    double* get_optimal_solution() override;
+  std::shared_ptr<const Vector> get_optimal_solution() const override
+  {
+    return x_qp_;
+  }
 
     /**
      *@brief get the objective value from the QP solvers
@@ -85,12 +88,18 @@ public:
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    double* get_multipliers_bounds() override;
+  std::shared_ptr<const Vector> get_bounds_multipliers() const override
+  {
+    return nullptr;
+  }
 
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    double* get_multipliers_constr() override;
+  std::shared_ptr<const Vector> get_constraints_multipliers() const override
+  {
+    return y_qp_;
+  }
 
     /**
      * @brief copy the working set information

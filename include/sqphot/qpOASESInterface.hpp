@@ -9,6 +9,8 @@
 #define __QPOASES_INTERFACE_HPP__
 
 #include "sqphot/QPsolverInterface.hpp"
+#include "sqphot/Options.hpp"
+#include "qpOASES.hpp"
 
 
 namespace SQPhotstart {
@@ -73,18 +75,16 @@ public:
     * @brief copy the optimal solution of the QP to the input pointer
     */
 
-    double* get_optimal_solution() override;
+  std::shared_ptr<const Vector> get_optimal_solution() const override;
 
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    double* get_multipliers_bounds()override;
-
+  std::shared_ptr<const Vector> get_bounds_multipliers() const override;
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    double* get_multipliers_constr()override;
-
+  std::shared_ptr<const Vector> get_constraints_multipliers() const override;
 
     void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
@@ -257,7 +257,7 @@ private:
     std::shared_ptr<Vector> ubA_; /**< upper bounds of Ax */
     std::shared_ptr<Vector> ub_;  /**< upper bounds of x */
     std::shared_ptr<Vector> x_qp_; /** the qp solution */
-    std::shared_ptr<Vector> y_qp_; /** the multiplier corresponding to the optimal solution */
+    std::shared_ptr<Vector> y_qp_; /** the bounds and constraint multipliers corresponding to the optimal solution.  The first nVar_QP_ entries are for the bound multipliersr, and the remaining nConstr_QP_ entries contain the constraint multipliers. */
     std::shared_ptr<SpHbMat> H_;/**< the Matrix object stores the QP data H in
                                           * Harwell-Boeing Sparse Matrix format*/
     std::shared_ptr<SpHbMat> A_;/**< the Matrix object stores the QP data A in

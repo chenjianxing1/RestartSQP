@@ -8,18 +8,11 @@
 #define SQPHOTSTART_ALG_HPP_
 
 #include "sqphot/SQPDebug.hpp"
-#include "IpTNLP.hpp"
-#include "IpRegOptions.hpp"
-#include "IpOptionsList.hpp"
-#include "sqphot/Stats.hpp"
-#include "sqphot/Types.hpp"
-#include "sqphot/Options.hpp"
-#include "sqphot/QPhandler.hpp"
-#include "sqphot/Utils.hpp"
 #include "sqphot/SQPTNLP.hpp"
-#include "sqphot/Vector.hpp"
-#include "sqphot/Matrix.hpp"
-
+#include "sqphot/Options.hpp"
+#include "sqphot/Stats.hpp"
+#include "IpOptionsList.hpp"
+#include "sqphot/QPhandler.hpp"
 
 namespace SQPhotstart {
 /**

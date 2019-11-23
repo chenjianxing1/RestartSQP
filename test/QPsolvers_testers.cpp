@@ -90,21 +90,21 @@ int main(int argc, char* argv[]) {
     for(i = 0 ; i <nCon+nVar; i++) {
         if(fgets(buffer,100,file)!=NULL) {
             sscanf(buffer,"%lf",&tmp_double);
-            lb_qore->setValueAt(i, tmp_double);
+            lb_qore->set_value(i, tmp_double);
         }
     }
 
     for(i = 0 ; i <nCon+nVar; i++) {
         if(fgets(buffer,100,file)!=NULL) {
             sscanf(buffer,"%lf",&tmp_double);
-            ub_qore->setValueAt(i, tmp_double);
+            ub_qore->set_value(i, tmp_double);
         }
     }
 
     for(i = 0 ; i <nVar; i++) {
         if(fgets(buffer,100,file)!=NULL) {
             sscanf(buffer,"%lf",&tmp_double);
-            g->setValueAt(i,tmp_double);
+            g->set_value(i,tmp_double);
         }
     }
 
@@ -198,8 +198,8 @@ int main(int argc, char* argv[]) {
     }
     qore_inferface->test_optimality();
     x_qore->copy_vector(qore_inferface->get_optimal_solution());
-    y_qore_constr->copy_vector(qore_inferface->get_multipliers_constr());
-    y_qore_bounds->copy_vector(qore_inferface->get_multipliers_bounds());
+    y_qore_constr->copy_vector(qore_inferface->get_constraints_multipliers());
+    y_qore_bounds->copy_vector(qore_inferface->get_bounds_multipliers());
     double obj_qore = qore_inferface->get_obj_value();
 
     ///////////////////////////////////////////////////////////
@@ -215,10 +215,10 @@ int main(int argc, char* argv[]) {
     auto ubA_qpOASES = make_shared<Vector>(nCon);
 
 
-    lb_qpOASES->copy_vector(lb_qore->values());
-    ub_qpOASES->copy_vector(ub_qore->values());
-    lbA_qpOASES->copy_vector(lb_qore->values()+nVar);
-    ubA_qpOASES->copy_vector(ub_qore->values()+nVar);
+    lb_qpOASES->copy_values(lb_qore->values());
+    ub_qpOASES->copy_values(ub_qore->values());
+    lbA_qpOASES->copy_values(lb_qore->values()+nVar);
+    ubA_qpOASES->copy_values(ub_qore->values()+nVar);
 
     shared_ptr<qpOASESInterface> qpoases_interface= make_shared<qpOASESInterface>(H_qpOASES,
             A_qpOASES, g, lb_qore, ub_qore, lbA_qpOASES, ubA_qpOASES,options);
@@ -229,8 +229,8 @@ int main(int argc, char* argv[]) {
 
     }
     x_qpOASES->copy_vector(qpoases_interface->get_optimal_solution());
-    y_qpOASES_constr->copy_vector(qpoases_interface->get_multipliers_constr());
-    y_qpOASES_bounds->copy_vector(qpoases_interface->get_multipliers_bounds());
+    y_qpOASES_constr->copy_vector(qpoases_interface->get_constraints_multipliers());
+    y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
 
     qpoases_interface->test_optimality();
     double obj_qpOASES = qpoases_interface->get_obj_value();
@@ -282,12 +282,12 @@ int main(int argc, char* argv[]) {
     printf("%30s    %23s    %23s\n","Exitflag",exitflag_qore.c_str(),exitflag_qpOASES.c_str());
     printf("%30s    %23d    %23d\n","Iteration",stats_qore->qp_iter,stats_qpOASES->qp_iter);
     printf("%30s    %23.16e    %23.16e\n","Objective",obj_qore,obj_qpOASES);
-    printf("%30s    %23.16e    %23.16e\n","||x||",x_qore->getOneNorm(),
-           x_qpOASES->getOneNorm());
-    printf("%30s    %23.16e    %23.16e\n","||y_b||",y_qore_bounds->getInfNorm(),
-           y_qpOASES_bounds->getInfNorm());
-    printf("%30s    %23.16e    %23.16e\n","||y_c||",y_qore_constr->getInfNorm(),
-           y_qpOASES_constr->getInfNorm());
+    printf("%30s    %23.16e    %23.16e\n","||x||",x_qore->one_norm(),
+           x_qpOASES->one_norm());
+    printf("%30s    %23.16e    %23.16e\n","||y_b||",y_qore_bounds->inf_norm(),
+           y_qpOASES_bounds->inf_norm());
+    printf("%30s    %23.16e    %23.16e\n","||y_c||",y_qore_constr->inf_norm(),
+           y_qpOASES_constr->inf_norm());
     printf("%30s    %23.16e    %23.16e\n","KKT Error",
            qore_inferface->get_optimality_status().KKT_error,
            qpoases_interface->get_optimality_status().KKT_error);

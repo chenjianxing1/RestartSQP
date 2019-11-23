@@ -124,7 +124,7 @@ void CplexInterface::optimizeQP(shared_ptr<Stats> stats)  {
 
     for(int i = 0; i< nVar_QP_; i++) {
         if(cplex.isExtracted(vars[i]))
-            x_qp_->setValueAt(i, cplex.getValue(vars[i]));
+            x_qp_->set_value(i, cplex.getValue(vars[i]));
     }
 
 
@@ -137,9 +137,9 @@ void CplexInterface::optimizeQP(shared_ptr<Stats> stats)  {
     }
     for(int i= 0; i<nConstr_QP_; i++) {
         if(y_start[i]>0)
-            y_qp_->setValueAt(i,y_start[i]);
+            y_qp_->set_value(i,y_start[i]);
         else
-            y_qp_->setValueAt(i,y_start[i*2+1]);
+            y_qp_->set_value(i,y_start[i*2+1]);
     }
 
 //    y_qp_->print("y_qp");
@@ -178,7 +178,7 @@ void CplexInterface::optimizeLP(shared_ptr<Stats> stats)  {
 
     for(int i = 0; i< nVar_QP_; i++) {
         if(cplex.isExtracted(cplex_vars_[i]))
-            x_qp_->setValueAt(i, cplex.getValue(cplex_vars_[i]));
+            x_qp_->set_value(i, cplex.getValue(cplex_vars_[i]));
     }
     x_qp_->print("x_qp");
 
@@ -190,14 +190,6 @@ void CplexInterface::optimizeLP(shared_ptr<Stats> stats)  {
 /**-------------------------------------------------------**/
 /**@name Getters*/
 //@{
-/**
- * @return the pointer to the optimal solution
- *
- */
-double* CplexInterface::get_optimal_solution()  {
-    return x_qp_->values();
-
-}
 
 /**
  *@brief get the objective value from the QP solvers
@@ -208,22 +200,6 @@ double CplexInterface::get_obj_value()  {
     return final_obj_;
 }
 
-
-/**
- * @brief get the pointer to the multipliers to the bounds constraints.
- */
-double* CplexInterface::get_multipliers_bounds()  {
-    return nullptr;
-}
-
-
-
-/**
- * @brief get the pointer to the multipliers to the regular constraints.
- */
-double* CplexInterface::get_multipliers_constr()  {
-    return y_qp_->values();
-}
 
 /**
  * @brief copy the working set information
@@ -245,11 +221,11 @@ QPReturnType CplexInterface::get_status() {}
 /**@name Setters, by location and value*/
 //@{
 void CplexInterface::set_lb(int location, double value) {
-    lb_->setValueAt(location, value);
+    lb_->set_value(location, value);
 }
 
 void CplexInterface::set_ub(int location, double value) {
-    ub_->setValueAt(location, value);
+    ub_->set_value(location, value);
 }
 
 void CplexInterface::set_lbA(int location, double value) {

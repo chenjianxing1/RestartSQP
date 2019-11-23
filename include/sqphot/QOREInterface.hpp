@@ -12,6 +12,8 @@ extern "C" {
 }
 
 #include "sqphot/QPsolverInterface.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/MessageHandling.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 
@@ -73,28 +75,17 @@ public:
      * @param x_optimal a pointer to an empty array with allocated memory euqal to
      * sizeof(double)*number_variables
      */
-    inline double* get_optimal_solution() override {
-        return x_qp_->values();
-    };
+  std::shared_ptr<const Vector> get_optimal_solution() const override;
 
     /**
      * @brief get the pointer to the multipliers to the bounds constraints.
      */
-    inline double* get_multipliers_bounds()override {
-#if NEW_FORMULATION
-        return y_qp_->values()+nVar_QP_+(3*nConstr_QP_-nVar_QP_);//3*nConstr_QP-nVar_QP = nlp_info.nCon
-#else
-        return y_qp_->values();
-#endif
-    };
-
+  std::shared_ptr<const Vector>  get_bounds_multipliers() const override;
     /**
      * @brief get the pointer to the multipliers to the regular constraints.
      */
-    inline double* get_multipliers_constr()override {
-        return y_qp_->values()+ nVar_QP_;
-    };
-
+  std::shared_ptr<const Vector> get_constraints_multipliers() const override;
+  
     Exitflag get_status() override;
 
 
@@ -141,17 +132,17 @@ public:
     //@{
     void set_g(int location, double value) override {
         value = value < INF ? value : INF;
-        g_->setValueAt(location, value);
+        g_->set_value(location, value);
     };
 
     void set_lb(int location, double value) override {
         value = value > -INF ? value : -INF;
-        lb_->setValueAt(location, value);
+        lb_->set_value(location, value);
     };
 
     void set_ub(int location, double value) override {
         value = value < INF ? value : INF;
-        ub_->setValueAt(location, value);
+        ub_->set_value(location, value);
     };
 
     void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
@@ -182,8 +173,8 @@ public:
     void set_ubA(std::shared_ptr<const Vector> rhs) override {};
 
     void reset_constraints() override {
-        lb_->set_zeros();
-        ub_->set_zeros();
+        lb_->set_to_zero();
+        ub_->set_to_zero();
     };
     //@}
 
@@ -236,7 +227,11 @@ private:
     std::shared_ptr<Vector> lb_;
     std::shared_ptr<Vector> ub_;
     std::shared_ptr<Vector> x_qp_;
-    std::shared_ptr<Vector> y_qp_;
+  /** the bounds and constraint multipliers corresponding to the
+      optimal solution.  The first nVar_QP_ entries are for the bound
+      multipliersr, and the remaining nConstr_QP_ entries contain the
+      constraint multipliers. */
+  std::shared_ptr<Vector> y_qp_;
 
     int qpiter_[1];
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;

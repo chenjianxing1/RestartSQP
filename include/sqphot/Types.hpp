@@ -44,7 +44,7 @@ typedef struct {
 
 enum QPType {
     LP = 1,/** solving a linear program*/
-    QP = 2/**solving a regular qp subproblem **/
+    QP = 2 /** solving a regular quadratic subproblem **/
 };
 
 

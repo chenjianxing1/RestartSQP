@@ -2,6 +2,7 @@
 #include <time.h>
 #include <random>
 #include <iterator>
+#include <algorithm>
 
 #include "unit_test_utils.hpp"
 #include "sqphot/SpHbMat.hpp"
@@ -40,7 +41,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -52,7 +53,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     shared_ptr<SpHbMat> m_csr_row_oriented = make_shared<SpHbMat>(dense_matrix_in,
             rowNum, colNum, true, true);
 
-    dense_matrix_out->set_zeros();
+    dense_matrix_out->set_to_zero();
     m_csr_row_oriented->get_dense_matrix(dense_matrix_out->values());
 
     if(TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
@@ -78,7 +79,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -91,7 +92,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     shared_ptr<SpHbMat> m_csc_col_oriented = make_shared<SpHbMat>(dense_matrix_in,
             rowNum, colNum, false, true);
 
-    dense_matrix_out->set_zeros();
+    dense_matrix_out->set_to_zero();
     m_csc_col_oriented->get_dense_matrix(dense_matrix_out->values(),false);
 
 
@@ -118,7 +119,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -130,7 +131,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
     shared_ptr<SpHbMat> m_csr_col_oriented = make_shared<SpHbMat>(dense_matrix_in,
             rowNum, colNum, false, true);
 
-    dense_matrix_out->set_zeros();
+    dense_matrix_out->set_to_zero();
     m_csr_col_oriented->get_dense_matrix(dense_matrix_out->values(),false);
 
 
@@ -157,7 +158,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum, const double* d
         printf("\nMatrix out is \n");
         for(int i = 0; i < rowNum; i++) {
             for(int j = 0; j < colNum; j++)
-                printf("%10e ",dense_matrix_out->values(i * colNum + j));
+                printf("%10e ",dense_matrix_out->value(i * colNum + j));
 
             printf("\n");
         }
@@ -176,7 +177,7 @@ bool
 TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
         shared_ptr<const Vector> vector) {
 
-    assert(colNum == vector->Dim());
+    assert(colNum == vector->dim());
 
     bool is_csc_passed, is_csr_passed;
 
@@ -186,8 +187,8 @@ TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* d
     //compare it with matrix-vector multiplication in dense matrix
     for(int i = 0; i<rowNum; i ++) {
         for(int j = 0; j<colNum; j++) {
-            result_dense->addNumberAt(i, dense_matrix_in[i*colNum+j]*
-                                      vector->values(j));
+            result_dense->add_number_to_element(i, dense_matrix_in[i*colNum+j]*
+                                      vector->value(j));
         }
     }
 
@@ -247,7 +248,7 @@ TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* d
 bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const double* dense_matrix_in,
         shared_ptr<const Vector> vector) {
 
-    assert(rowNum == vector->Dim());
+    assert(rowNum == vector->dim());
 
     bool is_csc_passed, is_csr_passed;
 
@@ -257,8 +258,8 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     //compare it with matrix-vector multiplication in dense matrix
     for(int i = 0; i<colNum; i ++) {
         for(int j = 0; j<rowNum; j++) {
-            result_dense->addNumberAt(i, dense_matrix_in[j*colNum+i]*
-                                      vector->values(j));
+            result_dense->add_number_to_element(i, dense_matrix_in[j*colNum+i]*
+                                      vector->value(j));
         }
     }
 
@@ -449,7 +450,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<Vector> vector_mult = make_shared<Vector>(colNum);
 
     for(int i = 0; i < colNum; i++) {
-        vector_mult->setValueAt(i,rand() %10+1);
+        vector_mult->set_value(i,rand() %10+1);
     }
 
     TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_mult);
@@ -462,7 +463,7 @@ int main(int argc, char* argv[]) {
     shared_ptr<Vector> vector_trans_mult = make_shared<Vector>(rowNum);
 
     for(int i = 0; i < rowNum; i++) {
-        vector_trans_mult->setValueAt(i,rand() %10+1);
+        vector_trans_mult->set_value(i,rand() %10+1);
     }
 
     TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(rowNum, colNum, dense_matrix_in, vector_trans_mult);

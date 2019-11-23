@@ -8,10 +8,13 @@
 #include "sqphot/Utils.hpp"
 
 #include "sqphot/QPsolverInterface.hpp"
+
+#ifdef DEBUG
+#ifdef COMPARE_QP_SOLVER
 #include "sqphot/qpOASESInterface.hpp"
-#include "sqphot/GurobiInterface.hpp"
 #include "sqphot/QOREInterface.hpp"
-#include "sqphot/CplexInterface.hpp"
+#endif
+#endif
 
 namespace SQPhotstart {
 /** Forward Declaration */
@@ -60,10 +63,10 @@ public:
      * assuming the first QP subproblem has been solved.
      * */
 
-    void solveQP(std::shared_ptr<SQPhotstart::Stats> stats, std::shared_ptr<Options> options);
+    void solveQP(std::shared_ptr<Stats> stats, std::shared_ptr<Options> options);
 
 
-    void solveLP(std::shared_ptr<SQPhotstart::Stats> stats) {
+    void solveLP(std::shared_ptr<Stats> stats) {
         solverInterface_->optimizeLP(stats);
     }
     /** @name Getters */
@@ -75,23 +78,33 @@ public:
      * @param p_k 	the pointer to an empty array with the length equal to the size
      * of the QP subproblem
      */
-    double* get_optimal_solution();
+  std::shared_ptr<const Vector> get_optimal_solution() const
+  {
+    return solverInterface_->get_optimal_solution();
+  }
 
 
     /**
      * @brief Get the infeasibility measure of the quadratic model
      * @return The one norm of the last (2*nConstr) varaibles of the QP solution
      */
-    double get_infea_measure_model();
+    double get_infea_measure_model() const;
     /**
      *@brief Get the multipliers corresponding to the bound variables
      */
-    double* get_multipliers_bounds();
+  std::shared_ptr<const Vector> get_bounds_multipliers() const
+  {
+    return solverInterface_->get_bounds_multipliers();
+  }
+
 
     /**
      * @brief Get the multipliers corresponding to the constraints
      */
-    double* get_multipliers_constr();
+  std::shared_ptr<const Vector> get_constraints_multipliers() const
+  {
+    return solverInterface_->get_constraints_multipliers();
+  }
 
     /**
      * @brief Get the objective value of the QP
@@ -249,8 +262,8 @@ public:
 
     const OptimalityStatus &get_QpOptimalStatus() const;
 
-#if DEBUG
-#if COMPARE_QP_SOLVER
+#ifdef DEBUG
+#ifdef COMPARE_QP_SOLVER
 
 
     void set_bounds_debug(double delta, std::shared_ptr<const Vector> x_k,
@@ -320,8 +333,8 @@ private:
     Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
     OptimalityStatus qpOptimalStatus_;
 
-#if DEBUG
-#if COMPARE_QP_SOLVER
+#ifdef DEBUG
+#ifdef COMPARE_QP_SOLVER
     std::shared_ptr<qpOASESInterface> qpOASESInterface_;
     std::shared_ptr<QOREInterface> QOREInterface_;
     ActiveType* W_c_qpOASES_;//working set for constraints;

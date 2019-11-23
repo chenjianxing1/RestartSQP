@@ -137,14 +137,14 @@ SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambd
  */
 bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l,
                                    shared_ptr<const Vector> x_u) {
-    for (int i = 0; i < x->Dim(); i++) {
-        assert(x_l->values(i) <= x_u->values(i));
-        if (x_l->values(i) > x->values(i)) {
-            x->setValueAt(i,x_l->values(i));
-//            x->setValueAt(i, x_l->values(i)+0.5*(x_u->values(i)-x_l->values(i)));
-        } else if (x->values(i) > x_u->values(i)) {
-            x->setValueAt(i,x_u->values(i));
-//           x->setValueAt(i, x_u->values(i)-0.5*(x_u->values(i)-x_l->values(i)));
+    for (int i = 0; i < x->dim(); i++) {
+        assert(x_l->value(i) <= x_u->value(i));
+        if (x_l->value(i) > x->value(i)) {
+            x->set_value(i,x_l->value(i));
+//            x->set_value(i, x_l->value(i)+0.5*(x_u->value(i)-x_l->value(i)));
+        } else if (x->value(i) > x_u->value(i)) {
+            x->set_value(i,x_u->value(i));
+//           x->set_value(i, x_u->value(i)-0.5*(x_u->value(i)-x_l->value(i)));
         }
     }
     return true;
