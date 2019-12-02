@@ -49,16 +49,12 @@ public:
      *  information for the first QP.
      *
      */
-    void initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
-                        const std::string& name);
+    void initialize(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
+                    const std::string& name);
 
     /** temporarily use Ipopt options*/
     //@{
     //
-
-    Ipopt::SmartPtr<Ipopt::OptionsList> getRoptions2() {
-        return roptions2_;
-    }
 
     Ipopt::SmartPtr<Ipopt::Journalist> getJnlst() {
         return jnlst_;
@@ -136,7 +132,7 @@ private:
     /**
      * @brief set the default option values
      */
-    void setDefaultOption();
+  void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
 
     /**
      * @brief This is the function that checks if the current point is optimal, and
@@ -324,6 +320,22 @@ private:
     ///////////////////////////////////////////////////////////
 private:
 
+  /** Options and output infrastructure.
+   *
+   *  We use the tools from the Ipopt package for now.  The annoying
+   *  thing is that we need to use Ipopt's SmartPtr's. */
+  //@{
+  /** Journal through which all output is directed. */
+  Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+  /** List of options.
+   *
+   *  It is initialized in the constructor but then be retrieved by
+   *  user of this object and changed.  With a few exceptions, the
+   *  option values are retrieved when the Initialize method is
+   *  called. */
+  Ipopt::SmartPtr<Ipopt::OptionsList> ipopt_options_; //TODO: replace options_
+  //@}
+
     ConstraintType* bound_cons_type_;/**< the variables type, it can be either
                                                *bounded, bounded above,bounded below, or
                                                *unbounded*/
@@ -333,9 +345,6 @@ private:
     Exitflag exitflag_ = UNKNOWN;
     int nCon_; /**< number of constraints*/
     int nVar_; /**< number of variables*/
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    Ipopt::SmartPtr<Ipopt::OptionsList> roptions2_;
-    Ipopt::SmartPtr<Ipopt::RegisteredOptions> roptions;
     double actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
     double delta_;/**< trust-region radius*/
     double infea_measure_;/**< the measure of infeasibility evaluated at x_k*/

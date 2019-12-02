@@ -297,7 +297,7 @@ shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
   shared_ptr<Vector> retval = make_shared<Vector>(nVar_QP_);
   
   // copy the values from the beginning of the y_qp_ vector
-  retval->copy_values(y_qp_->non_const_values());
+  retval->copy_values(y_qp_->values());
   
   return retval;
 }
@@ -312,7 +312,7 @@ shared_ptr<const Vector> qpOASESInterface::get_constraints_multipliers() const
   shared_ptr<Vector> retval = make_shared<Vector>(nConstr_QP_);
   
   // copy the value from the second part of the y_qp_ vector
-  retval->copy_values(y_qp_->non_const_values()+nConstr_QP_);
+  retval->copy_values(y_qp_->values()+nVar_QP_);
   
   return retval;
 }

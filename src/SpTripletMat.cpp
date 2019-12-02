@@ -237,6 +237,7 @@ void SpTripletMat::freeMemory() {
 void SpTripletMat::times(std::shared_ptr<const Vector> p,
                          std::shared_ptr<Vector> result) const {
 
+  result->set_to_zero();
     assert(ColNum_ == p->dim());
     if (isSymmetric_) {
         result->set_to_zero();
@@ -324,6 +325,9 @@ void SpTripletMat::transposed_times(std::shared_ptr<const Vector> p,
 
 
 void SpTripletMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
+  for (int i=0; i<RowNum_*ColNum_; i++) {
+    dense_matrix[i] = 0.;
+  }
     if(row_oriented) {
         for(int i = 0; i<EntryNum_; i++) {
             dense_matrix[ColNum_* (RowIndex_[i]-1)+(ColIndex_[i] - 1)] = MatVal_[i];

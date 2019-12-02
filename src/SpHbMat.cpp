@@ -594,6 +594,10 @@ void SpHbMat::write_to_file(const char* name,
 
 void SpHbMat::get_dense_matrix(double* dense_matrix,bool row_oriented) const {
 
+  // Initialize dense matrix values to zero
+  for (int i=0; i<RowNum_*ColNum_; i++) {
+    dense_matrix[i] = 0.;
+  }
     int row;
     if(row_oriented) {
         if(isCompressedRow_) {

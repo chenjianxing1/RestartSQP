@@ -160,7 +160,7 @@ public:
   {
     assert(first_element>=0);
     assert(first_element+length<=size_);
-    double oneNorm = 0;
+    double oneNorm = 0.;
     for(int i=first_element; i<first_element+length; i++) {
         oneNorm += fabs(values_[i]);
     }
@@ -170,8 +170,8 @@ public:
   /** calculate the infinity norm of the member _vector*/
   double inf_norm() const
   {
-    double inf_norm = 0;
-    for (int i = 0; i < size_; i++) {
+    double inf_norm = 0.;
+    for (int i=0; i<size_; i++) {
       inf_norm = std::max(inf_norm, fabs(values_[i]));
     }
     return inf_norm;

@@ -27,9 +27,57 @@ Algorithm::Algorithm() :
     qp_obj_(0),
     actual_reduction_(0),
     infea_measure_(0.0),
-    infea_measure_model_(0) {
-    jnlst_ = new Journalist();
-    roptions2_ = new OptionsList();
+    infea_measure_model_(0)
+{
+  // Some of the following code was taking from the Ipopt code.
+
+  // Create journalist and set it up so that it prints to stdout.
+  jnlst_ = new Journalist();
+  SmartPtr<Journal> stdout_jrnl =
+    jnlst_->AddFileJournal("console", "stdout", J_ITERSUMMARY);
+  stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
+ 
+  // Create a new options list
+  ipopt_options_ = new OptionsList();
+
+  // Get the list of registered options to define the options for the
+  // SQP algorithm .*/
+  SmartPtr<RegisteredOptions> reg_options = new RegisteredOptions();
+
+  // Options related to output
+  reg_options->SetRegisteringCategory("Output");
+  reg_options->AddBoundedIntegerOption(
+    "print_level",
+    "Output verbosity level.",
+    0, J_LAST_LEVEL-1, J_ITERSUMMARY,
+    "Sets the default verbosity level for console output. The "
+    "larger this value the more detailed is the output.");
+
+  reg_options->AddStringOption1(
+    "output_file",
+    "File name of desired output file (leave unset for no file output).",
+    "",
+    "*", "Any acceptable standard file name",
+    "NOTE: This option only works when read from the sqp.opt options file! "
+    "An output file with this name will be written (leave unset for no "
+    "file output).  The verbosity level is by default set to \"print_level\", "
+    "but can be overridden with \"file_print_level\".  The file name is "
+    "changed to use only small letters.");
+  reg_options->AddBoundedIntegerOption(
+    "file_print_level",
+    "Verbosity level for output file.",
+    0, J_LAST_LEVEL-1, J_ITERSUMMARY,
+    "NOTE: This option only works when read from the sqp.opt options file! "
+    "Determines the verbosity level for the file specified by "
+    "\"output_file\".  By default it is the same as \"print_level\".");
+
+  // Set the algorithm specific options
+  register_options_(reg_options);
+
+  // Finalize options list by giving it the list of registered options
+  // and the journalist (for error message).
+  ipopt_options_->SetJournalist(jnlst_);
+  ipopt_options_->SetRegisteredOptions(reg_options);
 }
 
 
@@ -100,27 +148,27 @@ void Algorithm::Optimize() {
         //exit the loop or not
         if (options_->printLevel >= 2) {
             if (stats_->iter % 10 == 0) {
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
             }
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+            jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
         }
         else {
             jnlst_->DeleteAllJournals();
-            Ipopt::SmartPtr<Ipopt::Journal> logout_jrnl = jnlst_->GetJournal("file_output");
+            SmartPtr<Journal> logout_jrnl = jnlst_->GetJournal("file_output");
             if(IsNull(logout_jrnl)) {
                 jnlst_->AddFileJournal("file_output", problem_name_+"_output.log",
-                                       Ipopt::J_ITERSUMMARY);
+                                       J_ITERSUMMARY);
 
             }
             if (IsValid(logout_jrnl)) {
-                logout_jrnl->SetPrintLevel(Ipopt::J_STATISTICS, Ipopt::J_NONE);
+                logout_jrnl->SetPrintLevel(J_STATISTICS, J_NONE);
             }
             if (stats_->iter % 10 == 0) {
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_HEADER);
-                jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, DOUBLE_LONG_DIVIDER);
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_HEADER);
+                jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
             }
-            jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN, STANDARD_OUTPUT);
+            jnlst_->Printf(J_ITERSUMMARY, J_MAIN, STANDARD_OUTPUT);
         }
 
 
@@ -406,7 +454,8 @@ void Algorithm::check_optimality() {
 }
 
 
-void Algorithm::get_trial_point_info() {
+void Algorithm::get_trial_point_info()
+{
 
   x_trial_->set_to_sum_of_vectors(1., x_k_, 1., p_k_);
 
@@ -429,8 +478,9 @@ void Algorithm::get_trial_point_info() {
  *  information for the first QP.
  *
  */
-void Algorithm::initialization(SmartPtr<TNLP> nlp,
-                               const string& name) {
+void Algorithm::initialize(SmartPtr<TNLP> nlp,
+                           const string& name)
+{
     std::size_t found = name.find_last_of("/\\");
 
     problem_name_  = name.substr(found+1);
@@ -546,7 +596,7 @@ void Algorithm::allocate_memory(SmartPtr<TNLP> nlp) {
                                           false);
     hessian_ = make_shared<SpTripletMat>(nlp_->nlp_info_.nnz_h_lag, nVar_, nVar_,
                                          true);
-    //TODO: use roptions instead of this one
+    //TODO: use reg_options instead of this one
     options_ = make_shared<Options>();
     stats_ = make_shared<Stats>();
 
@@ -1045,56 +1095,75 @@ void Algorithm::update_penalty_parameter() {
 /**
  * @brief Use the Ipopt Reference Options and set it to default values.
  */
-void Algorithm::setDefaultOption() {
+void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options) {
 
-    roptions = new RegisteredOptions();
-    roptions->SetRegisteringCategory("trust-region");
-    roptions->AddNumberOption("eta_c", "trust-region parameter for the ratio test.",
-                              0.25,
-                              "If ratio<=eta_c, then the trust-region radius for the next "
-                              "iteration will be decreased for the next iteration.");
-    roptions->AddNumberOption("eta_s", "trust-region parameter for the ratio test.",
-                              1.0e-8,
-                              "The trial point will be accepted if ratio>= eta_s. ");
-    roptions->AddNumberOption("eta_e", "trust-region parameter for the ratio test.",
-                              0.75,
-                              "If ratio>=eta_e and the search direction hits the  "
-                              "trust-region boundary, the trust-region radius will "
-                              " be increased for the next iteration.");
-    roptions->AddNumberOption("gamma_c", "radius update parameter",
-                              0.5,
-                              "If the trust-region radius is going to be decreased,"
-                              " then it will be set as gamma_c*delta, where delta "
-                              "is current trust-region radius.");
-    roptions->AddNumberOption("gamma_e", "radius update parameter",
-                              2.0,
-                              "If the trust-region radius is going to be "
-                              "increased, then it will be set as gamma_e*delta,"
-                              "where delta is current trust-region radius.");
-    roptions->AddNumberOption("delta_0", "initial trust-region radius value", 1.0);
-    roptions->AddNumberOption("delta_max", "the maximum value of trust-region radius"
-                              " allowed for the radius update", 1.0e8);
+  reg_options->SetRegisteringCategory("trust-region");
+  reg_options->AddBoundedNumberOption(
+    "eta_c", "trust-region parameter for the ratio test.",
+    0., true, 1., true,
+    0.25,
+    "If ratio<=eta_c, then the trust-region radius for the next "
+    "iteration will be decreased for the next iteration.");
+  reg_options->AddBoundedNumberOption(
+    "eta_s", "trust-region parameter for the ratio test.",
+    0., true, 1., true,
+    1.0e-8,
+    "The trial point will be accepted if ratio>= eta_s. ");
+  reg_options->AddBoundedNumberOption(
+    "eta_e", "trust-region parameter for the ratio test.",
+    0., true, 1., true,
+    0.75,
+    "If ratio>=eta_e and the search direction hits the  "
+    "trust-region boundary, the trust-region radius will "
+    "be increased for the next iteration.");
+  reg_options->AddBoundedNumberOption(
+    "trust_region_decrease_factor",
+    "Factor used to reduce the trust-region size.",
+    0., true, 1., true,
+    0.5,
+    "If the trust-region radius is going to be decreased, "
+    "then it will be multiplied by the value of this options.");
+  reg_options->AddLowerBoundedNumberOption(
+    "trust_region_increase_factor",
+    "Factor used to increase the trust-region size.",
+    1., true,
+    2.0,
+    "If the trust-region radius is going to be "
+    "increased, then it will be set as gamma_e*delta,"
+    "where delta is current trust-region radius.");
 
-    roptions->SetRegisteringCategory("Penalty Update");
-    roptions->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
-    roptions->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
-    roptions->AddNumberOption("print_level_penalty_update",
+  reg_options->AddLowerBoundedNumberOption(
+    "trust_region_init",
+    "Initial trust-region radius value",
+    0., true,
+    1.0);
+  reg_options->AddLowerBoundedNumberOption(
+    "trust_region_max",
+    "Maximum value of trust-region radius "
+    "allowed for the radius update",
+    0., true,
+    1e8);
+
+    reg_options->SetRegisteringCategory("Penalty Update");
+    reg_options->AddNumberOption("eps1", "penalty update parameter", 0.3, "");
+    reg_options->AddNumberOption("eps2", "penalty update parameter", 1.0e-6, "");
+    reg_options->AddNumberOption("print_level_penalty_update",
                               "print level for penalty update", 0);
-    roptions->AddNumberOption("rho_max", "maximum value of penalty parameter", 1.0e6);
-    roptions->AddNumberOption("increase_parm",
+    reg_options->AddNumberOption("rho_max", "maximum value of penalty parameter", 1.0e6);
+    reg_options->AddNumberOption("increase_parm",
                               "the number which will be use for scaling the new "
                               "penalty parameter", 10);
-    roptions->AddIntegerOption("penalty_iter_max",
+    reg_options->AddIntegerOption("penalty_iter_max",
                                "maximum number of penalty paramter update allowed in a "
                                "single iteration in the main algorithm", 10);
-    roptions->AddIntegerOption("penalty_iter_max_total",
+    reg_options->AddIntegerOption("penalty_iter_max_total",
                                "maximum number of penalty paramter update allowed "
                                "in total", 100);
 
-    roptions->SetRegisteringCategory("Optimality Test");
-    roptions->AddIntegerOption("testOption_NLP", "Level of Optimality test for "
+    reg_options->SetRegisteringCategory("Optimality Test");
+    reg_options->AddIntegerOption("testOption_NLP", "Level of Optimality test for "
                                "NLP", 0);
-    roptions->AddStringOption2("auto_gen_tol",
+    reg_options->AddStringOption2("auto_gen_tol",
                                "Tell the algorithm to automatically"
                                "generate the tolerance level for optimality test "
                                "based on information from NLP",
@@ -1103,21 +1172,20 @@ void Algorithm::setDefaultOption() {
                                " the optimality test",
                                "yes", "will automatically generate the tolerance "
                                "level for the optimality test");
-    roptions->AddNumberOption("opt_tol", "", 1.0e-5);
-    roptions->AddNumberOption("active_set_tol", "", 1.0e-5);
-    roptions->AddNumberOption("opt_compl_tol", "", 1.0e-6);
-    roptions->AddNumberOption("opt_dual_fea_tol", " ", 1.0e-6);
-    roptions->AddNumberOption("opt_prim_fea_tol", " ", 1.0e-5);
-    roptions->AddNumberOption("opt_second_tol", " ", 1.0e-8);
+    reg_options->AddNumberOption("opt_tol", "", 1.0e-5);
+    reg_options->AddNumberOption("active_set_tol", "", 1.0e-5);
+    reg_options->AddNumberOption("opt_compl_tol", "", 1.0e-6);
+    reg_options->AddNumberOption("opt_dual_fea_tol", " ", 1.0e-6);
+    reg_options->AddNumberOption("opt_prim_fea_tol", " ", 1.0e-5);
+    reg_options->AddNumberOption("opt_second_tol", " ", 1.0e-8);
 
-    roptions->SetRegisteringCategory("General");
-    roptions->AddNumberOption("step_size_tol", "the smallest stepsize can be accepted"
+    reg_options->SetRegisteringCategory("General");
+    reg_options->AddNumberOption("step_size_tol", "the smallest stepsize can be accepted"
                               "before concluding convergence",
                               1.0e-15);
-    roptions->AddNumberOption("iter_max",
+    reg_options->AddNumberOption("iter_max",
                               "maximum number of iteration for the algorithm", 10);
-    roptions->AddNumberOption("print_level", "print level for main algorithm", 2);
-    roptions->AddStringOption2(
+    reg_options->AddStringOption2(
         "second_order_correction",
         "Tells the algorithm to calculate the second-order correction step "
         "during the main iteration"
@@ -1126,28 +1194,28 @@ void Algorithm::setDefaultOption() {
         "yes", "will calculate the soc steps",
         "");
 
-    roptions->SetRegisteringCategory("QPsolver");
-    roptions->AddIntegerOption("testOption_QP",
+    reg_options->SetRegisteringCategory("QPsolver");
+    reg_options->AddIntegerOption("testOption_QP",
                                "Level of Optimality test for QP", -99);
-    roptions->AddNumberOption("iter_max_qp", "maximum number of iteration for the "
+    reg_options->AddNumberOption("iter_max_qp", "maximum number of iteration for the "
                               "QP solver in solving each QP", 100);
-    roptions->AddNumberOption("print_level_qp", "print level for QP solver", 0);
+    reg_options->AddNumberOption("print_level_qp", "print level for QP solver", 0);
 
-    //    roptions->AddStringOption("QPsolverChoice",
+    //    reg_options->AddStringOption("QPsolverChoice",
     //		    "The choice of QP solver which will be used in the Algorithm",
     //		    "qpOASES");
 
 
-    roptions->SetRegisteringCategory("LPsolver");
-    //    roptions->AddStringOption("LPsolverChoice",
+    reg_options->SetRegisteringCategory("LPsolver");
+    //    reg_options->AddStringOption("LPsolverChoice",
     //		    "The choice of LP solver which will be used in the Algorithm",
     //		    "qpOASES");
 
-    roptions->AddIntegerOption("testOption_LP",
+    reg_options->AddIntegerOption("testOption_LP",
                                "Level of Optimality test for LP", -99);
-    roptions->AddNumberOption("iter_max_lp", "maximum number of iteration for the "
+    reg_options->AddNumberOption("iter_max_lp", "maximum number of iteration for the "
                               "LP solver in solving each LP", 100);
-    roptions->AddNumberOption("print_level_lp", "print level for LP solver", 0);
+    reg_options->AddNumberOption("print_level_lp", "print level for LP solver", 0);
 
 }
 

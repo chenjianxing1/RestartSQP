@@ -106,6 +106,7 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const doub
     shared_ptr<Vector> result_sparse = make_shared<Vector>(rowNum);
 
     //compare it with matrix-vector multiplication in dense matrix
+    result_dense->set_to_zero();
     for(int i = 0; i<rowNum; i ++) {
         for(int j = 0; j<colNum; j++) {
             result_dense->add_number_to_element(i,
@@ -146,6 +147,7 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum, const 
     shared_ptr<Vector> result_sparse = make_shared<Vector>(colNum);
 
     //compare it with matrix-vector multiplication in dense matrix
+    result_dense->set_to_zero();
     for(int i = 0; i<colNum; i ++) {
         for(int j = 0; j<rowNum; j++) {
             result_dense->add_number_to_element(i, dense_matrix_in[j*colNum+i]*
@@ -192,7 +194,7 @@ int main(int argc, char* argv[]) {
     /**-------------------------------------------------------**/
     srand (time(NULL));
     std::random_device rd;
-    std::mt19937 g(rd());
+    //    std::mt19937 g(rd());
 
     int rowNum = rand() %10+1;
     int colNum = rand() %10+1;
@@ -203,7 +205,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i<rowNum*colNum; i++)
         isNonzero.push_back(i);
 
-    std::shuffle(isNonzero.begin(), isNonzero.end(),g);
+    //    std::shuffle(isNonzero.begin(), isNonzero.end(),g);
 
     auto dense_matrix_in = new double[rowNum*colNum]();
     for(int i = 0; i < rowNum*colNum; i++) {
@@ -264,7 +266,7 @@ int main(int argc, char* argv[]) {
     isNonzero.reserve(dim*(dim-1)/2);
     for(int i = 0; i<dim*(dim-1)/2; i++)
         isNonzero.push_back(i);
-    std::shuffle(isNonzero.begin(), isNonzero.end(),g);
+    //std::shuffle(isNonzero.begin(), isNonzero.end(),g);
 
     int EntryNum_sym = rand()%(dim*(dim-1)/2)+1;//with nonzero diagonal
 
