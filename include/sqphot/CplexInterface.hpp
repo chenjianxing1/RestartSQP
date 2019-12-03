@@ -7,7 +7,6 @@
 #ifndef SQPHOTSTART_CPLEX_INTERFACE_HPP
 #define SQPHOTSTART_CPLEX_INTERFACE_HPP
 
-
 #ifdef USE_CPLEX
 #include <ilcplex/ilocplex.h>
 #endif
@@ -17,199 +16,194 @@
 namespace SQPhotstart {
 DECLARE_STD_EXCEPTION(CPLEX_SOLVER_FAILS);
 
-class CplexInterface : public QPSolverInterface {
-    /**-------------------------------------------------------**/
-    /**                  Public Methods                       **/
-    /**-------------------------------------------------------**/
+class CplexInterface : public QPSolverInterface
+{
+  /**-------------------------------------------------------**/
+  /**                  Public Methods                       **/
+  /**-------------------------------------------------------**/
 public:
-    /**@name Getters for private members*/
-    //@{
-    const std::shared_ptr<Vector>& getLb() const override;
+  /**@name Getters for private members*/
+  //@{
+  const std::shared_ptr<Vector>& getLb() const override;
 
-    const std::shared_ptr<Vector>& getUb() const override;
+  const std::shared_ptr<Vector>& getUb() const override;
 
-    const std::shared_ptr<Vector>& getLbA() const override;
+  const std::shared_ptr<Vector>& getLbA() const override;
 
-    const std::shared_ptr<Vector>& getUbA() const override;
+  const std::shared_ptr<Vector>& getUbA() const override;
 
-    const std::shared_ptr<Vector>& getG() const override;
+  const std::shared_ptr<Vector>& getG() const override;
 
-    std::shared_ptr<const SpHbMat> getH() const override;
+  std::shared_ptr<const SpHbMat> getH() const override;
 
-    std::shared_ptr<const SpHbMat> getA() const override;
-    //@}
+  std::shared_ptr<const SpHbMat> getA() const override;
+  //@}
 
+  CplexInterface(NLPInfo nlp_info, QPType qptype,
+                 std::shared_ptr<const Options> options,
+                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
-    CplexInterface(NLPInfo nlp_info,
-                   QPType qptype,
-                   std::shared_ptr<const Options> options,
-                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+  /** Default destructor*/
+  ~CplexInterface() override;
 
-    /** Default destructor*/
-    ~CplexInterface() override;
+  /**
+   * @brief Solve a regular QP with given data and options.
+   *
+   */
+  void optimizeQP(std::shared_ptr<Stats> stats) override;
 
-    /**
-     * @brief Solve a regular QP with given data and options.
-     *
-     */
-    void optimizeQP(std::shared_ptr<Stats> stats) override;
+  /**
+   * @brief Solve a regular LP with given data and options
+   */
 
-    /**
-     * @brief Solve a regular LP with given data and options
-     */
+  void optimizeLP(std::shared_ptr<Stats> stats) override;
 
-    void optimizeLP(std::shared_ptr<Stats> stats) override;
+  bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) override;
 
-
-    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
-
-    /**-------------------------------------------------------**/
-    /**                    Getters                            **/
-    /**-------------------------------------------------------**/
-    /**@name Getters*/
-    //@{
-    /**
-     * @return the pointer to the optimal solution
-     *
-     */
+  /**-------------------------------------------------------**/
+  /**                    Getters                            **/
+  /**-------------------------------------------------------**/
+  /**@name Getters*/
+  //@{
+  /**
+   * @return the pointer to the optimal solution
+   *
+   */
   std::shared_ptr<const Vector> get_optimal_solution() const override
   {
     return x_qp_;
   }
 
-    /**
-     *@brief get the objective value from the QP solvers
-     *
-     * @return the objective function value of the QP problem
-     */
-    double get_obj_value() override;
+  /**
+   *@brief get the objective value from the QP solvers
+   *
+   * @return the objective function value of the QP problem
+   */
+  double get_obj_value() override;
 
-
-    /**
-     * @brief get the pointer to the multipliers to the bounds constraints.
-     */
+  /**
+   * @brief get the pointer to the multipliers to the bounds constraints.
+   */
   std::shared_ptr<const Vector> get_bounds_multipliers() const override
   {
     return nullptr;
   }
 
-    /**
-     * @brief get the pointer to the multipliers to the regular constraints.
-     */
+  /**
+   * @brief get the pointer to the multipliers to the regular constraints.
+   */
   std::shared_ptr<const Vector> get_constraints_multipliers() const override
   {
     return y_qp_;
   }
 
-    /**
-     * @brief copy the working set information
-     * @param W_constr a pointer to an array of length (nCon_QP_) which will store the
-     * working set for constraints
-     * @param W_bounds a pointer to an array of length (nVar_QP_) which will store the
-     * working set for bounds
-     *
-     */
-    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds)override;
+  /**
+   * @brief copy the working set information
+   * @param W_constr a pointer to an array of length (nCon_QP_) which will store
+   * the
+   * working set for constraints
+   * @param W_bounds a pointer to an array of length (nVar_QP_) which will store
+   * the
+   * working set for bounds
+   *
+   */
+  void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
-    Exitflag get_status() override;
+  Exitflag get_status() override;
 
-    //@}
+  //@}
 
-    /**-------------------------------------------------------**/
-    /**                    Setters                            **/
-    /**-------------------------------------------------------**/
-    /**@name Setters, by location and value*/
-    //@{
-    void set_lb(int location, double value) override;
+  /**-------------------------------------------------------**/
+  /**                    Setters                            **/
+  /**-------------------------------------------------------**/
+  /**@name Setters, by location and value*/
+  //@{
+  void set_lb(int location, double value) override;
 
-    void set_ub(int location, double value) override;
+  void set_ub(int location, double value) override;
 
-    void set_lbA(int location, double value) override;
+  void set_lbA(int location, double value) override;
 
-    void set_ubA(int location, double value) override;
+  void set_ubA(int location, double value) override;
 
-    void set_g(int location, double value) override;
-    //@}
+  void set_g(int location, double value) override;
+  //@}
 
-    /**@name Setters for dense vector, by vector value*/
-    //@{
-    void set_ub(std::shared_ptr<const Vector> rhs) override;
+  /**@name Setters for dense vector, by vector value*/
+  //@{
+  void set_ub(std::shared_ptr<const Vector> rhs) override;
 
-    void set_lb(std::shared_ptr<const Vector> rhs) override;
+  void set_lb(std::shared_ptr<const Vector> rhs) override;
 
-    void set_lbA(std::shared_ptr<const Vector> rhs) override;
+  void set_lbA(std::shared_ptr<const Vector> rhs) override;
 
-    void set_ubA(std::shared_ptr<const Vector> rhs) override;
+  void set_ubA(std::shared_ptr<const Vector> rhs) override;
 
-    void set_g(std::shared_ptr<const Vector> rhs) override;
-    //@}
+  void set_g(std::shared_ptr<const Vector> rhs) override;
+  //@}
 
-    /**@name Setters for matrix*/
-    //@{
-    void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
+  /**@name Setters for matrix*/
+  //@{
+  void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
-    //@}
+  void set_A(std::shared_ptr<const SpTripletMat> rhs,
+             IdentityInfo I_info) override;
+  //@}
 
-    void reset_constraints() override;
+  void reset_constraints() override;
 
-    /**-------------------------------------------------------**/
-    /**                  Data Writer                          **/
-    /**-------------------------------------------------------**/
+  /**-------------------------------------------------------**/
+  /**                  Data Writer                          **/
+  /**-------------------------------------------------------**/
 
-    void WriteQPDataToFile(Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category,
-                           const std::string filename) override {
+  void WriteQPDataToFile(Ipopt::EJournalLevel level,
+                         Ipopt::EJournalCategory category,
+                         const std::string filename) override
+  {
+  }
 
-    }
-
-    /**-------------------------------------------------------**/
-    /**                  Private Methods                      **/
-    /**-------------------------------------------------------**/
+  /**-------------------------------------------------------**/
+  /**                  Private Methods                      **/
+  /**-------------------------------------------------------**/
 private:
-    /** Default constructor*/
-    CplexInterface();
+  /** Default constructor*/
+  CplexInterface();
 
-    /** Copy Constructor */
-    CplexInterface(const CplexInterface &);
+  /** Copy Constructor */
+  CplexInterface(const CplexInterface&);
 
-    /** Overloaded Equals Operator */
-    void operator=(const CplexInterface &);
+  /** Overloaded Equals Operator */
+  void operator=(const CplexInterface&);
 
-    void set_solver_options();
-    /**-------------------------------------------------------**/
-    /**                  Private Members                      **/
-    /**-------------------------------------------------------**/
+  void set_solver_options();
+  /**-------------------------------------------------------**/
+  /**                  Private Members                      **/
+  /**-------------------------------------------------------**/
 
 private:
-    IdentityInfo I_info_;
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    Exitflag status_;
-    QPType qptype_;
-    bool firstQPsolved_;
-    double final_obj_;
-    int nConstr_QP_;
-    int nVar_QP_;
-    std::shared_ptr<Vector> lb_;
-    std::shared_ptr<Vector> ub_;
-    std::shared_ptr<Vector> x_qp_;
-    std::shared_ptr<Vector> y_qp_;
-    std::shared_ptr<const Options> options_;
-    std::shared_ptr<const SpTripletMat> A_;
+  IdentityInfo I_info_;
+  Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+  Exitflag status_;
+  QPType qptype_;
+  bool firstQPsolved_;
+  double final_obj_;
+  int nConstr_QP_;
+  int nVar_QP_;
+  std::shared_ptr<Vector> lb_;
+  std::shared_ptr<Vector> ub_;
+  std::shared_ptr<Vector> x_qp_;
+  std::shared_ptr<Vector> y_qp_;
+  std::shared_ptr<const Options> options_;
+  std::shared_ptr<const SpTripletMat> A_;
 #ifdef USE_CPLEX
-    std::shared_ptr<IloEnv> cplex_env_;
-    std::shared_ptr<IloModel> cplex_model_;
-    IloNumExpr qobj_;/**< quadratic part of the objecitve*/
-    vector<IloNumExpr> constraints_;
-    vector<IloNumExpr> lterm_;/**< linear part of the objective */
-    vector<IloNumVar> cplex_vars_;
+  std::shared_ptr<IloEnv> cplex_env_;
+  std::shared_ptr<IloModel> cplex_model_;
+  IloNumExpr qobj_; /**< quadratic part of the objecitve*/
+  vector<IloNumExpr> constraints_;
+  vector<IloNumExpr> lterm_; /**< linear part of the objective */
+  vector<IloNumVar> cplex_vars_;
 #endif
-
-
 };
 
-
-}//SQPHOTSTART
+} // SQPHOTSTART
 #endif
-
-

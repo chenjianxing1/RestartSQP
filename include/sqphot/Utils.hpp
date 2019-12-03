@@ -21,8 +21,8 @@
 #include <vector>
 
 #include "IpTNLP.hpp"
-#include "sqphot/SQPDebug.hpp"
 #include "sqphot/MessageHandling.hpp"
+#include "sqphot/SQPDebug.hpp"
 #include "sqphot/Types.hpp"
 #endif
 

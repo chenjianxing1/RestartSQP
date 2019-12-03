@@ -12,9 +12,8 @@
 #include <cmath>
 #include <memory>
 
-#include "sqphot/Types.hpp"
 #include "IpJournalist.hpp"
-
+#include "sqphot/Types.hpp"
 
 namespace SQPhotstart {
 
@@ -23,9 +22,9 @@ namespace SQPhotstart {
  *  functionality.
  */
 
-class Vector {
+class Vector
+{
 public:
-
   /** Constructor.
    *
    *  Initialize the size of the vector and allocate the memory.
@@ -39,7 +38,7 @@ public:
   Vector(int size, const double* values);
 
   /** Copy Constructor */
-  Vector(const Vector &);
+  Vector(const Vector&);
 
   /** Destructor*/
   virtual ~Vector();
@@ -76,13 +75,11 @@ public:
       for (int i = 0; i < size_; i++) {
         values_[i] += rhs.values_[i];
       }
-    }
-    else if (factor == -1.) {
+    } else if (factor == -1.) {
       for (int i = 0; i < size_; i++) {
         values_[i] -= rhs.values_[i];
       }
-    }
-    else {
+    } else {
       for (int i = 0; i < size_; i++) {
         values_[i] += factor * rhs.values_[i];
       }
@@ -101,8 +98,8 @@ public:
   /** The values to the sum of two vectors.
    *
    *  this vector = fact1*vec1 + fact2*vec2 */
-  void set_to_sum_of_vectors(double fact1, const Vector& vec1,
-                             double fact2, const Vector& vec2)
+  void set_to_sum_of_vectors(double fact1, const Vector& vec1, double fact2,
+                             const Vector& vec2)
   {
     assert(size_ == vec1.size_);
     assert(size_ == vec2.size_);
@@ -110,10 +107,9 @@ public:
       for (int i = 0; i < size_; i++) {
         values_[i] = vec1.values_[i] + vec2.values_[i];
       }
-    }
-    else {
+    } else {
       for (int i = 0; i < size_; i++) {
-        values_[i] = fact1*vec1.values_[i] + fact2*vec2.values_[i];
+        values_[i] = fact1 * vec1.values_[i] + fact2 * vec2.values_[i];
       }
     }
   }
@@ -134,7 +130,8 @@ public:
   }
 
   /** Copy the values from a double* array */
-  void copy_values(const double* values) {
+  void copy_values(const double* values)
+  {
     for (int i = 0; i < size_; i++) {
       values_[i] = values[i];
     }
@@ -158,11 +155,11 @@ public:
       starts at element first_element and has a length of length */
   double one_norm(int first_element, int length) const
   {
-    assert(first_element>=0);
-    assert(first_element+length<=size_);
+    assert(first_element >= 0);
+    assert(first_element + length <= size_);
     double oneNorm = 0.;
-    for(int i=first_element; i<first_element+length; i++) {
-        oneNorm += fabs(values_[i]);
+    for (int i = first_element; i < first_element + length; i++) {
+      oneNorm += fabs(values_[i]);
     }
     return oneNorm;
   }
@@ -171,7 +168,7 @@ public:
   double inf_norm() const
   {
     double inf_norm = 0.;
-    for (int i=0; i<size_; i++) {
+    for (int i = 0; i < size_; i++) {
       inf_norm = std::max(inf_norm, fabs(values_[i]));
     }
     return inf_norm;
@@ -191,7 +188,7 @@ public:
   void scale(double scaling_factor)
   {
     if (scaling_factor != 1.) {
-      for(int i=0; i<size_; i++) {
+      for (int i = 0; i < size_; i++) {
         values_[i] *= scaling_factor;
       }
     }
@@ -228,11 +225,9 @@ public:
   }
 
   /** Print vector or write to a file. */
-  void write_to_file(std::string name,
-                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+  void write_to_file(std::string name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                      Ipopt::EJournalLevel level,
-                     Ipopt::EJournalCategory category,
-                     Solver qpsolver) const;
+                     Ipopt::EJournalCategory category, Solver qpsolver) const;
   // AW: Replace qpsolver argument
   // Also, why are the both a print and a write_to_file method
 
@@ -243,7 +238,7 @@ private:
 
   /** Overloaded Equals Operator.  Make this private so that it is
    *  not automatically generated. */
-  void operator=(const Vector &);
+  void operator=(const Vector&);
 
   /** Dimension of the vector */
   int size_;
@@ -251,6 +246,5 @@ private:
   /** Array with the elements of the vector. */
   double* values_;
 };
-
 }
 #endif

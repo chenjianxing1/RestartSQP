@@ -16,7 +16,7 @@
 #ifdef DEBUG
 #undef COMPARE_QP_SOLVER
 #undef CHECK_TERMINATION
-#define CHECK_TR_ALG //check trust region algorithm
+#define CHECK_TR_ALG // check trust region algorithm
 #undef CHECK_SOC
 #undef CHECK_INFEA_CAL
 #undef CHECK_QP_SOLVER

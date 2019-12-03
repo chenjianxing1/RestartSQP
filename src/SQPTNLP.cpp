@@ -11,48 +11,51 @@ using namespace std;
 namespace SQPhotstart {
 
 /** Default constructor*/
-SQPTNLP::SQPTNLP(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
-    nlp_ = nlp;
-    Ipopt::TNLP::IndexStyleEnum index_style;
-    nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
-                       nlp_info_.nnz_h_lag, index_style);
-    assert(index_style == Ipopt::TNLP::FORTRAN_STYLE);
+SQPTNLP::SQPTNLP(Ipopt::SmartPtr<Ipopt::TNLP> nlp)
+{
+  nlp_ = nlp;
+  Ipopt::TNLP::IndexStyleEnum index_style;
+  nlp_->get_nlp_info(nlp_info_.nVar, nlp_info_.nCon, nlp_info_.nnz_jac_g,
+                     nlp_info_.nnz_h_lag, index_style);
+  assert(index_style == Ipopt::TNLP::FORTRAN_STYLE);
 }
 
-
 /** Default constructor*/
-SQPTNLP::~SQPTNLP() {
+SQPTNLP::~SQPTNLP()
+{
 }
 
 /**
  *@brief get the bounds information from the NLP object
  */
 bool SQPTNLP::Get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
-                              shared_ptr<Vector> c_l, shared_ptr<Vector> c_u) {
+                              shared_ptr<Vector> c_l, shared_ptr<Vector> c_u)
+{
 
-    nlp_->get_bounds_info(nlp_info_.nVar, x_l->values(), x_u->values(),
-                          nlp_info_.nCon, c_l->values(), c_u->values());
-    return true;
+  nlp_->get_bounds_info(nlp_info_.nVar, x_l->values(), x_u->values(),
+                        nlp_info_.nCon, c_l->values(), c_u->values());
+  return true;
 }
 
 /*
  * @brief Get the starting point from the NLP object.
  */
-bool
-SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0, shared_ptr<Vector> lambda_0) {
-    nlp_->get_starting_point(nlp_info_.nVar, true, x_0->values(),
-                             false, NULL, NULL, nlp_info_.nCon, true,
-                             lambda_0->values());
+bool SQPTNLP::Get_starting_point(shared_ptr<Vector> x_0,
+                                 shared_ptr<Vector> lambda_0)
+{
+  nlp_->get_starting_point(nlp_info_.nVar, true, x_0->values(), false, NULL,
+                           NULL, nlp_info_.nCon, true, lambda_0->values());
 
-    return true;
+  return true;
 }
 
 /**
  *@brief Evaluate the objective value
  */
-bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, double& obj_value) {
-    nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
-    return true;
+bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, double& obj_value)
+{
+  nlp_->eval_f(nlp_info_.nVar, x->values(), true, obj_value);
+  return true;
 }
 
 /**
@@ -60,18 +63,21 @@ bool SQPTNLP::Eval_f(shared_ptr<const Vector> x, double& obj_value) {
  *
  */
 bool SQPTNLP::Eval_constraints(shared_ptr<const Vector> x,
-                               shared_ptr<Vector> constraints) {
-    nlp_->eval_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
-                 constraints->values());
-    return true;
+                               shared_ptr<Vector> constraints)
+{
+  nlp_->eval_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
+               constraints->values());
+  return true;
 }
 
 /**
  *@brief Evaluate gradient at point x
  */
-bool SQPTNLP::Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradient) {
-    nlp_->eval_grad_f(nlp_info_.nVar, x->values(), true, gradient->values());
-    return true;
+bool SQPTNLP::Eval_gradient(shared_ptr<const Vector> x,
+                            shared_ptr<Vector> gradient)
+{
+  nlp_->eval_grad_f(nlp_info_.nVar, x->values(), true, gradient->values());
+  return true;
 }
 
 /**
@@ -80,11 +86,12 @@ bool SQPTNLP::Eval_gradient(shared_ptr<const Vector> x, shared_ptr<Vector> gradi
  */
 
 bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x,
-                                     shared_ptr<SpTripletMat> Jacobian) {
-    nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
-                     nlp_info_.nnz_jac_g,
-                     Jacobian->RowIndex(), Jacobian->ColIndex(), NULL);
-    return true;
+                                     shared_ptr<SpTripletMat> Jacobian)
+{
+  nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
+                   nlp_info_.nnz_jac_g, Jacobian->RowIndex(),
+                   Jacobian->ColIndex(), NULL);
+  return true;
 }
 
 /**
@@ -92,11 +99,11 @@ bool SQPTNLP::Get_Strucutre_Jacobian(shared_ptr<const Vector> x,
  */
 
 bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x,
-                            shared_ptr<SpTripletMat> Jacobian) {
-    nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
-                     nlp_info_.nnz_jac_g,
-                     NULL, NULL, Jacobian->MatVal());
-    return true;
+                            shared_ptr<SpTripletMat> Jacobian)
+{
+  nlp_->eval_jac_g(nlp_info_.nVar, x->values(), true, nlp_info_.nCon,
+                   nlp_info_.nnz_jac_g, NULL, NULL, Jacobian->MatVal());
+  return true;
 }
 
 /**
@@ -105,49 +112,53 @@ bool SQPTNLP::Eval_Jacobian(shared_ptr<const Vector> x,
  */
 bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
                                     shared_ptr<const Vector> lambda,
-                                    shared_ptr<SpTripletMat> Hessian) {
+                                    shared_ptr<SpTripletMat> Hessian)
+{
 
-    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nCon,
-                 lambda->values(), true,
-                 nlp_info_.nnz_h_lag, Hessian->RowIndex(), Hessian->ColIndex(), NULL);
+  nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1.0, nlp_info_.nCon,
+               lambda->values(), true, nlp_info_.nnz_h_lag, Hessian->RowIndex(),
+               Hessian->ColIndex(), NULL);
 
-
-    return true;
+  return true;
 }
-
 
 /**
  *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
  */
-bool
-SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
-                      shared_ptr<SpTripletMat> Hessian) {
-    nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nCon,
-                 lambda->values(), true,
-                 nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
+bool SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x,
+                           shared_ptr<const Vector> lambda,
+                           shared_ptr<SpTripletMat> Hessian)
+{
+  nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nCon,
+               lambda->values(), true, nlp_info_.nnz_h_lag, NULL, NULL,
+               Hessian->MatVal());
 
-    return true;
+  return true;
 }
 
 /**
- * @brief This function shifts the initial starting point to be feasible to the bound constraints
+ * @brief This function shifts the initial starting point to be feasible to the
+ * bound constraints
  * @param x initial starting point
  * @param x_l lower bound constraints
  * @param x_u upper bound constraints
  */
-bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x, shared_ptr<const Vector> x_l,
-                                   shared_ptr<const Vector> x_u) {
-    for (int i = 0; i < x->dim(); i++) {
-        assert(x_l->value(i) <= x_u->value(i));
-        if (x_l->value(i) > x->value(i)) {
-            x->set_value(i,x_l->value(i));
-//            x->set_value(i, x_l->value(i)+0.5*(x_u->value(i)-x_l->value(i)));
-        } else if (x->value(i) > x_u->value(i)) {
-            x->set_value(i,x_u->value(i));
-//           x->set_value(i, x_u->value(i)-0.5*(x_u->value(i)-x_l->value(i)));
-        }
+bool SQPTNLP::shift_starting_point(shared_ptr<Vector> x,
+                                   shared_ptr<const Vector> x_l,
+                                   shared_ptr<const Vector> x_u)
+{
+  for (int i = 0; i < x->dim(); i++) {
+    assert(x_l->value(i) <= x_u->value(i));
+    if (x_l->value(i) > x->value(i)) {
+      x->set_value(i, x_l->value(i));
+      //            x->set_value(i,
+      //            x_l->value(i)+0.5*(x_u->value(i)-x_l->value(i)));
+    } else if (x->value(i) > x_u->value(i)) {
+      x->set_value(i, x_u->value(i));
+      //           x->set_value(i,
+      //           x_u->value(i)-0.5*(x_u->value(i)-x_l->value(i)));
     }
-    return true;
+  }
+  return true;
 }
-
 }

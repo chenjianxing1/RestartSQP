@@ -11,236 +11,238 @@ extern "C" {
 #include "qpsolver.h"
 }
 
-#include "sqphot/QPsolverInterface.hpp"
-#include "sqphot/Options.hpp"
 #include "sqphot/MessageHandling.hpp"
+#include "sqphot/Options.hpp"
+#include "sqphot/QPsolverInterface.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 
 namespace SQPhotstart {
-class QOREInterface :
-    public QPSolverInterface {
+class QOREInterface : public QPSolverInterface
+{
 
-    ///////////////////////////////////////////////////////////
-    //                      PUBLIC METHODS                   //
-    ///////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
+  //                      PUBLIC METHODS                   //
+  ///////////////////////////////////////////////////////////
 public:
+  /**Constructor*/
 
+  QOREInterface(NLPInfo nlp_info, QPType qptype,
+                std::shared_ptr<const Options> options,
+                Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
-    /**Constructor*/
+  QOREInterface(std::shared_ptr<SpHbMat> H, std::shared_ptr<SpHbMat> A,
+                std::shared_ptr<Vector> g, std::shared_ptr<Vector> lb,
+                std::shared_ptr<Vector> ub,
+                std::shared_ptr<const Options> options = nullptr);
 
-    QOREInterface(NLPInfo nlp_info,
-                  QPType qptype,
-                  std::shared_ptr<const Options> options,
-                  Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
+  /** Default destructor*/
+  ~QOREInterface();
 
-    QOREInterface(std::shared_ptr<SpHbMat> H,
-                  std::shared_ptr<SpHbMat> A,
-                  std::shared_ptr<Vector> g,
-                  std::shared_ptr<Vector> lb,
-                  std::shared_ptr<Vector> ub,
-                  std::shared_ptr<const Options> options = nullptr);
+  /**
+   * @brief Solve a regular QP with given data and options.
+   */
 
-    /** Default destructor*/
-    ~QOREInterface();
+  void optimizeQP(std::shared_ptr<Stats> stats = nullptr) override;
 
+  /**
+   * @brief Solve a regular LP with given data and options
+   */
 
-    /**
-     * @brief Solve a regular QP with given data and options.
-     */
+  void optimizeLP(std::shared_ptr<Stats> stats = nullptr) override;
 
-    void optimizeQP(std::shared_ptr<Stats> stats = nullptr) override;
+  bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) override;
 
+  /**@name Getters */
+  //@{
+  /**
+   *@brief get the objective value from the QP solvers
+   *
+   * @return the objective function value of the QP problem
+   */
+  double get_obj_value() override;
 
-    /**
-     * @brief Solve a regular LP with given data and options
-     */
-
-    void optimizeLP(std::shared_ptr<Stats> stats = nullptr) override;
-
-    bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b =NULL) override;
-
-    /**@name Getters */
-    //@{
-    /**
-     *@brief get the objective value from the QP solvers
-     *
-     * @return the objective function value of the QP problem
-     */
-    double get_obj_value() override;
-
-    /**
-     * @brief copy the optimal solution of the QP to the input pointer
-     *
-     * @param x_optimal a pointer to an empty array with allocated memory euqal to
-     * sizeof(double)*number_variables
-     */
+  /**
+   * @brief copy the optimal solution of the QP to the input pointer
+   *
+   * @param x_optimal a pointer to an empty array with allocated memory euqal to
+   * sizeof(double)*number_variables
+   */
   std::shared_ptr<const Vector> get_optimal_solution() const override;
 
-    /**
-     * @brief get the pointer to the multipliers to the bounds constraints.
-     */
-  std::shared_ptr<const Vector>  get_bounds_multipliers() const override;
-    /**
-     * @brief get the pointer to the multipliers to the regular constraints.
-     */
+  /**
+   * @brief get the pointer to the multipliers to the bounds constraints.
+   */
+  std::shared_ptr<const Vector> get_bounds_multipliers() const override;
+  /**
+   * @brief get the pointer to the multipliers to the regular constraints.
+   */
   std::shared_ptr<const Vector> get_constraints_multipliers() const override;
-  
-    Exitflag get_status() override;
 
+  Exitflag get_status() override;
 
+  void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
 
-    void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+  OptimalityStatus get_optimality_status() override
+  {
+    return qpOptimalStatus_;
+  }
+  //@}
+  //
 
-    OptimalityStatus get_optimality_status() override {
-        return qpOptimalStatus_;
-    }
-    //@}
-    //
+  /**@name Getters */
+  //@{
+  const std::shared_ptr<Vector>& getG() const override
+  {
+    return g_;
+  };
 
-    /**@name Getters */
-//@{
-    const std::shared_ptr<Vector>& getG() const override {
-        return g_;
-    };
+  const std::shared_ptr<Vector>& getLb() const override
+  {
+    return lb_;
+  };
 
-    const std::shared_ptr<Vector>& getLb() const override {
-        return lb_;
-    };
+  const std::shared_ptr<Vector>& getUb() const override
+  {
+    return ub_;
+  };
 
-    const std::shared_ptr<Vector>& getUb() const override {
-        return ub_;
-    };
+  const std::shared_ptr<Vector>& getLbA() const override
+  {
+    THROW_EXCEPTION(INVALID_RETURN_TYPE, INVALID_RETURN_TYPE_MSG);
+  }
 
-    const std::shared_ptr<Vector>& getLbA() const override {
-        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
-    }
+  const std::shared_ptr<Vector>& getUbA() const override
+  {
+    THROW_EXCEPTION(INVALID_RETURN_TYPE, INVALID_RETURN_TYPE_MSG);
+  }
 
-    const std::shared_ptr<Vector>& getUbA() const override {
-        THROW_EXCEPTION(INVALID_RETURN_TYPE,INVALID_RETURN_TYPE_MSG);
-    }
+  std::shared_ptr<const SpHbMat> getH() const override
+  {
+    return H_;
+  };
 
-    std::shared_ptr<const SpHbMat> getH()const override {
-        return H_;
-    };
+  std::shared_ptr<const SpHbMat> getA() const override
+  {
+    return A_;
+  };
+  //@}
+  /** @name Setters */
+  //@{
+  void set_g(int location, double value) override
+  {
+    value = value < INF ? value : INF;
+    g_->set_value(location, value);
+  };
 
-    std::shared_ptr<const SpHbMat> getA() const override {
-        return A_;
-    };
-//@}
-    /** @name Setters */
-    //@{
-    void set_g(int location, double value) override {
-        value = value < INF ? value : INF;
-        g_->set_value(location, value);
-    };
+  void set_lb(int location, double value) override
+  {
+    value = value > -INF ? value : -INF;
+    lb_->set_value(location, value);
+  };
 
-    void set_lb(int location, double value) override {
-        value = value > -INF ? value : -INF;
-        lb_->set_value(location, value);
-    };
+  void set_ub(int location, double value) override
+  {
+    value = value < INF ? value : INF;
+    ub_->set_value(location, value);
+  };
 
-    void set_ub(int location, double value) override {
-        value = value < INF ? value : INF;
-        ub_->set_value(location, value);
-    };
+  void set_A(std::shared_ptr<const SpTripletMat> rhs,
+             IdentityInfo I_info) override;
 
-    void set_A(std::shared_ptr<const SpTripletMat> rhs, IdentityInfo I_info) override;
+  void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
 
-    void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
+  //@}
+  void WriteQPDataToFile(Ipopt::EJournalLevel level,
+                         Ipopt::EJournalCategory category,
+                         const std::string filename) override;
 
-    //@}
-    void WriteQPDataToFile(Ipopt::EJournalLevel level,
-                           Ipopt::EJournalCategory category,
-                           const std::string filename) override ;
+  //@{
+  void set_g(std::shared_ptr<const Vector> rhs) override
+  {
+    g_->copy_vector(rhs);
+  };
 
-    //@{
-    void set_g(std::shared_ptr<const Vector> rhs) override {
-        g_->copy_vector(rhs);
-    };
+  void set_lb(std::shared_ptr<const Vector> rhs) override
+  {
+    lb_->copy_vector(rhs);
+  };
 
-    void set_lb(std::shared_ptr<const Vector> rhs) override {
-        lb_->copy_vector(rhs);
-    };
+  void set_ub(std::shared_ptr<const Vector> rhs) override
+  {
+    ub_->copy_vector(rhs);
+  };
 
-    void set_ub(std::shared_ptr<const Vector> rhs) override {
-        ub_->copy_vector(rhs);
-    };
+  void set_lbA(int location, double value) override{};
+  void set_lbA(std::shared_ptr<const Vector> rhs) override{};
+  void set_ubA(int location, double value) override{};
+  void set_ubA(std::shared_ptr<const Vector> rhs) override{};
 
-    void set_lbA(int location, double value) override {};
-    void set_lbA(std::shared_ptr<const Vector> rhs) override {};
-    void set_ubA(int location, double value) override {};
-    void set_ubA(std::shared_ptr<const Vector> rhs) override {};
+  void reset_constraints() override
+  {
+    lb_->set_to_zero();
+    ub_->set_to_zero();
+  };
+  //@}
 
-    void reset_constraints() override {
-        lb_->set_to_zero();
-        ub_->set_to_zero();
-    };
-    //@}
-
-    ///////////////////////////////////////////////////////////
-    //                      PRIVATE METHODS                  //
-    ///////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
+  //                      PRIVATE METHODS                  //
+  ///////////////////////////////////////////////////////////
 private:
-    /** Default Constructor*/
-    QOREInterface();
+  /** Default Constructor*/
+  QOREInterface();
 
-    /** Copy Constructor */
-    QOREInterface(const QOREInterface &);
+  /** Copy Constructor */
+  QOREInterface(const QOREInterface&);
 
+  /** Overloaded Equals Operator */
+  void operator=(const QOREInterface&);
 
-    /** Overloaded Equals Operator */
-    void operator=(const QOREInterface &);
+  /**
+   * @brief set options of QP solver based on the user-defined values
+   */
+  void set_solver_options(std::shared_ptr<const Options> options);
 
-    /**
-     * @brief set options of QP solver based on the user-defined values
-     */
-    void set_solver_options(std::shared_ptr<const Options> options);
+  /**
+   * @brief Handle errors based on current status
+   */
+  void handle_error(QPType qptype, std::shared_ptr<Stats> stats = nullptr);
+  /**
+   * @brief Allocate memory for the class members
+   * @param nlp_index_info  the struct that stores simple nlp dimension info
+   * @param qptype is the problem to be solved QP or LP?
+   */
+  void allocate_memory(NLPInfo nlp_info, QPType qptype);
 
-    /**
-     * @brief Handle errors based on current status
-     */
-    void handle_error(QPType qptype, std::shared_ptr<Stats> stats=nullptr);
-    /**
-     * @brief Allocate memory for the class members
-     * @param nlp_index_info  the struct that stores simple nlp dimension info
-     * @param qptype is the problem to be solved QP or LP?
-     */
-    void allocate_memory(NLPInfo nlp_info, QPType qptype);
-
-
-
-    ///////////////////////////////////////////////////////////
-    //                      PRIVATE MEMBERS                  //
-    ///////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
+  //                      PRIVATE MEMBERS                  //
+  ///////////////////////////////////////////////////////////
 private:
-    int status_;
-    QoreProblem* solver_;
-    bool firstQPsolved_ = false;
-    int nConstr_QP_;
-    int nVar_QP_;
-    bool matrix_change_flag_ = false;
-    OptimalityStatus qpOptimalStatus_;
-    std::shared_ptr<SpHbMat> A_;
-    std::shared_ptr<SpHbMat> H_;
-    std::shared_ptr<Vector> g_;
-    std::shared_ptr<Vector> lb_;
-    std::shared_ptr<Vector> ub_;
-    std::shared_ptr<Vector> x_qp_;
+  int status_;
+  QoreProblem* solver_;
+  bool firstQPsolved_ = false;
+  int nConstr_QP_;
+  int nVar_QP_;
+  bool matrix_change_flag_ = false;
+  OptimalityStatus qpOptimalStatus_;
+  std::shared_ptr<SpHbMat> A_;
+  std::shared_ptr<SpHbMat> H_;
+  std::shared_ptr<Vector> g_;
+  std::shared_ptr<Vector> lb_;
+  std::shared_ptr<Vector> ub_;
+  std::shared_ptr<Vector> x_qp_;
   /** the bounds and constraint multipliers corresponding to the
       optimal solution.  The first nVar_QP_ entries are for the bound
       multipliersr, and the remaining nConstr_QP_ entries contain the
       constraint multipliers. */
   std::shared_ptr<Vector> y_qp_;
 
-    int qpiter_[1];
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-    int rv_;//temporarily placed here, for recording the return value from the solver
-    int* working_set_;
+  int qpiter_[1];
+  Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+  int rv_; // temporarily placed here, for recording the return value from the
+           // solver
+  int* working_set_;
 };
-
-
 }
-
 
 #endif
