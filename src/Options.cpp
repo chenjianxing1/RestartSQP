@@ -17,7 +17,7 @@ Options::~Options() {
 
 
 int Options::setToDefault() {
-    iter_max = 3000;
+    iter_max = 1000;
     printLevel = 2;
     qpPrintLevel = 0;       //does not print anything
     QPsolverChoice = QORE;
@@ -31,7 +31,7 @@ int Options::setToDefault() {
     gamma_e = 2;
     delta = 1;
     delta_min = 1.0e-16;
-    delta_max = 1.0e10;
+    delta_max = 1.0e8;
     active_set_tol = 1.0e-5;
     opt_stat_tol = 1.0e-4;
     opt_compl_tol = 1.0e-4;

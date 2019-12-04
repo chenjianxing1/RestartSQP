@@ -15,8 +15,8 @@ DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
  * Default Constructor
  */
 Algorithm::Algorithm() :
-    Active_Set_constraints_(NULL),
-    Active_Set_bounds_(NULL),
+    W_constr_(NULL),
+    W_bounds_(NULL),
     cons_type_(NULL),
     bound_cons_type_(NULL),
     obj_value_trial_(0),
@@ -24,7 +24,7 @@ Algorithm::Algorithm() :
     qp_obj_(0),
     actual_reduction_(0),
     infea_measure_(0.0),
-    infea_measure_model_(0) {
+    infea_measure_model_(0.0) {
     jnlst_ = new Ipopt::Journalist();
     roptions2_ = new Ipopt::OptionsList();
 }
@@ -39,10 +39,10 @@ Algorithm::~Algorithm() {
     cons_type_ = NULL;
     delete[] bound_cons_type_;
     bound_cons_type_ = NULL;
-    delete[] Active_Set_bounds_;
-    Active_Set_bounds_ = NULL;
-    delete[] Active_Set_constraints_;
-    Active_Set_constraints_ = NULL;
+    delete[] W_bounds_;
+    W_bounds_ = NULL;
+    delete[] W_constr_;
+    W_constr_ = NULL;
 
 }
 
@@ -57,8 +57,8 @@ void Algorithm::Optimize() {
         setupQP();
         //for debugging
         //@{
-//    hessian_->print_full("hessian");
-//    jacobian_->print_full("jacobian");
+        //    hessian_->print_full("hessian");
+        //    jacobian_->print_full("jacobian");
         //@}
         try {
             myQP_->solveQP(stats_,
@@ -73,7 +73,6 @@ void Algorithm::Optimize() {
 
         //get the search direction from the solution of the QPsubproblem
         get_search_direction();
-//        p_k_->print("p_k_");
         qp_obj_ = get_obj_QP();
 
         //Update the penalty parameter if necessary
@@ -183,20 +182,20 @@ void Algorithm::check_optimality() {
             if (cons_type_[i] == BOUNDED_ABOVE) {
                 if (abs(c_u_->values(i) - c_k_->values(i)) <
                         options_->active_set_tol)
-                    Active_Set_constraints_[i] = ACTIVE_ABOVE;
+                    W_constr_[i] = ACTIVE_ABOVE;
             } else if (cons_type_[i] == BOUNDED_BELOW) {
                 if (abs(c_k_->values(i) - c_l_->values(i)) <
                         options_->active_set_tol) {
-                    Active_Set_constraints_[i] = ACTIVE_BELOW;
+                    W_constr_[i] = ACTIVE_BELOW;
                 }
             } else if (cons_type_[i] == EQUAL) {
                 if ((abs(c_u_->values(i) - c_k_->values(i)) <
                         options_->active_set_tol) &&
                         (abs(c_k_->values(i) - c_l_->values(i)) <
                          options_->active_set_tol))
-                    Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
+                    W_constr_[i] = ACTIVE_BOTH_SIDE;
             } else {
-                Active_Set_constraints_[i] = INACTIVE;
+                W_constr_[i] = INACTIVE;
             }
         }
 
@@ -205,19 +204,19 @@ void Algorithm::check_optimality() {
         if (bound_cons_type_[i] == BOUNDED_ABOVE) {
             if (abs(x_u_->values(i) - x_k_->values(i)) <
                     options_->active_set_tol)
-                Active_Set_bounds_[i] = ACTIVE_ABOVE;
+                W_bounds_[i] = ACTIVE_ABOVE;
         } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
             if (abs(x_k_->values(i) - x_l_->values(i)) <
                     options_->active_set_tol)
-                Active_Set_bounds_[i] = ACTIVE_BELOW;
+                W_bounds_[i] = ACTIVE_BELOW;
         } else if (bound_cons_type_[i] == EQUAL) {
             if ((abs(x_u_->values(i) - x_k_->values(i)) <
                     options_->active_set_tol) &&
                     (abs(x_k_->values(i) - x_l_->values(i)) <
                      options_->active_set_tol))
-                Active_Set_bounds_[i] = ACTIVE_BOTH_SIDE;
+                W_bounds_[i] = ACTIVE_BOTH_SIDE;
         } else {
-            Active_Set_bounds_[i] = INACTIVE;
+            W_bounds_[i] = INACTIVE;
         }
     }
     /**-------------------------------------------------------**/
@@ -525,8 +524,8 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
     nCon_ = nlp_->nlp_info_.nCon;
     cons_type_ = new ConstraintType[nCon_];
     bound_cons_type_ = new ConstraintType[nVar_];
-    Active_Set_bounds_ = new ActiveType[nVar_];
-    Active_Set_constraints_ = new ActiveType[nCon_];
+    W_bounds_ = new ActiveType[nVar_];
+    W_constr_ = new ActiveType[nCon_];
 
     x_k_ = make_shared<Vector>(nVar_);
     x_trial_ = make_shared<Vector>(nVar_);
@@ -965,8 +964,6 @@ void Algorithm::update_penalty_parameter() {
                 if (rho_trial * infea_measure_ - get_obj_QP()>=
                         options_->eps2 * rho_trial *
                         (infea_measure_ - infea_measure_model_)) {
-//                    printf("rho_trial = %23.16e\n",rho_trial);
-//                    printf("infea_measure_ = %23.16e\n",infea_measure_);
                     stats_->penalty_change_Succ_addone();
 
                     options_->eps1 +=
@@ -984,8 +981,6 @@ void Algorithm::update_penalty_parameter() {
                     pred_reduction_ = rho_ * infea_measure_ - get_obj_QP();
 
                 } else {
-//                    printf("rho_trial = %23.16e\n",rho_trial);
-//                    printf("infea_measure_ = %23.16e\n",infea_measure_);
                     stats_->penalty_change_Fail_addone();
                     infea_measure_model_ = infea_measure_model_tmp;
                     QPinfoFlag_.Update_penalty = true;

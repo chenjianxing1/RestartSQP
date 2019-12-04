@@ -71,19 +71,20 @@ qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H,
     options_(options)
 {
 
+
     x_qp_ = make_shared<Vector>(nVar_QP_);
     y_qp_ = make_shared<Vector>(nConstr_QP_+nVar_QP_);
     solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t) nVar_QP_,
               (qpOASES::int_t) nConstr_QP_);
-    H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
-                 H_->ColNum(),
+    H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(nVar_QP_,
+                 nVar_QP_,
                  H_->RowIndex(),
                  H_->ColIndex(),
                  H_->MatVal());
     H_qpOASES_->createDiagInfo();
 
-    A_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(A_->RowNum(),
-                 A_->ColNum(),
+    A_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(nConstr_QP_,
+                 nVar_QP_,
                  A_->RowIndex(),
                  A_->ColIndex(),
                  A_->MatVal());
@@ -287,7 +288,12 @@ void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats) {
  * @brief get the pointer to the multipliers to the bounds constraints.
  */
 double* qpOASESInterface::get_multipliers_bounds() {
+#if NEW_FORMULATION
+    return y_qp_->values()+3*nConstr_QP_;//equals to nVar_QP+nConstr_nlp
+#else
     return y_qp_->values();
+#endif
+
 }
 
 
@@ -303,6 +309,7 @@ double* qpOASESInterface::get_multipliers_constr() {
  * @brief copy the optimal solution of the QP to the input pointer
  */
 double* qpOASESInterface::get_optimal_solution() {
+
     return x_qp_->values();
 }
 
@@ -402,8 +409,8 @@ void qpOASESInterface::set_H(shared_ptr<const SpTripletMat> rhs) {
     }
     if(!H_->isinitialized()) {
         H_->setStructure(rhs);//TODO: move to somewhere else?
-        H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(H_->RowNum(),
-                     H_->ColNum(),
+        H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(nVar_QP_,
+                     nVar_QP_,
                      H_->RowIndex(),
                      H_->ColIndex(),
                      H_->MatVal());
@@ -422,8 +429,8 @@ void qpOASESInterface::set_A(shared_ptr<const SQPhotstart::SpTripletMat> rhs, Id
     }
     if(!A_->isinitialized()) {
         A_->setStructure(rhs, I_info);
-        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(A_->RowNum(),
-                     A_->ColNum(),
+        A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(nConstr_QP_,
+                     nVar_QP_,
                      A_->RowIndex(),
                      A_->ColIndex(),
                      A_->MatVal());

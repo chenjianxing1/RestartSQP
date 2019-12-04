@@ -355,8 +355,8 @@ private:
     double pred_reduction_;/**< the predicted reduction evaluated at x_k and p_k*/
     double qp_obj_;/**< the objective value of current qp*/
     double rho_; /**< penalty parameter*/
-    ActiveType* Active_Set_bounds_;
-    ActiveType* Active_Set_constraints_;
+    ActiveType* W_bounds_;
+    ActiveType* W_constr_;
     OptimalityStatus opt_status_;
     UpdateFlags QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
     bool isaccept_; // is the new point accepted?

@@ -190,7 +190,7 @@ SpHbMat::~SpHbMat() {
  *
  * @param rhs a SpMatrix object whose content will be copied to the class members
  * (in a different sparse matrix representations)
- * @param I_info the information of 2 identity sub matrices.
+ * @param I_info the information of identity sub matrices.
  *
  */
 void SpHbMat::setStructure(
@@ -454,7 +454,6 @@ void SpHbMat::set_zero() {
 shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const {
 
     shared_ptr<SpTripletMat> result;
-    int nnz;//number of non-zero entries
     int j = 1;
     if(isSymmetric_) {
         std::vector<std::tuple<int,int,double,int>>  triplet_vector;

@@ -469,12 +469,13 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad) {
  */
 void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
                         shared_ptr<Options> options) {
-
-//    solverInterface_->getA()->print_full("A");
-//    solverInterface_->getH()->print_full("H");
-//    solverInterface_->getLb()->print("Lb");
-//    solverInterface_->getUb()->print("Ub");
-//    solverInterface_->getG()->print("G");
+//   solverInterface_->getA()->print_full("A");
+//   solverInterface_->getH()->print_full("H");
+//   solverInterface_->getLb()->print("Lb");
+//   solverInterface_->getUb()->print("Ub");
+//   solverInterface_->getLbA()->print("LbA");
+//   solverInterface_->getUbA()->print("UbA");
+//   solverInterface_->getG()->print("G");
 
 #if DEBUG
 #if COMPARE_QP_SOLVER
@@ -484,11 +485,11 @@ void QPhandler::solveQP(shared_ptr<SQPhotstart::Stats> stats,
     bool qore_optimal = OptimalityTest(QOREInterface_,QORE,W_b_qore_,W_c_qore_);
     if(!qpOASES_optimal||!qore_optimal)
         testQPsolverDifference();
-
 #endif
 #endif
 
     solverInterface_->optimizeQP(stats);
+
 
     //manually check if the optimality condition is satisfied
     bool isOptimal= test_optimality(solverInterface_, QPsolverChoice_, W_b_, W_c_);

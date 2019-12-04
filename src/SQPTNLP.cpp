@@ -121,8 +121,11 @@ bool SQPTNLP::Get_Structure_Hessian(shared_ptr<const Vector> x,
 bool
 SQPTNLP::Eval_Hessian(shared_ptr<const Vector> x, shared_ptr<const Vector> lambda,
                       shared_ptr<SpTripletMat> Hessian) {
+    auto lambda_tmp = make_shared<Vector>(lambda->Dim());
+    lambda_tmp->copy_vector(lambda->values());
+    lambda_tmp->scale(-1.0);
     nlp_->eval_h(nlp_info_.nVar, x->values(), true, 1, nlp_info_.nCon,
-                 lambda->values(), true,
+                 lambda_tmp->values(), true,
                  nlp_info_.nnz_h_lag, NULL, NULL, Hessian->MatVal());
 
     return true;

@@ -398,11 +398,11 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 //        tol =  (H->oneNorm()+1)*1.0e-6;
 //
     if(qpOptimalStatus_.KKT_error>tol) {
-        //    printf("comp_violation %10e\n", compl_violation);
-        //    printf("stat_violation %10e\n", statioanrity_violation);
-        //    printf("prim_violation %10e\n", primal_violation);
-        //    printf("dual_violation %10e\n", dual_violation);
-        //    printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
+        printf("comp_violation %10e\n", compl_violation);
+        printf("stat_violation %10e\n", statioanrity_violation);
+        printf("prim_violation %10e\n", primal_violation);
+        printf("dual_violation %10e\n", dual_violation);
+        printf("KKT_error %10e\n", qpOptimalStatus_.KKT_error);
         return false;
 
     }

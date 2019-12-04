@@ -154,6 +154,8 @@ public:
         return values_;
     }
 
+
+
     inline const double* values() const {
         return values_;
     }
