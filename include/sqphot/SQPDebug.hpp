@@ -11,7 +11,7 @@
 #define __SQPDEBUG_HPP__
 
 #define DEBUG
-// #define NEW_FORMULATION true
+//#define NEW_FORMULATION
 
 #ifdef DEBUG
 #undef COMPARE_QP_SOLVER

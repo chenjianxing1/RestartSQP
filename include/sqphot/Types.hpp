@@ -71,7 +71,7 @@ enum Exitflag
   QPERROR_UNKNOWN = 30,
   AUXINPUT_NOT_OPTIMAL = 99, // The input point in auxInput is not optimal when
                              // hotstart is enabled.
-  UNKNOWN = -99 // unknown error
+  UNKNOWN = -99              // unknown error
 };
 
 enum ConstraintType

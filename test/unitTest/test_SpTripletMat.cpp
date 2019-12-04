@@ -21,9 +21,9 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
   shared_ptr<SpTripletMat> m_row_oriented =
       make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
 
-  m_row_oriented->get_dense_matrix(dense_matrix_out->values(), true);
+  m_row_oriented->get_dense_matrix(dense_matrix_out->get_values(), true);
 
-  if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
+  if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "row_oriented_matrix")) {
     printf("---------------------------------------------------------\n");
     printf("    Conversion between row-oriented dense matrix \n    "
@@ -44,7 +44,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
     printf("\nMatrix out is \n");
     for (int i = 0; i < rowNum; i++) {
       for (int j = 0; j < colNum; j++)
-        printf("%10e ", dense_matrix_out->value(i * colNum + j));
+        printf("%10e ", dense_matrix_out->get_value(i * colNum + j));
 
       printf("\n");
     }
@@ -59,9 +59,9 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
       make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, false);
 
   dense_matrix_out->set_to_zero();
-  m_col_oriented->get_dense_matrix(dense_matrix_out->values(), false);
+  m_col_oriented->get_dense_matrix(dense_matrix_out->get_values(), false);
 
-  if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->values(),
+  if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "col_oriented_matrix")) {
     printf("---------------------------------------------------------\n");
     printf("    Conversion between col-oriented dense matrix \n    "
@@ -81,7 +81,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
     printf("\nMatrix out is \n");
     for (int i = 0; i < rowNum; i++) {
       for (int j = 0; j < colNum; j++)
-        printf("%10e ", dense_matrix_out->value(i * colNum + j));
+        printf("%10e ", dense_matrix_out->get_value(i * colNum + j));
 
       printf("\n");
     }
@@ -94,7 +94,7 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum,
                                               shared_ptr<const Vector> vector)
 {
 
-  assert(colNum == vector->dim());
+  assert(colNum == vector->get_dim());
 
   shared_ptr<Vector> result_dense = make_shared<Vector>(rowNum);
   shared_ptr<Vector> result_sparse = make_shared<Vector>(rowNum);
@@ -104,17 +104,17 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum,
   for (int i = 0; i < rowNum; i++) {
     for (int j = 0; j < colNum; j++) {
       result_dense->add_number_to_element(i, dense_matrix_in[i * colNum + j] *
-                                                 vector->value(j));
+                                                 vector->get_value(j));
     }
   }
 
   shared_ptr<SpTripletMat> sparse_matrix =
       make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
 
-  sparse_matrix->times(vector, result_sparse);
+  sparse_matrix->multiply(vector, result_sparse);
 
-  if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(), result_dense->values(),
-                              rowNum)) {
+  if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->get_values(),
+                              result_dense->get_values(), rowNum)) {
     printf("---------------------------------------------------------\n");
     printf("   Matrix-vector multiplication for triplet \n"
            "   sparse matrix passed!   \n");
@@ -136,7 +136,7 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(
     shared_ptr<const Vector> vector)
 {
 
-  assert(rowNum == vector->dim());
+  assert(rowNum == vector->get_dim());
 
   shared_ptr<Vector> result_dense = make_shared<Vector>(colNum);
   shared_ptr<Vector> result_sparse = make_shared<Vector>(colNum);
@@ -146,16 +146,16 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(
   for (int i = 0; i < colNum; i++) {
     for (int j = 0; j < rowNum; j++) {
       result_dense->add_number_to_element(i, dense_matrix_in[j * colNum + i] *
-                                                 vector->value(j));
+                                                 vector->get_value(j));
     }
   }
 
   shared_ptr<SpTripletMat> sparse_matrix =
       make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
-  sparse_matrix->transposed_times(vector, result_sparse);
+  sparse_matrix->multiply_transpose(vector, result_sparse);
 
-  if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->values(), result_dense->values(),
-                              colNum)) {
+  if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->get_values(),
+                              result_dense->get_values(), colNum)) {
     printf("---------------------------------------------------------\n");
     printf("   Transposed matrix-vector multiplication for triplet\n"
            "   sparse matrix passed!   \n");

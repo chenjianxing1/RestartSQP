@@ -44,8 +44,8 @@ QOREInterface::QOREInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
  , g_(g)
  , lb_(lb)
  , ub_(ub)
- , nVar_QP_(A->ColNum())
- , nConstr_QP_(A->RowNum())
+ , nVar_QP_(A->get_num_columns())
+ , nConstr_QP_(A->get_num_rows())
  , firstQPsolved_(false)
  , solver_(0)
 {
@@ -53,7 +53,8 @@ QOREInterface::QOREInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
   y_qp_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
   working_set_ = new int[nVar_QP_ + nConstr_QP_]();
   qpiter_[0] = 0;
-  rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, A->EntryNum(), H->EntryNum());
+  rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, A->get_num_entries(),
+              H->get_num_entries());
   assert(rv_ == QPSOLVER_OK);
   if (options != nullptr)
     set_solver_options(options);
@@ -85,9 +86,10 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
   /**-------------------------------------------------------**/
   /**                   Set Data and Optimize QP            **/
   /**-------------------------------------------------------**/
-  rv_ =
-      QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(), A_->ColIndex(),
-                A_->MatVal(), H_->RowIndex(), H_->ColIndex(), H_->MatVal());
+  rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->get_row_indices(),
+                  A_->get_column_indices(), A_->get_values(),
+                  H_->get_row_indices(), H_->get_column_indices(),
+                  H_->get_values());
 
   assert(rv_ == QPSOLVER_OK);
   if (firstQPsolved_) {
@@ -97,8 +99,8 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
       rv_ = QPAdjust(solver_, -1.0);
     }
   }
-  rv_ =
-      QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0); //
+  rv_ = QPOptimize(solver_, lb_->get_values(), ub_->get_values(),
+                   g_->get_values(), 0, 0); //
 
   if (rv_ != QPSOLVER_OK) {
     QPGetInt(solver_, "status", &status_);
@@ -115,9 +117,9 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
   /**-------------------------------------------------------**/
   /**               Get Primal and Dual Solution            **/
   /**-------------------------------------------------------**/
-  rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
+  rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->get_values());
   assert(rv_ == QPSOLVER_OK);
-  rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
+  rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->get_values());
   assert(rv_ == QPSOLVER_OK);
 
   /**-------------------------------------------------------**/
@@ -139,8 +141,8 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
   /**-------------------------------------------------------**/
   /**                   Set Data and Optimize LP            **/
   /**-------------------------------------------------------**/
-  rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->RowIndex(),
-                  A_->ColIndex(), A_->MatVal(), NULL, NULL, NULL);
+  rv_ = QPSetData(solver_, nVar_QP_, nConstr_QP_, A_->get_row_indices(),
+                  A_->get_column_indices(), A_->get_values(), NULL, NULL, NULL);
   assert(rv_ == QPSOLVER_OK);
   if (firstQPsolved_) {
     if (matrix_change_flag_) {
@@ -150,8 +152,8 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
     }
   }
 
-  rv_ =
-      QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(), 0, 0); //
+  rv_ = QPOptimize(solver_, lb_->get_values(), ub_->get_values(),
+                   g_->get_values(), 0, 0); //
   assert(rv_ == QPSOLVER_OK);
 
   rv_ = QPGetInt(solver_, "status", &status_);
@@ -163,9 +165,9 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
   /**-------------------------------------------------------**/
   /**               Get Primal and Dual Solution            **/
   /**-------------------------------------------------------**/
-  rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->values());
+  rv_ = QPGetDblVector(solver_, "primalsol", x_qp_->get_values());
   assert(rv_ == QPSOLVER_OK);
-  rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->values());
+  rv_ = QPGetDblVector(solver_, "dualsol", y_qp_->get_values());
   assert(rv_ == QPSOLVER_OK);
   /**-------------------------------------------------------**/
   /**                     Update Stats                      **/
@@ -237,8 +239,8 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   /**                    primal feasibility                 **/
   /**-------------------------------------------------------**/
   for (i = 0; i < nVar_QP_ + nConstr_QP_; i++) {
-    primal_violation += max(0.0, (lb_->value(i) - x_qp_->value(i)));
-    primal_violation += -min(0.0, (ub_->value(i) - x_qp_->value(i)));
+    primal_violation += max(0.0, (lb_->get_value(i) - x_qp_->get_value(i)));
+    primal_violation += -min(0.0, (ub_->get_value(i) - x_qp_->get_value(i)));
     //        printf("primal_violation[%d]=%f\n",i,primal_violation);
   }
   /**-------------------------------------------------------**/
@@ -250,17 +252,17 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
       case INACTIVE: // the constraint is inactive, then the dual multiplier
         // should be 0
         // printf("0\n");
-        dual_violation += fabs(y_qp_->value(i));
+        dual_violation += fabs(y_qp_->get_value(i));
         break;
       case ACTIVE_BELOW: // the constraint is active at the lower bound, so the
         // multiplier should be positive
         //            printf("-1\n");
-        dual_violation += -min(0.0, y_qp_->value(i));
+        dual_violation += -min(0.0, y_qp_->get_value(i));
         break;
       case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so the
         // multiplier should be negavie
         //            printf("1\n");
-        dual_violation += max(0.0, y_qp_->value(i));
+        dual_violation += max(0.0, y_qp_->get_value(i));
         break;
       case ACTIVE_BOTH_SIDE:
         //           printf("99\n");
@@ -278,19 +280,19 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
       switch (W_c[i]) {
         case INACTIVE: // the constraint is inactive, then the dual multiplier
           // should be 0
-          dual_violation += fabs(y_qp_->value(i + nVar_QP_));
+          dual_violation += fabs(y_qp_->get_value(i + nVar_QP_));
           //                  printf("0\n");
           break;
         case ACTIVE_BELOW: // the constraint is active at the lower bound, so
                            // the
           // multiplier should be positive
-          dual_violation += -min(0.0, y_qp_->value(i + nVar_QP_));
+          dual_violation += -min(0.0, y_qp_->get_value(i + nVar_QP_));
           //                 printf("-1\n");
           break;
         case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so
                            // the
           // multiplier should be negavie
-          dual_violation += max(0.0, y_qp_->value(i + nVar_QP_));
+          dual_violation += max(0.0, y_qp_->get_value(i + nVar_QP_));
           //                printf("1\n");
           break;
         case ACTIVE_BOTH_SIDE:
@@ -308,14 +310,15 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   /**                   stationarity                        **/
   /**-------------------------------------------------------**/
   // calculate A'*y+lambda-g-Hx
-  A_->transposed_times(y_qp_->values() + nVar_QP_, stationary_gap->values());
+  A_->multiply_transpose(y_qp_->get_values() + nVar_QP_,
+                         stationary_gap->get_values());
 
   shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
-  H_->times(x_qp_, Hx);
+  H_->multiply(x_qp_, Hx);
   stationary_gap->add_vector(1., get_bounds_multipliers());
   stationary_gap->add_vector(-1., g_);
   stationary_gap->add_vector(-1., Hx);
-  statioanrity_violation = stationary_gap->one_norm();
+  statioanrity_violation = stationary_gap->calc_one_norm();
 
   /**-------------------------------------------------------**/
   /**                    Complemtarity                      **/
@@ -323,16 +326,16 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   for (i = 0; i < nVar_QP_; i++) {
     switch (W_b[i]) {
       case INACTIVE: // constraint is inactive, multiplier should be 0
-        compl_violation += abs(y_qp_->value(i));
+        compl_violation += abs(y_qp_->get_value(i));
         break;
       case ACTIVE_BELOW: // the constraint is active at the lower bound
-        compl_violation +=
-            abs(y_qp_->value(i) * (x_qp_->value(i) - lb_->value(i)));
+        compl_violation += abs(y_qp_->get_value(i) *
+                               (x_qp_->get_value(i) - lb_->get_value(i)));
         break;
       case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so the
         // multiplier should be negavie
-        compl_violation +=
-            abs(y_qp_->value(i) * (ub_->value(i) - x_qp_->value(i)));
+        compl_violation += abs(y_qp_->get_value(i) *
+                               (ub_->get_value(i) - x_qp_->get_value(i)));
         break;
       case ACTIVE_BOTH_SIDE:
         break;
@@ -347,19 +350,19 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
     for (i = 0; i < nConstr_QP_; i++) {
       switch (W_c[i]) {
         case INACTIVE: // constraint is inactive, multiplier should be 0
-          compl_violation += abs(y_qp_->value(i + nVar_QP_));
+          compl_violation += abs(y_qp_->get_value(i + nVar_QP_));
           break;
         case ACTIVE_BELOW: // the constraint is active at the lower bound
-          compl_violation +=
-              abs(y_qp_->value(i + nVar_QP_) *
-                  (x_qp_->value(i + nVar_QP_) - lb_->value(i + nVar_QP_)));
+          compl_violation += abs(
+              y_qp_->get_value(i + nVar_QP_) *
+              (x_qp_->get_value(i + nVar_QP_) - lb_->get_value(i + nVar_QP_)));
           break;
         case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so
                            // the
           // multiplier should be negavie
-          compl_violation +=
-              abs(y_qp_->value(i + nVar_QP_) *
-                  (ub_->value(i + nVar_QP_) - x_qp_->value(i + nVar_QP_)));
+          compl_violation += abs(
+              y_qp_->get_value(i + nVar_QP_) *
+              (ub_->get_value(i + nVar_QP_) - x_qp_->get_value(i + nVar_QP_)));
           break;
         case ACTIVE_BOTH_SIDE:
           break;
@@ -422,7 +425,7 @@ shared_ptr<const Vector> QOREInterface::get_bounds_multipliers() const
   shared_ptr<Vector> retval = make_shared<Vector>(nVar_QP_);
 
   // copy the values from the beginning of the y_qp_ vector
-  retval->copy_values(y_qp_->values());
+  retval->copy_values(y_qp_->get_values());
 
   return retval;
 }
@@ -436,7 +439,7 @@ shared_ptr<const Vector> QOREInterface::get_constraints_multipliers() const
   shared_ptr<Vector> retval = make_shared<Vector>(nConstr_QP_);
 
   // copy the value from the second part of the y_qp_ vector
-  retval->copy_values(y_qp_->values() + nVar_QP_);
+  retval->copy_values(y_qp_->get_values() + nVar_QP_);
 
   return retval;
 }
@@ -447,8 +450,8 @@ shared_ptr<const Vector> QOREInterface::get_constraints_multipliers() const
 double QOREInterface::get_obj_value()
 {
   shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
-  H_->times(x_qp_, Hx);
-  return (Hx->inner_product(x_qp_) * 0.5 + g_->inner_product(x_qp_));
+  H_->multiply(x_qp_, Hx);
+  return (Hx->calc_inner_product(x_qp_) * 0.5 + g_->calc_inner_product(x_qp_));
 }
 
 Exitflag QOREInterface::get_status()
@@ -474,13 +477,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
     if (i < nVar_QP_) {
       switch (working_set_[i]) {
         case -1:
-          if (fabs(x_qp_->value(i) - lb_->value(i)) < sqrt_m_eps)
+          if (fabs(x_qp_->get_value(i) - lb_->get_value(i)) < sqrt_m_eps)
             W_bounds[i] = ACTIVE_BOTH_SIDE;
           else
             W_bounds[i] = ACTIVE_ABOVE;
           break;
         case 1:
-          if (fabs(x_qp_->value(i) - ub_->value(i)) < sqrt_m_eps)
+          if (fabs(x_qp_->get_value(i) - ub_->get_value(i)) < sqrt_m_eps)
             W_bounds[i] = ACTIVE_BOTH_SIDE;
           else
             W_bounds[i] = ACTIVE_BELOW;
@@ -495,13 +498,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
     } else {
       switch (working_set_[i]) {
         case -1:
-          if (fabs(x_qp_->value(i) - lb_->value(i) < sqrt_m_eps))
+          if (fabs(x_qp_->get_value(i) - lb_->get_value(i) < sqrt_m_eps))
             W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDE;
           else
             W_constr[i - nVar_QP_] = ACTIVE_ABOVE;
           break;
         case 1:
-          if (fabs(x_qp_->value(i) - ub_->value(i) < sqrt_m_eps))
+          if (fabs(x_qp_->get_value(i) - ub_->get_value(i) < sqrt_m_eps))
             W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDE;
           else
             W_constr[i - nVar_QP_] = ACTIVE_BELOW;
@@ -645,13 +648,13 @@ void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
       // setup the slack variables to satisfy the bound constraints
       for (int i = 0; i < nConstr_QP_; i++) {
         x_0->set_value(i + nVar_QP_ - 2 * nConstr_QP_,
-                       max(0.0, lb_->value(nVar_QP_ + i)));
+                       max(0.0, lb_->get_value(nVar_QP_ + i)));
         x_0->set_value(i + nVar_QP_ - nConstr_QP_,
-                       -min(0.0, ub_->value(nVar_QP_ + i)));
+                       -min(0.0, ub_->get_value(nVar_QP_ + i)));
       }
 
-      rv_ = QPOptimize(solver_, lb_->values(), ub_->values(), g_->values(),
-                       x_0->values(), NULL); //
+      rv_ = QPOptimize(solver_, lb_->get_values(), ub_->get_values(),
+                       g_->get_values(), x_0->get_values(), NULL); //
       QPGetInt(solver_, "itercount", qpiter_);
       if (stats != nullptr)
         stats->qp_iter_addValue(qpiter_[0]);
@@ -674,7 +677,7 @@ void QOREInterface::set_solver_options(shared_ptr<const Options> options)
 void QOREInterface::set_A(shared_ptr<const SpTripletMat> rhs,
                           IdentityInfo I_info)
 {
-  if (!A_->isinitialized())
+  if (!A_->is_initialized())
     A_->setStructure(rhs, I_info);
   else {
     matrix_change_flag_ = true;
@@ -684,7 +687,7 @@ void QOREInterface::set_A(shared_ptr<const SpTripletMat> rhs,
 
 void QOREInterface::set_H(shared_ptr<const SpTripletMat> rhs)
 {
-  if (!H_->isinitialized())
+  if (!H_->is_initialized())
     H_->setStructure(rhs);
   else {
     matrix_change_flag_ = true;

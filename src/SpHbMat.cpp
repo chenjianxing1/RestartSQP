@@ -12,20 +12,20 @@ namespace SQPhotstart {
 //@{
 /** Default constructor*/
 SpHbMat::SpHbMat(int RowNum, int ColNum, bool isCompressedRow)
- : RowIndex_(NULL)
- , ColIndex_(NULL)
- , MatVal_(NULL)
+ : row_indices_(NULL)
+ , column_indices_(NULL)
+ , values_(NULL)
  , order_(NULL)
- , EntryNum_(-1)
- , isInitialised_(false)
- , RowNum_(RowNum)
- , ColNum_(ColNum)
- , isCompressedRow_(isCompressedRow)
+ , num_entries_(-1)
+ , is_initialized_(false)
+ , num_rows_(RowNum)
+ , num_columns_(ColNum)
+ , is_compressed_row_format_(isCompressedRow)
 {
-  if (isCompressedRow_) {
-    RowIndex_ = new int[RowNum + 1]();
+  if (is_compressed_row_format_) {
+    row_indices_ = new int[RowNum + 1]();
   } else
-    ColIndex_ = new int[ColNum + 1]();
+    column_indices_ = new int[ColNum + 1]();
 }
 
 /**
@@ -38,25 +38,25 @@ SpHbMat::SpHbMat(int RowNum, int ColNum, bool isCompressedRow)
  * @param ColNum: number of columns of a matrix
  */
 SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow)
- : RowIndex_(NULL)
- , ColIndex_(NULL)
- , MatVal_(NULL)
+ : row_indices_(NULL)
+ , column_indices_(NULL)
+ , values_(NULL)
  , order_(NULL)
- , EntryNum_(nnz)
- , RowNum_(RowNum)
- , ColNum_(ColNum)
- , isInitialised_(false)
- , isCompressedRow_(isCompressedRow)
+ , num_entries_(nnz)
+ , num_rows_(RowNum)
+ , num_columns_(ColNum)
+ , is_initialized_(false)
+ , is_compressed_row_format_(isCompressedRow)
 {
 
   if (isCompressedRow) {
-    ColIndex_ = new int[nnz]();
-    RowIndex_ = new int[RowNum + 1]();
+    column_indices_ = new int[nnz]();
+    row_indices_ = new int[RowNum + 1]();
   } else {
-    ColIndex_ = new int[ColNum + 1]();
-    RowIndex_ = new int[nnz]();
+    column_indices_ = new int[ColNum + 1]();
+    row_indices_ = new int[nnz]();
   }
-  MatVal_ = new double[nnz]();
+  values_ = new double[nnz]();
   order_ = new int[nnz]();
   for (int i = 0; i < nnz; i++)
     order_[i] = i;
@@ -64,14 +64,14 @@ SpHbMat::SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow)
 
 SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
                  bool isCompressedRow)
- : RowIndex_(NULL)
- , ColIndex_(NULL)
- , MatVal_(NULL)
+ : row_indices_(NULL)
+ , column_indices_(NULL)
+ , values_(NULL)
  , order_(NULL)
- , EntryNum_(0)
- , RowNum_(RowNum)
- , ColNum_(ColNum)
- , isCompressedRow_(isCompressedRow)
+ , num_entries_(0)
+ , num_rows_(RowNum)
+ , num_columns_(ColNum)
+ , is_compressed_row_format_(isCompressedRow)
 {
 
   int* RowIndex_tmp = NULL;
@@ -79,11 +79,11 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
   double* MatVal_tmp = NULL;
   // allocate memory
   if (isCompressedRow) {
-    RowIndex_ = new int[RowNum + 1]();
+    row_indices_ = new int[RowNum + 1]();
     ColIndex_tmp = new int[RowNum * ColNum]();
     MatVal_tmp = new double[RowNum * ColNum]();
   } else {
-    ColIndex_ = new int[ColNum + 1]();
+    column_indices_ = new int[ColNum + 1]();
     RowIndex_tmp = new int[RowNum * ColNum]();
     MatVal_tmp = new double[RowNum * ColNum]();
   }
@@ -94,23 +94,23 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
         for (int j = 0; j < ColNum; j++) {
           // identify nonzero entry
           if (abs(data[i * ColNum + j]) > m_eps) {
-            MatVal_tmp[EntryNum_] = data[i * ColNum + j];
-            ColIndex_tmp[EntryNum_] = j;
-            EntryNum_++;
+            MatVal_tmp[num_entries_] = data[i * ColNum + j];
+            ColIndex_tmp[num_entries_] = j;
+            num_entries_++;
           }
         }
-        RowIndex_[i + 1] = EntryNum_;
+        row_indices_[i + 1] = num_entries_;
       }
     } else { // if it is condensed column
       for (int j = 0; j < ColNum; j++) {
         for (int i = 0; i < RowNum; i++) {
           if (abs(data[j + i * ColNum]) > m_eps) {
-            MatVal_tmp[EntryNum_] = data[j + i * ColNum];
-            RowIndex_tmp[EntryNum_] = i;
-            EntryNum_++;
+            MatVal_tmp[num_entries_] = data[j + i * ColNum];
+            RowIndex_tmp[num_entries_] = i;
+            num_entries_++;
           }
         }
-        ColIndex_[j + 1] = EntryNum_;
+        column_indices_[j + 1] = num_entries_;
       }
     }
   } else {
@@ -118,35 +118,34 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
       for (int j = 0; j < RowNum; j++) {
         for (int i = 0; i < ColNum; i++) {
           if (abs(data[j + i * RowNum]) > m_eps) {
-            MatVal_tmp[EntryNum_] = data[j + i * RowNum];
-            ColIndex_tmp[EntryNum_] = i;
-            EntryNum_++;
+            MatVal_tmp[num_entries_] = data[j + i * RowNum];
+            ColIndex_tmp[num_entries_] = i;
+            num_entries_++;
           }
         }
-        RowIndex_[j + 1] = EntryNum_;
+        row_indices_[j + 1] = num_entries_;
       }
     } else {
       for (int i = 0; i < ColNum; i++) {
         for (int j = 0; j < RowNum; j++) {
           // identify nonzero entry
           if (abs(data[i * RowNum + j]) > m_eps) {
-            MatVal_tmp[EntryNum_] = data[i * RowNum + j];
-            RowIndex_tmp[EntryNum_] = j;
-            EntryNum_++;
+            MatVal_tmp[num_entries_] = data[i * RowNum + j];
+            RowIndex_tmp[num_entries_] = j;
+            num_entries_++;
           }
         }
-        ColIndex_[i + 1] = EntryNum_;
+        column_indices_[i + 1] = num_entries_;
       }
     }
   }
   // allocate memory for class member
-  MatVal_ = new double[EntryNum_]();
-  order_ = new int[EntryNum_]();
+  values_ = new double[num_entries_];
   if (isCompressedRow) {
-    ColIndex_ = new int[EntryNum_]();
-    for (int i = 0; i < EntryNum_; i++) {
-      ColIndex_[i] = ColIndex_tmp[i];
-      MatVal_[i] = MatVal_tmp[i];
+    column_indices_ = new int[num_entries_];
+    for (int i = 0; i < num_entries_; i++) {
+      column_indices_[i] = ColIndex_tmp[i];
+      values_[i] = MatVal_tmp[i];
     }
     delete[] MatVal_tmp;
     MatVal_tmp = NULL;
@@ -154,17 +153,17 @@ SpHbMat::SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented,
     ColIndex_tmp = NULL;
 
   } else {
-    RowIndex_ = new int[EntryNum_]();
-    for (int i = 0; i < EntryNum_; i++) {
-      RowIndex_[i] = RowIndex_tmp[i];
-      MatVal_[i] = MatVal_tmp[i];
+    row_indices_ = new int[num_entries_];
+    for (int i = 0; i < num_entries_; i++) {
+      row_indices_[i] = RowIndex_tmp[i];
+      values_[i] = MatVal_tmp[i];
     }
     delete[] MatVal_tmp;
     MatVal_tmp = NULL;
     delete[] RowIndex_tmp;
     RowIndex_tmp = NULL;
   }
-  order_ = new int[EntryNum()]();
+  order_ = new int[num_entries_];
 }
 
 /**
@@ -200,14 +199,15 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
                            IdentityInfo I_info)
 {
   set_zero();
-  isSymmetric_ = false;
-  assert(isInitialised_ == false);
+  is_symmetric_ = false;
+  assert(is_initialized_ == false);
 
   int counter = 0; // the counter for recording the index location
   std::vector<std::tuple<int, int, double, int>> sorted_index_info;
-  for (int i = 0; i < rhs->EntryNum(); i++) {
+  for (int i = 0; i < rhs->get_num_entries(); i++) {
     sorted_index_info.push_back(std::make_tuple(
-        rhs->RowIndex(i), rhs->ColIndex(i), rhs->MatVal(i), counter));
+        rhs->get_row_index_at_entry(i), rhs->get_column_index_at_entry(i),
+        rhs->get_value_at_entry(i), counter));
     counter++;
   }
 
@@ -220,7 +220,7 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
     }
   }
 
-  assert(counter == EntryNum_);
+  assert(counter == num_entries_);
 
   //  for(int i = 0; i <sorted_index_info.size(); i++) {
   //      printf("%i ", std::get<0>(sorted_index_info[i]));
@@ -230,35 +230,35 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs,
 
   //  }
 
-  if (isCompressedRow_) {
+  if (is_compressed_row_format_) {
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),
               tuple_sort_rule_compressed_row);
-    for (int i = 0; i < EntryNum_; i++) {
-      ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-      MatVal_[i] = std::get<2>(sorted_index_info[i]);
+    for (int i = 0; i < num_entries_; i++) {
+      column_indices_[i] = std::get<1>(sorted_index_info[i]) - 1;
+      values_[i] = std::get<2>(sorted_index_info[i]);
       order_[std::get<3>(sorted_index_info[i])] = i;
 
-      for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
-        RowIndex_[j]++;
+      for (int j = std::get<0>(sorted_index_info[i]); j < num_rows_; j++) {
+        row_indices_[j]++;
       }
     }
-    RowIndex_[RowNum_] = EntryNum_;
+    row_indices_[num_rows_] = num_entries_;
 
   } else {
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),
               tuple_sort_rule_compressed_column);
-    for (int i = 0; i < EntryNum_; i++) {
-      MatVal_[i] = std::get<2>(sorted_index_info[i]);
-      RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
+    for (int i = 0; i < num_entries_; i++) {
+      values_[i] = std::get<2>(sorted_index_info[i]);
+      row_indices_[i] = std::get<0>(sorted_index_info[i]) - 1;
       order_[std::get<3>(sorted_index_info[i])] = i;
 
-      for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
-        ColIndex_[j]++;
+      for (int j = std::get<1>(sorted_index_info[i]); j < num_columns_; j++) {
+        column_indices_[j]++;
       }
     }
-    ColIndex_[ColNum_] = EntryNum_;
+    column_indices_[num_columns_] = num_entries_;
   }
-  isInitialised_ = true;
+  is_initialized_ = true;
   sorted_index_info.clear();
 }
 
@@ -279,67 +279,70 @@ void SpHbMat::setStructure(std::shared_ptr<const SpTripletMat> rhs)
 {
 
   set_zero();
-  isSymmetric_ = rhs->isSymmetric();
+  is_symmetric_ = rhs->is_symmetric();
 
-  assert(isInitialised_ == false);
+  assert(is_initialized_ == false);
   std::vector<std::tuple<int, int, double, int>> sorted_index_info;
 
   // if it is symmetric, it will calculate the
   // number of entry and allocate_memory the memory
   // of RowIndex and MatVal by going through
   // all of its entries one by one
-  for (int i = 0; i < rhs->EntryNum(); i++) {
-    sorted_index_info.emplace_back(rhs->RowIndex(i), rhs->ColIndex(i),
-                                   rhs->MatVal(i), sorted_index_info.size());
+  for (int i = 0; i < rhs->get_num_entries(); i++) {
+    sorted_index_info.emplace_back(
+        rhs->get_row_index_at_entry(i), rhs->get_column_index_at_entry(i),
+        rhs->get_value_at_entry(i), sorted_index_info.size());
 
-    if (isSymmetric_ && rhs->RowIndex(i) != rhs->ColIndex(i)) {
-      sorted_index_info.emplace_back(rhs->ColIndex(i), rhs->RowIndex(i),
-                                     rhs->MatVal(i), sorted_index_info.size());
+    if (is_symmetric_ &&
+        rhs->get_row_index_at_entry(i) != rhs->get_column_index_at_entry(i)) {
+      sorted_index_info.emplace_back(
+          rhs->get_column_index_at_entry(i), rhs->get_row_index_at_entry(i),
+          rhs->get_value_at_entry(i), sorted_index_info.size());
     }
   }
 
-  if (EntryNum_ < 0) { // no memory allocated so far
-    EntryNum_ = sorted_index_info.size();
-    MatVal_ = new double[EntryNum_]();
-    order_ = new int[EntryNum_]();
+  if (num_entries_ < 0) { // no memory allocated so far
+    num_entries_ = sorted_index_info.size();
+    values_ = new double[num_entries_]();
+    order_ = new int[num_entries_]();
 
-    if (isCompressedRow_) {
-      ColIndex_ = new int[EntryNum_]();
+    if (is_compressed_row_format_) {
+      column_indices_ = new int[num_entries_]();
     } else {
-      RowIndex_ = new int[EntryNum_]();
+      row_indices_ = new int[num_entries_]();
     }
   }
 
-  if (isCompressedRow_) {
+  if (is_compressed_row_format_) {
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),
               tuple_sort_rule_compressed_row);
     // copy the order information back
-    for (int i = 0; i < EntryNum_; i++) {
-      ColIndex_[i] = std::get<1>(sorted_index_info[i]) - 1;
-      MatVal_[i] = std::get<2>(sorted_index_info[i]);
+    for (int i = 0; i < num_entries_; i++) {
+      column_indices_[i] = std::get<1>(sorted_index_info[i]) - 1;
+      values_[i] = std::get<2>(sorted_index_info[i]);
       order_[std::get<3>(sorted_index_info[i])] = i;
-      for (int j = std::get<0>(sorted_index_info[i]); j < RowNum_; j++) {
-        RowIndex_[j]++;
+      for (int j = std::get<0>(sorted_index_info[i]); j < num_rows_; j++) {
+        row_indices_[j]++;
       }
     }
-    RowIndex_[RowNum_] = EntryNum_;
+    row_indices_[num_rows_] = num_entries_;
   } else {
     std::sort(sorted_index_info.begin(), sorted_index_info.end(),
               tuple_sort_rule_compressed_column);
     // copy the order information back
 
-    for (int i = 0; i < EntryNum_; i++) {
-      RowIndex_[i] = std::get<0>(sorted_index_info[i]) - 1;
-      MatVal_[i] = std::get<2>(sorted_index_info[i]);
+    for (int i = 0; i < num_entries_; i++) {
+      row_indices_[i] = std::get<0>(sorted_index_info[i]) - 1;
+      values_[i] = std::get<2>(sorted_index_info[i]);
       order_[std::get<3>(sorted_index_info[i])] = i;
 
-      for (int j = std::get<1>(sorted_index_info[i]); j < ColNum_; j++) {
-        ColIndex_[j]++;
+      for (int j = std::get<1>(sorted_index_info[i]); j < num_columns_; j++) {
+        column_indices_[j]++;
       }
     }
-    ColIndex_[ColNum_] = EntryNum_;
+    column_indices_[num_columns_] = num_entries_;
   }
-  isInitialised_ = true;
+  is_initialized_ = true;
   sorted_index_info.clear();
 }
 
@@ -363,19 +366,20 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs,
   }
 
   // assign each matrix entry to the corresponding position after permutation
-  for (int i = 0; i < EntryNum_ - total_I_entries; i++) {
-    MatVal_[order(i)] = rhs->MatVal(i);
+  for (int i = 0; i < num_entries_ - total_I_entries; i++) {
+    values_[order_[i]] = rhs->get_value_at_entry(i);
   }
 }
 
 void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs)
 {
   int j = 0;
-  for (int i = 0; i < rhs->EntryNum(); i++) {
-    MatVal_[order_[j]] = rhs->MatVal(i);
+  for (int i = 0; i < rhs->get_num_entries(); i++) {
+    values_[order_[j]] = rhs->get_value_at_entry(i);
     j++;
-    if (isSymmetric_ && (rhs->ColIndex(i) != rhs->RowIndex(i))) {
-      MatVal_[order_[j]] = rhs->MatVal(i);
+    if (is_symmetric_ &&
+        (rhs->get_column_index_at_entry(i) != rhs->get_row_index_at_entry(i))) {
+      values_[order_[j]] = rhs->get_value_at_entry(i);
       j++;
     }
   }
@@ -388,12 +392,12 @@ void SpHbMat::setMatVal(std::shared_ptr<const SpTripletMat> rhs)
  */
 void SpHbMat::freeMemory()
 {
-  delete[] ColIndex_;
-  ColIndex_ = NULL;
-  delete[] RowIndex_;
-  RowIndex_ = NULL;
-  delete[] MatVal_;
-  MatVal_ = NULL;
+  delete[] column_indices_;
+  column_indices_ = NULL;
+  delete[] row_indices_;
+  row_indices_ = NULL;
+  delete[] values_;
+  values_ = NULL;
   delete[] order_;
   order_ = NULL;
 }
@@ -401,39 +405,39 @@ void SpHbMat::freeMemory()
 void SpHbMat::copy(std::shared_ptr<const SpHbMat> rhs)
 {
 
-  assert(EntryNum_ == rhs->EntryNum());
-  assert(RowNum_ == rhs->RowNum());
-  assert(ColNum_ == rhs->ColNum());
-  for (int i = 0; i < EntryNum_; i++) {
-    RowIndex_[i] = rhs->RowIndex(i);
-    MatVal_[i] = rhs->MatVal(i);
-    order_[i] = rhs->order(i);
+  assert(num_entries_ == rhs->get_num_entries());
+  assert(num_rows_ == rhs->get_num_rows());
+  assert(num_columns_ == rhs->get_num_columns());
+  for (int i = 0; i < num_entries_; i++) {
+    row_indices_[i] = rhs->get_row_index_at_entry(i);
+    values_[i] = rhs->get_value_at_entry(i);
+    order_[i] = rhs->get_order_at_entry(i);
   }
 
-  for (int i = 0; i < ColNum_ + 1; i++) {
-    ColIndex_[i] = rhs->ColIndex(i);
+  for (int i = 0; i < num_columns_ + 1; i++) {
+    column_indices_[i] = rhs->get_column_index_at_entry(i);
   }
 }
 
 void SpHbMat::set_zero()
 {
-  if (isCompressedRow_) {
-    for (int i = 0; i < EntryNum_; i++) {
-      MatVal_[i] = 0;
-      ColIndex_[i] = 0;
+  if (is_compressed_row_format_) {
+    for (int i = 0; i < num_entries_; i++) {
+      values_[i] = 0;
+      column_indices_[i] = 0;
       order_[i] = i;
     }
-    for (int i = 0; i < RowNum_ + 1; i++) {
-      RowIndex_[i] = 0;
+    for (int i = 0; i < num_rows_ + 1; i++) {
+      row_indices_[i] = 0;
     }
   } else {
-    for (int i = 0; i < EntryNum_; i++) {
-      MatVal_[i] = 0;
-      RowIndex_[i] = 0;
+    for (int i = 0; i < num_entries_; i++) {
+      values_[i] = 0;
+      row_indices_[i] = 0;
       order_[i] = i;
     }
-    for (int i = 0; i < ColNum_ + 1; i++) {
-      ColIndex_[i] = 0;
+    for (int i = 0; i < num_columns_ + 1; i++) {
+      column_indices_[i] = 0;
     }
   }
 }
@@ -444,16 +448,17 @@ shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const
   shared_ptr<SpTripletMat> result;
   int nnz; // number of non-zero entries
   int j = 1;
-  if (isSymmetric_) {
+  if (is_symmetric_) {
     std::vector<std::tuple<int, int, double, int>> triplet_vector;
-    for (int i = 0; i < EntryNum_; i++) {
-      if (isCompressedRow_) {
-        while (RowIndex_[j] == i)
+    for (int i = 0; i < num_entries_; i++) {
+      if (is_compressed_row_format_) {
+        while (row_indices_[j] == i)
           j++;
-        triplet_vector.emplace_back(j, ColIndex_[i] + 1, MatVal_[i], order_[i]);
+        triplet_vector.emplace_back(j, column_indices_[i] + 1, values_[i],
+                                    order_[i]);
       }
     }
-    for (int i = 0; i < EntryNum_; i++) // delete repetitive entry
+    for (int i = 0; i < num_entries_; i++) // delete repetitive entry
       if (get<0>(triplet_vector[i]) != get<1>(triplet_vector[i]))
         for (int k = i; k < triplet_vector.size(); k++) {
           if (get<0>(triplet_vector[i]) == get<1>(triplet_vector[k]) &&
@@ -461,39 +466,39 @@ shared_ptr<SpTripletMat> SpHbMat::convert_to_triplet() const
             triplet_vector.erase(triplet_vector.begin() + k);
         }
 
-    if (isCompressedRow_)
+    if (is_compressed_row_format_)
       std::sort(triplet_vector.begin(), triplet_vector.end(),
                 tuple_sort_rule_compressed_row);
     else
       std::sort(triplet_vector.begin(), triplet_vector.end(),
                 tuple_sort_rule_compressed_column);
 
-    result = make_shared<SpTripletMat>(triplet_vector.size(), RowNum_, ColNum_,
-                                       true, true);
+    result = make_shared<SpTripletMat>(triplet_vector.size(), num_rows_,
+                                       num_columns_, true, true);
 
-    for (int i = 0; i < result->EntryNum(); i++) {
-      result->setRowIndex(i, get<0>(triplet_vector[i]));
-      result->setColIndex(i, get<1>(triplet_vector[i]));
-      result->setMatValAt(i, get<2>(triplet_vector[i]));
+    for (int i = 0; i < result->get_num_entries(); i++) {
+      result->set_row_index_at_entry(i, get<0>(triplet_vector[i]));
+      result->set_column_index_at_entry(i, get<1>(triplet_vector[i]));
+      result->set_value_at_entry(i, get<2>(triplet_vector[i]));
       //            result->setOrderAt(i,get<3>(triplet_vector[i]));
     }
   } else {
-    result =
-        make_shared<SpTripletMat>(EntryNum_, RowNum_, ColNum_, false, true);
-    for (int i = 0; i < EntryNum_; i++) {
-      if (isCompressedRow_) {
-        while (RowIndex_[j] == i)
+    result = make_shared<SpTripletMat>(num_entries_, num_rows_, num_columns_,
+                                       false, true);
+    for (int i = 0; i < num_entries_; i++) {
+      if (is_compressed_row_format_) {
+        while (row_indices_[j] == i)
           j++;
-        result->setRowIndex(i, j);
-        result->setColIndex(i, ColIndex_[i] + 1);
+        result->set_row_index_at_entry(i, j);
+        result->set_column_index_at_entry(i, column_indices_[i] + 1);
       } else {
-        while (ColIndex_[j] == i)
+        while (column_indices_[j] == i)
           j++;
-        result->setColIndex(i, j);
-        result->setRowIndex(i, RowIndex_[i] + 1);
+        result->set_column_index_at_entry(i, j);
+        result->set_row_index_at_entry(i, row_indices_[i] + 1);
       }
 
-      result->setMatValAt(i, MatVal_[i]);
+      result->set_value_at_entry(i, values_[i]);
     }
   }
   return result;
@@ -569,149 +574,153 @@ void SpHbMat::get_dense_matrix(double* dense_matrix, bool row_oriented) const
 {
 
   // Initialize dense matrix values to zero
-  for (int i = 0; i < RowNum_ * ColNum_; i++) {
+  for (int i = 0; i < num_rows_ * num_columns_; i++) {
     dense_matrix[i] = 0.;
   }
   int row;
   if (row_oriented) {
-    if (isCompressedRow_) {
-      for (int i = 1; i < RowNum_ + 1; i++) {
-        if (RowIndex_[i] > 0) {
+    if (is_compressed_row_format_) {
+      for (int i = 1; i < num_rows_ + 1; i++) {
+        if (row_indices_[i] > 0) {
           row = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
-        while (i == RowIndex_[row + 1]) {
+      for (int i = 0; i < num_entries_; i++) {
+        while (i == row_indices_[row + 1]) {
           row++;
         }
-        dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
+        dense_matrix[num_columns_ * row + column_indices_[i]] = values_[i];
       }
     } else {
       int col;
-      for (int i = 1; i < ColNum_ + 1; i++) {
-        if (ColIndex_[i] > 0) {
+      for (int i = 1; i < num_columns_ + 1; i++) {
+        if (column_indices_[i] > 0) {
           col = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
-        while (i == ColIndex_[col + 1]) {
+      for (int i = 0; i < num_entries_; i++) {
+        while (i == column_indices_[col + 1]) {
           col++;
         }
 
-        dense_matrix[ColNum_ * RowIndex_[i] + col] = MatVal_[i];
+        dense_matrix[num_columns_ * row_indices_[i] + col] = values_[i];
       }
     }
   } else {
-    if (isCompressedRow_) {
-      for (int i = 1; i < RowNum_ + 1; i++) {
-        if (RowIndex_[i] > 0) {
+    if (is_compressed_row_format_) {
+      for (int i = 1; i < num_rows_ + 1; i++) {
+        if (row_indices_[i] > 0) {
           row = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
-        while (i == RowIndex_[row + 1]) {
+      for (int i = 0; i < num_entries_; i++) {
+        while (i == row_indices_[row + 1]) {
           row++;
         }
-        dense_matrix[RowNum_ * ColIndex_[i] + row] = MatVal_[i];
+        dense_matrix[num_rows_ * column_indices_[i] + row] = values_[i];
       }
     } else {
       int col;
-      for (int i = 1; i < ColNum_ + 1; i++) {
-        if (ColIndex_[i] > 0) {
+      for (int i = 1; i < num_columns_ + 1; i++) {
+        if (column_indices_[i] > 0) {
           col = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
-        while (i == ColIndex_[col + 1]) {
+      for (int i = 0; i < num_entries_; i++) {
+        while (i == column_indices_[col + 1]) {
           col++;
         }
 
-        dense_matrix[RowNum_ * col + RowIndex_[i]] = MatVal_[i];
+        dense_matrix[num_rows_ * col + row_indices_[i]] = values_[i];
       }
     }
   }
 }
 
-void SpHbMat::transposed_times(shared_ptr<const Vector> p,
-                               shared_ptr<Vector> result) const
+void SpHbMat::multiply_transpose(shared_ptr<const Vector> p,
+                                 shared_ptr<Vector> result) const
 {
 
   result->set_to_zero();
 
-  if (isCompressedRow_) {
+  if (is_compressed_row_format_) {
     int row;
-    for (int i = 1; i < RowNum_ + 1; i++) {
-      if (RowIndex_[i] > 0) {
+    for (int i = 1; i < num_rows_ + 1; i++) {
+      if (row_indices_[i] > 0) {
         row = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
-      while (i == RowIndex_[row + 1]) {
+    for (int i = 0; i < num_entries_; i++) {
+      while (i == row_indices_[row + 1]) {
         row++;
       }
-      result->add_number_to_element(ColIndex_[i], MatVal_[i] * p->value(row));
+      result->add_number_to_element(column_indices_[i],
+                                    values_[i] * p->get_value(row));
     }
   } else {
     int col;
     // find the col corresponding to the first nonzero entry
-    for (int i = 1; i < ColNum_ + 1; i++) {
-      if (ColIndex_[i] > 0) {
+    for (int i = 1; i < num_columns_ + 1; i++) {
+      if (column_indices_[i] > 0) {
         col = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
+    for (int i = 0; i < num_entries_; i++) {
       // go to the next col
-      while (i == ColIndex_[col + 1]) {
+      while (i == column_indices_[col + 1]) {
         col++;
       }
-      result->add_number_to_element(col, MatVal_[i] * p->value(RowIndex_[i]));
+      result->add_number_to_element(col,
+                                    values_[i] * p->get_value(row_indices_[i]));
     }
   }
 }
 
-void SpHbMat::times(std::shared_ptr<const Vector> p,
-                    std::shared_ptr<Vector> result) const
+void SpHbMat::multiply(std::shared_ptr<const Vector> p,
+                       std::shared_ptr<Vector> result) const
 {
 
   result->set_to_zero();
 
-  if (isCompressedRow_) {
+  if (is_compressed_row_format_) {
     int row;
     // find the row corresponding to the first nonzero entry
-    for (int i = 1; i < RowNum_ + 1; i++) {
-      if (RowIndex_[i] > 0) {
+    for (int i = 1; i < num_rows_ + 1; i++) {
+      if (row_indices_[i] > 0) {
         row = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
+    for (int i = 0; i < num_entries_; i++) {
       // go to the next row
-      while (i == RowIndex_[row + 1]) {
+      while (i == row_indices_[row + 1]) {
         row++;
       }
-      result->add_number_to_element(row, MatVal_[i] * p->value(ColIndex_[i]));
+      result->add_number_to_element(row, values_[i] *
+                                             p->get_value(column_indices_[i]));
     }
   } else {
     int col;
     // find the col corresponding to the first nonzero entry
-    for (int i = 1; i < ColNum_ + 1; i++) {
-      if (ColIndex_[i] > 0) {
+    for (int i = 1; i < num_columns_ + 1; i++) {
+      if (column_indices_[i] > 0) {
         col = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
+    for (int i = 0; i < num_entries_; i++) {
       // go to the next col
-      while (i == ColIndex_[col + 1]) {
+      while (i == column_indices_[col + 1]) {
         col++;
       }
-      result->add_number_to_element(RowIndex_[i], MatVal_[i] * p->value(col));
+      result->add_number_to_element(row_indices_[i],
+                                    values_[i] * p->get_value(col));
     }
   }
 }
@@ -723,34 +732,34 @@ void SpHbMat::print_full(const char* name,
                          Ipopt::EJournalCategory category) const
 {
   char mat_val[99];
-  auto dense_matrix = new double[RowNum_ * ColNum_]();
+  auto dense_matrix = new double[num_rows_ * num_columns_]();
   int row;
-  if (isCompressedRow_) {
-    for (int i = 1; i < RowNum_ + 1; i++) {
-      if (RowIndex_[i] > 0) {
+  if (is_compressed_row_format_) {
+    for (int i = 1; i < num_rows_ + 1; i++) {
+      if (row_indices_[i] > 0) {
         row = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
-      while (i == RowIndex_[row + 1]) {
+    for (int i = 0; i < num_entries_; i++) {
+      while (i == row_indices_[row + 1]) {
         row++;
       }
-      dense_matrix[ColNum_ * row + ColIndex_[i]] = MatVal_[i];
+      dense_matrix[num_columns_ * row + column_indices_[i]] = values_[i];
     }
   } else {
     int col;
-    for (int i = 1; i < ColNum_ + 1; i++) {
-      if (ColIndex_[i] > 0) {
+    for (int i = 1; i < num_columns_ + 1; i++) {
+      if (column_indices_[i] > 0) {
         col = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
-      while (i == ColIndex_[col + 1]) {
+    for (int i = 0; i < num_entries_; i++) {
+      while (i == column_indices_[col + 1]) {
         col++;
       }
-      dense_matrix[ColNum_ * RowIndex_[i] + col] = MatVal_[i];
+      dense_matrix[num_columns_ * row_indices_[i] + col] = values_[i];
     }
   }
 
@@ -759,9 +768,9 @@ void SpHbMat::print_full(const char* name,
       jnlst->Printf(level, category, name);
       jnlst->Printf(level, category, " =: {\n");
     }
-    for (int i = 0; i < RowNum_; i++) {
-      for (int j = 0; j < ColNum_; j++) {
-        sprintf(mat_val, "%f  ", dense_matrix[i * ColNum() + j]);
+    for (int i = 0; i < num_rows_; i++) {
+      for (int j = 0; j < num_columns_; j++) {
+        sprintf(mat_val, "%f  ", dense_matrix[i * get_num_columns() + j]);
         jnlst->Printf(level, category, mat_val);
       }
       jnlst->Printf(level, category, "\n");
@@ -771,9 +780,9 @@ void SpHbMat::print_full(const char* name,
     if (name != nullptr)
       printf("%s =:{\n", name);
 
-    for (int i = 0; i < RowNum_; i++) {
-      for (int j = 0; j < ColNum_; j++) {
-        printf("%23.16e  ", dense_matrix[i * ColNum() + j]);
+    for (int i = 0; i < num_rows_; i++) {
+      for (int j = 0; j < num_columns_; j++) {
+        printf("%23.16e  ", dense_matrix[i * get_num_columns() + j]);
       }
       printf("\n");
     }
@@ -787,99 +796,100 @@ void SpHbMat::print(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                     Ipopt::EJournalCategory category) const
 {
 
-  if (isCompressedRow_) {
+  if (is_compressed_row_format_) {
     std::cout << name << "= " << std::endl;
     std::cout << "ColIndex: ";
-    for (int i = 0; i < EntryNum_; i++)
-      std::cout << ColIndex(i) << " ";
+    for (int i = 0; i < num_entries_; i++)
+      std::cout << get_column_index_at_entry(i) << " ";
     std::cout << " " << std::endl;
 
     std::cout << "RowIndex: ";
-    for (int i = 0; i < RowNum_ + 1; i++)
-      std::cout << RowIndex(i) << " ";
+    for (int i = 0; i < num_rows_ + 1; i++)
+      std::cout << get_row_index_at_entry(i) << " ";
     std::cout << " " << std::endl;
   } else {
     // for compressed column format
     std::cout << name << "= " << std::endl;
     std::cout << "ColIndex: ";
-    for (int i = 0; i < ColNum_ + 1; i++)
-      std::cout << ColIndex(i) << " ";
+    for (int i = 0; i < num_columns_ + 1; i++)
+      std::cout << get_column_index_at_entry(i) << " ";
 
     std::cout << " " << std::endl;
     std::cout << "RowIndex: ";
 
-    for (int i = 0; i < EntryNum_; i++)
-      std::cout << RowIndex(i) << " ";
+    for (int i = 0; i < num_entries_; i++)
+      std::cout << get_row_index_at_entry(i) << " ";
     std::cout << " " << std::endl;
   }
   std::cout << "MatVal:   ";
 
-  for (int i = 0; i < EntryNum_; i++)
-    std::cout << MatVal(i) << " ";
+  for (int i = 0; i < num_entries_; i++)
+    std::cout << get_value_at_entry(i) << " ";
   std::cout << " " << std::endl;
 
   std::cout << "order:    ";
-  for (int i = 0; i < EntryNum_; i++)
-    std::cout << order(i) << " ";
+  for (int i = 0; i < num_entries_; i++)
+    std::cout << get_order_at_entry(i) << " ";
   std::cout << " " << std::endl;
 }
-
+#if 0
 /** @name norms */
 //@{
-const double SpHbMat::oneNorm() const
+const double SpHbMat::calc_one_norm() const
 {
   // TODO: test on it!
-  std::shared_ptr<Vector> colSums = std::make_shared<Vector>(ColNum_);
-  if (isCompressedRow_) {
-    for (int i = 0; i < EntryNum_; i++) {
-      colSums->add_number_to_element(ColIndex(i), abs(MatVal_[i]));
+  std::shared_ptr<Vector> colSums = std::make_shared<Vector>(num_columns_);
+  if (is_compressed_row_format_) {
+    for (int i = 0; i < num_entries_; i++) {
+      colSums->add_number_to_element(get_column_indices(i), abs(values_[i]));
     }
   } else {
     int col = 0;
-    for (int i = 1; i < ColNum_ + 1; i++) {
-      if (ColIndex_[i] > 0) {
+    for (int i = 1; i < num_columns_ + 1; i++) {
+      if (column_indices_[i] > 0) {
         col = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
-      while (ColIndex_[col + 1])
+    for (int i = 0; i < num_entries_; i++) {
+      while (column_indices_[col + 1])
         col++;
-      colSums->add_number_to_element(col, abs(MatVal_[i]));
+      colSums->add_number_to_element(col, abs(values_[i]));
     }
   }
 
   double oneNorm =
-      colSums->inf_norm(); // same as calculating the MAX of an array
+      colSums->calc_inf_norm(); // same as calculating the MAX of an array
   return oneNorm;
 }
 
-const double SpHbMat::infNorm() const
+const double SpHbMat::calc_inf_norm() const
 {
   // TODO: test on it!
-  std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(RowNum_);
-  if (isCompressedRow_) {
-    for (int i = 0; i < EntryNum_; i++) {
-      rowSums->add_number_to_element(RowIndex(i), abs(MatVal_[i]));
+  std::shared_ptr<Vector> rowSums = std::make_shared<Vector>(num_rows_);
+  if (is_compressed_row_format_) {
+    for (int i = 0; i < num_entries_; i++) {
+      rowSums->add_number_to_element(get_row_indices(i), abs(values_[i]));
     }
   } else {
     int row = 0;
-    for (int i = 1; i < RowNum_ + 1; i++) {
-      if (RowIndex_[i] > 0) {
+    for (int i = 1; i < num_rows_ + 1; i++) {
+      if (row_indices_[i] > 0) {
         row = i - 1;
         break;
       }
     }
-    for (int i = 0; i < EntryNum_; i++) {
-      while (RowIndex_[row + 1])
+    for (int i = 0; i < num_entries_; i++) {
+      while (row_indices_[row + 1])
         row++;
-      rowSums->add_number_to_element(row, abs(MatVal_[i]));
+      rowSums->add_number_to_element(row, abs(values_[i]));
     }
   }
 
   double InfNorm =
-      rowSums->inf_norm(); // same as calculating the MAX of an array
+      rowSums->calc_inf_norm(); // same as calculating the MAX of an array
   return InfNorm;
 }
+#endif
 //@}
 } // END_OF_NAMESPACE

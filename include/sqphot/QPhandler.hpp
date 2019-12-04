@@ -73,7 +73,8 @@ public:
    * @brief Get the optimal solution from the QPsolverinterface
    *
    * This is only an interface for user to avoid call interface directly.
-   * @param p_k 	the pointer to an empty array with the length equal to the
+   * @param p_k 	the pointer to an empty array with the length equal to
+   * the
    * size
    * of the QP subproblem
    */

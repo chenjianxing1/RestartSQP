@@ -21,13 +21,15 @@ shared_ptr<SpHbMat> convert_csr_to_csc(shared_ptr<const SpHbMat> csr_matrix)
 {
 
   double* dense_matrix;
-  dense_matrix = new double[csr_matrix->RowNum() *
-                            csr_matrix->ColNum()](); // get the dense matrix out
+  dense_matrix =
+      new double[csr_matrix->get_num_rows() *
+                 csr_matrix->get_num_columns()](); // get the dense matrix out
 
   csr_matrix->get_dense_matrix(dense_matrix);
 
-  shared_ptr<SpHbMat> csc_matrix = make_shared<SpHbMat>(
-      dense_matrix, csr_matrix->RowNum(), csr_matrix->ColNum(), true, false);
+  shared_ptr<SpHbMat> csc_matrix =
+      make_shared<SpHbMat>(dense_matrix, csr_matrix->get_num_rows(),
+                           csr_matrix->get_num_columns(), true, false);
   delete[] dense_matrix;
 
   return csc_matrix;
@@ -113,42 +115,42 @@ int main(int argc, char* argv[])
   for (i = 0; i < nCon + 1; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &tmp_int);
-      A_qore->setRowIndexAt(i, tmp_int);
+      A_qore->set_row_index_at_entry(i, tmp_int);
     }
   }
 
   for (i = 0; i < Annz; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &tmp_int);
-      A_qore->setColIndexAt(i, tmp_int);
+      A_qore->set_column_index_at_entry(i, tmp_int);
     }
   }
 
   for (i = 0; i < Annz; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%lf", &tmp_double);
-      A_qore->setMatValAt(i, tmp_double);
+      A_qore->set_value_at_entry(i, tmp_double);
     }
   }
 
   for (i = 0; i < nVar + 1; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &tmp_int);
-      H_qore->setRowIndexAt(i, tmp_int);
+      H_qore->set_row_index_at_entry(i, tmp_int);
     }
   }
 
   for (i = 0; i < Hnnz; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &tmp_int);
-      H_qore->setColIndexAt(i, tmp_int);
+      H_qore->set_column_index_at_entry(i, tmp_int);
     }
   }
 
   for (i = 0; i < Hnnz; i++) {
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%lf", &tmp_double);
-      H_qore->setMatValAt(i, tmp_double);
+      H_qore->set_value_at_entry(i, tmp_double);
     }
   }
 
@@ -212,10 +214,10 @@ int main(int argc, char* argv[])
   auto lbA_qpOASES = make_shared<Vector>(nCon);
   auto ubA_qpOASES = make_shared<Vector>(nCon);
 
-  lb_qpOASES->copy_values(lb_qore->values());
-  ub_qpOASES->copy_values(ub_qore->values());
-  lbA_qpOASES->copy_values(lb_qore->values() + nVar);
-  ubA_qpOASES->copy_values(ub_qore->values() + nVar);
+  lb_qpOASES->copy_values(lb_qore->get_values());
+  ub_qpOASES->copy_values(ub_qore->get_values());
+  lbA_qpOASES->copy_values(lb_qore->get_values() + nVar);
+  ubA_qpOASES->copy_values(ub_qore->get_values() + nVar);
 
   shared_ptr<qpOASESInterface> qpoases_interface =
       make_shared<qpOASESInterface>(H_qpOASES, A_qpOASES, g, lb_qore, ub_qore,
@@ -278,12 +280,12 @@ int main(int argc, char* argv[])
   printf("%30s    %23d    %23d\n", "Iteration", stats_qore->qp_iter,
          stats_qpOASES->qp_iter);
   printf("%30s    %23.16e    %23.16e\n", "Objective", obj_qore, obj_qpOASES);
-  printf("%30s    %23.16e    %23.16e\n", "||x||", x_qore->one_norm(),
-         x_qpOASES->one_norm());
-  printf("%30s    %23.16e    %23.16e\n", "||y_b||", y_qore_bounds->inf_norm(),
-         y_qpOASES_bounds->inf_norm());
-  printf("%30s    %23.16e    %23.16e\n", "||y_c||", y_qore_constr->inf_norm(),
-         y_qpOASES_constr->inf_norm());
+  printf("%30s    %23.16e    %23.16e\n", "||x||", x_qore->calc_one_norm(),
+         x_qpOASES->calc_one_norm());
+  printf("%30s    %23.16e    %23.16e\n", "||y_b||",
+         y_qore_bounds->calc_inf_norm(), y_qpOASES_bounds->calc_inf_norm());
+  printf("%30s    %23.16e    %23.16e\n", "||y_c||",
+         y_qore_constr->calc_inf_norm(), y_qpOASES_constr->calc_inf_norm());
   printf("%30s    %23.16e    %23.16e\n", "KKT Error",
          qore_inferface->get_optimality_status().KKT_error,
          qpoases_interface->get_optimality_status().KKT_error);

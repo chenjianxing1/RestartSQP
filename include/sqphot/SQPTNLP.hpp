@@ -34,7 +34,7 @@ public:
   /**
    *@brief get the bounds information from the NLP object
    */
-  virtual bool Get_bounds_info(std::shared_ptr<Vector> x_l,
+  virtual bool get_bounds_info(std::shared_ptr<Vector> x_l,
                                std::shared_ptr<Vector> x_u,
                                std::shared_ptr<Vector> c_l,
                                std::shared_ptr<Vector> c_u);
@@ -43,65 +43,54 @@ public:
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not
    */
-  virtual bool Get_starting_point(std::shared_ptr<Vector> x_0,
+  virtual bool get_starting_point(std::shared_ptr<Vector> x_0,
                                   std::shared_ptr<Vector> lambda_0);
 
   /**
    *@brief Evaluate the objective value
    */
-  virtual bool Eval_f(std::shared_ptr<const Vector> x, double& obj_value);
+  virtual bool eval_f(std::shared_ptr<const Vector> x, double& obj_value);
 
   /**
    * @brief Evaluate the constraints at point x
    *
    */
-  virtual bool Eval_constraints(std::shared_ptr<const Vector> x,
+  virtual bool eval_constraints(std::shared_ptr<const Vector> x,
                                 std::shared_ptr<Vector> constraints);
 
   /**
    *@brief Evaluate gradient at point x
    */
-  virtual bool Eval_gradient(std::shared_ptr<const Vector> x,
+  virtual bool eval_gradient(std::shared_ptr<const Vector> x,
                              std::shared_ptr<Vector> gradient);
 
   /**
    * @brief Get the matrix structure of the Jacobian
    * Always call this before the first time using @Eval_Jacobian
    */
-  virtual bool Get_Strucutre_Jacobian(std::shared_ptr<const Vector> x,
+  virtual bool get_jacobian_structure(std::shared_ptr<const Vector> x,
                                       std::shared_ptr<SpTripletMat> Jacobian);
 
   /**
    *@brief Evaluate Jacobian at point x
    */
-  virtual bool Eval_Jacobian(std::shared_ptr<const Vector> x,
+  virtual bool eval_jacobian(std::shared_ptr<const Vector> x,
                              std::shared_ptr<SpTripletMat> Jacobian);
 
   /**
    * @brief Get the structure of the Hessian
    * Always call this before the first time using @Eval_Hessian
    */
-  virtual bool Get_Structure_Hessian(std::shared_ptr<const Vector> x,
+  virtual bool get_hessian_structure(std::shared_ptr<const Vector> x,
                                      std::shared_ptr<const Vector> lambda,
                                      std::shared_ptr<SpTripletMat> Hessian);
 
   /**
    *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
    */
-  virtual bool Eval_Hessian(std::shared_ptr<const Vector> x,
+  virtual bool eval_hessian(std::shared_ptr<const Vector> x,
                             std::shared_ptr<const Vector> lambda,
                             std::shared_ptr<SpTripletMat> Hessian);
-
-  /**
-   * @brief This function shifts the initial starting point to be feasible to
-   * the bound constraints
-   * @param x initial starting point
-   * @param x_l lower bound constraints
-   * @param x_u upper bound constraints
-   */
-  virtual bool shift_starting_point(std::shared_ptr<Vector> x,
-                                    std::shared_ptr<const Vector> x_l,
-                                    std::shared_ptr<const Vector> x_u);
 
 public:
   NLPInfo nlp_info_; /**< the struct record the number of variables, number of

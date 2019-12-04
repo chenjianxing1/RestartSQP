@@ -125,7 +125,7 @@ void Algorithm::Optimize()
     update_penalty_parameter();
 
     // calculate the infinity norm of the search direction
-    norm_p_k_ = p_k_->inf_norm();
+    norm_p_k_ = p_k_->calc_inf_norm();
 
     get_trial_point_info();
 
@@ -220,15 +220,19 @@ void Algorithm::check_optimality()
     /**-------------------------------------------------------**/
     for (i = 0; i < nCon_; i++) {
       if (cons_type_[i] == BOUNDED_ABOVE) {
-        if (abs(c_u_->value(i) - c_k_->value(i)) < options_->active_set_tol)
+        if (abs(c_u_->get_value(i) - c_k_->get_value(i)) <
+            options_->active_set_tol)
           Active_Set_constraints_[i] = ACTIVE_ABOVE;
       } else if (cons_type_[i] == BOUNDED_BELOW) {
-        if (abs(c_k_->value(i) - c_l_->value(i)) < options_->active_set_tol) {
+        if (abs(c_k_->get_value(i) - c_l_->get_value(i)) <
+            options_->active_set_tol) {
           Active_Set_constraints_[i] = ACTIVE_BELOW;
         }
       } else if (cons_type_[i] == EQUAL) {
-        if ((abs(c_u_->value(i) - c_k_->value(i)) < options_->active_set_tol) &&
-            (abs(c_k_->value(i) - c_l_->value(i)) < options_->active_set_tol))
+        if ((abs(c_u_->get_value(i) - c_k_->get_value(i)) <
+             options_->active_set_tol) &&
+            (abs(c_k_->get_value(i) - c_l_->get_value(i)) <
+             options_->active_set_tol))
           Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
       } else {
         Active_Set_constraints_[i] = INACTIVE;
@@ -237,14 +241,18 @@ void Algorithm::check_optimality()
 
   for (i = 0; i < nVar_; i++) {
     if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-      if (abs(x_u_->value(i) - x_k_->value(i)) < options_->active_set_tol)
+      if (abs(x_u_->get_value(i) - x_k_->get_value(i)) <
+          options_->active_set_tol)
         Active_Set_bounds_[i] = ACTIVE_ABOVE;
     } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-      if (abs(x_k_->value(i) - x_l_->value(i)) < options_->active_set_tol)
+      if (abs(x_k_->get_value(i) - x_l_->get_value(i)) <
+          options_->active_set_tol)
         Active_Set_bounds_[i] = ACTIVE_BELOW;
     } else if (bound_cons_type_[i] == EQUAL) {
-      if ((abs(x_u_->value(i) - x_k_->value(i)) < options_->active_set_tol) &&
-          (abs(x_k_->value(i) - x_l_->value(i)) < options_->active_set_tol))
+      if ((abs(x_u_->get_value(i) - x_k_->get_value(i)) <
+           options_->active_set_tol) &&
+          (abs(x_k_->get_value(i) - x_l_->get_value(i)) <
+           options_->active_set_tol))
         Active_Set_bounds_[i] = ACTIVE_BOTH_SIDE;
     } else {
       Active_Set_bounds_[i] = INACTIVE;
@@ -273,9 +281,9 @@ void Algorithm::check_optimality()
   opt_status_.dual_feasibility = true;
   while (i < nVar_) {
     if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-      dual_violation += max(multiplier_vars_->value(i), 0.0);
+      dual_violation += max(multiplier_vars_->get_value(i), 0.0);
     } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-      dual_violation += -min(multiplier_vars_->value(i), 0.0);
+      dual_violation += -min(multiplier_vars_->get_value(i), 0.0);
     }
     i++;
   }
@@ -283,9 +291,9 @@ void Algorithm::check_optimality()
   i = 0;
   while (i < nCon_) {
     if (cons_type_[i] == BOUNDED_ABOVE) {
-      dual_violation += max(multiplier_cons_->value(i), 0.0);
+      dual_violation += max(multiplier_cons_->get_value(i), 0.0);
     } else if (cons_type_[i] == BOUNDED_BELOW) {
-      dual_violation += -min(multiplier_cons_->value(i), 0.0);
+      dual_violation += -min(multiplier_cons_->get_value(i), 0.0);
     }
     i++;
   }
@@ -298,13 +306,13 @@ void Algorithm::check_optimality()
   i = 0;
   while (i < nCon_) {
     if (cons_type_[i] == BOUNDED_ABOVE) {
-      compl_violation +=
-          abs(multiplier_cons_->value(i) * (c_u_->value(i) - c_k_->value(i)));
+      compl_violation += abs(multiplier_cons_->get_value(i) *
+                             (c_u_->get_value(i) - c_k_->get_value(i)));
     } else if (cons_type_[i] == BOUNDED_BELOW) {
-      compl_violation +=
-          abs(multiplier_cons_->value(i) * (c_k_->value(i) - c_l_->value(i)));
+      compl_violation += abs(multiplier_cons_->get_value(i) *
+                             (c_k_->get_value(i) - c_l_->get_value(i)));
     } else if (cons_type_[i] == UNBOUNDED) {
-      compl_violation += abs(multiplier_cons_->value(i));
+      compl_violation += abs(multiplier_cons_->get_value(i));
     }
     i++;
   }
@@ -312,13 +320,13 @@ void Algorithm::check_optimality()
   i = 0;
   while (i < nVar_) {
     if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-      compl_violation +=
-          abs(multiplier_vars_->value(i) * (x_u_->value(i) - x_k_->value(i)));
+      compl_violation += abs(multiplier_vars_->get_value(i) *
+                             (x_u_->get_value(i) - x_k_->get_value(i)));
     } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-      compl_violation +=
-          abs(multiplier_vars_->value(i) * (x_k_->value(i) - x_l_->value(i)));
+      compl_violation += abs(multiplier_vars_->get_value(i) *
+                             (x_k_->get_value(i) - x_l_->get_value(i)));
     } else if (bound_cons_type_[i] == UNBOUNDED) {
-      compl_violation += abs(multiplier_vars_->value(i));
+      compl_violation += abs(multiplier_vars_->get_value(i));
     }
     i++;
   }
@@ -344,11 +352,11 @@ void Algorithm::check_optimality()
   //
   //    multiplier_cons_->print("multiplier_cons_");
   //    multiplier_vars_->print("multiplier_vars_");
-  jacobian_->transposed_times(multiplier_cons_, difference);
+  jacobian_->multiply_transpose(multiplier_cons_, difference);
   difference->add_vector(1., multiplier_vars_);
   difference->add_vector(-1., grad_f_);
 
-  statioanrity_violation = difference->one_norm();
+  statioanrity_violation = difference->calc_one_norm();
   //@}
 
   /**-------------------------------------------------------**/
@@ -430,8 +438,8 @@ void Algorithm::get_trial_point_info()
 
   // Calculate f_trial, c_trial and infea_measure_trial for the trial points
   // x_trial
-  nlp_->Eval_f(x_trial_, obj_value_trial_);
-  nlp_->Eval_constraints(x_trial_, c_trial_);
+  nlp_->eval_f(x_trial_, obj_value_trial_);
+  nlp_->eval_constraints(x_trial_, c_trial_);
 
 #ifdef NEW_FORMULATION
   infea_measure_trial_ = cal_infea(c_trial_, c_l_, c_u_, x_trial_, x_l_, x_u_);
@@ -439,6 +447,32 @@ void Algorithm::get_trial_point_info()
   infea_measure_trial_ = cal_infea(
       c_trial_, c_l_, c_u_); // calculate the infeasibility measure for x_k
 #endif
+}
+
+/**
+ * @brief This function shifts the initial starting point to be feasible to the
+ * bound constraints
+ * @param x initial starting point
+ * @param x_l lower bound constraints
+ * @param x_u upper bound constraints
+ */
+// AW: This is only used here, so we can make it invisible to the outside
+static void shift_starting_point_(shared_ptr<Vector> x,
+                                  shared_ptr<const Vector> x_l,
+                                  shared_ptr<const Vector> x_u)
+{
+  for (int i = 0; i < x->get_dim(); i++) {
+    assert(x_l->get_value(i) <= x_u->get_value(i));
+    if (x_l->get_value(i) > x->get_value(i)) {
+      x->set_value(i, x_l->get_value(i));
+      //            x->set_value(i,
+      //            x_l->value(i)+0.5*(x_u->value(i)-x_l->value(i)));
+    } else if (x->get_value(i) > x_u->get_value(i)) {
+      x->set_value(i, x_u->get_value(i));
+      //           x->set_value(i,
+      //           x_u->value(i)-0.5*(x_u->value(i)-x_l->value(i)));
+    }
+  }
 }
 
 /**
@@ -462,20 +496,20 @@ void Algorithm::initialize(SmartPtr<TNLP> nlp, const string& name)
   /*-----------------------------------------------------*/
   /*         Get the nlp information                     */
   /*-----------------------------------------------------*/
-  nlp_->Get_bounds_info(x_l_, x_u_, c_l_, c_u_);
-  nlp_->Get_starting_point(x_k_, multiplier_cons_);
+  nlp_->get_bounds_info(x_l_, x_u_, c_l_, c_u_);
+  nlp_->get_starting_point(x_k_, multiplier_cons_);
 
 // shift starting point to satisfy the bound constraint
 #ifndef NEW_FORMULATION
-  nlp_->shift_starting_point(x_k_, x_l_, x_u_);
+  shift_starting_point_(x_k_, x_l_, x_u_);
 #endif
-  nlp_->Eval_f(x_k_, obj_value_);
-  nlp_->Eval_gradient(x_k_, grad_f_);
-  nlp_->Eval_constraints(x_k_, c_k_);
-  nlp_->Get_Structure_Hessian(x_k_, multiplier_cons_, hessian_);
-  nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
-  nlp_->Get_Strucutre_Jacobian(x_k_, jacobian_);
-  nlp_->Eval_Jacobian(x_k_, jacobian_);
+  nlp_->eval_f(x_k_, obj_value_);
+  nlp_->eval_gradient(x_k_, grad_f_);
+  nlp_->eval_constraints(x_k_, c_k_);
+  nlp_->get_hessian_structure(x_k_, multiplier_cons_, hessian_);
+  nlp_->eval_hessian(x_k_, multiplier_cons_, hessian_);
+  nlp_->get_jacobian_structure(x_k_, jacobian_);
+  nlp_->eval_jacobian(x_k_, jacobian_);
   classify_constraints_types();
 
 #ifdef NEW_FORMULATION
@@ -583,19 +617,19 @@ Algorithm::cal_infea(shared_ptr<const Vector> c_k, shared_ptr<const Vector> c_l,
                      shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u)
 {
   double infea_measure = 0.0;
-  for (int i = 0; i < c_k_->dim(); i++) {
-    if (c_k->value(i) < c_l->value(i))
-      infea_measure += (c_l->value(i) - c_k->value(i));
-    else if (c_k->value(i) > c_u->value(i))
-      infea_measure += (c_k->value(i) - c_u->value(i));
+  for (int i = 0; i < c_k_->get_dim(); i++) {
+    if (c_k->get_value(i) < c_l->get_value(i))
+      infea_measure += (c_l->get_value(i) - c_k->get_value(i));
+    else if (c_k->get_value(i) > c_u->get_value(i))
+      infea_measure += (c_k->get_value(i) - c_u->get_value(i));
   }
 
   if (x_k != nullptr) {
-    for (int i = 0; i < x_k_->dim(); i++) {
-      if (x_k->value(i) < x_l->value(i))
-        infea_measure += (x_l->value(i) - x_k->value(i));
-      else if (x_k->value(i) > x_u->value(i))
-        infea_measure += (x_k->value(i) - x_u->value(i));
+    for (int i = 0; i < x_k_->get_dim(); i++) {
+      if (x_k->get_value(i) < x_l->get_value(i))
+        infea_measure += (x_l->get_value(i) - x_k->get_value(i));
+      else if (x_k->get_value(i) > x_u->get_value(i))
+        infea_measure += (x_k->get_value(i) - x_u->get_value(i));
     }
   }
 
@@ -609,7 +643,7 @@ Algorithm::cal_infea(shared_ptr<const Vector> c_k, shared_ptr<const Vector> c_l,
  */
 void Algorithm::get_search_direction()
 {
-  p_k_->copy_values(myQP_->get_optimal_solution()->values());
+  p_k_->copy_values(myQP_->get_optimal_solution()->get_values());
 }
 
 /**
@@ -623,15 +657,15 @@ void Algorithm::get_multipliers()
   if (options_->QPsolverChoice == QORE || options_->QPsolverChoice == QPOASES) {
     multiplier_cons_->copy_vector(myQP_->get_constraints_multipliers());
     multiplier_vars_->copy_values(
-        myQP_->get_bounds_multipliers()->values()); // AW would be good to
-                                                    // separate different parts
-                                                    // of the QP multipliers?
+        myQP_->get_bounds_multipliers()->get_values()); // AW would be good to
+    // separate different parts
+    // of the QP multipliers?
   } else if (options_->QPsolverChoice == GUROBI ||
              options_->QPsolverChoice == CPLEX) {
     multiplier_cons_->copy_vector(myQP_->get_constraints_multipliers());
     shared_ptr<Vector> tmp_vec_nVar = make_shared<Vector>(nVar_);
-    jacobian_->transposed_times(multiplier_cons_, tmp_vec_nVar);
-    hessian_->times(p_k_, multiplier_vars_);
+    jacobian_->multiply_transpose(multiplier_cons_, tmp_vec_nVar);
+    hessian_->multiply(p_k_, multiplier_vars_);
     multiplier_vars_->add_vector(1., grad_f_);
     multiplier_vars_->add_vector(-1., tmp_vec_nVar);
   }
@@ -793,9 +827,9 @@ void Algorithm::ratio_test()
     c_k_->copy_vector(c_trial_);
     // update function information by reading from nlp_ object
     get_multipliers();
-    nlp_->Eval_gradient(x_k_, grad_f_);
-    nlp_->Eval_Jacobian(x_k_, jacobian_);
-    nlp_->Eval_Hessian(x_k_, multiplier_cons_, hessian_);
+    nlp_->eval_gradient(x_k_, grad_f_);
+    nlp_->eval_jacobian(x_k_, jacobian_);
+    nlp_->eval_hessian(x_k_, multiplier_cons_, hessian_);
 
     QPinfoFlag_.Update_A = true;
     QPinfoFlag_.Update_H = true;
@@ -834,7 +868,7 @@ void Algorithm::update_radius()
   } else {
     // printf("delta_ = %23.16e, ||p_k|| = %23.16e\n",delta_,p_k_->inf_norm());
     if (actual_reduction_ > options_->eta_e * pred_reduction_ &&
-        (options_->tol > fabs(delta_ - p_k_->inf_norm()))) {
+        (options_->tol > fabs(delta_ - p_k_->calc_inf_norm()))) {
       delta_ = min(options_->gamma_e * delta_, options_->delta_max);
       QPinfoFlag_.Update_delta = true;
     }
@@ -894,11 +928,12 @@ void Algorithm::classify_constraints_types()
 {
 
   for (int i = 0; i < nCon_; i++) {
-    cons_type_[i] = classify_single_constraint(c_l_->value(i), c_u_->value(i));
+    cons_type_[i] =
+        classify_single_constraint(c_l_->get_value(i), c_u_->get_value(i));
   }
   for (int i = 0; i < nVar_; i++) {
     bound_cons_type_[i] =
-        classify_single_constraint(x_l_->value(i), x_u_->value(i));
+        classify_single_constraint(x_l_->get_value(i), x_u_->get_value(i));
   }
 }
 
@@ -1155,13 +1190,13 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
 
   //    reg_options->AddStringOption("QPsolverChoice",
   //		    "The choice of QP solver which will be used in the
-  //Algorithm",
+  // Algorithm",
   //		    "qpOASES");
 
   reg_options->SetRegisteringCategory("LPsolver");
   //    reg_options->AddStringOption("LPsolverChoice",
   //		    "The choice of LP solver which will be used in the
-  //Algorithm",
+  // Algorithm",
   //		    "qpOASES");
 
   reg_options->AddIntegerOption("testOption_LP",
@@ -1215,11 +1250,11 @@ void Algorithm::second_order_correction()
     double norm_p_k_tmp = norm_p_k_;
     double qp_obj_tmp = qp_obj_;
     shared_ptr<Vector> Hp = make_shared<Vector>(nVar_);
-    hessian_->times(p_k_, Hp);   // Hp = H_k*p_k
-    Hp->add_vector(1., grad_f_); //(H_k*p_k+g_k)
+    hessian_->multiply(p_k_, Hp); // Hp = H_k*p_k
+    Hp->add_vector(1., grad_f_);  //(H_k*p_k+g_k)
     myQP_->update_grad(Hp);
     myQP_->update_bounds(delta_, x_l_, x_u_, x_trial_, c_l_, c_u_, c_trial_);
-    norm_p_k_ = p_k_->inf_norm();
+    norm_p_k_ = p_k_->calc_inf_norm();
 
     try {
       myQP_->solveQP(stats_, options_);

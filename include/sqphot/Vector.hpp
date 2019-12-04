@@ -35,7 +35,7 @@ public:
    *  memory, and copies the values in vector_values to its internal
    *  array.
    */
-  Vector(int size, const double* values);
+  Vector(int size, const double* get_values);
 
   /** Copy Constructor */
   Vector(const Vector&);
@@ -146,14 +146,14 @@ public:
   }
 
   /** Calculate the one-norm of this vector. */
-  double one_norm() const
+  double calc_one_norm() const
   {
-    return one_norm(0, size_);
+    return calc_one_norm(0, size_);
   }
 
   /** calculate one norm of a subvector of this vector.  The subvector
       starts at element first_element and has a length of length */
-  double one_norm(int first_element, int length) const
+  double calc_one_norm(int first_element, int length) const
   {
     assert(first_element >= 0);
     assert(first_element + length <= size_);
@@ -165,7 +165,7 @@ public:
   }
 
   /** calculate the infinity norm of the member _vector*/
-  double inf_norm() const
+  double calc_inf_norm() const
   {
     double inf_norm = 0.;
     for (int i = 0; i < size_; i++) {
@@ -175,11 +175,11 @@ public:
   }
 
   /** Compute the inner product of this vector with another */
-  double inner_product(std::shared_ptr<Vector> rhs) const
+  double calc_inner_product(std::shared_ptr<Vector> rhs) const
   {
     double product = 0;
     for (int i = 0; i < size_; i++) {
-      product += values_[i] * rhs->values()[i];
+      product += values_[i] * rhs->get_values()[i];
     }
     return product;
   }
@@ -195,25 +195,25 @@ public:
   }
 
   /** Return the dimension of the vector. */
-  int dim() const
+  int get_dim() const
   {
     return size_;
   }
 
   /** Return the array with the vector elements (const version) */
-  double* values() const
+  double* get_values() const
   {
     return values_;
   }
 
   /** Return the array with the vector elements (non-const version) */
-  double* non_const_values()
+  double* get_non_const_values()
   {
     return values_;
   }
 
   /** Return the value of the i-th vector element */
-  double value(int i) const
+  double get_value(int i) const
   {
     return values_[i];
   }

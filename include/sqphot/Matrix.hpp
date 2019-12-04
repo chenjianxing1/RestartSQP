@@ -8,6 +8,9 @@
 #define SQPHOTSTART_MATRIX_HPP_
 
 #include "IpJournalist.hpp"
+#include "sqphot/Vector.hpp"
+
+#include <memory>
 
 namespace SQPhotstart {
 
@@ -44,27 +47,48 @@ public:
              Ipopt::EJournalLevel level = Ipopt::J_ALL,
              Ipopt::EJournalCategory category = Ipopt::J_DBG) const = 0;
 
-  virtual bool isCompressedRow() = 0;
+  virtual bool is_compressed_row_format() const = 0;
 
-  virtual int EntryNum() const = 0;
+  virtual bool is_initialized() const = 0;
 
-  virtual bool isSymmetric() const = 0;
+  virtual int get_num_entries() const = 0;
 
-  virtual double MatVal(int i) = 0;
+  virtual int get_num_rows() const = 0;
 
-  virtual int ColIndex(int i) = 0;
+  virtual int get_num_columns() const = 0;
 
-  virtual int RowIndex(int i) = 0;
+  virtual bool is_symmetric() const = 0;
 
-  virtual int order(int i) = 0;
+  virtual double get_value_at_entry(int i) const = 0;
 
-  virtual double* MatVal() = 0;
+  virtual int get_column_index_at_entry(int i) const = 0;
 
-  virtual int* ColIndex() = 0;
+  virtual int get_row_index_at_entry(int i) const = 0;
 
-  virtual int* RowIndex() = 0;
+  virtual int get_order_at_entry(int i) const = 0;
 
-  virtual int* order() = 0;
+  virtual const double* get_values() const = 0;
+
+  virtual const int* get_column_indices() const = 0;
+
+  virtual const int* get_row_indices() const = 0;
+
+  virtual const int* get_order() const = 0;
+
+  virtual double* get_nonconst_values() = 0;
+
+  virtual int* get_nonconst_column_indices() = 0;
+
+  virtual int* get_nonconst_row_indices() = 0;
+
+  virtual int* get_nonconst_order() = 0;
+
+  virtual void multiply(std::shared_ptr<const Vector> p,
+                        std::shared_ptr<Vector> result) const = 0;
+
+  virtual void multiply_transpose(std::shared_ptr<const Vector> p,
+                                  std::shared_ptr<Vector> result) const = 0;
+
   ///////////////////////////////////////////////////////////
   //                     PRIVATE  METHODS                  //
   ///////////////////////////////////////////////////////////

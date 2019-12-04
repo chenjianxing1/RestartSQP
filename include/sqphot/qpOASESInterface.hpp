@@ -234,12 +234,11 @@ private:
   std::shared_ptr<Vector> ubA_;  /**< upper bounds of Ax */
   std::shared_ptr<Vector> ub_;   /**< upper bounds of x */
   std::shared_ptr<Vector> x_qp_; /** the qp solution */
-  std::
-      shared_ptr<Vector>
-          y_qp_; /** the bounds and constraint multipliers corresponding to the
-                    optimal solution.  The first nVar_QP_ entries are for the
-                    bound multipliersr, and the remaining nConstr_QP_ entries
-                    contain the constraint multipliers. */
+  std::shared_ptr<Vector>
+      y_qp_; /** the bounds and constraint multipliers corresponding to the
+                optimal solution.  The first nVar_QP_ entries are for the
+                bound multipliersr, and the remaining nConstr_QP_ entries
+                contain the constraint multipliers. */
   std::shared_ptr<SpHbMat> H_; /**< the Matrix object stores the QP data H in
                                          * Harwell-Boeing Sparse Matrix format*/
   std::shared_ptr<SpHbMat> A_; /**< the Matrix object stores the QP data A in

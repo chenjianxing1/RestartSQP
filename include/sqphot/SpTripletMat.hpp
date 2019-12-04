@@ -11,7 +11,6 @@
 #include "sqphot/Matrix.hpp"
 #include "sqphot/Utils.hpp"
 #include "sqphot/Vector.hpp"
-#include <memory>
 
 namespace SQPhotstart {
 
@@ -28,14 +27,15 @@ public:
   //@{
   /** Constructor for an empty Sparse Matrix with N non-zero entries.
    *  It sets the property of the matrix, but */
-  SpTripletMat(int nnz, int RowNum, int ColNum, bool isSymmetric = false,
-               bool allocate = true);
+  SpTripletMat(int nnz, int num_rows, int num_columns,
+               bool is_symmetric = false, bool allocate = true);
 
   /**
    *@brief
    *
    */
-  SpTripletMat(const double* data, int RowNum, int ColNum, bool row_oriented);
+  SpTripletMat(const double* data, int num_rows, int num_columns,
+               bool row_oriented);
 
   /** Default destructor*/
   ~SpTripletMat() override;
@@ -59,21 +59,22 @@ public:
              Ipopt::EJournalCategory category = Ipopt::J_DBG) const override;
 
   /**
-   * @brief Times a matrix with a vector p, the pointer to the matrix-vector
-   * product  will be stored in the class member of another Vector class object
+   * @brief Multiplies the matrix with a vector p, the pointer to the
+   * matrix-vector
+   * product will be stored in the class member of another Vector class object
    * called "result"
    * */
-  virtual void times(std::shared_ptr<const Vector> p,
-                     std::shared_ptr<Vector> result) const;
+  virtual void multiply(std::shared_ptr<const Vector> p,
+                        std::shared_ptr<Vector> result) const;
 
   /**
-   * @brief Times the matrix transpose with a vector p, the pointer to the
+   * @brief Multiplies the matrix transpose with a vector p, the pointer to the
    * matrix-vector
-   * product  will be stored in the class member of another Vector class object
+   * product will be stored in the class member of another Vector class object
    * called "result"
    * */
-  virtual void transposed_times(std::shared_ptr<const Vector> p,
-                                std::shared_ptr<Vector> result) const;
+  virtual void multiply_transpose(std::shared_ptr<const Vector> p,
+                                  std::shared_ptr<Vector> result) const;
 
   //@}
   /**
@@ -83,30 +84,38 @@ public:
    */
   void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
-  /**
-   * @brief calculate the one norm of the matrix
-   *
-   * @return the calculated one-norm
-   */
-  double OneNorm();
+/**
+ * @brief calculate the one norm of the matrix
+ *
+ * @return the calculated one-norm
+ */
+#if 0
+  double calc_one_norm() const;
+#endif
 
-  bool isCompressedRow() override
+  bool is_compressed_row_format() const override
   {
     return false;
   };
 
-  bool isSymmetric() const override
+  bool is_symmetric() const override
   {
-    return isSymmetric_;
+    return is_symmetric_;
   }
 
+  inline bool is_initialized() const override
+  {
+    return is_initialized_;
+  }
+
+#if 0
   /**
    * @brief calculate the infinity norm of the matrix
    *
    * @return the calculated inf-norm
    */
-  double InfNorm();
-
+  double calc_inf_norm();
+#endif
   /**
    *@brief make a deep copy of a matrix information
    */
@@ -115,152 +124,136 @@ public:
 
   /**@name Extract Matrix info*/
   //@{
-  inline int ColNum() const
+  inline int get_num_columns() const
   {
-
-    return ColNum_;
+    return num_columns_;
   }
 
-  inline int RowNum() const
+  inline int get_num_rows() const
   {
-
-    return RowNum_;
+    return num_rows_;
   }
 
-  inline int EntryNum()
+  inline int get_num_entries() const override
   {
-
-    return EntryNum_;
+    return num_entries_;
   }
 
-  inline int EntryNum() const override
+  inline const int* get_row_indices() const override
   {
-
-    return EntryNum_;
+    return row_indices_;
   }
 
-  inline int* RowIndex() override
+  inline const int* get_column_indices() const override
   {
-
-    return RowIndex_;
+    return column_indices_;
   }
 
-  inline int* ColIndex() override
+  inline const double* get_values() const override
   {
-
-    return ColIndex_;
+    return values_;
   }
 
-  inline double* MatVal() override
+  inline const int* get_order() const override
   {
-
-    return MatVal_;
-  }
-
-  inline int* order() override
-  {
-
     return order_;
   }
 
-  inline int RowIndex(int i) override
+  inline int* get_nonconst_row_indices() override
   {
-
-    return RowIndex_[i];
+    return row_indices_;
   }
 
-  inline int ColIndex(int i) override
+  inline int* get_nonconst_column_indices() override
   {
-
-    return ColIndex_[i];
+    return column_indices_;
   }
 
-  inline double MatVal(int i) override
+  inline double* get_nonconst_values() override
   {
-
-    return MatVal_[i];
+    return values_;
   }
 
-  inline int order(int i) override
+  inline int* get_nonconst_order() override
   {
+    return order_;
+  }
 
+  inline int get_row_index_at_entry(int i) const override
+  {
+    return row_indices_[i];
+  }
+
+  inline int get_column_index_at_entry(int i) const override
+  {
+    return column_indices_[i];
+  }
+
+  inline double get_value_at_entry(int i) const override
+  {
+    return values_[i];
+  }
+
+  inline int get_order_at_entry(int i) const override
+  {
     return order_[i];
   }
-
-  inline const int RowIndex(int i) const
+#if 0
+  inline const int get_row_indices(int i) const
   {
-
-    return RowIndex_[i];
+    return row_indices_[i];
   }
 
-  inline const int ColIndex(int i) const
+  inline const int get_column_indices(int i) const
   {
-
-    return ColIndex_[i];
+    return column_indices_[i];
   }
 
-  inline const double MatVal(int i) const
+  inline const double get_values(int i) const
   {
-
-    return MatVal_[i];
+    return values_[i];
   }
 
   inline const int order(int i) const
   {
-
     return order_[i];
   }
 
-  inline const int* RowIndex() const
+  inline const int* get_row_indices() const
   {
-
-    return RowIndex_;
+    return row_indices_;
   }
 
-  inline const int* ColIndex() const
+  inline const int* get_column_indices() const
   {
-
-    return ColIndex_;
+    return column_indices_;
   }
 
-  inline const double* MatVal() const
+  inline const double* get_values() const
   {
-
-    return MatVal_;
+    return values_;
   }
 
   inline const int* order() const
   {
-
     return order_;
   }
-
+#endif
   //@}
 
-  inline void setMatValAt(int location, double value_to_assign)
+  inline void set_value_at_entry(int location, double value_to_assign)
   {
-
-    MatVal_[location] = value_to_assign;
+    values_[location] = value_to_assign;
   }
 
-  inline void setRowIndex(int i, int value)
+  inline void set_row_index_at_entry(int i, int value)
   {
-    RowIndex_[i] = value;
+    row_indices_[i] = value;
   }
 
-  inline void setColIndex(int i, int value)
+  inline void set_column_index_at_entry(int i, int value)
   {
-    ColIndex_[i] = value;
-  }
-
-  void set_zero()
-  {
-    for (int i = 0; i < EntryNum_; i++) {
-      order_[i] = 0;
-      MatVal_[i] = 0;
-      ColIndex_[i] = 0;
-      RowIndex_[i] = 0;
-    }
+    column_indices_[i] = value;
   }
 
   ///////////////////////////////////////////////////////////
@@ -272,7 +265,7 @@ private:
   SpTripletMat();
 
   /** free all memory*/
-  void freeMemory();
+  void free_memory_();
 
   /** Copy Constructor */
   SpTripletMat(const SpTripletMat&);
@@ -285,15 +278,16 @@ private:
   ///////////////////////////////////////////////////////////
 
 private:
-  bool isAllocated_;
-  bool isSymmetric_; /**< is the matrix symmetric, if yes, the non-diagonal
-                               *data will only be stored for once*/
-  double* MatVal_;   /**< the entry data of a matrix */
-  int ColNum_;       /**< the number columns of a matrix */
-  int EntryNum_;     /**< number of non-zero entries in  matrix */
-  int RowNum_;       /**< the number of rows of a matrix */
-  int* ColIndex_;    /**< the column number of a matrix entry */
-  int* RowIndex_;    /**< the row number of a matrix entry */
+  bool is_initialized_;
+  bool is_allocated_;
+  bool is_symmetric_;   /**< is the matrix symmetric, if yes, the non-diagonal
+                                 *data will only be stored for once*/
+  double* values_;      /**< the entry data of a matrix */
+  int num_columns_;     /**< the number columns of a matrix */
+  int num_entries_;     /**< number of non-zero entries in  matrix */
+  int num_rows_;        /**< the number of rows of a matrix */
+  int* column_indices_; /**< the column number of a matrix entry */
+  int* row_indices_;    /**< the row number of a matrix entry */
   int* order_; /**< the corresponding original position of a matrix entry */
 };
 }

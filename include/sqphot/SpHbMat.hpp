@@ -29,7 +29,7 @@ public:
   //@{
 
   /**Default constructor*/
-  SpHbMat(int RowNum, int ColNum, bool isCompressedRow);
+  SpHbMat(int get_num_rows, int get_num_columns, bool is_compressed_row);
 
   /**
    * @brief A constructor
@@ -37,14 +37,15 @@ public:
    * @param RowNum the number of rows
    * @param ColNum the number of columns
    */
-  SpHbMat(int nnz, int RowNum, int ColNum, bool isCompressedRow);
+  SpHbMat(int nnz, int get_num_rows, int get_num_columns,
+          bool is_compressed_row);
 
   /**
    * @brief constructor which generate matrix data directly from a dense matrix
    *
    */
-  SpHbMat(const double* data, int RowNum, int ColNum, bool row_oriented = true,
-          bool isCompressedRow = false);
+  SpHbMat(const double* data, int get_num_rows, int get_num_columns,
+          bool row_oriented = true, bool is_compressed_row = false);
 
   /**
    * @brief Default destructor
@@ -60,33 +61,33 @@ public:
   //@}
 
   //@{
-  inline void setMatValAt(int i, double value)
+  inline void set_value_at_entry(int i, double value)
   {
-    assert(i < EntryNum_);
-    MatVal_[i] = value;
+    assert(i < num_entries_);
+    values_[i] = value;
   }
 
   //
-  inline void setRowIndexAt(int i, int value)
+  inline void set_row_index_at_entry(int i, int value)
   {
-    if (isCompressedRow_) {
-      assert(i < RowNum_ + 1);
+    if (is_compressed_row_format_) {
+      assert(i < num_rows_ + 1);
     } else {
-      assert(i < EntryNum_);
+      assert(i < num_entries_);
     }
 
-    RowIndex_[i] = value;
+    row_indices_[i] = value;
   }
 
-  inline void setColIndexAt(int i, int value)
+  inline void set_column_index_at_entry(int i, int value)
   {
-    if (isCompressedRow_) {
-      assert(i < EntryNum_);
+    if (is_compressed_row_format_) {
+      assert(i < num_entries_);
     } else {
-      assert(i < ColNum_ + 1);
+      assert(i < num_columns_ + 1);
     }
 
-    ColIndex_[i] = value;
+    column_indices_[i] = value;
   }
 
   //@}
@@ -117,58 +118,61 @@ public:
              Ipopt::EJournalLevel level = Ipopt::J_ALL,
              Ipopt::EJournalCategory category = Ipopt::J_DBG) const override;
 
-  void times(std::shared_ptr<const Vector> p,
-             std::shared_ptr<Vector> result) const;
+  void multiply(std::shared_ptr<const Vector> p,
+                std::shared_ptr<Vector> result) const override;
 
-  void transposed_times(std::shared_ptr<const Vector> p,
-                        std::shared_ptr<Vector> result) const;
+  void multiply_transpose(std::shared_ptr<const Vector> p,
+                          std::shared_ptr<Vector> result) const override;
 
-  void transposed_times(const double* p, double* result) const
+  // TODO: Maybe replace by something not taking arrays directly?
+  void multiply_transpose(const double* p, double* result) const
   {
-    for (int i = 0; i < ColNum_; i++)
+    for (int i = 0; i < num_columns_; i++)
       result[i] = 0.0;
 
-    if (isCompressedRow_) {
+    if (is_compressed_row_format_) {
       int row;
-      for (int i = 1; i < RowNum_ + 1; i++) {
-        if (RowIndex_[i] > 0) {
+      for (int i = 1; i < num_rows_ + 1; i++) {
+        if (row_indices_[i] > 0) {
           row = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
-        while (i == RowIndex_[row + 1]) {
+      for (int i = 0; i < num_entries_; i++) {
+        while (i == row_indices_[row + 1]) {
           row++;
         }
-        result[ColIndex_[i]] += MatVal_[i] * p[row];
+        result[column_indices_[i]] += values_[i] * p[row];
       }
     } else {
       int col;
       // find the col corresponding to the first nonzero entry
-      for (int i = 1; i < ColNum_ + 1; i++) {
-        if (ColIndex_[i] > 0) {
+      for (int i = 1; i < num_columns_ + 1; i++) {
+        if (column_indices_[i] > 0) {
           col = i - 1;
           break;
         }
       }
-      for (int i = 0; i < EntryNum_; i++) {
+      for (int i = 0; i < num_entries_; i++) {
         // go to the next col
-        while (i == ColIndex_[col + 1]) {
+        while (i == column_indices_[col + 1]) {
           col++;
         }
-        result[col] += MatVal_[i] * p[RowIndex_[i]];
+        result[col] += values_[i] * p[row_indices_[i]];
       }
     }
   }
+
   /**
    * @brief make a deep copy of a matrix information
    */
 
   virtual void copy(std::shared_ptr<const SpHbMat> rhs);
+#if 0
+  const double calc_one_norm() const;
 
-  const double oneNorm() const;
-
-  const double infNorm() const;
+  const double calc_inf_norm() const;
+#endif
   /**
    * @brief convert the matrix data stored in the class members to a triplet
    * matrix
@@ -178,135 +182,117 @@ public:
   /** Extract class member information*/
   //@{
 
-  inline int EntryNum() const override
+  inline int get_num_entries() const override
   {
-
-    return EntryNum_;
+    return num_entries_;
   }
 
-  inline int ColNum() const
+  inline int get_num_columns() const override
   {
-
-    return ColNum_;
+    return num_columns_;
   }
 
-  inline int RowNum() const
+  inline int get_num_rows() const override
   {
-
-    return RowNum_;
+    return num_rows_;
   }
 
-  inline const int RowIndex(int i) const
+  inline int get_row_index_at_entry(int i) const override
   {
+    return row_indices_[i];
+  }
 
+  inline int get_column_index_at_entry(int i) const override
+  {
+    return column_indices_[i];
+  }
+
+  inline double get_value_at_entry(int i) const override
+  {
+    return values_[i];
+  }
+
+  inline int get_order_at_entry(int i) const override
+  {
+    return order_[i];
+  }
+#if 0
+  inline int get_row_indices(int i) const
+  {
     return RowIndex_[i];
   }
 
-  inline const int ColIndex(int i) const
+  inline int get_column_indices(int i) override
   {
 
     return ColIndex_[i];
   }
 
-  inline const double MatVal(int i) const
+  inline double get_value_at_entry(int i) override
   {
 
     return MatVal_[i];
   }
 
-  inline const int order(int i) const
+  inline int get_order(int i) override
   {
 
     return order_[i];
   }
-
-  inline int RowIndex(int i) override
+#endif
+  inline const int* get_row_indices() const override
   {
-
-    return RowIndex_[i];
+    return row_indices_;
   }
 
-  inline int ColIndex(int i) override
+  inline const int* get_column_indices() const override
   {
-
-    return ColIndex_[i];
+    return column_indices_;
   }
 
-  inline double MatVal(int i) override
+  inline const double* get_values() const override
   {
-
-    return MatVal_[i];
+    return values_;
   }
 
-  inline int order(int i) override
+  inline const int* get_order() const override
   {
-
-    return order_[i];
-  }
-
-  inline int* RowIndex() override
-  {
-
-    return RowIndex_;
-  }
-
-  inline int* ColIndex() override
-  {
-
-    return ColIndex_;
-  }
-
-  inline double* MatVal() override
-  {
-
-    return MatVal_;
-  }
-
-  inline int* order() override
-  {
-
     return order_;
   }
 
-  inline const int* RowIndex() const
+  inline int* get_nonconst_row_indices() override
   {
-
-    return RowIndex_;
+    return row_indices_;
   }
 
-  inline const int* ColIndex() const
+  inline int* get_nonconst_column_indices() override
   {
-
-    return ColIndex_;
+    return column_indices_;
   }
 
-  inline const double* MatVal() const
+  inline double* get_nonconst_values() override
   {
-
-    return MatVal_;
+    return values_;
   }
 
-  inline const int* order() const
+  inline int* get_nonconst_order() override
   {
-
     return order_;
   }
 
-  inline bool isSymmetric() const override
+  inline bool is_symmetric() const override
   {
+    return is_symmetric_;
+  }
 
-    return isSymmetric_;
-  };
-
-  inline bool isinitialized()
+  inline bool is_initialized() const override
   {
+    return is_initialized_;
+  }
 
-    return isInitialised_;
-  };
-
-  inline bool isCompressedRow() override
+  inline bool is_compressed_row_format() const override
   {
-    return isCompressedRow_;
+    return is_compressed_row_format_;
   }
 
   /**
@@ -386,16 +372,16 @@ private:
   //                     PRIVATE  MEMBERS                  //
   ///////////////////////////////////////////////////////////
 private:
-  bool isInitialised_;
-  bool isSymmetric_;
-  bool isCompressedRow_;
-  int ColNum_;
-  int EntryNum_;
-  int RowNum_;
+  bool is_initialized_;
+  bool is_symmetric_;
+  bool is_compressed_row_format_;
+  int num_columns_;
+  int num_entries_;
+  int num_rows_;
   int* order_;
-  double* MatVal_;
-  int* ColIndex_;
-  int* RowIndex_;
+  double* values_;
+  int* column_indices_;
+  int* row_indices_;
 
   /**
    * @brief setup the structure of the sparse matrix for QPsolvrs
