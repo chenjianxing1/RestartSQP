@@ -417,7 +417,7 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b) {
 
 double QOREInterface::get_obj_value() {
     shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
-    H_->times(x_qp_,Hx);
+    H_->times(x_qp_,Hx); //Hx = H*x_qp
     return (Hx->times(x_qp_)*0.5+g_->times(x_qp_));
 }
 

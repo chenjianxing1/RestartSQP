@@ -7,6 +7,7 @@
 #define SQPHOTSTART_OPTIONS_HPP
 
 #include <string>
+#include <time.h>
 #include <sqphot/Types.hpp>
 #include <IpJournalist.hpp>
 
@@ -30,9 +31,7 @@ public:
     double tol;
     int iter_max;
     int printLevel;
-
-
-
+    double time_max; //in seconds
 
     /**solver choice*/
     //@{

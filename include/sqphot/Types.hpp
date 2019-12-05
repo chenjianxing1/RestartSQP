@@ -56,6 +56,7 @@ enum Exitflag {
     PRED_REDUCTION_NEGATIVE = 3,
     TRUST_REGION_TOO_SMALL = 4,
     STEP_LARGER_THAN_TRUST_REGION = 5,
+    EXCEED_TIME_LIMITS = 6,
     QP_OPTIMAL = 20,
     QPERROR_INTERNAL_ERROR = 21, //QP solver internal error
     QPERROR_INFEASIBLE = 22,//QP solver error: conclude QP formulation infeasible

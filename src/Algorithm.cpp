@@ -54,6 +54,7 @@ Algorithm::~Algorithm() {
  */
 void Algorithm::Optimize() {
     while (stats_->iter < options_->iter_max && exitflag_ == UNKNOWN) {
+        iter_time_ = clock();
         setupQP();
         //for debugging
         //@{
@@ -67,7 +68,7 @@ void Algorithm::Optimize() {
         catch (QP_NOT_OPTIMAL) {
             myQP_->WriteQPData(problem_name_+"qpdata.log");
             exitflag_ = myQP_->get_status();
-            //break;
+            break;
         }
 
 
@@ -131,6 +132,13 @@ void Algorithm::Optimize() {
         }
         catch (SMALL_TRUST_REGION) {
             check_optimality();
+            break;
+        }
+
+        iter_time_ = clock()-iter_time_;
+        stats_->total_time += iter_time_;
+        if(((float) stats_->total_time/CLOCKS_PER_SEC)>options_->time_max) {
+            exitflag_ = EXCEED_TIME_LIMITS;
             break;
         }
 
@@ -519,6 +527,8 @@ void Algorithm::initialization(Ipopt::SmartPtr<Ipopt::TNLP> nlp,
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
 void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
+
+    clock_t t = clock();
     nlp_ = make_shared<SQPTNLP>(nlp);
     nVar_ = nlp_->nlp_info_.nVar;
     nCon_ = nlp_->nlp_info_.nCon;
@@ -550,6 +560,8 @@ void Algorithm::allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp) {
 
     myQP_ = make_shared<QPhandler>(nlp_->nlp_info_,QP, jnlst_, options_);
     myLP_ = make_shared<QPhandler>(nlp_->nlp_info_,LP, jnlst_, options_);
+
+    stats_->total_time = clock() - t;
 
 
 }
@@ -926,10 +938,10 @@ void Algorithm::update_penalty_parameter() {
 
                 }
             } else {
-                while ((infea_measure_ - infea_measure_model_ <
+                while ((infea_measure_ - infea_measure_model_) <
                         options_->eps1 * (infea_measure_ - infea_measure_infty) &&
                         (stats_->penalty_change_trial <
-                         options_->penalty_iter_max))) {
+                         options_->penalty_iter_max)) {
 
 
                     if (rho_trial >= options_->rho_max) {
@@ -961,6 +973,9 @@ void Algorithm::update_penalty_parameter() {
             }
             //if any change occurs
             if (rho_trial > rho_) {
+                //printf("lhs = %23.16e\n",
+                //rho_trial * infea_measure_ - get_obj_QP());
+                //printf("rhs = %23.16e\n",options_->eps2 * rho_trial *(infea_measure_ - infea_measure_model_));
                 if (rho_trial * infea_measure_ - get_obj_QP()>=
                         options_->eps2 * rho_trial *
                         (infea_measure_ - infea_measure_model_)) {
@@ -1252,6 +1267,11 @@ void Algorithm::print_final_stats() {
                        "Exitflag:                                                   %23s\n",
                        "EXCEED_MAX_ITER");
         break;
+    case EXCEED_TIME_LIMITS :
+        jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN,
+                       "Exitflag:                                                   %23s\n",
+                       "EXCEED_TIME_LIMITS");
+        break;
     case QP_OPTIMAL:
         jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN,
                        "Exitflag:                                                   %23s\n",
@@ -1353,6 +1373,9 @@ void Algorithm::print_final_stats() {
     jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN,
                    "Final Objectives:                                           %23.16e\n",
                    obj_value_);
+    jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN,
+                   "Total Times:                                                %23.16e\n",
+                   (float)stats_->total_time/CLOCKS_PER_SEC);
     jnlst_->Printf(Ipopt::J_ITERSUMMARY, Ipopt::J_MAIN,
                    "Primal Feasibility Violation                                %23.16e\n",
                    opt_status_.primal_violation);

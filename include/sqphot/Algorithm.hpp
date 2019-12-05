@@ -332,6 +332,7 @@ private:
     ///////////////////////////////////////////////////////////
 private:
 
+    clock_t iter_time_;
     ConstraintType* bound_cons_type_;/**< the variables type, it can be either
                                                *bounded, bounded above,bounded below, or
                                                *unbounded*/

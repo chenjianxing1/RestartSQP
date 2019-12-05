@@ -18,6 +18,7 @@ public:
         penalty_change_Fail = 0;
         penalty_change_Succ = 0;
         soc_iter = 0;
+        total_time = 0.0;
     };
 
     /* Destructor*/
@@ -100,6 +101,7 @@ public:
 
     /* Member Variables */
 public:
+    double total_time;
     int qp_iter;
     int iter;
     int qp_break_down;
