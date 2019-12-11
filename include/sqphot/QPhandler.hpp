@@ -1,8 +1,7 @@
 #ifndef SQPHOTSTART_QPHANDLER_HPP_
 #define SQPHOTSTART_QPHANDLER_HPP_
 
-#include "sqphot/Options.hpp"
-#include "sqphot/SQPTNLP.hpp"
+#include "sqphot/SqpNlpBase.hpp"
 #include "sqphot/Stats.hpp"
 #include "sqphot/Utils.hpp"
 
@@ -49,9 +48,9 @@ class QPhandler
   //                      PUBLIC METHODS                   //
   ///////////////////////////////////////////////////////////
 public:
-  QPhandler(NLPInfo nlp_info, QPType qptype,
+  QPhandler(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype,
             Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-            std::shared_ptr<const Options> options);
+            Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   /** Default destructor */
   virtual ~QPhandler();
@@ -61,7 +60,7 @@ public:
    * assuming the first QP subproblem has been solved.
    * */
 
-  void solveQP(std::shared_ptr<Stats> stats, std::shared_ptr<Options> options);
+  void solveQP(std::shared_ptr<Stats> stats, Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   void solveLP(std::shared_ptr<Stats> stats)
   {
@@ -300,9 +299,9 @@ protected:
   IdentityInfo I_info_A_;
 
 private:
-  Solver QPsolverChoice_;
+  Solver qp_solver_choice_;
   // bounds that can be represented as vectors
-  const NLPInfo nlp_info_;
+  std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes_;
   int nConstr_QP_;
   int nVar_QP_;
   ActiveType* W_c_; // working set for constraints;

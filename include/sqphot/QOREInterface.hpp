@@ -11,8 +11,9 @@ extern "C" {
 #include "qpsolver.h"
 }
 
+#include "IpOptionsList.hpp"
+#include "sqphot/SqpNlpBase.hpp"
 #include "sqphot/MessageHandling.hpp"
-#include "sqphot/Options.hpp"
 #include "sqphot/QPsolverInterface.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
@@ -27,14 +28,14 @@ class QOREInterface : public QPSolverInterface
 public:
   /**Constructor*/
 
-  QOREInterface(NLPInfo nlp_info, QPType qptype,
-                std::shared_ptr<const Options> options,
+  QOREInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+                Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
   QOREInterface(std::shared_ptr<SpHbMat> H, std::shared_ptr<SpHbMat> A,
                 std::shared_ptr<Vector> g, std::shared_ptr<Vector> lb,
                 std::shared_ptr<Vector> ub,
-                std::shared_ptr<const Options> options = nullptr);
+                Ipopt::SmartPtr<const Ipopt::OptionsList> options = nullptr);
 
   /** Default destructor*/
   ~QOREInterface();
@@ -198,10 +199,12 @@ private:
   /** Overloaded Equals Operator */
   void operator=(const QOREInterface&);
 
+  void get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options);
+
   /**
    * @brief set options of QP solver based on the user-defined values
    */
-  void set_solver_options(std::shared_ptr<const Options> options);
+  void set_qp_solver_options_();
 
   /**
    * @brief Handle errors based on current status
@@ -212,7 +215,7 @@ private:
    * @param nlp_index_info  the struct that stores simple nlp dimension info
    * @param qptype is the problem to be solved QP or LP?
    */
-  void allocate_memory(NLPInfo nlp_info, QPType qptype);
+  void allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype);
 
   ///////////////////////////////////////////////////////////
   //                      PRIVATE MEMBERS                  //
@@ -242,6 +245,17 @@ private:
   int rv_; // temporarily placed here, for recording the return value from the
            // solver
   int* working_set_;
+
+  /** Algorithmic options */
+  //@{
+  // Maximum number of QP iterations per QP solve
+  int qp_solver_max_num_iterations_;
+  // Print level for QP solver
+  int qp_solver_print_level_;
+  // Maximum number of LP iterations per LP solve
+  int lp_solver_max_num_iterations_;
+  //@}
+
 };
 }
 

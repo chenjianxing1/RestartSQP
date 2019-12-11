@@ -102,14 +102,6 @@ enum Solver
 
 typedef struct
 {
-  int nCon;
-  int nVar;
-  int nnz_jac_g;
-  int nnz_h_lag;
-} NLPInfo;
-
-typedef struct
-{
   bool primal_feasibility = false;
   double primal_violation = 0.0;
   bool dual_feasibility = false;

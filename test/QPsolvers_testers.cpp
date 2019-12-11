@@ -7,11 +7,11 @@ extern "C" {
 }
 
 #include "sqphot/MessageHandling.hpp"
-#include "sqphot/Options.hpp"
 #include "sqphot/QOREInterface.hpp"
 #include "sqphot/SpHbMat.hpp"
 #include "sqphot/Vector.hpp"
 #include "sqphot/qpOASESInterface.hpp"
+#include "sqphot/Algorithm.hpp"
 #include <memory>
 
 using namespace SQPhotstart;
@@ -156,6 +156,14 @@ int main(int argc, char* argv[])
 
   //    H_qore->print_full("H");
 
+  /////////////////////////////////////////////////////
+  //  Create a dummy Algorithm object to get options //
+  /////////////////////////////////////////////////////
+
+  shared_ptr<Algorithm> dummy_algorithm = make_shared<Algorithm>();
+  Ipopt::SmartPtr<Ipopt::Journalist> jnlst = dummy_algorithm->get_jnlst();
+  Ipopt::SmartPtr<Ipopt::OptionsList> options = dummy_algorithm->get_options_list();
+
   // read matrix data
   ///////////////////////////////////////////////////////////
   //                     QORE                              //
@@ -167,11 +175,7 @@ int main(int argc, char* argv[])
   //    nlp_info.nnz_jac_g = Annz;
   //    nlp_info.nnz_h_lag = Hnnz;
 
-  shared_ptr<SQPhotstart::Stats> stats_qore = make_shared<SQPhotstart::Stats>();
-  shared_ptr<SQPhotstart::Options> options =
-      make_shared<SQPhotstart::Options>();
-  options->qpPrintLevel = 0;
-  Ipopt::SmartPtr<Ipopt::Journalist> jnlst = new Ipopt::Journalist();
+  shared_ptr<Stats> stats_qore = make_shared<Stats>();
 
   shared_ptr<QOREInterface> qore_inferface =
       make_shared<QOREInterface>(H_qore, A_qore, g, lb_qore, ub_qore, options);
@@ -204,8 +208,7 @@ int main(int argc, char* argv[])
   ///////////////////////////////////////////////////////////
   //                     QPOASES                           //
   ///////////////////////////////////////////////////////////
-  shared_ptr<SQPhotstart::Stats> stats_qpOASES =
-      make_shared<SQPhotstart::Stats>();
+  shared_ptr<Stats> stats_qpOASES = make_shared<Stats>();
   auto A_qpOASES = convert_csr_to_csc(A_qore);
   auto H_qpOASES = convert_csr_to_csc(H_qore);
 

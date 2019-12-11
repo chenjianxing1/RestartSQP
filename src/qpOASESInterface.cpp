@@ -34,21 +34,31 @@ namespace SQPhotstart {
  * @param nlp_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(NLPInfo nlp_info, QPType qptype,
-                                   shared_ptr<const Options> options,
+qpOASESInterface::qpOASESInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+                                   Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                                    Ipopt::SmartPtr<Ipopt::Journalist> jnlst)
  : jnlst_(jnlst)
- , options_(options)
 {
+  // Get the option values for this object
+  get_option_values_(options);
 
 #ifdef NEW_FORMULATION
-  nConstr_QP_ = nlp_info.nCon + nlp_info.nVar;
-  nVar_QP_ = nlp_info.nVar * 3 + 2 * nlp_info.nCon;
+  nConstr_QP_ = nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
+  nVar_QP_ = nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
 #else
-  nConstr_QP_ = nlp_info.nCon;
-  nVar_QP_ = nlp_info.nVar + 2 * nlp_info.nCon;
+  nConstr_QP_ = nlp_sizes->get_num_constraints();
+  nVar_QP_ = nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
 #endif
-  allocate_memory(nlp_info, qptype);
+  allocate_memory(nlp_sizes, qptype);
+}
+
+void qpOASESInterface::get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+{
+  // Get the options from the options list
+  options->GetIntegerValue("qp_solver_max_num_iterations", qp_solver_max_num_iterations_, "");
+  options->GetIntegerValue("qp_solver_print_level", qp_solver_print_level_, "");
+  options->GetIntegerValue("lp_solver_max_num_iterations", lp_solver_max_num_iterations_, "");
+
 }
 
 qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
@@ -56,7 +66,7 @@ qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
                                    shared_ptr<Vector> ub,
                                    shared_ptr<Vector> lbA,
                                    shared_ptr<Vector> ubA,
-                                   shared_ptr<Options> options)
+                                   Ipopt::SmartPtr<const Ipopt::OptionsList> options)
  : nVar_QP_(A->get_num_columns())
  , nConstr_QP_(A->get_num_rows())
  , H_(H)
@@ -66,8 +76,9 @@ qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
  , ub_(ub)
  , lbA_(lbA)
  , ubA_(ubA)
- , options_(options)
 {
+  // Get the option values for this object
+  get_option_values_(options);
 
   x_qp_ = make_shared<Vector>(nVar_QP_);
   y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
@@ -102,13 +113,13 @@ qpOASESInterface::~qpOASESInterface() = default;
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-void qpOASESInterface::allocate_memory(NLPInfo nlp_info, QPType qptype)
+void qpOASESInterface::allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype)
 {
 
 #ifdef NEW_FORMULATION
-  int nnz_g_QP = nlp_info.nnz_jac_g + 2 * nlp_info.nCon + 3 * nlp_info.nVar;
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints()+ 3 * nlp_sizes->get_num_variables();
 #else
-  int nnz_g_QP = nlp_info.nnz_jac_g + 2 * nlp_info.nCon;
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints();
 #endif
   lbA_ = make_shared<Vector>(nConstr_QP_);
   ubA_ = make_shared<Vector>(nConstr_QP_);
@@ -135,12 +146,11 @@ void qpOASESInterface::allocate_memory(NLPInfo nlp_info, QPType qptype)
  */
 void qpOASESInterface::optimizeQP(shared_ptr<Stats> stats)
 {
-
-  qpOASES::int_t nWSR = options_->qp_maxiter;
+  qpOASES::int_t nWSR = qp_solver_max_num_iterations_; // TODO modify it
 
   if (!firstQPsolved_) { // if haven't solve any QP before then initialize the
                          // first QP
-    set_solver_options();
+    set_qp_solver_options_();
 
     //@{
     // for debugging
@@ -221,9 +231,9 @@ void qpOASESInterface::optimizeQP(shared_ptr<Stats> stats)
 
 void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats)
 {
-  qpOASES::int_t nWSR = options_->lp_maxiter; // TODO modify it
+  qpOASES::int_t nWSR = lp_solver_max_num_iterations_; // TODO modify it
   if (!firstQPsolved_) {
-    set_solver_options();
+    set_qp_solver_options_();
     solver_->init(0, g_->get_values(), A_qpOASES_.get(), lb_->get_values(),
                   ub_->get_values(), lbA_->get_values(), ubA_->get_values(),
                   nWSR);
@@ -677,7 +687,7 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
 {
 
   if (qptype == LP) {
-    qpOASES::int_t nWSR = options_->lp_maxiter; // TODO modify it
+    qpOASES::int_t nWSR = lp_solver_max_num_iterations_; // TODO modify it
     if (solver_->isInfeasible()) {
       shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
       shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
@@ -706,7 +716,7 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
       THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
     }
   } else {
-    qpOASES::int_t nWSR = options_->qp_maxiter; // TODO modify it
+    qpOASES::int_t nWSR = qp_solver_max_num_iterations_; // TODO modify it
     if (solver_->isInfeasible()) {
       shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
       for (int i = 0; i < nConstr_QP_; i++) {
@@ -748,14 +758,14 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
   }
 }
 
-void qpOASESInterface::set_solver_options()
+void qpOASESInterface::set_qp_solver_options_()
 {
 
   qpOASES::Options qp_options;
 
   qp_options.setToReliable();
   // setup the printlevel of q
-  switch (options_->qpPrintLevel) {
+  switch (qp_solver_print_level_) {
     case 0:
       qp_options.printLevel = qpOASES::PL_NONE;
       break;

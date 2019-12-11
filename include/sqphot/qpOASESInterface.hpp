@@ -8,8 +8,9 @@
 #ifndef __QPOASES_INTERFACE_HPP__
 #define __QPOASES_INTERFACE_HPP__
 
+#include "IpOptionsList.hpp"
+#include "SqpNlpBase.hpp"
 #include "qpOASES.hpp"
-#include "sqphot/Options.hpp"
 #include "sqphot/QPsolverInterface.hpp"
 
 namespace SQPhotstart {
@@ -38,8 +39,8 @@ public:
    * @param nlp_info the struct that stores simple nlp dimension info
    * @param qptype  is the problem to be solved QP or LP?
    */
-  qpOASESInterface(NLPInfo nlp_info, QPType qptype,
-                   std::shared_ptr<const Options> options,
+  qpOASESInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+                   Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                    Ipopt::SmartPtr<Ipopt::Journalist>
                        jnlst); // number of constraints in the QP problem
 
@@ -47,7 +48,7 @@ public:
                    std::shared_ptr<Vector> g, std::shared_ptr<Vector> lb,
                    std::shared_ptr<Vector> ub, std::shared_ptr<Vector> lbA,
                    std::shared_ptr<Vector> ubA,
-                   std::shared_ptr<Options> options = nullptr);
+                   Ipopt::SmartPtr<const Ipopt::OptionsList> options = nullptr);
 
   /** Defualt Destructor */
   ~qpOASESInterface() override;
@@ -181,6 +182,8 @@ private:
   /** default constructor*/
   qpOASESInterface();
 
+  void get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options);
+
   void handle_error(QPType qptype, std::shared_ptr<Stats> stats = nullptr);
 
   void reset_flags();
@@ -190,9 +193,9 @@ private:
    * @param nlp_info  the struct that stores simple nlp dimension info
    * @param qptype is the problem to be solved QP or LP?
    */
-  void allocate_memory(NLPInfo nlp_info, QPType qptype);
+  void allocate_memory(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype);
 
-  void set_solver_options();
+  void set_qp_solver_options_();
 
   void get_Matrix_change_status();
 
@@ -214,7 +217,7 @@ private:
   int nConstr_QP_;             /**< number of constraints for QP*/
   int nVar_QP_;                /**< number of variables for QP*/
   OptimalityStatus qpOptimalStatus_;
-  std::shared_ptr<const Options> options_;
+  Ipopt::SmartPtr<const Ipopt::OptionsList> options_;
   std::shared_ptr<qpOASES::SymSparseMat>
       H_qpOASES_; /**< the Matrix object that qpOASES
                    * taken in, it only contains the
@@ -243,6 +246,16 @@ private:
                                          * Harwell-Boeing Sparse Matrix format*/
   std::shared_ptr<SpHbMat> A_; /**< the Matrix object stores the QP data A in
                                          * Harwell-Boeing Sparse Matrix format*/
+
+  /** Algorithmic options */
+  //@{
+  // Maximum number of QP iterations per QP solve
+  int qp_solver_max_num_iterations_;
+  // Print level for QP solver
+  int qp_solver_print_level_;
+  // Maximum number of LP iterations per LP solve
+  int lp_solver_max_num_iterations_;
+  //@}
 };
 }
 #endif

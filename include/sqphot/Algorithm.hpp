@@ -8,10 +8,9 @@
 #define SQPHOTSTART_ALG_HPP_
 
 #include "IpOptionsList.hpp"
-#include "sqphot/Options.hpp"
 #include "sqphot/QPhandler.hpp"
 #include "sqphot/SQPDebug.hpp"
-#include "sqphot/SQPTNLP.hpp"
+#include "sqphot/Algorithm.hpp"
 #include "sqphot/Stats.hpp"
 
 namespace SQPhotstart {
@@ -51,15 +50,20 @@ public:
    *  information for the first QP.
    *
    */
-  void initialize(Ipopt::SmartPtr<Ipopt::TNLP> nlp, const std::string& name);
+  void initialize(std::shared_ptr<SqpNlpBase> sqp_nlp, const std::string& name);
 
   /** temporarily use Ipopt options*/
   //@{
   //
 
-  Ipopt::SmartPtr<Ipopt::Journalist> getJnlst()
+  Ipopt::SmartPtr<Ipopt::Journalist> get_jnlst()
   {
     return jnlst_;
+  }
+
+  Ipopt::SmartPtr<Ipopt::OptionsList> get_options_list()
+  {
+    return options_;
   }
 
   //@}
@@ -77,7 +81,7 @@ public:
    * TO BE IMPLEMENTED
    */
 
-  virtual void ReOptimize(Ipopt::SmartPtr<Ipopt::TNLP> nlp)
+  virtual void ReOptimize(std::shared_ptr<SqpNlpBase> sqp_nlp)
   {
   }
 
@@ -131,12 +135,6 @@ public:
   //                      PRIVATE METHODS                  //
   ///////////////////////////////////////////////////////////
 private:
-  /** Copy Constructor */
-  Algorithm(const Algorithm&);
-
-  /** Overloaded Equals Operator */
-  void operator=(const Algorithm&);
-
   /**
    * @brief set the default option values
    */
@@ -310,7 +308,7 @@ private:
    *
    * @param nlp: the nlp reader that read data of the function to be minimized;
    */
-  void allocate_memory(Ipopt::SmartPtr<Ipopt::TNLP> nlp);
+  void allocate_memory(std::shared_ptr<SqpNlpBase> sqp_nlp);
 
   /**
    *
@@ -337,6 +335,21 @@ private:
   //              PRIVATE CLASS MEMBERS                    //
   ///////////////////////////////////////////////////////////
 private:
+  /** @name Hide unused default methods. */
+  //@{
+  /** Copy Constructor */
+  Algorithm(const Algorithm&);
+
+  /** Overloaded Equals Operator */
+  void operator=(const Algorithm&);
+  //@}
+
+  /** Get the option values from the options object. */
+  void get_option_values_();
+
+  /** SqpNlp object that evaluates all NLP information. */
+  std::shared_ptr<SqpNlpBase> sqp_nlp_;
+
   /** Options and output infrastructure.
    *
    *  We use the tools from the Ipopt package for now.  The annoying
@@ -350,7 +363,7 @@ private:
    *  user of this object and changed.  With a few exceptions, the
    *  option values are retrieved when the Initialize method is
    *  called. */
-  Ipopt::SmartPtr<Ipopt::OptionsList> ipopt_options_; // TODO: replace options_
+  Ipopt::SmartPtr<Ipopt::OptionsList> options_; // TODO: replace options_
   //@}
 
   ConstraintType*
@@ -385,9 +398,7 @@ private:
       QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
   bool isaccept_;  // is the new point accepted?
   std::shared_ptr<QPhandler> myLP_;
-  std::shared_ptr<Options> options_; /**< the default options used for now. */
   std::shared_ptr<QPhandler> myQP_;
-  std::shared_ptr<SQPTNLP> nlp_;
   std::shared_ptr<SpTripletMat>
       hessian_; /**< the SparseMatrix object for hessain
                      *of  f(x)-sum_{i=1}^m lambda_i c_i(x)*/
@@ -411,6 +422,66 @@ private:
                      *x_trial = x_k+p_k*/
 
   std::shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
+
+  /** Option values */
+  //@{
+  /** print level for journalist */ //TODO: This should be removed!
+  int print_level_;
+  /** Maximum number of iterations. */
+  int max_num_iterations_;
+  /** Initial trust region radius. */
+  double trust_region_init_value_;
+  /** Maximal trust region radius. */
+  double trust_region_max_value_;
+  /** Minimum trust region radius. */
+  double trust_region_min_value_;
+  /** Trust region ratio decrease tolerance. */
+  double trust_region_ratio_decrease_tol_;
+  /** Trust region ratio acceptance tolerance. */
+  double trust_region_ratio_accept_tol_;
+  /** Trust region ratio increase tolerance. */
+  double trust_region_ratio_increase_tol_;
+  /** Factor by which the trust region is reduced. */
+  double trust_region_decrease_factor_;
+  /** Factor by which the trust region is increased. */
+  double trust_region_increase_factor_;
+
+  /** Initial penalty parameter value. */
+  double penalty_parameter_init_value_;
+  /** Some penatly parameter update tolernace. */ // TODO find out what this is
+  double penalty_update_tol_;
+  /** Factor by which penalty parameter is increased. */
+  double penalty_parameter_increase_factor_;
+  /** Maximum value of penalty parameter. */
+  double penalty_parameter_max_value_;
+  /** Some constant in penalty parameter update rule. */
+  double eps1_;
+  /** Some constant in penalty parameter update rule. */
+  double eps1_change_parm_;
+  /** Some constant in penalty parameter update rule. */
+  double eps2_;
+  /** Maximum number of penalty parameter updates. ??? */ //TODO
+  int penalty_iter_max_;
+
+  /** Flag indicating whether we do a second-order correction. */
+  bool perform_second_order_correction_step_;
+
+  /** Tolerance for active set identification. */ // TODO: This should be separate for constraints, relative, etc?
+  double active_set_tol_;
+  /** Overall optimality tolerance. */
+  double opt_tol_;
+  /** Optimality tolerance for primal feasibility. */
+  double opt_tol_primal_feasibility_;
+  /** Optimality tolerance for dual feasibility. */
+  double opt_tol_dual_feasibility_;
+  /** Optimality tolerance for stationarity feasibility. */  // TODO what is this?
+  double opt_tol_stationarity_feasibility_;
+  /** Optimality tolerance for complementarity. */
+  double opt_tol_complementarity_;
+
+  /** QP solver usde for ??? */
+  Solver qp_solver_choice_;
+  //@}
 
 }; // END_OF_ALG_CLASS
 

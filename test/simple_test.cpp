@@ -7,6 +7,7 @@
 #include <sqphot/Algorithm.hpp>
 #include <sqphot/QPhandler.hpp>
 #include <sqphot/Utils.hpp>
+#include <sqphot/SqpTNlp.hpp>
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -80,8 +81,9 @@ int main(int argc, char** args)
   Algorithm alg;
   SmartPtr<OptionsList> dummy_options = new OptionsList();
   SmartPtr<TNLP> ampl_tnlp =
-      new AmplTNLP(ConstPtr(alg.getJnlst()), dummy_options, args);
-  alg.initialize(ampl_tnlp, args[1]);
+      new AmplTNLP(ConstPtr(alg.get_jnlst()), dummy_options, args);
+  shared_ptr<SqpTNlp> sqp_nlp = make_shared<SqpTNlp>(ampl_tnlp);
+  alg.initialize(sqp_nlp, args[1]);
   alg.Optimize();
 
   shared_ptr<Table_Writer> writer = make_shared<Table_Writer>("result_table");
