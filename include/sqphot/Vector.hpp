@@ -114,26 +114,40 @@ public:
     }
   }
 
-  /** Copy all the entries from another vector */
-  void copy_vector(std::shared_ptr<const Vector> rhs)
+  /** Copy all the entries from another vector.  If wanted, this can be a scale copy. */
+  void copy_vector(std::shared_ptr<const Vector> rhs, double scale_factor = 1.)
   {
-    copy_vector(*rhs);
+    copy_vector(*rhs, scale_factor);
   }
 
-  /** Copy all the entries from another vector */
-  void copy_vector(const Vector& rhs)
+  /** Copy all the entries from another vector.  If wanted, this can be a scale copy. */
+  void copy_vector(const Vector& rhs, double scale_factor = 1.)
   {
     assert(size_ == rhs.size_);
-    for (int i = 0; i < size_; i++) {
-      values_[i] = rhs.values_[i];
+    if (scale_factor == 1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = rhs.values_[i];
+      }
+    }
+    else {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = scale_factor * rhs.values_[i];
+      }
     }
   }
 
-  /** Copy the values from a double* array */
-  void copy_values(const double* values)
+  /** Copy the values from a double* array.  If wanted, this can be a scale copy. */
+  void copy_values(const double* values, double scale_factor = 1.)
   {
-    for (int i = 0; i < size_; i++) {
-      values_[i] = values[i];
+    if (scale_factor == 1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = values[i];
+      }
+    }
+    else {
+      for (int i = 0; i < size_; i++) {
+        values_[i] = scale_factor * values[i];
+      }
     }
   }
 

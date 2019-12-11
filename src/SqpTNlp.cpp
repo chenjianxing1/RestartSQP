@@ -129,9 +129,15 @@ bool SqpTNlp::get_hessian_structure(shared_ptr<const Vector> x,
                                     shared_ptr<const Vector> lambda,
                                     shared_ptr<SpTripletMat> Hessian)
 {
+  // We need to change the sign of the multipliers
+  // TOO: Make consistent
+  int dim_lambda = lambda->get_dim();
+  double scale_factor = -1.;
+  shared_ptr<Vector> negative_lambda = make_shared<Vector>(dim_lambda);
+  negative_lambda->copy_vector(lambda, scale_factor);
 
   ipopt_tnlp_->eval_h(num_variables_, x->get_values(), true, 1.0,
-                      num_constraints_, lambda->get_values(), true,
+                      num_constraints_, negative_lambda->get_values(), true,
                       num_nonzeros_hessian_,
                       Hessian->get_nonconst_row_indices(),
                       Hessian->get_nonconst_column_indices(), NULL);
