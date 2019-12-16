@@ -60,7 +60,8 @@ public:
    * assuming the first QP subproblem has been solved.
    * */
 
-  void solveQP(std::shared_ptr<Stats> stats, Ipopt::SmartPtr<const Ipopt::OptionsList> options);
+  void solveQP(std::shared_ptr<Stats> stats,
+               Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   void solveLP(std::shared_ptr<Stats> stats)
   {

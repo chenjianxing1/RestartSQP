@@ -5,7 +5,7 @@
  */
 
 #include "sqphot/QOREInterface.hpp"
-\
+
 using namespace std;
 
 namespace SQPhotstart {
@@ -16,7 +16,8 @@ namespace SQPhotstart {
  * @param options object stored user-defined parameter values
  * @param jnlst Ipopt Jourlist object, for printing out log files
  */
-QOREInterface::QOREInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+QOREInterface::QOREInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
+                             QPType qptype,
                              Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                              Ipopt::SmartPtr<Ipopt::Journalist> jnlst)
  : jnlst_(jnlst)
@@ -26,24 +27,29 @@ QOREInterface::QOREInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QP
   get_option_values_(options);
 
 #ifdef NEW_FORMULATION
-  nConstr_QP_ = nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
-  nVar_QP_ = nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
+  nConstr_QP_ =
+      nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
+  nVar_QP_ =
+      nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
 #else
   nConstr_QP_ = nlp_sizes->get_num_constraints();
-  nVar_QP_ = nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
+  nVar_QP_ =
+      nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
 #endif
   qpiter_[0] = 0;
   allocate_memory(nlp_sizes, qptype);
   set_qp_solver_options_();
 }
 
-void QOREInterface::get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+void QOREInterface::get_option_values_(
+    Ipopt::SmartPtr<const Ipopt::OptionsList> options)
 {
   // Get the options from the options list
-  options->GetIntegerValue("qp_solver_max_num_iterations", qp_solver_max_num_iterations_, "");
+  options->GetIntegerValue("qp_solver_max_num_iterations",
+                           qp_solver_max_num_iterations_, "");
   options->GetIntegerValue("qp_solver_print_level", qp_solver_print_level_, "");
-  options->GetIntegerValue("lp_solver_max_num_iterations", lp_solver_max_num_iterations_, "");
-
+  options->GetIntegerValue("lp_solver_max_num_iterations",
+                           lp_solver_max_num_iterations_, "");
 }
 
 QOREInterface::QOREInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
@@ -197,13 +203,17 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
  * @param qptype is the problem to be solved QP or LP?
  */
 
-void QOREInterface::allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype)
+void QOREInterface::allocate_memory(
+    std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype)
 {
 
 #ifdef NEW_FORMULATION
-  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints() + 3 * nlp_sizes->get_num_variables();
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() +
+                 2 * nlp_sizes->get_num_constraints() +
+                 3 * nlp_sizes->get_num_variables();
 #else
-  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints();
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() +
+                 2 * nlp_sizes->get_num_constraints();
 // number of nonzero variables in jacobian
 // The Jacobian has the structure [J I -I], so it will contains extra
 // 2*number_constr
@@ -218,7 +228,8 @@ void QOREInterface::allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_si
   y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
   working_set_ = new int[nConstr_QP_ + nVar_QP_];
   if (qptype != LP) {
-    rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, nlp_sizes->get_num_nonzeros_hessian());
+    rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP,
+                nlp_sizes->get_num_nonzeros_hessian());
     H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
   } else {
     // if we are solving an LP, the number of nonzero in the Hessian is 0

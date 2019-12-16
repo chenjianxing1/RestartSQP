@@ -10,7 +10,6 @@
 #include "IpOptionsList.hpp"
 #include "sqphot/QPhandler.hpp"
 #include "sqphot/SQPDebug.hpp"
-#include "sqphot/Algorithm.hpp"
 #include "sqphot/Stats.hpp"
 
 namespace SQPhotstart {
@@ -28,7 +27,7 @@ namespace SQPhotstart {
  *To use this method, call @Optimize and input NLP class object.
  *
  */
-class Algorithm
+class SqpAlgorithm
 {
   ///////////////////////////////////////////////////////////
   //                      PUBLIC METHODS                   //
@@ -37,10 +36,10 @@ public:
   /** @name constructor/destructor*/
   //@{
   /** Default Constructor*/
-  Algorithm();
+  SqpAlgorithm();
 
   /** Default Destructor*/
-  ~Algorithm();
+  ~SqpAlgorithm();
   //@}
 
   /**
@@ -97,7 +96,7 @@ public:
   //@{
   inline Exitflag get_exit_flag() const
   {
-    return exitflag_;
+    return exit_flag_;
   }
 
   inline OptimalityStatus get_opt_status() const
@@ -338,10 +337,10 @@ private:
   /** @name Hide unused default methods. */
   //@{
   /** Copy Constructor */
-  Algorithm(const Algorithm&);
+  SqpAlgorithm(const SqpAlgorithm&);
 
   /** Overloaded Equals Operator */
-  void operator=(const Algorithm&);
+  void operator=(const SqpAlgorithm&);
   //@}
 
   /** Get the option values from the options object. */
@@ -374,9 +373,9 @@ private:
       cons_type_;            /**<the constraints type, it can be either
                                        *bounded,bounded above,bounded below, or unbounded*/
   std::string problem_name_; /**< problem name*/
-  Exitflag exitflag_ = UNKNOWN;
-  int nCon_;                /**< number of constraints*/
-  int nVar_;                /**< number of variables*/
+  Exitflag exit_flag_;       /**< Exit flag */
+  int nCon_;                 /**< number of constraints*/
+  int nVar_;                 /**< number of variables*/
   double actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
   double delta_;            /**< trust-region radius*/
   double infea_measure_;    /**< the measure of infeasibility evaluated at x_k*/
@@ -423,12 +422,22 @@ private:
 
   std::shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
 
+  /** CPU time at the beginning of the optimization run. */
+  double cpu_time_at_start_;
+  /** wallclock_ time at the beginning of the optimization run. */
+  double wallclock_time_at_start_;
+
   /** Option values */
   //@{
-  /** print level for journalist */ //TODO: This should be removed!
+  /** print level for journalist */ // TODO: This should be removed!
   int print_level_;
   /** Maximum number of iterations. */
   int max_num_iterations_;
+  /** Maximum cpu time for one solve (in seconds). */
+  double cpu_time_limit_;
+  /** Maximum wallclock time for one solve (in seconds). */
+  double wallclock_time_limit_;
+
   /** Initial trust region radius. */
   double trust_region_init_value_;
   /** Maximal trust region radius. */
@@ -460,13 +469,15 @@ private:
   double eps1_change_parm_;
   /** Some constant in penalty parameter update rule. */
   double eps2_;
-  /** Maximum number of penalty parameter updates. ??? */ //TODO
+  /** Maximum number of penalty parameter updates. ??? */ // TODO
   int penalty_iter_max_;
 
   /** Flag indicating whether we do a second-order correction. */
   bool perform_second_order_correction_step_;
 
-  /** Tolerance for active set identification. */ // TODO: This should be separate for constraints, relative, etc?
+  /** Tolerance for active set identification. */ // TODO: This should be
+                                                  // separate for constraints,
+                                                  // relative, etc?
   double active_set_tol_;
   /** Overall optimality tolerance. */
   double opt_tol_;
@@ -474,10 +485,14 @@ private:
   double opt_tol_primal_feasibility_;
   /** Optimality tolerance for dual feasibility. */
   double opt_tol_dual_feasibility_;
-  /** Optimality tolerance for stationarity feasibility. */  // TODO what is this?
+  /** Optimality tolerance for stationarity feasibility. */ // TODO what is
+                                                            // this?
   double opt_tol_stationarity_feasibility_;
   /** Optimality tolerance for complementarity. */
   double opt_tol_complementarity_;
+
+  /** CPU time limit for one optimization run. */
+  double max_cputime_;
 
   /** QP solver usde for ??? */
   Solver qp_solver_choice_;

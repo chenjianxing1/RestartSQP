@@ -34,39 +34,43 @@ namespace SQPhotstart {
  * @param nlp_info the struct that stores simple nlp dimension info
  * @param qptype  is the problem to be solved QP or LP or SOC?
  */
-qpOASESInterface::qpOASESInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
-                                   Ipopt::SmartPtr<const Ipopt::OptionsList> options,
-                                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst)
+qpOASESInterface::qpOASESInterface(
+    std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+    Ipopt::SmartPtr<const Ipopt::OptionsList> options,
+    Ipopt::SmartPtr<Ipopt::Journalist> jnlst)
  : jnlst_(jnlst)
 {
   // Get the option values for this object
   get_option_values_(options);
 
 #ifdef NEW_FORMULATION
-  nConstr_QP_ = nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
-  nVar_QP_ = nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
+  nConstr_QP_ =
+      nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
+  nVar_QP_ =
+      nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
 #else
   nConstr_QP_ = nlp_sizes->get_num_constraints();
-  nVar_QP_ = nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
+  nVar_QP_ =
+      nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
 #endif
   allocate_memory(nlp_sizes, qptype);
 }
 
-void qpOASESInterface::get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+void qpOASESInterface::get_option_values_(
+    Ipopt::SmartPtr<const Ipopt::OptionsList> options)
 {
   // Get the options from the options list
-  options->GetIntegerValue("qp_solver_max_num_iterations", qp_solver_max_num_iterations_, "");
+  options->GetIntegerValue("qp_solver_max_num_iterations",
+                           qp_solver_max_num_iterations_, "");
   options->GetIntegerValue("qp_solver_print_level", qp_solver_print_level_, "");
-  options->GetIntegerValue("lp_solver_max_num_iterations", lp_solver_max_num_iterations_, "");
-
+  options->GetIntegerValue("lp_solver_max_num_iterations",
+                           lp_solver_max_num_iterations_, "");
 }
 
-qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
-                                   shared_ptr<Vector> g, shared_ptr<Vector> lb,
-                                   shared_ptr<Vector> ub,
-                                   shared_ptr<Vector> lbA,
-                                   shared_ptr<Vector> ubA,
-                                   Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+qpOASESInterface::qpOASESInterface(
+    shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A, shared_ptr<Vector> g,
+    shared_ptr<Vector> lb, shared_ptr<Vector> ub, shared_ptr<Vector> lbA,
+    shared_ptr<Vector> ubA, Ipopt::SmartPtr<const Ipopt::OptionsList> options)
  : nVar_QP_(A->get_num_columns())
  , nConstr_QP_(A->get_num_rows())
  , H_(H)
@@ -92,16 +96,16 @@ qpOASESInterface::qpOASESInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
   int* H_const_col_indices = const_cast<int*>(H_->get_column_indices());
   double* H_const_values = const_cast<double*>(H_->get_values());
   H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-      nVar_QP_, nVar_QP_, H_const_row_indices,
-      H_const_col_indices, H_const_values);
+      nVar_QP_, nVar_QP_, H_const_row_indices, H_const_col_indices,
+      H_const_values);
   H_qpOASES_->createDiagInfo();
 
   int* A_const_row_indices = const_cast<int*>(A_->get_row_indices());
   int* A_const_col_indices = const_cast<int*>(A_->get_column_indices());
   double* A_const_values = const_cast<double*>(A_->get_values());
   A_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-      nConstr_QP_, nVar_QP_, A_const_row_indices,
-      A_const_col_indices, A_const_values);
+      nConstr_QP_, nVar_QP_, A_const_row_indices, A_const_col_indices,
+      A_const_values);
 }
 
 /**Default destructor*/
@@ -113,13 +117,17 @@ qpOASESInterface::~qpOASESInterface() = default;
  * @param qptype is the problem to be solved QP or LP or SOC?
  * @return
  */
-void qpOASESInterface::allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype)
+void qpOASESInterface::allocate_memory(
+    std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype)
 {
 
 #ifdef NEW_FORMULATION
-  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints()+ 3 * nlp_sizes->get_num_variables();
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() +
+                 2 * nlp_sizes->get_num_constraints() +
+                 3 * nlp_sizes->get_num_variables();
 #else
-  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() + 2 * nlp_sizes->get_num_constraints();
+  int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() +
+                 2 * nlp_sizes->get_num_constraints();
 #endif
   lbA_ = make_shared<Vector>(nConstr_QP_);
   ubA_ = make_shared<Vector>(nConstr_QP_);
@@ -300,9 +308,9 @@ shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
   // create a new vector with the data
   shared_ptr<Vector> retval = make_shared<Vector>(nVar_QP_);
 
-  // copy the values from the beginning of the y_qp_ vector
+// copy the values from the beginning of the y_qp_ vector
 #ifdef NEW_FORMULATION
-  retval->copy_values(y_qp_->get_values()+3*nConstr_QP_);
+  retval->copy_values(y_qp_->get_values() + 3 * nConstr_QP_);
 #else
   retval->copy_values(y_qp_->get_values());
 #endif
@@ -416,8 +424,8 @@ void qpOASESInterface::set_H(shared_ptr<const SpTripletMat> rhs)
     int* H_const_col_indices = const_cast<int*>(H_->get_column_indices());
     double* H_const_values = const_cast<double*>(H_->get_values());
     H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-        nVar_QP_, nVar_QP_, H_const_row_indices,
-        H_const_col_indices, H_const_values);
+        nVar_QP_, nVar_QP_, H_const_row_indices, H_const_col_indices,
+        H_const_values);
   } else {
     H_->setMatVal(rhs);
     H_qpOASES_->setVal(H_->get_values());
@@ -437,8 +445,8 @@ void qpOASESInterface::set_A(shared_ptr<const SQPhotstart::SpTripletMat> rhs,
     int* A_const_col_indices = const_cast<int*>(A_->get_column_indices());
     double* A_const_values = const_cast<double*>(A_->get_values());
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(
-        nConstr_QP_, nVar_QP_, A_const_row_indices,
-        A_const_col_indices, A_const_values);
+        nConstr_QP_, nVar_QP_, A_const_row_indices, A_const_col_indices,
+        A_const_values);
   } else {
     A_->setMatVal(rhs, I_info);
     A_qpOASES_->setVal(A_->get_values());

@@ -39,7 +39,8 @@ public:
    * @param nlp_info the struct that stores simple nlp dimension info
    * @param qptype  is the problem to be solved QP or LP?
    */
-  qpOASESInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+  qpOASESInterface(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
+                   QPType qptype,
                    Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                    Ipopt::SmartPtr<Ipopt::Journalist>
                        jnlst); // number of constraints in the QP problem

@@ -12,9 +12,9 @@ extern "C" {
 }
 
 #include "IpOptionsList.hpp"
-#include "sqphot/SqpNlpBase.hpp"
 #include "sqphot/MessageHandling.hpp"
 #include "sqphot/QPsolverInterface.hpp"
+#include "sqphot/SqpNlpBase.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 
@@ -215,7 +215,8 @@ private:
    * @param nlp_index_info  the struct that stores simple nlp dimension info
    * @param qptype is the problem to be solved QP or LP?
    */
-  void allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype);
+  void allocate_memory(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
+                       QPType qptype);
 
   ///////////////////////////////////////////////////////////
   //                      PRIVATE MEMBERS                  //
@@ -255,7 +256,6 @@ private:
   // Maximum number of LP iterations per LP solve
   int lp_solver_max_num_iterations_;
   //@}
-
 };
 }
 

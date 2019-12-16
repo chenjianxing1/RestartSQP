@@ -9,9 +9,9 @@ extern "C" {
 #include "sqphot/MessageHandling.hpp"
 #include "sqphot/QOREInterface.hpp"
 #include "sqphot/SpHbMat.hpp"
+#include "sqphot/SqpAlgorithm.hpp"
 #include "sqphot/Vector.hpp"
 #include "sqphot/qpOASESInterface.hpp"
-#include "sqphot/Algorithm.hpp"
 #include <memory>
 
 using namespace SQPhotstart;
@@ -160,9 +160,10 @@ int main(int argc, char* argv[])
   //  Create a dummy Algorithm object to get options //
   /////////////////////////////////////////////////////
 
-  shared_ptr<Algorithm> dummy_algorithm = make_shared<Algorithm>();
+  shared_ptr<SqpAlgorithm> dummy_algorithm = make_shared<SqpAlgorithm>();
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst = dummy_algorithm->get_jnlst();
-  Ipopt::SmartPtr<Ipopt::OptionsList> options = dummy_algorithm->get_options_list();
+  Ipopt::SmartPtr<Ipopt::OptionsList> options =
+      dummy_algorithm->get_options_list();
 
   // read matrix data
   ///////////////////////////////////////////////////////////

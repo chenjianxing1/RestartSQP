@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:2019-07
  */
-#include "IpOptionsList.hpp"
 #include "sqphot/QPhandler.hpp"
+#include "IpOptionsList.hpp"
 #include "sqphot/QOREInterface.hpp"
 #include "sqphot/qpOASESInterface.hpp"
 
@@ -13,8 +13,8 @@ using namespace std;
 
 namespace SQPhotstart {
 
-QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
-                     Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
+                     QPType qptype, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                      Ipopt::SmartPtr<const Ipopt::OptionsList> options)
  : nlp_sizes_(nlp_sizes)
  , jnlst_(jnlst)
@@ -91,7 +91,8 @@ QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qpt
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
   qpOASESInterface_ = make_shared<qpOASESInterface>(nlp_sizes, qptype, options);
-  QOREInterface_ = make_shared<QOREInterface>(nlp_sizes, qptype, options, jnlst);
+  QOREInterface_ =
+      make_shared<QOREInterface>(nlp_sizes, qptype, options, jnlst);
   W_b_qpOASES_ = new ActiveType[nVar_QP_];
   W_c_qpOASES_ = new ActiveType[nConstr_QP_];
   W_b_qore_ = new ActiveType[nVar_QP_];
@@ -195,8 +196,7 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
       solverInterface_->set_lbA(num_cons + i,
                                 x_l->value(i) - x_k->value(i)); // must
       // place before set_ubA
-      solverInterface_->set_ubA(num_cons + i,
-                                x_u->value(i) - x_k->value(i));
+      solverInterface_->set_ubA(num_cons + i, x_u->value(i) - x_k->value(i));
     }
 
     for (int i = 0; i < num_vars; i++) {
@@ -397,10 +397,8 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
       solverInterface_->set_ubA(i, c_u->value(i) - c_k->value(i));
     }
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lbA(num_cons + i,
-                                x_l->value(i) - x_k->value(i));
-      solverInterface_->set_ubA(num_cons + i,
-                                x_u->value(i) - x_k->value(i));
+      solverInterface_->set_lbA(num_cons + i, x_l->value(i) - x_k->value(i));
+      solverInterface_->set_ubA(num_cons + i, x_u->value(i) - x_k->value(i));
     }
   }
 #endif
@@ -458,7 +456,8 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad)
  *@brief Solve the QP with objective and constraints defined by its class
  *members
  */
-void QPhandler::solveQP(shared_ptr<Stats> stats, Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+void QPhandler::solveQP(shared_ptr<Stats> stats,
+                        Ipopt::SmartPtr<const Ipopt::OptionsList> options)
 {
 
 //    solverInterface_->getA()->print_full("A");

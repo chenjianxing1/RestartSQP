@@ -5,7 +5,7 @@
 * Date:2019-06
 */
 
-#include "sqphot/Algorithm.hpp"
+#include "sqphot/SqpAlgorithm.hpp"
 #include "sqphot/MessageHandling.hpp"
 
 using namespace std;
@@ -19,20 +19,17 @@ DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
 /**
  * Default Constructor
  */
-Algorithm::Algorithm()
+SqpAlgorithm::SqpAlgorithm()
  : Active_Set_constraints_(NULL)
  , Active_Set_bounds_(NULL)
  , cons_type_(NULL)
  , bound_cons_type_(NULL)
- , obj_value_trial_(0)
- , pred_reduction_(0)
- , qp_obj_(0)
- , actual_reduction_(0)
- , infea_measure_(0.0)
- , infea_measure_model_(0)
 {
   // Some of the following code was taking from the Ipopt code.
 
+  ////////////////////////////////////////////////////////////////////////////
+  //              Set up output and options handling.                       //
+  ////////////////////////////////////////////////////////////////////////////
   // Create journalist and set it up so that it prints to stdout.
   jnlst_ = new Journalist();
   SmartPtr<Journal> stdout_jrnl =
@@ -82,7 +79,7 @@ Algorithm::Algorithm()
 /**
  * Default Destructor
  */
-Algorithm::~Algorithm()
+SqpAlgorithm::~SqpAlgorithm()
 {
 
   delete[] cons_type_;
@@ -100,9 +97,15 @@ Algorithm::~Algorithm()
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void Algorithm::Optimize()
+void SqpAlgorithm::Optimize()
 {
-  while (stats_->iter < max_num_iterations_ && exitflag_ == UNKNOWN) {
+  // Initalize the time at beginning of the algorithm
+  cpu_time_at_start_ = get_cpu_time_since_start();
+  wallclock_time_at_start_ = get_wallclock_time_since_start();
+
+  // Initialize exit flag to UNKOWN to indicate that loop is not finished
+  exit_flag_ = UNKNOWN;
+  while (stats_->iter < max_num_iterations_ && exit_flag_ == UNKNOWN) {
     setupQP();
     // for debugging
     //@{
@@ -110,10 +113,11 @@ void Algorithm::Optimize()
     //    jacobian_->print_full("jacobian");
     //@}
     try {
-      myQP_->solveQP(stats_, options_); // solve the QP subproblem and update the stats_
+      myQP_->solveQP(stats_,
+                     options_); // solve the QP subproblem and update the stats_
     } catch (QP_NOT_OPTIMAL) {
       myQP_->WriteQPData(problem_name_ + "qpdata.log");
-      exitflag_ = myQP_->get_status();
+      exit_flag_ = myQP_->get_status();
       // break;
     }
 
@@ -165,7 +169,7 @@ void Algorithm::Optimize()
     }
 
     check_optimality();
-    if (exitflag_ != UNKNOWN) {
+    if (exit_flag_ != UNKNOWN) {
       break;
     }
 
@@ -179,7 +183,20 @@ void Algorithm::Optimize()
 
   // check if the current iterates get_status before exiting
   if (stats_->iter == max_num_iterations_)
-    exitflag_ = EXCEED_MAX_ITER;
+    exit_flag_ = EXCEED_MAX_ITERATIONS;
+
+  // check if we are running out of CPU time
+  double current_cpu_time = get_cpu_time_since_start();
+  if (current_cpu_time - cpu_time_at_start_ > cpu_time_limit_) {
+    exit_flag_ = EXCEED_MAX_CPU_TIME;
+  }
+
+  // check if we are running out of wallclock time
+  double current_wallclock_time = get_wallclock_time_since_start();
+  if (current_wallclock_time - wallclock_time_at_start_ >
+      wallclock_time_limit_) {
+    exit_flag_ = EXCEED_MAX_WALLCLOCK_TIME;
+  }
 
   //    if (exitflag_ != OPTIMAL && exitflag_ != INVALID_NLP) {
   //        check_optimality();
@@ -199,7 +216,7 @@ void Algorithm::Optimize()
  *  function cannot be solved, it will assign _exitflag the	corresponding
  *  code according to the error type.
  */
-void Algorithm::check_optimality()
+void SqpAlgorithm::check_optimality()
 {
   // FIXME: not sure if it is better to use the new multiplier or the old one
 
@@ -221,19 +238,15 @@ void Algorithm::check_optimality()
     /**-------------------------------------------------------**/
     for (i = 0; i < nCon_; i++) {
       if (cons_type_[i] == BOUNDED_ABOVE) {
-        if (abs(c_u_->get_value(i) - c_k_->get_value(i)) <
-            active_set_tol_)
+        if (abs(c_u_->get_value(i) - c_k_->get_value(i)) < active_set_tol_)
           Active_Set_constraints_[i] = ACTIVE_ABOVE;
       } else if (cons_type_[i] == BOUNDED_BELOW) {
-        if (abs(c_k_->get_value(i) - c_l_->get_value(i)) <
-            active_set_tol_) {
+        if (abs(c_k_->get_value(i) - c_l_->get_value(i)) < active_set_tol_) {
           Active_Set_constraints_[i] = ACTIVE_BELOW;
         }
       } else if (cons_type_[i] == EQUAL) {
-        if ((abs(c_u_->get_value(i) - c_k_->get_value(i)) <
-             active_set_tol_) &&
-            (abs(c_k_->get_value(i) - c_l_->get_value(i)) <
-             active_set_tol_))
+        if ((abs(c_u_->get_value(i) - c_k_->get_value(i)) < active_set_tol_) &&
+            (abs(c_k_->get_value(i) - c_l_->get_value(i)) < active_set_tol_))
           Active_Set_constraints_[i] = ACTIVE_BOTH_SIDE;
       } else {
         Active_Set_constraints_[i] = INACTIVE;
@@ -242,18 +255,14 @@ void Algorithm::check_optimality()
 
   for (i = 0; i < nVar_; i++) {
     if (bound_cons_type_[i] == BOUNDED_ABOVE) {
-      if (abs(x_u_->get_value(i) - x_k_->get_value(i)) <
-          active_set_tol_)
+      if (abs(x_u_->get_value(i) - x_k_->get_value(i)) < active_set_tol_)
         Active_Set_bounds_[i] = ACTIVE_ABOVE;
     } else if (bound_cons_type_[i] == BOUNDED_BELOW) {
-      if (abs(x_k_->get_value(i) - x_l_->get_value(i)) <
-          active_set_tol_)
+      if (abs(x_k_->get_value(i) - x_l_->get_value(i)) < active_set_tol_)
         Active_Set_bounds_[i] = ACTIVE_BELOW;
     } else if (bound_cons_type_[i] == EQUAL) {
-      if ((abs(x_u_->get_value(i) - x_k_->get_value(i)) <
-           active_set_tol_) &&
-          (abs(x_k_->get_value(i) - x_l_->get_value(i)) <
-           active_set_tol_))
+      if ((abs(x_u_->get_value(i) - x_k_->get_value(i)) < active_set_tol_) &&
+          (abs(x_k_->get_value(i) - x_l_->get_value(i)) < active_set_tol_))
         Active_Set_bounds_[i] = ACTIVE_BOTH_SIDE;
     } else {
       Active_Set_bounds_[i] = INACTIVE;
@@ -380,12 +389,13 @@ void Algorithm::check_optimality()
       primal_violation < opt_tol_primal_feasibility_;
   opt_status_.dual_feasibility = dual_violation < opt_tol_dual_feasibility_;
   opt_status_.complementarity = compl_violation < opt_tol_complementarity_;
-  opt_status_.stationarity = stationarity_violation < opt_tol_stationarity_feasibility_;
+  opt_status_.stationarity =
+      stationarity_violation < opt_tol_stationarity_feasibility_;
 
   if (opt_status_.primal_feasibility && opt_status_.dual_feasibility &&
       opt_status_.complementarity && opt_status_.stationarity) {
     opt_status_.first_order_opt = true;
-    exitflag_ = OPTIMAL;
+    exit_flag_ = OPTIMAL;
   } else {
 // if it is not optimal
 #ifdef DEBUG
@@ -432,7 +442,7 @@ void Algorithm::check_optimality()
   }
 }
 
-void Algorithm::get_trial_point_info()
+void SqpAlgorithm::get_trial_point_info()
 {
 
   x_trial_->set_to_sum_of_vectors(1., x_k_, 1., p_k_);
@@ -482,7 +492,8 @@ static void shift_starting_point_(shared_ptr<Vector> x,
  *  information for the first QP.
  *
  */
-void Algorithm::initialize(std::shared_ptr<SqpNlpBase> sqp_nlp, const string& name)
+void SqpAlgorithm::initialize(std::shared_ptr<SqpNlpBase> sqp_nlp,
+                              const string& name)
 {
   // Get the options values from the options object
   get_option_values_();
@@ -573,10 +584,11 @@ void Algorithm::initialize(std::shared_ptr<SqpNlpBase> sqp_nlp, const string& na
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void Algorithm::allocate_memory(std::shared_ptr<SqpNlpBase> sqp_nlp)
+void SqpAlgorithm::allocate_memory(std::shared_ptr<SqpNlpBase> sqp_nlp)
 {
   sqp_nlp_ = sqp_nlp;
-  std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes = sqp_nlp_->get_problem_sizes();
+  std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes =
+      sqp_nlp_->get_problem_sizes();
   nVar_ = nlp_sizes->get_num_variables();
   nCon_ = nlp_sizes->get_num_constraints();
   cons_type_ = new ConstraintType[nCon_];
@@ -597,10 +609,10 @@ void Algorithm::allocate_memory(std::shared_ptr<SqpNlpBase> sqp_nlp)
   c_u_ = make_shared<Vector>(nCon_);
   grad_f_ = make_shared<Vector>(nVar_);
 
-  jacobian_ =
-      make_shared<SpTripletMat>(nlp_sizes->get_num_nonzeros_jacobian(), nCon_, nVar_, false);
-  hessian_ =
-      make_shared<SpTripletMat>(nlp_sizes->get_num_nonzeros_hessian(), nVar_, nVar_, true);
+  jacobian_ = make_shared<SpTripletMat>(nlp_sizes->get_num_nonzeros_jacobian(),
+                                        nCon_, nVar_, false);
+  hessian_ = make_shared<SpTripletMat>(nlp_sizes->get_num_nonzeros_hessian(),
+                                       nVar_, nVar_, true);
   stats_ = make_shared<Stats>();
 
   myQP_ = make_shared<QPhandler>(nlp_sizes, QP, jnlst_, options_);
@@ -614,10 +626,12 @@ respect
 * @return infea_measure = ||-max(c_k-c_u),0||_1 +||-min(c_k-c_l),0||_1+
                   ||-max(x_k-x_u),0||_1 +||-min(x_k-x_l),0||_1
 */
-double
-Algorithm::cal_infea(shared_ptr<const Vector> c_k, shared_ptr<const Vector> c_l,
-                     shared_ptr<const Vector> c_u, shared_ptr<const Vector> x_k,
-                     shared_ptr<const Vector> x_l, shared_ptr<const Vector> x_u)
+double SqpAlgorithm::cal_infea(shared_ptr<const Vector> c_k,
+                               shared_ptr<const Vector> c_l,
+                               shared_ptr<const Vector> c_u,
+                               shared_ptr<const Vector> x_k,
+                               shared_ptr<const Vector> x_l,
+                               shared_ptr<const Vector> x_u)
 {
   double infea_measure = 0.0;
   for (int i = 0; i < c_k_->get_dim(); i++) {
@@ -644,7 +658,7 @@ Algorithm::cal_infea(shared_ptr<const Vector> c_k, shared_ptr<const Vector> c_l,
  * subproblem
  * solved, and copies it to the class member _p_k
  */
-void Algorithm::get_search_direction()
+void SqpAlgorithm::get_search_direction()
 {
   p_k_->copy_values(myQP_->get_optimal_solution()->get_values());
 }
@@ -655,7 +669,7 @@ void Algorithm::get_search_direction()
  * bounds from QPsolver
  */
 
-void Algorithm::get_multipliers()
+void SqpAlgorithm::get_multipliers()
 {
   if (qp_solver_choice_ == QORE || qp_solver_choice_ == QPOASES) {
     multiplier_cons_->copy_vector(myQP_->get_constraints_multipliers());
@@ -663,8 +677,7 @@ void Algorithm::get_multipliers()
         myQP_->get_bounds_multipliers()->get_values()); // AW would be good to
     // separate different parts
     // of the QP multipliers?
-  } else if (qp_solver_choice_ == GUROBI ||
-             qp_solver_choice_ == CPLEX) {
+  } else if (qp_solver_choice_ == GUROBI || qp_solver_choice_ == CPLEX) {
     multiplier_cons_->copy_vector(myQP_->get_constraints_multipliers());
     shared_ptr<Vector> tmp_vec_nVar = make_shared<Vector>(nVar_);
     jacobian_->multiply_transpose(multiplier_cons_, tmp_vec_nVar);
@@ -685,7 +698,7 @@ DECLARE_STD_EXCEPTION(QP_UNCHANGED);
  * member QPinfoFlag_
  */
 
-void Algorithm::setupQP()
+void SqpAlgorithm::setupQP()
 {
   if (stats_->iter == 0) {
     myQP_->set_A(jacobian_);
@@ -739,7 +752,7 @@ void Algorithm::setupQP()
   }
 }
 
-void Algorithm::setupLP()
+void SqpAlgorithm::setupLP()
 {
   myLP_->set_bounds(delta_, x_l_, x_u_, x_k_, c_l_, c_u_, c_k_);
   myLP_->set_g(rho_);
@@ -757,13 +770,14 @@ void Algorithm::setupLP()
  * q_k(p; rho) = f_k+ g_k^Tp +1/2 p^T H_k p+rho* infeasibility_measure_model is
  * the
  * quadratic model at x_k.
- * The trial point  will be accepted if the ratio >= trust_region_ratio_accept_tol.
+ * The trial point  will be accepted if the ratio >=
+ * trust_region_ratio_accept_tol.
  * If it is accepted, the function will also updates the gradient, Jacobian
  * information by reading from nlp_ object. The corresponding flags of class
  * member
  * QPinfoFlag_ will set to be true.
  */
-void Algorithm::ratio_test()
+void SqpAlgorithm::ratio_test()
 {
 
   double P1_x = obj_value_ + rho_ * infea_measure_;
@@ -850,19 +864,21 @@ void Algorithm::ratio_test()
  * @brief Update the trust region radius.
  *
  * This function update the trust-region radius when the ratio calculated by the
- * ratio test is smaller than eta_c or bigger than trust_region_ratio_increase_tol and the
+ * ratio test is smaller than eta_c or bigger than
+ * trust_region_ratio_increase_tol and the
  * search_direction
  * hits the trust-region bounds.
  * If ratio<eta_c, the trust region radius will decrease by the parameter
  * gamma_c, to be gamma_c* delta_
- * If ratio_test> trust_region_ratio_increase_tol and delta_= norm_p_k_ the trust-region radius will be
+ * If ratio_test> trust_region_ratio_increase_tol and delta_= norm_p_k_ the
+ * trust-region radius will be
  * increased by the parameter gamma_c.
  *
  * If trust region radius has changed, the corresponding flags will be set to be
  * true;
  */
 
-void Algorithm::update_radius()
+void SqpAlgorithm::update_radius()
 {
   if (actual_reduction_ < trust_region_ratio_decrease_tol_ * pred_reduction_) {
     delta_ = trust_region_decrease_factor_ * delta_;
@@ -871,9 +887,11 @@ void Algorithm::update_radius()
     // object
   } else {
     // printf("delta_ = %23.16e, ||p_k|| = %23.16e\n",delta_,p_k_->inf_norm());
-    if (actual_reduction_ > trust_region_ratio_increase_tol_ * pred_reduction_ &&
+    if (actual_reduction_ >
+            trust_region_ratio_increase_tol_ * pred_reduction_ &&
         (opt_tol_ > fabs(delta_ - p_k_->calc_inf_norm()))) {
-      delta_ = min(trust_region_increase_factor_ * delta_, trust_region_max_value_);
+      delta_ =
+          min(trust_region_increase_factor_ * delta_, trust_region_max_value_);
       QPinfoFlag_.Update_delta = true;
     }
   }
@@ -888,7 +906,7 @@ void Algorithm::update_radius()
       stdout_jrnl->SetAllPrintLevels((EJournalLevel)print_level_);
       stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
     }
-    exitflag_ = TRUST_REGION_TOO_SMALL;
+    exit_flag_ = TRUST_REGION_TOO_SMALL;
     THROW_EXCEPTION(SMALL_TRUST_REGION, SMALL_TRUST_REGION_MSG);
   }
 }
@@ -928,7 +946,7 @@ static ConstraintType classify_single_constraint(double lower_bound,
   }
 }
 
-void Algorithm::classify_constraints_types()
+void SqpAlgorithm::classify_constraints_types()
 {
 
   for (int i = 0; i < nCon_; i++) {
@@ -945,165 +963,172 @@ void Algorithm::classify_constraints_types()
  * @brief update the penalty parameter for the algorithm.
  *
  */
-void Algorithm::update_penalty_parameter()
+void SqpAlgorithm::update_penalty_parameter()
 {
 
-    infea_measure_model_ = myQP_->get_infea_measure_model();
+  infea_measure_model_ = myQP_->get_infea_measure_model();
 
-    // prin/tf("infea_measure_model = %23.16e\n",infea_measure_model_);
-    // printf("infea_measure_ = %23.16e\n",infea_measure_);
-    if (infea_measure_model_ > penalty_update_tol_) {
-      double infea_measure_model_tmp =
-          infea_measure_model_; // temporarily store the value
-      double rho_trial = rho_;  // the temporary trial value for rho
-      setupLP();
+  // prin/tf("infea_measure_model = %23.16e\n",infea_measure_model_);
+  // printf("infea_measure_ = %23.16e\n",infea_measure_);
+  if (infea_measure_model_ > penalty_update_tol_) {
+    double infea_measure_model_tmp =
+        infea_measure_model_; // temporarily store the value
+    double rho_trial = rho_;  // the temporary trial value for rho
+    setupLP();
 
-      try {
-        myLP_->solveLP(stats_);
-      } catch (LP_NOT_OPTIMAL) {
-        exitflag_ = myLP_->get_status();
-        THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
-      }
-      // calculate the infea_measure of the LP
-      double infea_measure_infty = myLP_->get_infea_measure_model();
+    try {
+      myLP_->solveLP(stats_);
+    } catch (LP_NOT_OPTIMAL) {
+      exit_flag_ = myLP_->get_status();
+      THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
+    }
+    // calculate the infea_measure of the LP
+    double infea_measure_infty = myLP_->get_infea_measure_model();
 
-      //     printf("infea_measure_infty = %23.16e\n",infea_measure_infty);
-      if (infea_measure_infty <= penalty_update_tol_) {
-        // try to increase the penalty parameter to a number such that the
-        // infeasibility measure of QP model with such penalty parameter
-        // becomes zero
+    //     printf("infea_measure_infty = %23.16e\n",infea_measure_infty);
+    if (infea_measure_infty <= penalty_update_tol_) {
+      // try to increase the penalty parameter to a number such that the
+      // infeasibility measure of QP model with such penalty parameter
+      // becomes zero
 
-        while (infea_measure_model_ > penalty_update_tol_) {
-          if (rho_trial >= penalty_parameter_max_value_) {
-            break;
-          } // TODO:safeguarded procedure...put here for now
+      while (infea_measure_model_ > penalty_update_tol_) {
+        if (rho_trial >= penalty_parameter_max_value_) {
+          break;
+        } // TODO:safeguarded procedure...put here for now
 
-          rho_trial = min(penalty_parameter_max_value_,
-                          rho_trial * penalty_parameter_increase_factor_); // increase rho
+        rho_trial =
+            min(penalty_parameter_max_value_,
+                rho_trial * penalty_parameter_increase_factor_); // increase rho
 
-          stats_->penalty_change_trial_addone();
+        stats_->penalty_change_trial_addone();
 
-          myQP_->update_penalty(rho_trial);
+        myQP_->update_penalty(rho_trial);
 
-          try {
-            myQP_->solveQP(stats_, options_);
-          } catch (QP_NOT_OPTIMAL) {
-            exitflag_ = myQP_->get_status();
-            break;
-          }
-
-          // recalculate the infeasibility measure of the model by
-          // calculating the one norm of the slack variables
-
-          infea_measure_model_ = myQP_->get_infea_measure_model();
+        try {
+          myQP_->solveQP(stats_, options_);
+        } catch (QP_NOT_OPTIMAL) {
+          exit_flag_ = myQP_->get_status();
+          break;
         }
+
+        // recalculate the infeasibility measure of the model by
+        // calculating the one norm of the slack variables
+
+        infea_measure_model_ = myQP_->get_infea_measure_model();
+      }
+    } else {
+      while ((infea_measure_ - infea_measure_model_ <
+                  eps1_ * (infea_measure_ - infea_measure_infty) &&
+              (stats_->penalty_change_trial < penalty_iter_max_))) {
+
+        if (rho_trial >= penalty_parameter_max_value_) {
+          break;
+        }
+
+        // try to increase the penalty parameter to a number such that
+        // the incurred reduction for the QP model is to a ratio to the
+        // maximum possible reduction for current linear model.
+        rho_trial = min(penalty_parameter_max_value_,
+                        rho_trial * penalty_parameter_increase_factor_);
+
+        stats_->penalty_change_trial_addone();
+
+        myQP_->update_penalty(rho_trial);
+
+        try {
+          myQP_->solveQP(stats_, options_);
+        } catch (QP_NOT_OPTIMAL) {
+          exit_flag_ = myQP_->get_status();
+          break;
+        }
+
+        // recalculate the infeasibility measure of the model by
+        // calculating the one norm of the slack variables
+
+        infea_measure_model_ = myQP_->get_infea_measure_model();
+      }
+    }
+    // if any change occurs
+    if (rho_trial > rho_) {
+      if (rho_trial * infea_measure_ - get_obj_QP() >=
+          eps2_ * rho_trial * (infea_measure_ - infea_measure_model_)) {
+        //                    printf("rho_trial = %23.16e\n",rho_trial);
+        //                    printf("infea_measure_ =
+        //                    %23.16e\n",infea_measure_);
+        stats_->penalty_change_Succ_addone();
+
+        eps1_ += (1 - eps1_) * eps1_change_parm_;
+
+        // use the new solution as the search direction
+        get_search_direction();
+        rho_ = rho_trial; // update to the class variable
+        get_trial_point_info();
+        qp_obj_ = get_obj_QP();
+        double P1_x = obj_value_ + rho_ * infea_measure_;
+        double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
+
+        actual_reduction_ = P1_x - P1_x_trial;
+        pred_reduction_ = rho_ * infea_measure_ - get_obj_QP();
+
       } else {
-        while ((infea_measure_ - infea_measure_model_ <
-                    eps1_ * (infea_measure_ - infea_measure_infty) &&
-                (stats_->penalty_change_trial < penalty_iter_max_))) {
-
-          if (rho_trial >= penalty_parameter_max_value_) {
-            break;
-          }
-
-          // try to increase the penalty parameter to a number such that
-          // the incurred reduction for the QP model is to a ratio to the
-          // maximum possible reduction for current linear model.
-          rho_trial =
-              min(penalty_parameter_max_value_, rho_trial * penalty_parameter_increase_factor_);
-
-          stats_->penalty_change_trial_addone();
-
-          myQP_->update_penalty(rho_trial);
-
-          try {
-            myQP_->solveQP(stats_, options_);
-          } catch (QP_NOT_OPTIMAL) {
-            exitflag_ = myQP_->get_status();
-            break;
-          }
-
-          // recalculate the infeasibility measure of the model by
-          // calculating the one norm of the slack variables
-
-          infea_measure_model_ = myQP_->get_infea_measure_model();
-        }
+        //                    printf("rho_trial = %23.16e\n",rho_trial);
+        //                    printf("infea_measure_ =
+        //                    %23.16e\n",infea_measure_);
+        stats_->penalty_change_Fail_addone();
+        infea_measure_model_ = infea_measure_model_tmp;
+        QPinfoFlag_.Update_penalty = true;
       }
-      // if any change occurs
-      if (rho_trial > rho_) {
-        if (rho_trial * infea_measure_ - get_obj_QP() >=
-            eps2_ * rho_trial *
-                (infea_measure_ - infea_measure_model_)) {
-          //                    printf("rho_trial = %23.16e\n",rho_trial);
-          //                    printf("infea_measure_ =
-          //                    %23.16e\n",infea_measure_);
-          stats_->penalty_change_Succ_addone();
+    } else if (infea_measure_ < opt_tol_primal_feasibility_ * 1.0e-3) {
+      //            rho_ = rho_*0.5;
+      //            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2
+      //            * nCon_);
+      //            myQP_->update_penalty(rho_);
+      //
+      //            try {
+      //                myQP_->solveQP(stats_, old_options_);
+      //            }
+      //            catch (QP_NOT_OPTIMAL) {
+      //                handle_error("QP NOT OPTIMAL");
+      //            }
+      //
+      //            //recalculate the infeasibility measure of the model by
+      //            // calculating the one norm of the slack variables
+      //
+      //            infea_measure_model_ = myQP_->get_infea_measure_model();
 
-          eps1_ += (1 - eps1_) * eps1_change_parm_;
-
-          // use the new solution as the search direction
-          get_search_direction();
-          rho_ = rho_trial; // update to the class variable
-          get_trial_point_info();
-          qp_obj_ = get_obj_QP();
-          double P1_x = obj_value_ + rho_ * infea_measure_;
-          double P1_x_trial = obj_value_trial_ + rho_ * infea_measure_trial_;
-
-          actual_reduction_ = P1_x - P1_x_trial;
-          pred_reduction_ = rho_ * infea_measure_ - get_obj_QP();
-
-        } else {
-          //                    printf("rho_trial = %23.16e\n",rho_trial);
-          //                    printf("infea_measure_ =
-          //                    %23.16e\n",infea_measure_);
-          stats_->penalty_change_Fail_addone();
-          infea_measure_model_ = infea_measure_model_tmp;
-          QPinfoFlag_.Update_penalty = true;
-        }
-      } else if (infea_measure_ < opt_tol_primal_feasibility_ * 1.0e-3) {
-        //            rho_ = rho_*0.5;
-        //            shared_ptr<Vector> sol_tmp = make_shared<Vector>(nVar_ + 2
-        //            * nCon_);
-        //            myQP_->update_penalty(rho_);
-        //
-        //            try {
-        //                myQP_->solveQP(stats_, old_options_);
-        //            }
-        //            catch (QP_NOT_OPTIMAL) {
-        //                handle_error("QP NOT OPTIMAL");
-        //            }
-        //
-        //            //recalculate the infeasibility measure of the model by
-        //            // calculating the one norm of the slack variables
-        //
-        //            infea_measure_model_ = myQP_->get_infea_measure_model();
-
-        //            p_k_->copy_vector(sol_tmp);
-        //            get_trial_point_info();
-        //            qp_obj = get_obj_QP();
-      }
+      //            p_k_->copy_vector(sol_tmp);
+      //            get_trial_point_info();
+      //            qp_obj = get_obj_QP();
+    }
   }
 }
 
 /**
  * @brief Use the Ipopt Reference Options and set it to default values.
  */
-void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
+void SqpAlgorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
 {
 
   reg_options->SetRegisteringCategory("trust-region");
   reg_options->AddBoundedNumberOption(
-      "trust_region_ratio_decrease_tol", "trust-region parameter for the ratio test triggering decrease.", 0., true, 1., true,
-      0.25, "If ratio <= trust_region_ratio_decrease_tol, then the trust-region radius for the next "
-            "iteration will be decreased for the next iteration.");
+      "trust_region_ratio_decrease_tol",
+      "trust-region parameter for the ratio test triggering decrease.", 0.,
+      true, 1., true, 0.25,
+      "If ratio <= trust_region_ratio_decrease_tol, then the trust-region "
+      "radius for the next "
+      "iteration will be decreased for the next iteration.");
   reg_options->AddBoundedNumberOption(
-      "trust_region_ratio_accept_tol", "trust-region parameter for the ratio test.", 0., true, 1., true,
-      1.0e-8, "The trial point will be accepted if ratio >= trust_region_ratio_accept_tol. ");
+      "trust_region_ratio_accept_tol",
+      "trust-region parameter for the ratio test.", 0., true, 1., true, 1.0e-8,
+      "The trial point will be accepted if ratio >= "
+      "trust_region_ratio_accept_tol. ");
   reg_options->AddBoundedNumberOption(
-      "trust_region_ratio_increase_tol", "trust-region parameter for the ratio test.", 0., true, 1., true,
-      0.75, "If ratio >= trust_region_ratio_increase_tol and the search direction hits the  "
-            "trust-region boundary, the trust-region radius will "
-            "be increased for the next iteration.");
+      "trust_region_ratio_increase_tol",
+      "trust-region parameter for the ratio test.", 0., true, 1., true, 0.75,
+      "If ratio >= trust_region_ratio_increase_tol and the search direction "
+      "hits the  "
+      "trust-region boundary, the trust-region radius will "
+      "be increased for the next iteration.");
   reg_options->AddBoundedNumberOption(
       "trust_region_decrease_factor",
       "Factor used to reduce the trust-region size.", 0., true, 1., true, 0.5,
@@ -1116,37 +1141,37 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
       "increased, then it will be set as gamma_e*delta,"
       "where delta is current trust-region radius.");
 
-  reg_options->AddLowerBoundedNumberOption(
-      "trust_region_init_value", "Initial trust-region radius value", 0., true, 1.0);
+  reg_options->AddLowerBoundedNumberOption("trust_region_init_value",
+                                           "Initial trust-region radius value",
+                                           0., true, 1.0);
   reg_options->AddLowerBoundedNumberOption(
       "trust_region_max_value", "Maximum value of trust-region radius "
-                          "allowed for the radius update",
+                                "allowed for the radius update",
       0., true, 1e10);
   reg_options->AddLowerBoundedNumberOption(
       "trust_region_min_value", "Minimum value of trust-region radius "
-                          "allowed for the radius update",
+                                "allowed for the radius update",
       0., true, 1e-16);
 
   reg_options->SetRegisteringCategory("Penalty Update");
   reg_options->AddLowerBoundedNumberOption(
-      "penalty_parameter_init_value",
-      "Initial value of the penalty parameter.", 0., true, 1.0,
-      "");
+      "penalty_parameter_init_value", "Initial value of the penalty parameter.",
+      0., true, 1.0, "");
   reg_options->AddLowerBoundedNumberOption(
-      "penalty_update_tol",
-      "some tolerance.", 0., true, 1e-8,
-      "");
+      "penalty_update_tol", "some tolerance.", 0., true, 1e-8, "");
   reg_options->AddLowerBoundedNumberOption(
       "penalty_parameter_increase_factor",
-      "Factor by which penatly parameter is increased.", 1., true, 10.,
-      "");
-  reg_options->AddNumberOption("eps1", "penalty update parameter something", 0.1, "");
-  reg_options->AddNumberOption("eps1_change_parm", "penalty update parameter something", 0.1, "");
-  reg_options->AddNumberOption("eps2", "penalty update parameter something", 1.0e-6, "");
+      "Factor by which penatly parameter is increased.", 1., true, 10., "");
+  reg_options->AddNumberOption("eps1", "penalty update parameter something",
+                               0.1, "");
+  reg_options->AddNumberOption("eps1_change_parm",
+                               "penalty update parameter something", 0.1, "");
+  reg_options->AddNumberOption("eps2", "penalty update parameter something",
+                               1.0e-6, "");
   reg_options->AddNumberOption("print_level_penalty_update",
                                "print level for penalty update", 0);
-  reg_options->AddNumberOption("penalty_parameter_max_value", "Maximum value of the penalty parameter",
-                               1.0e8);
+  reg_options->AddNumberOption("penalty_parameter_max_value",
+                               "Maximum value of the penalty parameter", 1.0e8);
   reg_options->AddIntegerOption(
       "penalty_iter_max",
       "maximum number of penalty paramter update allowed in a "
@@ -1171,7 +1196,8 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
                   " the optimality test",
       "yes", "will automatically generate the tolerance "
              "level for the optimality test");
-  reg_options->AddNumberOption("active_set_tol", "", 1.0e-5); //TODO: make lower bounded options
+  reg_options->AddNumberOption("active_set_tol", "",
+                               1.0e-5); // TODO: make lower bounded options
   reg_options->AddNumberOption("opt_tol", "", 1.0e-8);
   reg_options->AddNumberOption("opt_tol_complementarity", "", 1.0e-4);
   reg_options->AddNumberOption("opt_tol_dual_feasibility", " ", 1.0e-4);
@@ -1179,13 +1205,21 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
   reg_options->AddNumberOption("opt_tol_stationarity_feasibility", "", 1e-4);
   reg_options->AddNumberOption("opt_second_tol", " ", 1.0e-8);
 
+  reg_options->AddLowerBoundedNumberOption(
+      "cpu_time_limit", "CPU time limit", 0., true, 1e10,
+      "Time limit measured in CPU time (in seconds)");
+  reg_options->AddLowerBoundedNumberOption(
+      "wallclock_time_limit", "Wallclock time limit", 0., true, 1e10,
+      "Time limit measured in wallclock time (in seconds)");
+
   reg_options->SetRegisteringCategory("General");
   reg_options->AddNumberOption("step_size_tol",
                                "the smallest stepsize can be accepted"
                                "before concluding convergence",
                                1.0e-15);
-  reg_options->AddIntegerOption(
-      "max_num_iterations", "Maximum number of iteration for the algorithm", 3000);
+  reg_options->AddIntegerOption("max_num_iterations",
+                                "Maximum number of iteration for the algorithm",
+                                3000);
   reg_options->AddStringOption2(
       "perform_second_order_correction_step",
       "Tells the algorithm to calculate the second-order correction step "
@@ -1198,23 +1232,18 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
   reg_options->AddIntegerOption("testOption_QP",
                                 "Level of Optimality test for QP", -99);
   reg_options->AddIntegerOption("qp_solver_max_num_iterations",
-                               "maximum number of iteration for the "
-                               "QP solver in solving each QP",
-                               1000);
+                                "maximum number of iteration for the "
+                                "QP solver in solving each QP",
+                                1000);
   reg_options->AddIntegerOption("lp_solver_max_num_iterations",
-                               "maximum number of iteration for the "
-                               "LP solver in solving each LP",
-                               1000);
-  reg_options->AddIntegerOption("qp_solver_print_level", "print level for QP solver",
-                               0);
+                                "maximum number of iteration for the "
+                                "LP solver in solving each LP",
+                                1000);
+  reg_options->AddIntegerOption("qp_solver_print_level",
+                                "print level for QP solver", 0);
   reg_options->AddStringOption4(
-      "qp_solver_choice",
-      "QP solver used for step computation.", "",
-      "QORE",
-      "QPOASE", "",
-      "QORE", "",
-      "GUROBI", "",
-      "CPLEX", "");
+      "qp_solver_choice", "QP solver used for step computation.", "", "QORE",
+      "QPOASE", "", "QORE", "", "GUROBI", "", "CPLEX", "");
 
   //    reg_options->AddStringOption("QPsolverChoice",
   //		    "The choice of QP solver which will be used in the
@@ -1237,45 +1266,64 @@ void Algorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
                                0);
 }
 
-void Algorithm::get_option_values_()
+void SqpAlgorithm::get_option_values_()
 {
   print_level_ = 2; // This should be taken care of before?
 
   options_->GetIntegerValue("max_num_iterations", max_num_iterations_, "");
-  options_->GetNumericValue("trust_region_init_value", trust_region_init_value_, "");
-  options_->GetNumericValue("trust_region_max_value", trust_region_max_value_, "");
-  options_->GetNumericValue("trust_region_min_value", trust_region_min_value_, "");
-  options_->GetNumericValue("trust_region_ratio_decrease_tol", trust_region_ratio_decrease_tol_, "");
-  options_->GetNumericValue("trust_region_ratio_accept_tol", trust_region_ratio_accept_tol_, "");
-  options_->GetNumericValue("trust_region_ratio_increase_tol", trust_region_ratio_increase_tol_, "");
-  options_->GetNumericValue("trust_region_decrease_factor", trust_region_decrease_factor_, "");
-  options_->GetNumericValue("trust_region_increase_factor", trust_region_increase_factor_, "");
+  options_->GetNumericValue("cpu_time_limit", cpu_time_limit_, "");
+  options_->GetNumericValue("wallclock_time_limit", wallclock_time_limit_, "");
 
-  options_->GetNumericValue("penalty_parameter_init_value", penalty_parameter_init_value_, "");
+  options_->GetNumericValue("trust_region_init_value", trust_region_init_value_,
+                            "");
+  options_->GetNumericValue("trust_region_max_value", trust_region_max_value_,
+                            "");
+  options_->GetNumericValue("trust_region_min_value", trust_region_min_value_,
+                            "");
+  options_->GetNumericValue("trust_region_ratio_decrease_tol",
+                            trust_region_ratio_decrease_tol_, "");
+  options_->GetNumericValue("trust_region_ratio_accept_tol",
+                            trust_region_ratio_accept_tol_, "");
+  options_->GetNumericValue("trust_region_ratio_increase_tol",
+                            trust_region_ratio_increase_tol_, "");
+  options_->GetNumericValue("trust_region_decrease_factor",
+                            trust_region_decrease_factor_, "");
+  options_->GetNumericValue("trust_region_increase_factor",
+                            trust_region_increase_factor_, "");
+
+  options_->GetNumericValue("penalty_parameter_init_value",
+                            penalty_parameter_init_value_, "");
   options_->GetNumericValue("penalty_update_tol", penalty_update_tol_, "");
-  options_->GetNumericValue("penalty_parameter_increase_factor", penalty_parameter_increase_factor_, "");
-  options_->GetNumericValue("penalty_parameter_max_value", penalty_parameter_max_value_, "");
+  options_->GetNumericValue("penalty_parameter_increase_factor",
+                            penalty_parameter_increase_factor_, "");
+  options_->GetNumericValue("penalty_parameter_max_value",
+                            penalty_parameter_max_value_, "");
   options_->GetNumericValue("eps1", eps1_, "");
   options_->GetNumericValue("eps1_change_parm", eps1_change_parm_, "");
   options_->GetNumericValue("eps2", eps2_, "");
   options_->GetIntegerValue("penalty_iter_max", penalty_iter_max_, "");
 
-  options_->GetBoolValue("perform_second_order_correction_step", perform_second_order_correction_step_, "");
+  options_->GetBoolValue("perform_second_order_correction_step",
+                         perform_second_order_correction_step_, "");
 
   options_->GetNumericValue("active_set_tol", active_set_tol_, "");
   options_->GetNumericValue("opt_tol", opt_tol_, "");
-  options_->GetNumericValue("opt_tol_primal_feasibility", opt_tol_primal_feasibility_, "");
-  options_->GetNumericValue("opt_tol_dual_feasibility", opt_tol_dual_feasibility_, "");
-  options_->GetNumericValue("opt_tol_stationarity_feasibility", opt_tol_stationarity_feasibility_, "");
-  options_->GetNumericValue("opt_tol_complementarity", opt_tol_complementarity_, "");
+  options_->GetNumericValue("opt_tol_primal_feasibility",
+                            opt_tol_primal_feasibility_, "");
+  options_->GetNumericValue("opt_tol_dual_feasibility",
+                            opt_tol_dual_feasibility_, "");
+  options_->GetNumericValue("opt_tol_stationarity_feasibility",
+                            opt_tol_stationarity_feasibility_, "");
+  options_->GetNumericValue("opt_tol_complementarity", opt_tol_complementarity_,
+                            "");
 
-      /** QP solver usde for ??? */
+  /** QP solver usde for ??? */
   int enum_int;
   options_->GetEnumValue("qp_solver_choice", enum_int, "");
   qp_solver_choice_ = Solver(enum_int);
 }
 
-void Algorithm::second_order_correction()
+void SqpAlgorithm::second_order_correction()
 {
   // FIXME: check correctness
   if ((!isaccept_) && perform_second_order_correction_step_) {
@@ -1326,7 +1374,7 @@ void Algorithm::second_order_correction()
       myQP_->solveQP(stats_, options_);
     } catch (QP_NOT_OPTIMAL) {
       myQP_->WriteQPData(problem_name_ + "qpdata.log");
-      exitflag_ = myQP_->get_status();
+      exit_flag_ = myQP_->get_status();
       THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
     }
     tmp_sol->copy_vector(myQP_->get_optimal_solution());
@@ -1352,163 +1400,78 @@ void Algorithm::second_order_correction()
 *@return QP obejctive
 */
 
-double Algorithm::get_obj_QP()
+double SqpAlgorithm::get_obj_QP()
 {
   return (myQP_->get_objective());
 }
 
-void Algorithm::print_final_stats()
-{
-  if (print_level_ > 0) {
-    SmartPtr<Journal> stdout_jrnl = jnlst_->GetJournal("console");
-    if (IsNull(stdout_jrnl)) {
-      SmartPtr<Journal> stdout_jrnl =
-          jnlst_->AddFileJournal("console", "stdout", J_ITERSUMMARY);
-    }
-    if (IsValid(stdout_jrnl)) {
-      // Set printlevel for stdout
-      stdout_jrnl->SetAllPrintLevels((EJournalLevel)print_level_);
-      stdout_jrnl->SetPrintLevel(J_DBG, J_NONE);
-    }
-  } else {
-    SmartPtr<Journal> logout_jrnl = jnlst_->GetJournal("file_output");
-    if (IsNull(logout_jrnl)) {
-      string output_file_name = problem_name_ + "_output.log";
-      jnlst_->AddFileJournal("file_output", output_file_name.c_str(),
-                             J_ITERSUMMARY);
-    }
-    if (IsValid(logout_jrnl)) {
-      logout_jrnl->SetPrintLevel(J_STATISTICS, J_NONE);
-    }
-  }
+////////////////////////////////////////////////////////////////////////////
 
-  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
-  switch (exitflag_) {
+void SqpAlgorithm::print_final_stats()
+{
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "======================================"
+                                        "===================================="
+                                        "============================\n");
+
+  // Determine string describing the exit status
+  string exit_status;
+  switch (exit_flag_) {
     case OPTIMAL:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "OPTIMAL");
+      exit_status = "Optimal solution found.";
       break;
     case PRED_REDUCTION_NEGATIVE:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "PRED_REDUCTION_NEGATIVE");
+      exit_status = "Error: Predict reduction is negative.";
       break;
     case INVALID_NLP:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "INVALID_NLP");
+      exit_status = "Error: Invalid NLP.";
       break;
-    case EXCEED_MAX_ITER:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "EXCEED_MAX_ITER");
+    case EXCEED_MAX_ITERATIONS:
+      exit_status = "Maximum number of iterations exceeded.";
       break;
-    case QP_OPTIMAL:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_SOL_IS_NOT_KKT_POINT");
+    case EXCEED_MAX_CPU_TIME:
+      exit_status = "CPU time limit exceeded.";
       break;
-    case QPERROR_INTERNAL_ERROR:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_INTERNAL_ERROR");
-      break;
-    case QPERROR_INFEASIBLE:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_INFEASIBLE");
-      break;
-    case QPERROR_UNBOUNDED:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_UNBOUNDED");
-      break;
-    case QPERROR_EXCEED_MAX_ITER:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_EXCEED_MAX_ITER");
-      break;
-    case QPERROR_NOTINITIALISED:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QP_NOTINITIALISED");
-      break;
-    case AUXINPUT_NOT_OPTIMAL:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "AUXINPUT_NOT_OPTIMAL");
-      break;
-    case CONVERGE_TO_NONOPTIMAL:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "CONVERGE_TO_NONOPTIMAL");
-      break;
-
-    case QPERROR_PREPARINGAUXILIARYQP:
-
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QPERROR_PREPARINGAUXILIARYQP");
-      break;
-    case QPERROR_AUXILIARYQPSOLVED:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QPERROR_AUXILIARYQPSOLVED");
-      break;
-    case QPERROR_PERFORMINGHOMOTOPY:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QPERROR_PERFORMINGHOMOTOPY");
-      break;
-    case QPERROR_HOMOTOPYQPSOLVED:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QPERROR_HOMOTOPYQPSOLVED");
+    case EXCEED_MAX_WALLCLOCK_TIME: // TODO NEXT
+      exit_status = "Wallclock time limit exceeded.";
       break;
     case TRUST_REGION_TOO_SMALL:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "TRUST_REGION_TOO_SMALL");
+      exit_status = "Trust region becomes too small.";
       break;
-
-    case STEP_LARGER_THAN_TRUST_REGION:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "STEP_LARGER_THAN_TRUST_REGION");
+    case QPERROR_INFEASIBLE:
+      exit_status = "Error: QP solver claims that QP is infeasible.";
+      break;
+    case QPERROR_UNBOUNDED:
+      exit_status = "Error: QP solver claims that QP is unbounded.";
+      break;
+    case QPERROR_EXCEED_MAX_ITER:
+      exit_status = "Error: QP solver exceeded internal iteration limit.";
       break;
     case QPERROR_UNKNOWN:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "QPERROR_UNKNOWN");
+      exit_status = "Error: Unknown QP solver error.";
       break;
-    case UNKNOWN:
-      jnlst_->Printf(
-          J_ITERSUMMARY, J_MAIN,
-          "Exitflag:                                                   %23s\n",
-          "UNKNOWN ERROR");
-
+#if 0
+    case QP_OPTIMAL:
+    case QPERROR_NOTINITIALISED:
+    case CONVERGE_TO_NONOPTIMAL:
+    case QPERROR_PREPARINGAUXILIARYQP:
+    case QPERROR_AUXILIARYQPSOLVED:
+    case QPERROR_PERFORMINGHOMOTOPY:
+    case QPERROR_HOMOTOPYQPSOLVED:
+      exit_status = "Should not appear as exit code.";
+      break;
+#endif
+    default:
+      exit_status =
+          "Error: exit_flag has uncaught value " + to_string(exit_flag_) + ".";
       break;
   }
+
+  // Print the exit status
+  jnlst_->Printf(
+      J_ITERSUMMARY, J_MAIN,
+      "Exit status:                                                %23s\n",
+      exit_status.c_str());
+
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "Number of Variables                                         %23i\n",

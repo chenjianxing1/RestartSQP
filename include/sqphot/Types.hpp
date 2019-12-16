@@ -53,10 +53,11 @@ enum Exitflag
   OPTIMAL = 0,
   INVALID_NLP = -1,
   CONVERGE_TO_NONOPTIMAL = 1,
-  EXCEED_MAX_ITER = 2, // exceeds the maximum number of iteration
+  EXCEED_MAX_ITERATIONS = 2, // exceeds the maximum number of iteration
   PRED_REDUCTION_NEGATIVE = 3,
   TRUST_REGION_TOO_SMALL = 4,
-  STEP_LARGER_THAN_TRUST_REGION = 5,
+  EXCEED_MAX_CPU_TIME = 6,
+  EXCEED_MAX_WALLCLOCK_TIME = 7,
   QP_OPTIMAL = 20,
   QPERROR_INTERNAL_ERROR = 21, // QP solver internal error
   QPERROR_INFEASIBLE =
@@ -69,9 +70,7 @@ enum Exitflag
   QPERROR_PERFORMINGHOMOTOPY = 28,
   QPERROR_HOMOTOPYQPSOLVED = 29,
   QPERROR_UNKNOWN = 30,
-  AUXINPUT_NOT_OPTIMAL = 99, // The input point in auxInput is not optimal when
-                             // hotstart is enabled.
-  UNKNOWN = -99              // unknown error
+  UNKNOWN = -99 // unknown error
 };
 
 enum ConstraintType

@@ -4,10 +4,10 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include <sqphot/Algorithm.hpp>
 #include <sqphot/QPhandler.hpp>
-#include <sqphot/Utils.hpp>
+#include <sqphot/SqpAlgorithm.hpp>
 #include <sqphot/SqpTNlp.hpp>
+#include <sqphot/Utils.hpp>
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -53,7 +53,7 @@ public:
    * @brief Write a brief summary for each problem being solved,
    */
   void write_in_brief(const std::string& pname, /**<name of the problem*/
-                      Algorithm& alg)
+                      SqpAlgorithm& alg)
   {
 
     std::size_t found = pname.find_last_of("/\\");
@@ -78,11 +78,16 @@ private:
 
 int main(int argc, char** args)
 {
-  Algorithm alg;
+  // Create the SQP algorithm object
+  SqpAlgorithm alg;
+
+  // Create an Ipopt::AmplTNLP object to handle the AMPL model
   SmartPtr<OptionsList> dummy_options = new OptionsList();
   SmartPtr<TNLP> ampl_tnlp =
       new AmplTNLP(ConstPtr(alg.get_jnlst()), dummy_options, args);
   shared_ptr<SqpTNlp> sqp_nlp = make_shared<SqpTNlp>(ampl_tnlp);
+
+  // Solve the AMPL model
   alg.initialize(sqp_nlp, args[1]);
   alg.Optimize();
 

@@ -41,5 +41,11 @@ bool is_int_array_equal(const int* a, const int* b, int length);
  *  and b of length length are equal. */
 bool is_double_array_equal(const double* a, const double* b, int length);
 
+/** Get CPU clock time since start. */
+double get_cpu_time_since_start();
+
+/** Get wallclock clock time since start. */
+double get_wallclock_time_since_start();
+
 } // namespace SQPhotstart
 #endif
