@@ -23,10 +23,17 @@ class SqpTNlp : public SqpNlpBase
 
 public:
   /** @brief Constructor that an instance of Ipopt's TNLP */
-  SqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp);
+  SqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp,
+          std::string nlp_name = "AMPL NLP");
 
-  /** Default destructor*/
+  /** Destructor*/
   ~SqpTNlp();
+
+  /** Get problem name. */
+  const std::string& get_nlp_name() const override
+  {
+    return nlp_name_;
+  }
 
   /**
    *@brief Get problem size information
@@ -108,6 +115,9 @@ private:
 
   /** Ipopt's TNLP object that will be called for all evaluations. */
   Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp_;
+
+  /** Name of the NLP. */
+  const std::string nlp_name_;
 
   /** Problem dimensioms. */
   //@{

@@ -19,6 +19,7 @@ extern "C" {
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 
 namespace SQPhotstart {
+
 class QOREInterface : public QPSolverInterface
 {
 
@@ -32,9 +33,9 @@ public:
                 Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
-  QOREInterface(std::shared_ptr<SpHbMat> H, std::shared_ptr<SpHbMat> A,
-                std::shared_ptr<Vector> g, std::shared_ptr<Vector> lb,
-                std::shared_ptr<Vector> ub,
+  QOREInterface(std::shared_ptr<SparseHbMatrix> H,
+                std::shared_ptr<SparseHbMatrix> A, std::shared_ptr<Vector> g,
+                std::shared_ptr<Vector> lb, std::shared_ptr<Vector> ub,
                 Ipopt::SmartPtr<const Ipopt::OptionsList> options = nullptr);
 
   /** Default destructor*/
@@ -44,15 +45,18 @@ public:
    * @brief Solve a regular QP with given data and options.
    */
 
-  void optimizeQP(std::shared_ptr<Stats> stats = nullptr) override;
+  QpSolverExitStatus
+  optimize_qp(std::shared_ptr<Statistics> stats = nullptr) override;
 
   /**
    * @brief Solve a regular LP with given data and options
    */
 
-  void optimizeLP(std::shared_ptr<Stats> stats = nullptr) override;
+  QpSolverExitStatus
+  optimize_lp(std::shared_ptr<Statistics> stats = nullptr) override;
 
-  bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) override;
+  bool test_optimality(ActivityStatus* W_c = NULL,
+                       ActivityStatus* W_b = NULL) override;
 
   /**@name Getters */
   //@{
@@ -69,7 +73,7 @@ public:
    * @param x_optimal a pointer to an empty array with allocated memory euqal to
    * sizeof(double)*number_variables
    */
-  std::shared_ptr<const Vector> get_optimal_solution() const override;
+  std::shared_ptr<const Vector> get_primal_solution() const override;
 
   /**
    * @brief get the pointer to the multipliers to the bounds constraints.
@@ -82,7 +86,8 @@ public:
 
   Exitflag get_status() override;
 
-  void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+  void get_working_set(ActivityStatus* W_constr,
+                       ActivityStatus* W_bounds) override;
 
   OptimalityStatus get_optimality_status() override
   {
@@ -118,19 +123,19 @@ public:
     THROW_EXCEPTION(INVALID_RETURN_TYPE, INVALID_RETURN_TYPE_MSG);
   }
 
-  std::shared_ptr<const SpHbMat> getH() const override
+  std::shared_ptr<const SparseHbMatrix> getH() const override
   {
     return H_;
   };
 
-  std::shared_ptr<const SpHbMat> getA() const override
+  std::shared_ptr<const SparseHbMatrix> getA() const override
   {
     return A_;
   };
   //@}
   /** @name Setters */
   //@{
-  void set_g(int location, double value) override
+  void set_gradient(int location, double value) override
   {
     value = value < INF ? value : INF;
     g_->set_value(location, value);
@@ -148,10 +153,11 @@ public:
     ub_->set_value(location, value);
   };
 
-  void set_A(std::shared_ptr<const SpTripletMat> rhs,
-             IdentityInfo I_info) override;
+  void
+  set_jacobian(std::shared_ptr<const SpTripletMat> rhs,
+               IdentityMatrixPositions& identity_matrix_positions) override;
 
-  void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
+  void set_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
 
   //@}
   void WriteQPDataToFile(Ipopt::EJournalLevel level,
@@ -159,7 +165,7 @@ public:
                          const std::string filename) override;
 
   //@{
-  void set_g(std::shared_ptr<const Vector> rhs) override
+  void set_gradient(std::shared_ptr<const Vector> rhs) override
   {
     g_->copy_vector(rhs);
   };
@@ -209,7 +215,7 @@ private:
   /**
    * @brief Handle errors based on current status
    */
-  void handle_error(QPType qptype, std::shared_ptr<Stats> stats = nullptr);
+  void handle_error(QPType qptype, std::shared_ptr<Statistics> stats = nullptr);
   /**
    * @brief Allocate memory for the class members
    * @param nlp_index_info  the struct that stores simple nlp dimension info
@@ -229,8 +235,8 @@ private:
   int nVar_QP_;
   bool matrix_change_flag_ = false;
   OptimalityStatus qpOptimalStatus_;
-  std::shared_ptr<SpHbMat> A_;
-  std::shared_ptr<SpHbMat> H_;
+  std::shared_ptr<SparseHbMatrix> A_;
+  std::shared_ptr<SparseHbMatrix> H_;
   std::shared_ptr<Vector> g_;
   std::shared_ptr<Vector> lb_;
   std::shared_ptr<Vector> ub_;

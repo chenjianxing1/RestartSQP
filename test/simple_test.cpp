@@ -58,13 +58,13 @@ public:
 
     std::size_t found = pname.find_last_of("/\\");
     OptimalityStatus opt_status = alg.get_opt_status();
-    shared_ptr<Stats> stats;
+    shared_ptr<Statistics> stats;
     stats = alg.get_stats();
 
     fprintf(file, "%10s   %10d    %10d    %10d    %10d    %10d    ",
             pname.substr(found + 1).c_str(), alg.get_num_var(),
-            alg.get_num_constr(), stats->iter, stats->qp_iter,
-            alg.get_exit_flag());
+            alg.get_num_constr(), stats->num_sqp_iterations_,
+            stats->num_qp_iterations_, alg.get_exit_flag());
     fprintf(file,
             "%23.16e    %23.16e    %23.16e    %23.16e    %23.16e    %23.16e\n",
             alg.get_final_objective(), alg.get_norm_p(),
@@ -85,11 +85,11 @@ int main(int argc, char** args)
   SmartPtr<OptionsList> dummy_options = new OptionsList();
   SmartPtr<TNLP> ampl_tnlp =
       new AmplTNLP(ConstPtr(alg.get_jnlst()), dummy_options, args);
-  shared_ptr<SqpTNlp> sqp_nlp = make_shared<SqpTNlp>(ampl_tnlp);
+  shared_ptr<SqpTNlp> sqp_nlp = make_shared<SqpTNlp>(ampl_tnlp, args[1]);
 
   // Solve the AMPL model
-  alg.initialize(sqp_nlp, args[1]);
-  alg.Optimize();
+  // alg.initialize(sqp_nlp, args[1]);
+  alg.optimize_nlp(sqp_nlp);
 
   shared_ptr<Table_Writer> writer = make_shared<Table_Writer>("result_table");
   writer->write_in_brief(args[1], alg);

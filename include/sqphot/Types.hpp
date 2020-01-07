@@ -33,15 +33,6 @@ enum PrintLevel
 //    QP_UNKNOWN_ERROR = 99
 //};
 
-typedef struct
-{
-  int length;
-  int* irow;
-  int* jcol;
-  int* size;
-  double* value;
-} IdentityInfo;
-
 enum QPType
 {
   LP = 1, /** solving a linear program*/
@@ -75,22 +66,22 @@ enum Exitflag
 
 enum ConstraintType
 {
-  BOUNDED = 5,
-  EQUAL = -5,
+  BOUNDED_BELOW_AND_ABOVE = 5,
+  IS_EQUALITY = -5,
   BOUNDED_ABOVE = 9,
   BOUNDED_BELOW = 1,
   UNBOUNDED = 0
 };
 
-enum ActiveType
+enum ActivityStatus
 {
   ACTIVE_ABOVE = 1,
   ACTIVE_BELOW = -1,
-  ACTIVE_BOTH_SIDE = -99,
+  ACTIVE_BOTH_SIDES = -99,
   INACTIVE = 0
 };
 
-enum Solver
+enum QpSolver
 {
   QPOASES,
   QORE,

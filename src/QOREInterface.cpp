@@ -52,9 +52,9 @@ void QOREInterface::get_option_values_(
                            lp_solver_max_num_iterations_, "");
 }
 
-QOREInterface::QOREInterface(shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A,
-                             shared_ptr<Vector> g, shared_ptr<Vector> lb,
-                             shared_ptr<Vector> ub,
+QOREInterface::QOREInterface(shared_ptr<SparseHbMatrix> H,
+                             shared_ptr<SparseHbMatrix> A, shared_ptr<Vector> g,
+                             shared_ptr<Vector> lb, shared_ptr<Vector> ub,
                              Ipopt::SmartPtr<const Ipopt::OptionsList> options)
  : A_(A)
  , H_(H)
@@ -92,8 +92,9 @@ QOREInterface::~QOREInterface()
  * @brief Solve a regular QP with given data and options.
  */
 
-void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
+QpSolverExitStatus QOREInterface::optimize_qp(shared_ptr<Statistics> stats)
 {
+  QpSolverExitStatus qp_exit_status = QPEXIT_NOT_SOLVED;
 
   //@{ For debug
   //        printf("QP_var is %d, QP_con is %d\n\n",nVar_QP_,nConstr_QP_);
@@ -121,16 +122,17 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
                    g_->get_values(), 0, 0); //
 
   if (rv_ != QPSOLVER_OK) {
+    assert("QORE rv is not QPSOLVER_OK" && false);
     QPGetInt(solver_, "status", &status_);
     if (status_ != QPSOLVER_OPTIMAL) {
-      THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
+      assert(status_ == QPSOLVER_OPTIMAL);
     }
   }
   rv_ = QPGetInt(solver_, "status", &status_);
   assert(rv_ == QPSOLVER_OK);
   handle_error(QP, stats);
   if (status_ != QPSOLVER_OPTIMAL) {
-    THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
+    assert(status_ == QPSOLVER_OPTIMAL);
   }
   /**-------------------------------------------------------**/
   /**               Get Primal and Dual Solution            **/
@@ -145,17 +147,22 @@ void QOREInterface::optimizeQP(shared_ptr<Stats> stats)
   /**-------------------------------------------------------**/
   QPGetInt(solver_, "itercount", qpiter_);
   if (stats != nullptr)
-    stats->qp_iter_addValue(qpiter_[0]);
+    stats->increase_qp_iteration_counter(qpiter_[0]);
 
   if (!firstQPsolved_)
     firstQPsolved_ = true;
+
+  qp_exit_status = QPEXIT_OPTIMAL;
+
+  return qp_exit_status;
 }
 
 /**
  * @brief Solve a regular LP with given data and options
  */
-void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
+QpSolverExitStatus QOREInterface::optimize_lp(shared_ptr<Statistics> stats)
 {
+  QpSolverExitStatus qp_exit_status = QPEXIT_NOT_SOLVED;
   /**-------------------------------------------------------**/
   /**                   Set Data and Optimize LP            **/
   /**-------------------------------------------------------**/
@@ -177,8 +184,10 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
   rv_ = QPGetInt(solver_, "status", &status_);
   assert(rv_ == QPSOLVER_OK);
   handle_error(LP, stats);
-  if (status_ != QPSOLVER_OPTIMAL)
-    THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
+  if (status_ != QPSOLVER_OPTIMAL) {
+    printf("in QOREInterface::optimize_lp status = %d\n", status_);
+    assert(status_ == QPSOLVER_OPTIMAL);
+  }
 
   /**-------------------------------------------------------**/
   /**               Get Primal and Dual Solution            **/
@@ -191,10 +200,14 @@ void QOREInterface::optimizeLP(shared_ptr<Stats> stats)
   /**                     Update Stats                      **/
   /**-------------------------------------------------------**/
   QPGetInt(solver_, "itercount", qpiter_);
-  stats->qp_iter_addValue(qpiter_[0]);
+  stats->increase_qp_iteration_counter(qpiter_[0]);
 
   if (!firstQPsolved_)
     firstQPsolved_ = true;
+
+  qp_exit_status = QPEXIT_OPTIMAL;
+
+  return qp_exit_status;
 }
 
 /**
@@ -223,14 +236,14 @@ void QOREInterface::allocate_memory(
   lb_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
   ub_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
   g_ = make_shared<Vector>(nVar_QP_);
-  A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_, true);
+  A_ = make_shared<SparseHbMatrix>(nnz_g_QP, nConstr_QP_, nVar_QP_, true);
   x_qp_ = make_shared<Vector>(nVar_QP_ + nConstr_QP_);
   y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
   working_set_ = new int[nConstr_QP_ + nVar_QP_];
   if (qptype != LP) {
     rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP,
                 nlp_sizes->get_num_nonzeros_hessian());
-    H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, true);
+    H_ = make_shared<SparseHbMatrix>(nVar_QP_, nVar_QP_, true);
   } else {
     // if we are solving an LP, the number of nonzero in the Hessian is 0
     rv_ = QPNew(&solver_, nVar_QP_, nConstr_QP_, nnz_g_QP, 0);
@@ -239,7 +252,7 @@ void QOREInterface::allocate_memory(
   assert(rv_ == QPSOLVER_OK);
 }
 
-bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
+bool QOREInterface::test_optimality(ActivityStatus* W_c, ActivityStatus* W_b)
 {
   int i;
   // create local variables and set all violation values to be 0
@@ -252,8 +265,8 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
 
   if (W_c == NULL && W_b == NULL) {
-    W_c = new ActiveType[nConstr_QP_];
-    W_b = new ActiveType[nVar_QP_];
+    W_c = new ActivityStatus[nConstr_QP_];
+    W_b = new ActivityStatus[nVar_QP_];
   }
 
   get_working_set(W_c, W_b);
@@ -287,14 +300,11 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
         //            printf("1\n");
         dual_violation += max(0.0, y_qp_->get_value(i));
         break;
-      case ACTIVE_BOTH_SIDE:
+      case ACTIVE_BOTH_SIDES:
         //           printf("99\n");
         break;
       default:
-        printf("failed in dual fea test, the working set  for qore at the "
-               "bounds is %i",
-               W_b[i]);
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
 
@@ -318,14 +328,11 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
           dual_violation += max(0.0, y_qp_->get_value(i + nVar_QP_));
           //                printf("1\n");
           break;
-        case ACTIVE_BOTH_SIDE:
+        case ACTIVE_BOTH_SIDES:
           //       printf("99\n");
           break;
         default:
-          printf("failed in dual fea test, the working set  for qore at the "
-                 "constr is %i",
-                 W_c[i]);
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     }
   }
@@ -360,13 +367,10 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
         compl_violation += abs(y_qp_->get_value(i) *
                                (ub_->get_value(i) - x_qp_->get_value(i)));
         break;
-      case ACTIVE_BOTH_SIDE:
+      case ACTIVE_BOTH_SIDES:
         break;
       default:
-        printf("failed in compl test, the working set  for qore at "
-               "the bounds is %i",
-               W_b[i]);
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
   if (A_ != nullptr) {
@@ -387,13 +391,10 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
               y_qp_->get_value(i + nVar_QP_) *
               (ub_->get_value(i + nVar_QP_) - x_qp_->get_value(i + nVar_QP_)));
           break;
-        case ACTIVE_BOTH_SIDE:
+        case ACTIVE_BOTH_SIDES:
           break;
         default:
-          printf("failed in compl test, the working set  for qpOASES at "
-                 "the constr is %i",
-                 W_c[i]);
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     }
   }
@@ -433,7 +434,7 @@ bool QOREInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   return true;
 }
 
-shared_ptr<const Vector> QOREInterface::get_optimal_solution() const
+shared_ptr<const Vector> QOREInterface::get_primal_solution() const
 {
   shared_ptr<const Vector> retval = make_shared<Vector>(*x_qp_);
   return retval;
@@ -493,7 +494,8 @@ Exitflag QOREInterface::get_status()
   }
 }
 
-void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
+void QOREInterface::get_working_set(ActivityStatus* W_constr,
+                                    ActivityStatus* W_bounds)
 {
   QPGetIntVector(solver_, "workingset", working_set_);
   for (int i = 0; i < nConstr_QP_ + nVar_QP_; i++) {
@@ -501,13 +503,13 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
       switch (working_set_[i]) {
         case -1:
           if (fabs(x_qp_->get_value(i) - lb_->get_value(i)) < sqrt_m_eps)
-            W_bounds[i] = ACTIVE_BOTH_SIDE;
+            W_bounds[i] = ACTIVE_BOTH_SIDES;
           else
             W_bounds[i] = ACTIVE_ABOVE;
           break;
         case 1:
           if (fabs(x_qp_->get_value(i) - ub_->get_value(i)) < sqrt_m_eps)
-            W_bounds[i] = ACTIVE_BOTH_SIDE;
+            W_bounds[i] = ACTIVE_BOTH_SIDES;
           else
             W_bounds[i] = ACTIVE_BELOW;
           break;
@@ -515,20 +517,19 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
           W_bounds[i] = INACTIVE;
           break;
         default:
-          printf("invalud workingset for qore1;");
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     } else {
       switch (working_set_[i]) {
         case -1:
           if (fabs(x_qp_->get_value(i) - lb_->get_value(i) < sqrt_m_eps))
-            W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDE;
+            W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDES;
           else
             W_constr[i - nVar_QP_] = ACTIVE_ABOVE;
           break;
         case 1:
           if (fabs(x_qp_->get_value(i) - ub_->get_value(i) < sqrt_m_eps))
-            W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDE;
+            W_constr[i - nVar_QP_] = ACTIVE_BOTH_SIDES;
           else
             W_constr[i - nVar_QP_] = ACTIVE_BELOW;
           break;
@@ -536,9 +537,7 @@ void QOREInterface::get_working_set(ActiveType* W_constr, ActiveType* W_bounds)
           W_constr[i - nVar_QP_] = INACTIVE;
           break;
         default:
-          printf("invalud workingset for qore2, the working set is %i;",
-                 W_constr[i]);
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     }
   }
@@ -645,8 +644,8 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 
   jnlst_->Printf(level, category, "%d\n", nVar_QP_);
   jnlst_->Printf(level, category, "%d\n", nConstr_QP_);
-  jnlst_->Printf(level, category, "%d\n", A_->EntryNum());
-  jnlst_->Printf(level, category, "%d\n", H_->EntryNum());
+  jnlst_->Printf(level, category, "%d\n", A_->get_num_entries());
+  jnlst_->Printf(level, category, "%d\n", H_->get_num_entries());
   lb_->write_to_file("lb", jnlst_, level, category, QORE);
   ub_->write_to_file("ub", jnlst_, level, category, QORE);
   g_->write_to_file("g", jnlst_, level, category, QORE);
@@ -660,13 +659,14 @@ void QOREInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
 #endif
 }
 
-void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
+void QOREInterface::handle_error(QPType qptype, shared_ptr<Statistics> stats)
 {
   switch (status_) {
     case QPSOLVER_OPTIMAL:
       // do nothing here
       break;
     case QPSOLVER_INFEASIBLE:
+      assert(false && "We don't handle QP solver yet");
       shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
       // setup the slack variables to satisfy the bound constraints
       for (int i = 0; i < nConstr_QP_; i++) {
@@ -680,7 +680,7 @@ void QOREInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
                        g_->get_values(), x_0->get_values(), NULL); //
       QPGetInt(solver_, "itercount", qpiter_);
       if (stats != nullptr)
-        stats->qp_iter_addValue(qpiter_[0]);
+        stats->increase_qp_iteration_counter(qpiter_[0]);
 
       assert(rv_ == QPSOLVER_OK);
       break;
@@ -697,24 +697,25 @@ void QOREInterface::set_qp_solver_options_()
   QPSetInt(solver_, "maxiter", qp_solver_max_num_iterations_);
 }
 
-void QOREInterface::set_A(shared_ptr<const SpTripletMat> rhs,
-                          IdentityInfo I_info)
+void QOREInterface::set_jacobian(
+    shared_ptr<const SpTripletMat> rhs,
+    IdentityMatrixPositions& identity_matrix_positions)
 {
   if (!A_->is_initialized())
-    A_->setStructure(rhs, I_info);
+    A_->set_structure(rhs, identity_matrix_positions);
   else {
     matrix_change_flag_ = true;
-    A_->setMatVal(rhs, I_info);
+    A_->set_values(rhs);
   }
 }
 
-void QOREInterface::set_H(shared_ptr<const SpTripletMat> rhs)
+void QOREInterface::set_hessian(shared_ptr<const SpTripletMat> rhs)
 {
   if (!H_->is_initialized())
-    H_->setStructure(rhs);
+    H_->set_structure(rhs);
   else {
     matrix_change_flag_ = true;
-    H_->setMatVal(rhs);
+    H_->set_values(rhs);
   }
 }
 } // SQP_HOTSTART

@@ -8,6 +8,7 @@
 #include "sqphot/MessageHandling.hpp"
 
 using namespace std;
+using namespace Ipopt;
 
 namespace SQPhotstart {
 
@@ -36,28 +37,31 @@ namespace SQPhotstart {
  */
 qpOASESInterface::qpOASESInterface(
     std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
-    Ipopt::SmartPtr<const Ipopt::OptionsList> options,
-    Ipopt::SmartPtr<Ipopt::Journalist> jnlst)
+    SmartPtr<const OptionsList> options, SmartPtr<Journalist> jnlst)
  : jnlst_(jnlst)
+ , first_qp_solved_(false)
+ , qp_matrices_changed_(true)
 {
   // Get the option values for this object
   get_option_values_(options);
 
+  num_nlp_variables_ = nlp_sizes->get_num_variables();
+  num_nlp_constraints_ = nlp_sizes->get_num_constraints();
+
 #ifdef NEW_FORMULATION
-  nConstr_QP_ =
+  num_qp_constraints_ =
       nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
-  nVar_QP_ =
+  num_qp_variables_ =
       nlp_sizes->get_num_variables() * 3 + 2 * nlp_sizes->get_num_constraints();
 #else
-  nConstr_QP_ = nlp_sizes->get_num_constraints();
-  nVar_QP_ =
+  num_qp_constraints_ = nlp_sizes->get_num_constraints();
+  num_qp_variables_ =
       nlp_sizes->get_num_variables() + 2 * nlp_sizes->get_num_constraints();
 #endif
   allocate_memory(nlp_sizes, qptype);
 }
 
-void qpOASESInterface::get_option_values_(
-    Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+void qpOASESInterface::get_option_values_(SmartPtr<const OptionsList> options)
 {
   // Get the options from the options list
   options->GetIntegerValue("qp_solver_max_num_iterations",
@@ -67,12 +71,16 @@ void qpOASESInterface::get_option_values_(
                            lp_solver_max_num_iterations_, "");
 }
 
-qpOASESInterface::qpOASESInterface(
-    shared_ptr<SpHbMat> H, shared_ptr<SpHbMat> A, shared_ptr<Vector> g,
-    shared_ptr<Vector> lb, shared_ptr<Vector> ub, shared_ptr<Vector> lbA,
-    shared_ptr<Vector> ubA, Ipopt::SmartPtr<const Ipopt::OptionsList> options)
- : nVar_QP_(A->get_num_columns())
- , nConstr_QP_(A->get_num_rows())
+qpOASESInterface::qpOASESInterface(shared_ptr<SparseHbMatrix> H,
+                                   shared_ptr<SparseHbMatrix> A,
+                                   shared_ptr<Vector> g, shared_ptr<Vector> lb,
+                                   shared_ptr<Vector> ub,
+                                   shared_ptr<Vector> lbA,
+                                   shared_ptr<Vector> ubA,
+                                   SmartPtr<const OptionsList> options)
+ : num_qp_variables_(A->get_num_columns())
+ , num_qp_constraints_(A->get_num_rows())
+ , first_qp_solved_(false)
  , H_(H)
  , A_(A)
  , g_(g)
@@ -81,14 +89,16 @@ qpOASESInterface::qpOASESInterface(
  , lbA_(lbA)
  , ubA_(ubA)
 {
+  A_->print("bla");
   // Get the option values for this object
   get_option_values_(options);
 
-  x_qp_ = make_shared<Vector>(nVar_QP_);
-  y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
-  solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t)nVar_QP_,
-                                                 (qpOASES::int_t)nConstr_QP_);
-  // AW: The following is very design in qpOASES: the constructor does not copy
+  x_qp_ = make_shared<Vector>(num_qp_variables_);
+  y_qp_ = make_shared<Vector>(num_qp_constraints_ + num_qp_variables_);
+  qpoases_solver_ = std::make_shared<qpOASES::SQProblem>(
+      (qpOASES::int_t)num_qp_variables_, (qpOASES::int_t)num_qp_constraints_);
+  // AW: The following is very bad design in qpOASES: the constructor does not
+  // copy
   // the values, but the only time the values
   // are actually changed is if the setVal method is called in
   // qpOASES::SparseMatrix.  It should be const.
@@ -96,20 +106,22 @@ qpOASESInterface::qpOASESInterface(
   int* H_const_col_indices = const_cast<int*>(H_->get_column_indices());
   double* H_const_values = const_cast<double*>(H_->get_values());
   H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-      nVar_QP_, nVar_QP_, H_const_row_indices, H_const_col_indices,
-      H_const_values);
+      num_qp_variables_, num_qp_variables_, H_const_row_indices,
+      H_const_col_indices, H_const_values);
   H_qpOASES_->createDiagInfo();
 
   int* A_const_row_indices = const_cast<int*>(A_->get_row_indices());
   int* A_const_col_indices = const_cast<int*>(A_->get_column_indices());
   double* A_const_values = const_cast<double*>(A_->get_values());
   A_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-      nConstr_QP_, nVar_QP_, A_const_row_indices, A_const_col_indices,
-      A_const_values);
+      num_qp_constraints_, num_qp_variables_, A_const_row_indices,
+      A_const_col_indices, A_const_values);
 }
 
 /**Default destructor*/
-qpOASESInterface::~qpOASESInterface() = default;
+qpOASESInterface::~qpOASESInterface()
+{
+}
 
 /**
  * @brief Allocate memory for the class members
@@ -129,21 +141,38 @@ void qpOASESInterface::allocate_memory(
   int nnz_g_QP = nlp_sizes->get_num_nonzeros_jacobian() +
                  2 * nlp_sizes->get_num_constraints();
 #endif
-  lbA_ = make_shared<Vector>(nConstr_QP_);
-  ubA_ = make_shared<Vector>(nConstr_QP_);
-  lb_ = make_shared<Vector>(nVar_QP_);
-  ub_ = make_shared<Vector>(nVar_QP_);
-  g_ = make_shared<Vector>(nVar_QP_);
-  A_ = make_shared<SpHbMat>(nnz_g_QP, nConstr_QP_, nVar_QP_, false);
-  x_qp_ = make_shared<Vector>(nVar_QP_);
-  y_qp_ = make_shared<Vector>(nConstr_QP_ + nVar_QP_);
+  lbA_ = make_shared<Vector>(num_qp_constraints_);
+  ubA_ = make_shared<Vector>(num_qp_constraints_);
+  lb_ = make_shared<Vector>(num_qp_variables_);
+  ub_ = make_shared<Vector>(num_qp_variables_);
+  g_ = make_shared<Vector>(num_qp_variables_);
+  A_ = make_shared<SparseHbMatrix>(nnz_g_QP, num_qp_constraints_,
+                                   num_qp_variables_, false);
+  x_qp_ = make_shared<Vector>(num_qp_variables_);
+  y_qp_ = make_shared<Vector>(num_qp_constraints_ + num_qp_variables_);
 
   if (qptype != LP) {
-    H_ = make_shared<SpHbMat>(nVar_QP_, nVar_QP_, false);
+    H_ = make_shared<SparseHbMatrix>(num_qp_variables_, num_qp_variables_,
+                                     false);
   }
 
-  solver_ = std::make_shared<qpOASES::SQProblem>((qpOASES::int_t)nVar_QP_,
-                                                 (qpOASES::int_t)nConstr_QP_);
+  qpoases_solver_ = std::make_shared<qpOASES::SQProblem>(
+      (qpOASES::int_t)num_qp_variables_, (qpOASES::int_t)num_qp_constraints_);
+}
+
+QpSolverExitStatus qpOASESInterface::get_qpoases_exit_status_(
+    shared_ptr<qpOASES::SQProblem> qpoases_solver)
+{
+  QpSolverExitStatus retval = QPEXIT_UNKNOWN_STATUS;
+  if (qpoases_solver->isSolved()) {
+    retval = QPEXIT_OPTIMAL;
+  } else if (qpoases_solver->isInfeasible()) {
+    retval = QPEXIT_INFEASIBLE;
+  } else if (qpoases_solver->isUnbounded()) {
+    retval = QPEXIT_UNBOUNDED;
+  }
+
+  return retval;
 }
 
 /**
@@ -152,34 +181,41 @@ void qpOASESInterface::allocate_memory(
  * After the QP being solved, it updates the stats, adding the iteration
  * number used to solve the QP to the qp_iter in object stats
  */
-void qpOASESInterface::optimizeQP(shared_ptr<Stats> stats)
+QpSolverExitStatus qpOASESInterface::optimize_qp(shared_ptr<Statistics> stats)
 {
+  QpSolverExitStatus retval = QPEXIT_NOT_SOLVED;
+
   qpOASES::int_t nWSR = qp_solver_max_num_iterations_; // TODO modify it
 
-  if (!firstQPsolved_) { // if haven't solve any QP before then initialize the
-                         // first QP
+  if (!first_qp_solved_) { // if haven't solve any QP before then initialize the
+                           // first QP
     set_qp_solver_options_();
 
+#if 0
     //@{
     // for debugging
-    //        H_qpOASES_->print("H_qp_oases");
-    //        A_qpOASES_->print("A_qpoases");
-    //        g_->print("g");
-    //        lbA_->print("LbA");
-    //        ubA_->print("ubA");
-    //        lb_->print("lb");
-    //        ub_->print("ub");
+            H_qpOASES_->print("H_qp_oases");
+            A_qpOASES_->print("A_qpoases");
+            g_->print("g");
+            lbA_->print("LbA");
+            ubA_->print("ubA");
+            lb_->print("lb");
+            ub_->print("ub");
     //@}
+#endif
 
-    solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                  lb_->get_values(), ub_->get_values(), lbA_->get_values(),
-                  ubA_->get_values(), nWSR);
+    qpoases_solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
+                          lb_->get_values(), ub_->get_values(),
+                          lbA_->get_values(), ubA_->get_values(), nWSR);
 
-    if (solver_->isSolved()) {
-      firstQPsolved_ = true;
-    } else {
-      handle_error(QP, stats);
+    retval = get_qpoases_exit_status_(qpoases_solver_);
+
+    if (retval == QPEXIT_OPTIMAL) {
+      first_qp_solved_ = true;
     }
+
+    // For now, don't try to fix any QP solver error
+    // handle_error(QP, stats);
   } else {
     // for debugging
     //@{
@@ -195,106 +231,136 @@ void qpOASESInterface::optimizeQP(shared_ptr<Stats> stats)
     if (new_QP_matrix_status_ == UNDEFINED) {
       assert(old_QP_matrix_status_ != UNDEFINED);
       if (old_QP_matrix_status_ == FIXED)
-        solver_->hotstart(g_->get_values(), lb_->get_values(),
-                          ub_->get_values(), lbA_->get_values(),
-                          ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(g_->get_values(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       else {
-        solver_->hotstart(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                          lb_->get_values(), ub_->get_values(),
-                          lbA_->get_values(), ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(H_qpOASES_.get(), g_->get_values(),
+                                  A_qpOASES_.get(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       }
     } else {
       if (new_QP_matrix_status_ == FIXED && old_QP_matrix_status_ == FIXED) {
-        solver_->hotstart(g_->get_values(), lb_->get_values(),
-                          ub_->get_values(), lbA_->get_values(),
-                          ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(g_->get_values(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       } else if (new_QP_matrix_status_ == VARIED &&
                  old_QP_matrix_status_ == VARIED) {
-        solver_->hotstart(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                          lb_->get_values(), ub_->get_values(),
-                          lbA_->get_values(), ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(H_qpOASES_.get(), g_->get_values(),
+                                  A_qpOASES_.get(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       } else if (new_QP_matrix_status_ != old_QP_matrix_status_) {
         qpOASES::Bounds tmp_bounds;
-        solver_->getBounds(tmp_bounds);
-        solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                      lb_->get_values(), ub_->get_values(), lbA_->get_values(),
-                      ubA_->get_values(), nWSR, 0, x_qp_->get_values(),
-                      y_qp_->get_values(), &tmp_bounds);
+        qpoases_solver_->getBounds(tmp_bounds);
+        qpoases_solver_->init(H_qpOASES_.get(), g_->get_values(),
+                              A_qpOASES_.get(), lb_->get_values(),
+                              ub_->get_values(), lbA_->get_values(),
+                              ubA_->get_values(), nWSR, 0, x_qp_->get_values(),
+                              y_qp_->get_values(), &tmp_bounds);
         new_QP_matrix_status_ = old_QP_matrix_status_ = UNDEFINED;
       }
     }
+    retval = get_qpoases_exit_status_(qpoases_solver_);
   }
 
-  reset_flags();
+  if (retval != QPEXIT_OPTIMAL) {
+    return retval;
+  }
+
+  // reset the flag that remembers whether QP matrices have changed
+  qp_matrices_changed_ = false;
 
   if (stats != nullptr)
-    stats->qp_iter_addValue((int)nWSR);
+    stats->increase_qp_iteration_counter((int)nWSR);
 
-  if (!solver_->isSolved()) {
+  // For now not trying to fix things if qpOASES fails
+  if (!qpoases_solver_->isSolved()) {
+    assert(false && "Not trying to fix qpOASES solution yet");
     handle_error(QP, stats);
   }
-  solver_->getPrimalSolution(x_qp_->get_values());
-  solver_->getDualSolution(y_qp_->get_values());
+
+  // Retrieve the primal and dual solution from qpOASES
+  qpoases_solver_->getPrimalSolution(x_qp_->get_non_const_values());
+  qpoases_solver_->getDualSolution(y_qp_->get_non_const_values());
+
+  return retval;
 }
 
-void qpOASESInterface::optimizeLP(shared_ptr<Stats> stats)
+QpSolverExitStatus qpOASESInterface::optimize_lp(shared_ptr<Statistics> stats)
 {
+  QpSolverExitStatus retval = QPEXIT_NOT_SOLVED;
+
   qpOASES::int_t nWSR = lp_solver_max_num_iterations_; // TODO modify it
-  if (!firstQPsolved_) {
+
+  // If this is the first solve, we need to call a different method
+  if (!first_qp_solved_) {
     set_qp_solver_options_();
-    solver_->init(0, g_->get_values(), A_qpOASES_.get(), lb_->get_values(),
-                  ub_->get_values(), lbA_->get_values(), ubA_->get_values(),
-                  nWSR);
-    if (solver_->isSolved()) {
-      firstQPsolved_ = true;
+    qpoases_solver_->init(0, g_->get_values(), A_qpOASES_.get(),
+                          lb_->get_values(), ub_->get_values(),
+                          lbA_->get_values(), ubA_->get_values(), nWSR);
+    retval = get_qpoases_exit_status_(qpoases_solver_);
+
+    if (retval == QPEXIT_OPTIMAL) {
+      first_qp_solved_ = true;
     } else {
+      assert("Not trying to fix qpOASES solutions yet" && false);
       handle_error(LP, stats);
     }
   } else {
     get_Matrix_change_status();
     if (new_QP_matrix_status_ == UNDEFINED) {
       if (old_QP_matrix_status_ == FIXED)
-        solver_->hotstart(g_->get_values(), lb_->get_values(),
-                          ub_->get_values(), lbA_->get_values(),
-                          ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(g_->get_values(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       else {
-        solver_->hotstart(0, g_->get_values(), A_qpOASES_.get(),
-                          lb_->get_values(), ub_->get_values(),
-                          lbA_->get_values(), ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(0, g_->get_values(), A_qpOASES_.get(),
+                                  lb_->get_values(), ub_->get_values(),
+                                  lbA_->get_values(), ubA_->get_values(), nWSR);
       }
     }
 
     else {
       if (new_QP_matrix_status_ == FIXED && old_QP_matrix_status_ == FIXED) {
-        solver_->hotstart(g_->get_values(), lb_->get_values(),
-                          ub_->get_values(), lbA_->get_values(),
-                          ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(g_->get_values(), lb_->get_values(),
+                                  ub_->get_values(), lbA_->get_values(),
+                                  ubA_->get_values(), nWSR);
       } else if (new_QP_matrix_status_ == VARIED &&
                  old_QP_matrix_status_ == VARIED) {
-        solver_->hotstart(0, g_->get_values(), A_qpOASES_.get(),
-                          lb_->get_values(), ub_->get_values(),
-                          lbA_->get_values(), ubA_->get_values(), nWSR);
+        qpoases_solver_->hotstart(0, g_->get_values(), A_qpOASES_.get(),
+                                  lb_->get_values(), ub_->get_values(),
+                                  lbA_->get_values(), ubA_->get_values(), nWSR);
       } else if (new_QP_matrix_status_ != old_QP_matrix_status_) {
-        solver_->init(0, g_->get_values(), A_qpOASES_.get(), lb_->get_values(),
-                      ub_->get_values(), lbA_->get_values(), ubA_->get_values(),
-                      nWSR);
+        qpoases_solver_->init(0, g_->get_values(), A_qpOASES_.get(),
+                              lb_->get_values(), ub_->get_values(),
+                              lbA_->get_values(), ubA_->get_values(), nWSR);
         new_QP_matrix_status_ = old_QP_matrix_status_ = UNDEFINED;
       }
+      retval = get_qpoases_exit_status_(qpoases_solver_);
     }
-    reset_flags();
 
-    if (!solver_->isSolved()) {
+    // reset the flag that remembers whether QP matrices have changed
+    qp_matrices_changed_ = false;
+
+    if (!qpoases_solver_->isSolved()) {
+      assert("Not trying to fix qpOASES solutions yet" && false);
       handle_error(LP, stats);
     }
   }
   // get primal and dual solutions
   if (stats != nullptr)
-    stats->qp_iter_addValue((int)nWSR);
-  solver_->getPrimalSolution(x_qp_->get_values());
-  solver_->getDualSolution(y_qp_->get_values());
+    stats->increase_qp_iteration_counter((int)nWSR);
+
+  // Retrieve the primal and dual solution from qpOASES
+  qpoases_solver_->getPrimalSolution(x_qp_->get_non_const_values());
+  qpoases_solver_->getDualSolution(y_qp_->get_non_const_values());
+
+  return retval;
 }
 
-shared_ptr<const Vector> qpOASESInterface::get_optimal_solution() const
+shared_ptr<const Vector> qpOASESInterface::get_primal_solution() const
 {
   shared_ptr<const Vector> retval = make_shared<Vector>(*x_qp_);
   return retval;
@@ -306,11 +372,16 @@ shared_ptr<const Vector> qpOASESInterface::get_optimal_solution() const
 shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
 {
   // create a new vector with the data
-  shared_ptr<Vector> retval = make_shared<Vector>(nVar_QP_);
+  shared_ptr<Vector> retval = make_shared<Vector>(num_nlp_variables_);
 
 // copy the values from the beginning of the y_qp_ vector
 #ifdef NEW_FORMULATION
-  retval->copy_values(y_qp_->get_values() + 3 * nConstr_QP_);
+  // The qpOASES multipliers are organized as follows:
+  // bounds for p, u and v slack variables, multpliers for x bounds, multipliers
+  // for constraints
+  //  retval->copy_values(y_qp_->get_values() + 3 * num_nlp_constraints_);
+  retval->copy_values(y_qp_->get_values() + num_nlp_variables_ +
+                      2 * num_nlp_constraints_);
 #else
   retval->copy_values(y_qp_->get_values());
 #endif
@@ -324,10 +395,10 @@ shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
 shared_ptr<const Vector> qpOASESInterface::get_constraints_multipliers() const
 {
   // create a new vector with the data
-  shared_ptr<Vector> retval = make_shared<Vector>(nConstr_QP_);
+  shared_ptr<Vector> retval = make_shared<Vector>(num_nlp_constraints_);
 
   // copy the value from the second part of the y_qp_ vector
-  retval->copy_values(y_qp_->get_values() + nVar_QP_);
+  retval->copy_values(y_qp_->get_values() + num_qp_variables_);
 
   return retval;
 }
@@ -341,18 +412,18 @@ shared_ptr<const Vector> qpOASESInterface::get_constraints_multipliers() const
 inline double qpOASESInterface::get_obj_value()
 {
 
-  return (double)(solver_->getObjVal());
+  return (double)(qpoases_solver_->getObjVal());
 }
 
 Exitflag qpOASESInterface::get_status()
 {
-  qpOASES::QProblemStatus finalStatus = solver_->getStatus();
+  qpOASES::QProblemStatus finalStatus = qpoases_solver_->getStatus();
 
-  if (solver_->isInfeasible()) {
+  if (qpoases_solver_->isInfeasible()) {
     return QPERROR_INFEASIBLE;
-  } else if (solver_->isUnbounded()) {
+  } else if (qpoases_solver_->isUnbounded()) {
     return QPERROR_UNBOUNDED;
-  } else if (solver_->isSolved()) {
+  } else if (qpoases_solver_->isSolved()) {
     return QP_OPTIMAL;
   } else
     switch (finalStatus) {
@@ -372,139 +443,98 @@ Exitflag qpOASESInterface::get_status()
 //@}
 void qpOASESInterface::set_lb(int location, double value)
 {
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   lb_->set_value(location, value);
 }
 
 void qpOASESInterface::set_ub(int location, double value)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   ub_->set_value(location, value);
 }
 
 void qpOASESInterface::set_lbA(int location, double value)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   lbA_->set_value(location, value);
 }
 
 void qpOASESInterface::set_ubA(int location, double value)
 {
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   ubA_->set_value(location, value);
 }
 
-void qpOASESInterface::set_g(int location, double value)
+void qpOASESInterface::set_gradient(int location, double value)
 {
-  if (firstQPsolved_ && !data_change_flags_.Update_g)
-    data_change_flags_.Update_g = true;
   g_->set_value(location, value);
 }
 
-void qpOASESInterface::set_H(shared_ptr<const SpTripletMat> rhs)
+void qpOASESInterface::set_hessian(shared_ptr<const SpTripletMat> rhs)
 {
-  //@for debugging
-  //@{
-  //	H_->print("H");
-  //	rhs->print("rhs");
-  //@}
+  // Remember that a change is made to the Hessian matrix
+  qp_matrices_changed_ = true;
 
-  if (firstQPsolved_ && !data_change_flags_.Update_H) {
-    data_change_flags_.Update_H = true;
-  }
   if (!H_->is_initialized()) {
-    H_->setStructure(rhs); // TODO: move to somewhere else?
+    H_->set_structure(rhs); // TODO: move to somewhere else?
+    H_->set_values(rhs);
     int* H_const_row_indices = const_cast<int*>(H_->get_row_indices());
     int* H_const_col_indices = const_cast<int*>(H_->get_column_indices());
     double* H_const_values = const_cast<double*>(H_->get_values());
     H_qpOASES_ = std::make_shared<qpOASES::SymSparseMat>(
-        nVar_QP_, nVar_QP_, H_const_row_indices, H_const_col_indices,
-        H_const_values);
+        num_qp_variables_, num_qp_variables_, H_const_row_indices,
+        H_const_col_indices, H_const_values);
   } else {
-    H_->setMatVal(rhs);
+    H_->set_values(rhs);
     H_qpOASES_->setVal(H_->get_values());
   }
   H_qpOASES_->createDiagInfo();
 }
 
-void qpOASESInterface::set_A(shared_ptr<const SQPhotstart::SpTripletMat> rhs,
-                             IdentityInfo I_info)
+void qpOASESInterface::set_jacobian(
+    shared_ptr<const SQPhotstart::SpTripletMat> rhs,
+    IdentityMatrixPositions& identity_matrix_positions)
 {
-  if (firstQPsolved_ && !data_change_flags_.Update_A) {
-    data_change_flags_.Update_A = true;
-  }
+  // Remember that a change is made to the Jacobian matrix
+  qp_matrices_changed_ = true;
+
   if (!A_->is_initialized()) {
-    A_->setStructure(rhs, I_info);
+    A_->set_structure(rhs, identity_matrix_positions);
+    A_->set_values(rhs);
     int* A_const_row_indices = const_cast<int*>(A_->get_row_indices());
     int* A_const_col_indices = const_cast<int*>(A_->get_column_indices());
     double* A_const_values = const_cast<double*>(A_->get_values());
     A_qpOASES_ = std::make_shared<qpOASES::SparseMatrix>(
-        nConstr_QP_, nVar_QP_, A_const_row_indices, A_const_col_indices,
-        A_const_values);
+        num_qp_constraints_, num_qp_variables_, A_const_row_indices,
+        A_const_col_indices, A_const_values);
   } else {
-    A_->setMatVal(rhs, I_info);
+    A_->set_values(rhs);
     A_qpOASES_->setVal(A_->get_values());
   }
 }
 
 void qpOASESInterface::set_ub(shared_ptr<const Vector> rhs)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   ub_->copy_vector(rhs);
 }
 
 void qpOASESInterface::set_lb(shared_ptr<const Vector> rhs)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   lb_->copy_vector(rhs);
 }
 
 void qpOASESInterface::set_lbA(shared_ptr<const Vector> rhs)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   lbA_->copy_vector(rhs);
 }
 
 void qpOASESInterface::set_ubA(shared_ptr<const Vector> rhs)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_bounds)
-    data_change_flags_.Update_bounds = true;
   ubA_->copy_vector(rhs);
 }
 
-void qpOASESInterface::set_g(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_gradient(shared_ptr<const Vector> rhs)
 {
-
-  if (firstQPsolved_ && !data_change_flags_.Update_g)
-    data_change_flags_.Update_g = true;
   g_->copy_vector(rhs);
 }
 
-void qpOASESInterface::reset_flags()
-{
-
-  data_change_flags_.Update_A = false;
-  data_change_flags_.Update_delta = false;
-  data_change_flags_.Update_H = false;
-  data_change_flags_.Update_penalty = false;
-  data_change_flags_.Update_g = false;
-  data_change_flags_.Update_bounds = false;
-}
-
-bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
+bool qpOASESInterface::test_optimality(ActivityStatus* W_c, ActivityStatus* W_b)
 {
 
   int i;
@@ -513,24 +543,24 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   double dual_violation = 0.0;
   double compl_violation = 0.0;
   double statioanrity_violation = 0.0;
-  shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
+  shared_ptr<Vector> Ax = make_shared<Vector>(num_qp_constraints_);
 
   if (W_c == NULL && W_b == NULL) {
-    W_c = new ActiveType[nConstr_QP_];
-    W_b = new ActiveType[nVar_QP_];
+    W_c = new ActivityStatus[num_qp_constraints_];
+    W_b = new ActivityStatus[num_qp_variables_];
   }
   get_working_set(W_c, W_b);
 
   /**-------------------------------------------------------**/
   /**                    primal feasibility                 **/
   /**-------------------------------------------------------**/
-  for (i = 0; i < nVar_QP_; i++) {
+  for (i = 0; i < num_qp_variables_; i++) {
     primal_violation += max(0.0, (lb_->get_value(i) - x_qp_->get_value(i)));
     primal_violation += -min(0.0, (ub_->get_value(i) - x_qp_->get_value(i)));
   }
   if (A_ != nullptr) {
     A_->multiply(x_qp_, Ax); // tmp_vec_nCon=A*x
-    for (i = 0; i < nConstr_QP_; i++) {
+    for (i = 0; i < num_qp_constraints_; i++) {
       primal_violation += max(0.0, (lbA_->get_value(i) - Ax->get_value(i)));
       primal_violation += -min(0.0, (ubA_->get_value(i) - Ax->get_value(i)));
     }
@@ -539,7 +569,7 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   /**-------------------------------------------------------**/
   /**                    dual feasibility                   **/
   /**-------------------------------------------------------**/
-  for (i = 0; i < nVar_QP_; i++) {
+  for (i = 0; i < num_qp_variables_; i++) {
     switch (W_b[i]) {
       case INACTIVE: // the constraint is inactive, then the dual multiplier
         // should be 0
@@ -553,39 +583,33 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
         // multiplier should be negavie
         dual_violation += max(0.0, y_qp_->get_value(i));
         break;
-      case ACTIVE_BOTH_SIDE:
+      case ACTIVE_BOTH_SIDES:
         break;
       default:
-        printf("failed in dual fea test, the working set  for qpOASES at "
-               "the bounds is %i",
-               W_b[i]);
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
   if (A_ != nullptr) {
-    for (i = 0; i < nConstr_QP_; i++) {
+    for (i = 0; i < num_qp_constraints_; i++) {
       switch (W_c[i]) {
         case INACTIVE: // the constraint is inactive, then the dual multiplier
           // should be 0
-          dual_violation += fabs(y_qp_->get_value(i + nVar_QP_));
+          dual_violation += fabs(y_qp_->get_value(i + num_qp_variables_));
           break;
         case ACTIVE_BELOW: // the constraint is active at the lower bound, so
                            // the
           // multiplier should be positive
-          dual_violation += -min(0.0, y_qp_->get_value(i + nVar_QP_));
+          dual_violation += -min(0.0, y_qp_->get_value(i + num_qp_variables_));
           break;
         case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so
                            // the
           // multiplier should be negavie
-          dual_violation += max(0.0, y_qp_->get_value(i + nVar_QP_));
+          dual_violation += max(0.0, y_qp_->get_value(i + num_qp_variables_));
           break;
-        case ACTIVE_BOTH_SIDE:
+        case ACTIVE_BOTH_SIDES:
           break;
         default:
-          printf("failed in dual fea test, the working set  for qpOASES at "
-                 "the constr is %i",
-                 W_c[i]);
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     }
   }
@@ -595,7 +619,7 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   /**-------------------------------------------------------**/
   // calculate A'*y+lambda-(g+Hx)
 
-  shared_ptr<Vector> stationary_gap = make_shared<Vector>(nVar_QP_);
+  shared_ptr<Vector> stationary_gap = make_shared<Vector>(num_qp_variables_);
   //    A_->print("A");
   //    H_->print("H");
   //    x_qp_->print("x_qp");
@@ -604,13 +628,13 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   //    y_qp_->print("y_qp");
 
   if (A_ != nullptr) {
-    A_->multiply_transpose(y_qp_->get_values() + nVar_QP_,
+    A_->multiply_transpose(y_qp_->get_values() + num_qp_variables_,
                            stationary_gap->get_values());
   }
-  shared_ptr<Vector> Hx = make_shared<Vector>(nVar_QP_);
+  shared_ptr<Vector> Hx = make_shared<Vector>(num_qp_variables_);
   H_->multiply(x_qp_, Hx);
 
-  stationary_gap->add_vector(1., y_qp_);
+  stationary_gap->add_elements(1., y_qp_->get_values());
   stationary_gap->add_vector(-1., g_);
   stationary_gap->add_vector(-1., Hx);
   statioanrity_violation = stationary_gap->calc_one_norm();
@@ -619,7 +643,7 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   /**                    Complemtarity                      **/
   /**-------------------------------------------------------**/
 
-  for (i = 0; i < nVar_QP_; i++) {
+  for (i = 0; i < num_qp_variables_; i++) {
     switch (W_b[i]) {
       case INACTIVE: // constraint is inactive, multiplier should be 0
         compl_violation += abs(y_qp_->get_value(i));
@@ -633,40 +657,32 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
         compl_violation += abs(y_qp_->get_value(i) *
                                (ub_->get_value(i) - x_qp_->get_value(i)));
         break;
-      case ACTIVE_BOTH_SIDE:
+      case ACTIVE_BOTH_SIDES:
         break;
       default:
-        printf("failed in compl test, the working set  for qpOASES at "
-               "the "
-               "bounds is %i",
-               W_b[i]);
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
   if (A_ != nullptr) {
-    for (i = 0; i < nConstr_QP_; i++) {
+    for (i = 0; i < num_qp_constraints_; i++) {
       switch (W_c[i]) {
         case INACTIVE: // constraint is inactive, multiplier should be 0
-          compl_violation += abs(y_qp_->get_value(i + nVar_QP_));
+          compl_violation += abs(y_qp_->get_value(i + num_qp_variables_));
           break;
         case ACTIVE_BELOW: // the constraint is active at the lower bound
-          compl_violation += abs(y_qp_->get_value(i + nVar_QP_) *
+          compl_violation += abs(y_qp_->get_value(i + num_qp_variables_) *
                                  (Ax->get_value(i) - lbA_->get_value(i)));
           break;
         case ACTIVE_ABOVE: // the contraint is active at the upper bounds, so
                            // the
           // multiplier should be negavie
-          compl_violation += abs(y_qp_->get_value(i + nVar_QP_) *
+          compl_violation += abs(y_qp_->get_value(i + num_qp_variables_) *
                                  (ubA_->get_value(i) - Ax->get_value(i)));
           break;
-        case ACTIVE_BOTH_SIDE:
+        case ACTIVE_BOTH_SIDES:
           break;
         default:
-          printf("failed in compl test, the working set  for qpOASES at "
-                 "the "
-                 "constr is %i",
-                 W_c[i]);
-          THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+          assert("Invalid working set flag" && false);
       }
     }
   }
@@ -695,51 +711,53 @@ bool qpOASESInterface::test_optimality(ActiveType* W_c, ActiveType* W_b)
   return true;
 }
 
-void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
+void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Statistics> stats)
 {
-
+  assert("Not trying to fix qpOASES solutions yet" && false);
   if (qptype == LP) {
     qpOASES::int_t nWSR = lp_solver_max_num_iterations_; // TODO modify it
-    if (solver_->isInfeasible()) {
-      shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
-      shared_ptr<Vector> Ax = make_shared<Vector>(nConstr_QP_);
+    if (qpoases_solver_->isInfeasible()) {
+      shared_ptr<Vector> x_0 = make_shared<Vector>(num_qp_variables_);
+      shared_ptr<Vector> Ax = make_shared<Vector>(num_qp_constraints_);
       x_0->copy_vector(x_qp_);
       A_->multiply(x_0, Ax);
 
-      for (int i = 0; i < nConstr_QP_; i++) {
-        x_0->set_value(i + nVar_QP_ - 2 * nConstr_QP_,
+      for (int i = 0; i < num_qp_constraints_; i++) {
+        x_0->set_value(i + num_qp_variables_ - 2 * num_qp_constraints_,
                        max(0.0, lbA_->get_value(i)));
-        x_0->set_value(i + nVar_QP_ - nConstr_QP_,
+        x_0->set_value(i + num_qp_variables_ - num_qp_constraints_,
                        -min(0.0, ubA_->get_value(i)));
       }
-      solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                    lb_->get_values(), ub_->get_values(), lbA_->get_values(),
-                    ubA_->get_values(), nWSR, NULL, x_0->get_values());
+      qpoases_solver_->init(H_qpOASES_.get(), g_->get_values(),
+                            A_qpOASES_.get(), lb_->get_values(),
+                            ub_->get_values(), lbA_->get_values(),
+                            ubA_->get_values(), nWSR, NULL, x_0->get_values());
     } else {
-      solver_->init(0, g_->get_values(), A_qpOASES_.get(), lb_->get_values(),
-                    ub_->get_values(), lbA_->get_values(), ubA_->get_values(),
-                    nWSR);
+      qpoases_solver_->init(0, g_->get_values(), A_qpOASES_.get(),
+                            lb_->get_values(), ub_->get_values(),
+                            lbA_->get_values(), ubA_->get_values(), nWSR);
     }
     old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
     if (stats != nullptr)
-      stats->qp_iter_addValue((int)nWSR);
+      stats->increase_qp_iteration_counter((int)nWSR);
 
-    if (!solver_->isSolved()) {
-      THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
+    if (!qpoases_solver_->isSolved()) {
+      //  THROW_EXCEPTION(LP_NOT_OPTIMAL, LP_NOT_OPTIMAL_MSG);
     }
   } else {
     qpOASES::int_t nWSR = qp_solver_max_num_iterations_; // TODO modify it
-    if (solver_->isInfeasible()) {
-      shared_ptr<Vector> x_0 = make_shared<Vector>(nVar_QP_);
-      for (int i = 0; i < nConstr_QP_; i++) {
-        x_0->set_value(i + nVar_QP_ - 2 * nConstr_QP_,
+    if (qpoases_solver_->isInfeasible()) {
+      shared_ptr<Vector> x_0 = make_shared<Vector>(num_qp_variables_);
+      for (int i = 0; i < num_qp_constraints_; i++) {
+        x_0->set_value(i + num_qp_variables_ - 2 * num_qp_constraints_,
                        max(0.0, lbA_->get_value(i)));
-        x_0->set_value(i + nVar_QP_ - nConstr_QP_,
+        x_0->set_value(i + num_qp_variables_ - num_qp_constraints_,
                        -min(0.0, ubA_->get_value(i)));
       }
-      solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                    lb_->get_values(), ub_->get_values(), lbA_->get_values(),
-                    ubA_->get_values(), nWSR, NULL, x_0->get_values());
+      qpoases_solver_->init(H_qpOASES_.get(), g_->get_values(),
+                            A_qpOASES_.get(), lb_->get_values(),
+                            ub_->get_values(), lbA_->get_values(),
+                            ubA_->get_values(), nWSR, NULL, x_0->get_values());
       // for debugging
       //@{
       //            H_qpOASES_->print("H_qp_oases");
@@ -750,29 +768,30 @@ void qpOASESInterface::handle_error(QPType qptype, shared_ptr<Stats> stats)
       //            lb_->print("lb");
       //            ub_->print("ub");
       //            x_0->print("x_0");
-      //            shared_ptr<Vector> Ax= make_shared<Vector>(nConstr_QP_);
+      //            shared_ptr<Vector> Ax=
+      //            make_shared<Vector>(num_qp_constraints_);
       //
       //            A_->times(x_0, Ax);
       //            Ax->print("Ax");
 
       //@}
     } else {
-      solver_->init(H_qpOASES_.get(), g_->get_values(), A_qpOASES_.get(),
-                    lb_->get_values(), ub_->get_values(), lbA_->get_values(),
-                    ubA_->get_values(), nWSR);
+      qpoases_solver_->init(H_qpOASES_.get(), g_->get_values(),
+                            A_qpOASES_.get(), lb_->get_values(),
+                            ub_->get_values(), lbA_->get_values(),
+                            ubA_->get_values(), nWSR);
     }
     old_QP_matrix_status_ = new_QP_matrix_status_ = UNDEFINED;
     if (stats != nullptr)
-      stats->qp_iter_addValue((int)nWSR);
-    if (!solver_->isSolved()) {
-      THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
+      stats->increase_qp_iteration_counter((int)nWSR);
+    if (!qpoases_solver_->isSolved()) {
+      // THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
     }
   }
 }
 
 void qpOASESInterface::set_qp_solver_options_()
 {
-
   qpOASES::Options qp_options;
 
   qp_options.setToReliable();
@@ -797,18 +816,18 @@ void qpOASESInterface::set_qp_solver_options_()
       qp_options.printLevel = qpOASES::PL_DEBUG_ITER;
       break;
   }
-  solver_->setOptions(qp_options);
+  qpoases_solver_->setOptions(qp_options);
 }
 
-void qpOASESInterface::WriteQPDataToFile(Ipopt::EJournalLevel level,
-                                         Ipopt::EJournalCategory category,
+void qpOASESInterface::WriteQPDataToFile(EJournalLevel level,
+                                         EJournalCategory category,
                                          const string filename)
 {
 #ifdef DEBUG
 #ifdef PRINT_OUT_QP_WITH_ERROR
   jnlst_->DeleteAllJournals();
-  Ipopt::SmartPtr<Ipopt::Journal> QPdata_jrnl =
-      jnlst_->AddFileJournal("QPdata", "qpOASES" + filename, Ipopt::J_WARNING);
+  SmartPtr<Journal> QPdata_jrnl =
+      jnlst_->AddFileJournal("QPdata", "qpOASES" + filename, J_WARNING);
   QPdata_jrnl->SetAllPrintLevels(level);
   QPdata_jrnl->SetPrintLevel(category, level);
 
@@ -829,40 +848,36 @@ void qpOASESInterface::get_Matrix_change_status()
 {
 
   if (old_QP_matrix_status_ == UNDEFINED) {
-    old_QP_matrix_status_ =
-        data_change_flags_.Update_A || data_change_flags_.Update_H ? VARIED
-                                                                   : FIXED;
+    old_QP_matrix_status_ = qp_matrices_changed_ ? VARIED : FIXED;
   } else {
     if (new_QP_matrix_status_ != UNDEFINED)
       old_QP_matrix_status_ = new_QP_matrix_status_;
-    new_QP_matrix_status_ =
-        data_change_flags_.Update_A || data_change_flags_.Update_H ? VARIED
-                                                                   : FIXED;
+    new_QP_matrix_status_ = qp_matrices_changed_ ? VARIED : FIXED;
   }
 }
 
-void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
-                                       SQPhotstart::ActiveType* W_bounds)
+void qpOASESInterface::get_working_set(SQPhotstart::ActivityStatus* W_constr,
+                                       SQPhotstart::ActivityStatus* W_bounds)
 {
-  int* tmp_W_c = new int[nConstr_QP_];
-  int* tmp_W_b = new int[nVar_QP_];
+  int* tmp_W_c = new int[num_qp_constraints_];
+  int* tmp_W_b = new int[num_qp_variables_];
 
-  assert(nConstr_QP_ == solver_->getNC());
-  assert(nVar_QP_ == solver_->getNV());
-  solver_->getWorkingSetConstraints(tmp_W_c);
-  solver_->getWorkingSetBounds(tmp_W_b);
+  assert(num_qp_constraints_ == qpoases_solver_->getNC());
+  assert(num_qp_variables_ == qpoases_solver_->getNV());
+  qpoases_solver_->getWorkingSetConstraints(tmp_W_c);
+  qpoases_solver_->getWorkingSetBounds(tmp_W_b);
 
-  for (int i = 0; i < nVar_QP_; i++) {
+  for (int i = 0; i < num_qp_variables_; i++) {
     switch ((int)tmp_W_b[i]) {
       case 1:
         if (fabs(x_qp_->get_value(i) - lb_->get_value(i)) < sqrt_m_eps)
-          W_bounds[i] = ACTIVE_BOTH_SIDE;
+          W_bounds[i] = ACTIVE_BOTH_SIDES;
         else
           W_bounds[i] = ACTIVE_ABOVE;
         break;
       case -1:
         if (fabs(x_qp_->get_value(i) - ub_->get_value(i)) < sqrt_m_eps)
-          W_bounds[i] = ACTIVE_BOTH_SIDE;
+          W_bounds[i] = ACTIVE_BOTH_SIDES;
         else
           W_bounds[i] = ACTIVE_BELOW;
 
@@ -871,23 +886,22 @@ void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
         W_bounds[i] = INACTIVE;
         break;
       default:
-        printf("invalud workingset for qpoases1");
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
-  auto Ax = make_shared<Vector>(nConstr_QP_);
+  auto Ax = make_shared<Vector>(num_qp_constraints_);
   A_->multiply(x_qp_, Ax); // tmp_vec_nCon=A*x
-  for (int i = 0; i < nConstr_QP_; i++) {
+  for (int i = 0; i < num_qp_constraints_; i++) {
     switch ((int)tmp_W_c[i]) {
       case 1:
         if (fabs(Ax->get_value(i) - lbA_->get_value(i) < sqrt_m_eps))
-          W_constr[i] = ACTIVE_BOTH_SIDE;
+          W_constr[i] = ACTIVE_BOTH_SIDES;
         else
           W_constr[i] = ACTIVE_ABOVE;
         break;
       case -1:
         if (fabs(Ax->get_value(i) - ubA_->get_value(i) < sqrt_m_eps))
-          W_constr[i] = ACTIVE_BOTH_SIDE;
+          W_constr[i] = ACTIVE_BOTH_SIDES;
         else
           W_constr[i] = ACTIVE_BELOW;
         break;
@@ -895,8 +909,7 @@ void qpOASESInterface::get_working_set(SQPhotstart::ActiveType* W_constr,
         W_constr[i] = INACTIVE;
         break;
       default:
-        printf("invalud workingset for qpoases2;");
-        THROW_EXCEPTION(INVALID_WORKING_SET, INVALID_WORKING_SET_MSG);
+        assert("Invalid working set flag" && false);
     }
   }
   delete[] tmp_W_b;

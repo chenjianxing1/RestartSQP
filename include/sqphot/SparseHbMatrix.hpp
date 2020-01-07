@@ -21,15 +21,19 @@ namespace SQPhotstart {
  * Harwell-Boeing format and then stored to its class members
  */
 
-class SpHbMat : public Matrix
+class SparseHbMatrix : public Matrix
 {
 
 public:
   /** constructor/destructor */
   //@{
 
-  /**Default constructor*/
-  SpHbMat(int get_num_rows, int get_num_columns, bool is_compressed_row);
+  /** Constructor.
+   *
+   *   This one only sets the dimensions and allocates memory but no data is
+   * initialized.
+   */
+  SparseHbMatrix(int num_rows, int num_columns, bool is_compressed_row);
 
   /**
    * @brief A constructor
@@ -37,27 +41,29 @@ public:
    * @param RowNum the number of rows
    * @param ColNum the number of columns
    */
-  SpHbMat(int nnz, int get_num_rows, int get_num_columns,
-          bool is_compressed_row);
+  SparseHbMatrix(int nnz, int num_rows, int num_columns,
+                 bool is_compressed_row);
 
   /**
-   * @brief constructor which generate matrix data directly from a dense matrix
+   * @brief Copy structure and data from a dense matrix.  This can only be done
+   * if this matrix has not been set to any structure or values before.
    *
    */
-  SpHbMat(const double* data, int get_num_rows, int get_num_columns,
-          bool row_oriented = true, bool is_compressed_row = false);
+  void copy_from_dense_matrix(const double* data, int get_num_rows,
+                              int get_num_columns, bool row_oriented = true,
+                              bool is_compressed_row = false);
 
   /**
    * @brief Default destructor
    */
-  ~SpHbMat() override;
+  ~SparseHbMatrix() override;
   //@}
 
   //@{
-  void setStructure(std::shared_ptr<const SpTripletMat> rhs,
-                    IdentityInfo I_info);
+  void set_structure(std::shared_ptr<const SpTripletMat> rhs,
+                     IdentityMatrixPositions& identity_matrix_positions);
 
-  void setStructure(std::shared_ptr<const SpTripletMat> rhs);
+  void set_structure(std::shared_ptr<const SpTripletMat> rhs);
   //@}
 
   //@{
@@ -90,17 +96,19 @@ public:
     column_indices_[i] = value;
   }
 
-  //@}
-  /**
-   * @brief set the Matrix values to the matrix, convert from triplet format to
-   * Harwell-Boeing Matrix format.
-   * @param rhs entry values(orders are not yet under permutation)
-   * @param I_info the 2 identity matrices information
-   */
-  virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs,
-                         IdentityInfo I_info);
+//@}
+/**
+ * @brief set the Matrix values to the matrix, convert from triplet format to
+ * Harwell-Boeing Matrix format.
+ * @param rhs entry values(orders are not yet under permutation)
+ * @param I_info the 2 identity matrices information
+ */
+#if 0
+  void set_values(std::shared_ptr<const SpTripletMat> triplet_matrix,
+                 IdentityMatrixPositions& identity_matrix_positions);
+#endif
 
-  virtual void setMatVal(std::shared_ptr<const SpTripletMat> rhs);
+  void set_values(std::shared_ptr<const SpTripletMat> triplet_matrix);
 
   void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
@@ -167,7 +175,7 @@ public:
    * @brief make a deep copy of a matrix information
    */
 
-  virtual void copy(std::shared_ptr<const SpHbMat> rhs);
+  void copy(std::shared_ptr<const SparseHbMatrix> rhs);
 #if 0
   const double calc_one_norm() const;
 
@@ -214,7 +222,7 @@ public:
 
   inline int get_order_at_entry(int i) const override
   {
-    return order_[i];
+    return triplet_order_[i];
   }
 #if 0
   inline int get_row_indices(int i) const
@@ -257,7 +265,7 @@ public:
 
   inline const int* get_order() const override
   {
-    return order_;
+    return triplet_order_;
   }
 
   inline int* get_nonconst_row_indices() override
@@ -277,7 +285,7 @@ public:
 
   inline int* get_nonconst_order() override
   {
-    return order_;
+    return triplet_order_;
   }
 
   inline bool is_symmetric() const override
@@ -301,26 +309,32 @@ public:
    */
   void write_to_file(const char* name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                      Ipopt::EJournalLevel level,
-                     Ipopt::EJournalCategory category, Solver solver);
+                     Ipopt::EJournalCategory category, QpSolver solver);
 
   ///////////////////////////////////////////////////////////
   //                     PRIVATE  METHODS                  //
   ///////////////////////////////////////////////////////////
 
 private:
-  /**Default constructor*/
-  SpHbMat();
+  /** Compiler generated methods to hide. */
+  //@{
+  /** Default constructor*/
+  SparseHbMatrix();
 
-  /** free all memory*/
-  void freeMemory();
-
-  //    /** Copy Constructor */
-  //    SpHbMat(const SpHbMat &);
+  /** Copy Constructor */
+  SparseHbMatrix(const SparseHbMatrix&);
 
   /** Overloaded Equals Operator */
-  void operator=(const SpHbMat&);
+  void operator=(const SparseHbMatrix&);
+  //@}
 
   void set_zero();
+
+  void allocate_memory_();
+
+  /** Set the structure from an (unsorted) list of triplet elements. */
+  void set_structure_from_list_(
+      std::vector<std::tuple<int, int, int, double>> elements_list);
 
 #if 0
     template <typename T>
@@ -331,57 +345,51 @@ private:
         }
     }
 #endif
-  /**
-   * @brief This is the sorted rule that used to sort data, first based on
-   * column
-   * index then based on row index
-   */
-  static bool tuple_sort_rule_compressed_column(
-      const std::tuple<int, int, double, int> left,
-      const std::tuple<int, int, double, int> right)
-  {
-
-    if (std::get<1>(left) < std::get<1>(right))
-      return true;
-    else if (std::get<1>(left) > std::get<1>(right))
-      return false;
-    else {
-      return std::get<0>(left) < std::get<0>(right);
-    }
-  }
-
-  /**
-   * @brief This is the sorted rule that used to sort data, first based on row
-   * index then based on column index
-   */
-  static bool
-  tuple_sort_rule_compressed_row(const std::tuple<int, int, double, int> left,
-                                 const std::tuple<int, int, double, int> right)
-  {
-
-    if (std::get<0>(left) < std::get<0>(right))
-      return true;
-    else if (std::get<0>(left) > std::get<0>(right))
-      return false;
-    else {
-      return std::get<1>(left) < std::get<1>(right);
-    }
-  }
 
   ///////////////////////////////////////////////////////////
   //                     PRIVATE  MEMBERS                  //
   ///////////////////////////////////////////////////////////
-private:
+
+  /** Flag indicating whether the nonzero patterns has been set already. */
   bool is_initialized_;
+
+  /** Flag indicating whether this matrix is symmetric.  That that case, only
+   * the upper triangular part is stored. */
   bool is_symmetric_;
+
+  /** Flag indicating whether this matrix is in compressed row (true) or
+   * compressed colums (false) formet. */
   bool is_compressed_row_format_;
-  int num_columns_;
-  int num_entries_;
+
+  /** Nuber of rows. */
   int num_rows_;
-  int* order_;
-  double* values_;
+
+  /** Number of columns. */
+  int num_columns_;
+
+  /** Number of nonzero entries. */
+  int num_entries_;
+
+  /** Column indices. */
   int* column_indices_;
+
+  /** Row indices. */
   int* row_indices_;
+
+  /** Number of elements that come from the triplet matrix that was used to set
+   * the structure (if such a matrix was used.) */
+  int num_triplet_entries_;
+
+  /** Values of the nonzero entries.
+   *
+   *  If this matrix is constructed with and IdentityMatrixPositions object, the
+   * values corresponding to these identity matrices are set together with the
+   * structure and not changed afterwards. */
+  double* values_;
+
+  /** Permutation that tells u that the i-th element in the triple matrix is the
+   * order[i]-th element in this matrix. */
+  int* triplet_order_;
 
   /**
    * @brief setup the structure of the sparse matrix for QPsolvrs

@@ -12,9 +12,10 @@ using namespace Ipopt;
 namespace SQPhotstart {
 
 /** Default constructor*/
-SqpTNlp::SqpTNlp(SmartPtr<TNLP> ipopt_tnlp)
+SqpTNlp::SqpTNlp(SmartPtr<TNLP> ipopt_tnlp, string nlp_name)
+ : ipopt_tnlp_(ipopt_tnlp)
+ , nlp_name_(nlp_name)
 {
-  ipopt_tnlp_ = ipopt_tnlp;
   TNLP::IndexStyleEnum index_style;
   ipopt_tnlp_->get_nlp_info(num_variables_, num_constraints_,
                             num_nonzeros_jacobian_, num_nonzeros_hessian_,

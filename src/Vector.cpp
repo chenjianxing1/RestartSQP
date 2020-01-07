@@ -60,20 +60,16 @@ void Vector::print(const string name, SmartPtr<Journalist> jnlst,
   if (!IsValid(jnlst)) {
     printf("%s = :\n", name.c_str());
 
+    printf("{ ");
     for (int i = 0; i < size_; i++) {
-      if (i == 0) {
-        printf("{ ");
-      }
       printf("%23.16e ", values_[i]);
     }
     printf("}\n\n");
   } else {
     jnlst->Printf(level, category, name.c_str());
     jnlst->Printf(level, category, " =: \n");
+    jnlst->Printf(level, category, "{ ");
     for (int i = 0; i < size_; i++) {
-      if (i == 0) {
-        jnlst->Printf(level, category, "{ ");
-      }
       jnlst->Printf(level, category, "%23.16e ", values_[i]);
     }
     jnlst->Printf(level, category, "}\n\n");
@@ -82,7 +78,7 @@ void Vector::print(const string name, SmartPtr<Journalist> jnlst,
 
 void Vector::write_to_file(string name, SmartPtr<Journalist> jnlst,
                            EJournalLevel level, EJournalCategory category,
-                           Solver qpsolver) const
+                           QpSolver qpsolver) const
 {
 // AW Instead of having DEBUG here, set the level accordingly
 #ifdef DEBUG

@@ -52,9 +52,7 @@ public:
   /** add the element in a specific location by a number*/
   void add_number_to_element(int index, double increase_amount)
   {
-    if (increase_amount != 0.) {
-      values_[index] += increase_amount;
-    }
+    values_[index] += increase_amount;
   }
 
   /** Add a vector to this vector.
@@ -82,6 +80,26 @@ public:
     } else {
       for (int i = 0; i < size_; i++) {
         values_[i] += factor * rhs.values_[i];
+      }
+    }
+  }
+
+  /** Add elements from an array.
+   *
+   *  The array values much be at least of length size_ */
+  void add_elements(double factor, const double* vals)
+  {
+    if (factor == 1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] += vals[i];
+      }
+    } else if (factor == -1.) {
+      for (int i = 0; i < size_; i++) {
+        values_[i] -= vals[i];
+      }
+    } else {
+      for (int i = 0; i < size_; i++) {
+        values_[i] += factor * vals[i];
       }
     }
   }
@@ -163,12 +181,12 @@ public:
   /** Calculate the one-norm of this vector. */
   double calc_one_norm() const
   {
-    return calc_one_norm(0, size_);
+    return calc_subvector_one_norm(0, size_);
   }
 
   /** calculate one norm of a subvector of this vector.  The subvector
       starts at element first_element and has a length of length */
-  double calc_one_norm(int first_element, int length) const
+  double calc_subvector_one_norm(int first_element, int length) const
   {
     assert(first_element >= 0);
     assert(first_element + length <= size_);
@@ -242,7 +260,7 @@ public:
   /** Print vector or write to a file. */
   void write_to_file(std::string name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                      Ipopt::EJournalLevel level,
-                     Ipopt::EJournalCategory category, Solver qpsolver) const;
+                     Ipopt::EJournalCategory category, QpSolver qpsolver) const;
   // AW: Replace qpsolver argument
   // Also, why are the both a print and a write_to_file method
 

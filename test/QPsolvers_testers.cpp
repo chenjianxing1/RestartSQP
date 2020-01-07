@@ -8,7 +8,7 @@ extern "C" {
 
 #include "sqphot/MessageHandling.hpp"
 #include "sqphot/QOREInterface.hpp"
-#include "sqphot/SpHbMat.hpp"
+#include "sqphot/SparseHbMatrix.hpp"
 #include "sqphot/SqpAlgorithm.hpp"
 #include "sqphot/Vector.hpp"
 #include "sqphot/qpOASESInterface.hpp"
@@ -17,7 +17,8 @@ extern "C" {
 using namespace SQPhotstart;
 using namespace std;
 
-shared_ptr<SpHbMat> convert_csr_to_csc(shared_ptr<const SpHbMat> csr_matrix)
+shared_ptr<SparseHbMatrix>
+convert_csr_to_csc(shared_ptr<const SparseHbMatrix> csr_matrix)
 {
 
   double* dense_matrix;
@@ -27,9 +28,14 @@ shared_ptr<SpHbMat> convert_csr_to_csc(shared_ptr<const SpHbMat> csr_matrix)
 
   csr_matrix->get_dense_matrix(dense_matrix);
 
-  shared_ptr<SpHbMat> csc_matrix =
-      make_shared<SpHbMat>(dense_matrix, csr_matrix->get_num_rows(),
-                           csr_matrix->get_num_columns(), true, false);
+  bool is_compressed_row = false;
+  bool row_oriented = true;
+  shared_ptr<SparseHbMatrix> csc_matrix = make_shared<SparseHbMatrix>(
+      csr_matrix->get_num_rows(), csr_matrix->get_num_columns(),
+      is_compressed_row);
+  csc_matrix->copy_from_dense_matrix(dense_matrix, csr_matrix->get_num_rows(),
+                                     csr_matrix->get_num_columns(),
+                                     row_oriented, is_compressed_row);
   delete[] dense_matrix;
 
   return csc_matrix;
@@ -80,8 +86,10 @@ int main(int argc, char* argv[])
   shared_ptr<Vector> ub_qore = make_shared<Vector>(nCon + nVar);
   shared_ptr<Vector> g = make_shared<Vector>(nVar);
 
-  shared_ptr<SpHbMat> A_qore = make_shared<SpHbMat>(Annz, nCon, nVar, true);
-  shared_ptr<SpHbMat> H_qore = make_shared<SpHbMat>(Hnnz, nVar, nVar, true);
+  shared_ptr<SparseHbMatrix> A_qore =
+      make_shared<SparseHbMatrix>(Annz, nCon, nVar, true);
+  shared_ptr<SparseHbMatrix> H_qore =
+      make_shared<SparseHbMatrix>(Hnnz, nVar, nVar, true);
 
   qp_int A_ir_qore[nCon + 1]; // row index
   qp_int A_jc_qore[Annz];     // column index
@@ -176,19 +184,19 @@ int main(int argc, char* argv[])
   //    nlp_info.nnz_jac_g = Annz;
   //    nlp_info.nnz_h_lag = Hnnz;
 
-  shared_ptr<Stats> stats_qore = make_shared<Stats>();
+  shared_ptr<Statistics> stats_qore = make_shared<Statistics>();
 
   shared_ptr<QOREInterface> qore_inferface =
       make_shared<QOREInterface>(H_qore, A_qore, g, lb_qore, ub_qore, options);
   try {
-    qore_inferface->optimizeQP(stats_qore);
+    qore_inferface->optimize_qp(stats_qore);
   } catch (...) {
   }
   switch (qore_inferface->get_status()) {
     case QPERROR_EXCEED_MAX_ITER:
       exitflag_qore = "EXCEED_ITER_LIMIT";
       break;
-    case QP_OPTIMAL:
+    case QPSOLVER_OPTIMAL:
       exitflag_qore = "OPTIMAL";
       break;
     case QPERROR_INFEASIBLE:
@@ -201,7 +209,7 @@ int main(int argc, char* argv[])
       exitflag_qore = "UNKNOWN";
   }
   qore_inferface->test_optimality();
-  x_qore->copy_vector(qore_inferface->get_optimal_solution());
+  x_qore->copy_vector(qore_inferface->get_primal_solution());
   y_qore_constr->copy_vector(qore_inferface->get_constraints_multipliers());
   y_qore_bounds->copy_vector(qore_inferface->get_bounds_multipliers());
   double obj_qore = qore_inferface->get_obj_value();
@@ -209,7 +217,7 @@ int main(int argc, char* argv[])
   ///////////////////////////////////////////////////////////
   //                     QPOASES                           //
   ///////////////////////////////////////////////////////////
-  shared_ptr<Stats> stats_qpOASES = make_shared<Stats>();
+  shared_ptr<Statistics> stats_qpOASES = make_shared<Statistics>();
   auto A_qpOASES = convert_csr_to_csc(A_qore);
   auto H_qpOASES = convert_csr_to_csc(H_qore);
 
@@ -227,10 +235,10 @@ int main(int argc, char* argv[])
       make_shared<qpOASESInterface>(H_qpOASES, A_qpOASES, g, lb_qore, ub_qore,
                                     lbA_qpOASES, ubA_qpOASES, options);
   try {
-    qpoases_interface->optimizeQP(stats_qpOASES);
+    qpoases_interface->optimize_qp(stats_qpOASES);
   } catch (...) {
   }
-  x_qpOASES->copy_vector(qpoases_interface->get_optimal_solution());
+  x_qpOASES->copy_vector(qpoases_interface->get_primal_solution());
   y_qpOASES_constr->copy_vector(
       qpoases_interface->get_constraints_multipliers());
   y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
@@ -241,7 +249,7 @@ int main(int argc, char* argv[])
     case QPERROR_EXCEED_MAX_ITER:
       exitflag_qpOASES = "EXCEED_ITER_LIMIT";
       break;
-    case QP_OPTIMAL:
+    case QPSOLVER_OPTIMAL:
       exitflag_qpOASES = "OPTIMAL";
       break;
     case QPERROR_INFEASIBLE:
@@ -281,8 +289,8 @@ int main(int argc, char* argv[])
   printf("%30s    %23s    %23s\n", "", "QORE", "QPOASES");
   printf("%30s    %23s    %23s\n", "Exitflag", exitflag_qore.c_str(),
          exitflag_qpOASES.c_str());
-  printf("%30s    %23d    %23d\n", "Iteration", stats_qore->qp_iter,
-         stats_qpOASES->qp_iter);
+  printf("%30s    %23d    %23d\n", "Iteration", stats_qore->num_qp_iterations_,
+         stats_qpOASES->num_qp_iterations_);
   printf("%30s    %23.16e    %23.16e\n", "Objective", obj_qore, obj_qpOASES);
   printf("%30s    %23.16e    %23.16e\n", "||x||", x_qore->calc_one_norm(),
          x_qpOASES->calc_one_norm());

@@ -14,6 +14,94 @@
 
 namespace SQPhotstart {
 
+// This structure stores the positions of multiples of identity matrices in the
+// Jacobian.
+// TODO: Make this a claa
+typedef struct
+{
+  int length;
+  int* irow;
+  int* jcol;
+  int* size;
+  double* value;
+} IdentityMatrixPositionsStruct;
+
+/** Class that stores the positions of identity matrices in the QP Jacobian. */
+class IdentityMatrixPositions
+{
+public:
+  /** Default constructor. */
+  IdentityMatrixPositions()
+  {
+  }
+
+  /** Destructor. */
+  ~IdentityMatrixPositions()
+  {
+  }
+
+  /** Add an identity matrix. */
+  void add_matrix(int row_offset, int column_offset, int dimension,
+                  double multiplicator)
+  {
+    row_offsets_.push_back(row_offset);
+    column_offsets_.push_back(column_offset);
+    dimensions_.push_back(dimension);
+    multiplicators_.push_back(multiplicator);
+  }
+
+  /** Getter methods. */
+  //@{
+  /** Return number of matrices. */
+  int get_num_matrices() const
+  {
+    return (int)row_offsets_.size();
+  }
+  /** Return row offset of matrix i. Counting starts at 1. */
+  int get_row_offset(int i) const
+  {
+    assert(i < row_offsets_.size());
+    return row_offsets_[i];
+  }
+  /** Return column offset of matrix i. Counting starts at 1. */
+  int get_column_offset(int i) const
+  {
+    assert(i < column_offsets_.size());
+    return column_offsets_[i];
+  }
+  /** Return size of matrix i. */
+  int get_dimension(int i) const
+  {
+    assert(i < dimensions_.size());
+    return dimensions_[i];
+  }
+  /** Return multiplicator for matrix i */
+  double get_multiplicator(int i) const
+  {
+    return multiplicators_[i];
+  }
+  //@}
+
+private:
+  /** Copy Constructor */
+  IdentityMatrixPositions(const IdentityMatrixPositions&);
+
+  /** Overloaded Equals Operator */
+  void operator=(const IdentityMatrixPositions&);
+
+  /** Row offsets. */
+  std::vector<int> row_offsets_;
+
+  /** Column offsets. */
+  std::vector<int> column_offsets_;
+
+  /** Dimesions of the identity matrices. */
+  std::vector<int> dimensions_;
+
+  /** Factors by which the identity matrices are multiplied. */
+  std::vector<double> multiplicators_;
+};
+
 /**
  *@brief
  * This is a virtual base class...

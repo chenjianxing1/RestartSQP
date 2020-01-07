@@ -4,13 +4,13 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#ifndef SQPHOTSTART_ALG_HPP_
-#define SQPHOTSTART_ALG_HPP_
+#ifndef SQPALGORITHM_HPP_
+#define SQPALGORITHM_HPP_
 
 #include "IpOptionsList.hpp"
 #include "sqphot/QPhandler.hpp"
 #include "sqphot/SQPDebug.hpp"
-#include "sqphot/Stats.hpp"
+#include "sqphot/Statistics.hpp"
 
 namespace SQPhotstart {
 /**
@@ -38,28 +38,18 @@ public:
   /** Default Constructor*/
   SqpAlgorithm();
 
-  /** Default Destructor*/
+  /** Destructor*/
   ~SqpAlgorithm();
   //@}
 
-  /**
-   *  @brief This function initializes the objects required by the SQP
-   * Algorithm,
-   *  copies some parameters required by the algorithm, obtains the function
-   *  information for the first QP.
-   *
-   */
-  void initialize(std::shared_ptr<SqpNlpBase> sqp_nlp, const std::string& name);
-
-  /** temporarily use Ipopt options*/
-  //@{
-  //
-
+  /** Return journalist.  This can be used by caller. */
   Ipopt::SmartPtr<Ipopt::Journalist> get_jnlst()
   {
     return jnlst_;
   }
 
+  /** Return options list.  This can be used by caller to set algorithmic
+   * options. */
   Ipopt::SmartPtr<Ipopt::OptionsList> get_options_list()
   {
     return options_;
@@ -70,9 +60,10 @@ public:
   /**
    * @brief This is the main method to optimize the NLP given as the input
    *
-   * @param nlp: the nlp reader that read data of the function to be minimized;
+   * @param sqp_nlp: nlp object defining the NLP to be solved
    */
-  virtual void Optimize();
+  void optimize_nlp(std::shared_ptr<SqpNlpBase> sqp_nlp,
+                    const std::string options_file_name = "sqp.opt");
 
   /**
    * @brief ReOptimize a problem by hotstarting from the old optimal solution
@@ -80,7 +71,7 @@ public:
    * TO BE IMPLEMENTED
    */
 
-  virtual void ReOptimize(std::shared_ptr<SqpNlpBase> sqp_nlp)
+  void ReOptimize(std::shared_ptr<SqpNlpBase> sqp_nlp)
   {
   }
 
@@ -109,24 +100,24 @@ public:
     return obj_value_;
   }
 
-  inline std::shared_ptr<Stats> get_stats() const
+  inline std::shared_ptr<Statistics> get_stats() const
   {
-    return stats_;
+    return solver_statistics_;
   }
 
   inline double get_norm_p() const
   {
-    return norm_p_k_;
+    return trial_step_norm_;
   }
 
   inline int get_num_constr() const
   {
-    return nCon_;
+    return num_constraints_;
   }
 
   inline int get_num_var() const
   {
-    return nVar_;
+    return num_variables_;
   }
 
   //@}
@@ -138,6 +129,28 @@ private:
    * @brief set the default option values
    */
   void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
+
+  /**
+   * @brief Prepare everything before we can start the algorithm loop.
+   *
+   *  Get the options values, create QP objects, initialize iterates.
+   */
+  void initialize_for_new_nlp_(const std::string& options_file_name);
+
+  /** Determine starting point and compute all corresponding quanties. */
+  void initialize_iterates_();
+
+  /** Print initial output
+   *
+   *  This prints the problem dimensions and initial header line.
+   */
+  void print_initial_output_();
+
+  /** Calculate the search direction.
+   *
+   *  For this, the QP is solved.
+   */
+  void calculate_search_direction_();
 
   /**
    * @brief This is the function that checks if the current point is optimal,
@@ -159,12 +172,9 @@ private:
   * @return infea_measure = ||-max(c_k-c_u),0||_1 +||-min(c_k-c_l),0||_1+
                     ||-max(x_k-x_u),0||_1 +||-min(x_k-x_l),0||_1
   */
-  double cal_infea(std::shared_ptr<const Vector> c_k_,
-                   std::shared_ptr<const Vector> c_l,
-                   std::shared_ptr<const Vector> c_u,
-                   std::shared_ptr<const Vector> x_k = nullptr,
-                   std::shared_ptr<const Vector> x_l = nullptr,
-                   std::shared_ptr<const Vector> x_u = nullptr);
+  double compute_constraint_violation_(
+      std::shared_ptr<const Vector> variable_values,
+      std::shared_ptr<const Vector> constraint_values_);
 
   /**
    * @brief This function calculates the infeasibility measure for  current
@@ -238,7 +248,7 @@ private:
   /**
    * @brief Update the penalty parameter
    */
-  void update_penalty_parameter();
+  void update_penalty_parameter_();
 
   /**@name Get the search direction from the LP/QP handler*/
   //@{
@@ -256,7 +266,7 @@ private:
    * specified QP information
    */
 
-  void get_search_direction();
+  void extract_trial_step_();
 
   /**
    *@brief get the objective value of QP from myQP object
@@ -272,10 +282,9 @@ private:
    * It will initialize all the data at once at the beginning of the Algorithm.
    * After
    * that, the data in the QP problem will be updated according to the class
-   * member QPinfoFlag_
+   * member qp_update_tracker_
    */
-
-  void setupQP();
+  void setup_qp_();
 
   /**
    * @brief This function will setup the data for the LP subproblem
@@ -304,10 +313,11 @@ private:
    * Algorithm::Optimize, and it copies all parameters that might be changed
    * during
    * the run of the function Algorithm::Optimize.
-   *
-   * @param nlp: the nlp reader that read data of the function to be minimized;
    */
-  void allocate_memory(std::shared_ptr<SqpNlpBase> sqp_nlp);
+  void allocate_memory_();
+
+  /** Free memory of any allocated arrays. */
+  void free_memory_();
 
   /**
    *
@@ -325,7 +335,7 @@ private:
    *
    * The same rules are also applied to the bound-constraints.
    */
-  void classify_constraints_types();
+  void classify_constraints_types_();
 
   void print_final_stats();
   //@}
@@ -356,6 +366,9 @@ private:
   //@{
   /** Journal through which all output is directed. */
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+  /** Name of the currently opened output file. */
+  std::string current_output_file_name_;
+
   /** List of options.
    *
    *  It is initialized in the constructor but then be retrieved by
@@ -365,62 +378,88 @@ private:
   Ipopt::SmartPtr<Ipopt::OptionsList> options_; // TODO: replace options_
   //@}
 
-  ConstraintType*
-      bound_cons_type_; /**< the variables type, it can be either
-                                  *bounded, bounded above,bounded below, or
-                                  *unbounded*/
-  ConstraintType*
-      cons_type_;            /**<the constraints type, it can be either
-                                       *bounded,bounded above,bounded below, or unbounded*/
-  std::string problem_name_; /**< problem name*/
-  Exitflag exit_flag_;       /**< Exit flag */
-  int nCon_;                 /**< number of constraints*/
-  int nVar_;                 /**< number of variables*/
+  /** Lower bounds for the variables. */
+  std::shared_ptr<Vector> lower_variable_bounds_;
+  /** Upper bounds for the variables. */
+  std::shared_ptr<Vector> upper_variable_bounds_;
+  /** Lower bounds for the constraints. */
+  std::shared_ptr<Vector> lower_constraint_bounds_;
+  /** Upper bounds for the constraints. */
+  std::shared_ptr<Vector> upper_constraint_bounds_;
+
+  /** Indicates for each bound whether it has lower and/or upper bounds. */
+  ConstraintType* bound_type_;
+  /** Indicates for each constraint whether it has lower and/or upper bounds. */
+  ConstraintType* constraint_type_;
+
+  /** Indicates whether a bound is in the working set. */
+  ActivityStatus* bound_activity_status_;
+  /** Indicates whether a constraint is in the working set. */
+  ActivityStatus* constraint_activity_status_;
+
+  /** Problem name. */
+  std::string problem_name_;
+
+  /** Number of variables. */
+  int num_variables_;
+  /** Number of constraints. */
+  int num_constraints_;
+
+  /** Exit flag.  If set to UNKNOWN the algorithm loop should still progress. */
+  Exitflag exit_flag_;
+
+  /** Constraint violation at current iterate in l1-norm. */
+  double current_infeasibility_;
+  /** Constraint violation at trial iterate in l1-norm. */
+  double trial_infeasibility_;
+  /** Constraint violation of trial step in linear constraint model. */
+  double current_model_infeasibility_;
+
   double actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
-  double delta_;            /**< trust-region radius*/
-  double infea_measure_;    /**< the measure of infeasibility evaluated at x_k*/
+  double trust_region_radius_; /**< trust-region radius*/
   double infea_measure_model_; /**< the one norm of all slack variables in the
                                   QP */
-  double infea_measure_trial_; /**< the measure of infeasibility evaluated at
-                                  x_trial*/
-  double norm_p_k_;            /**< the infinity norm of p_k*/
+  double trial_step_norm_;     /**< the infinity norm of p_k*/
   double obj_value_;           /**<the objective corresponding to the x_k*/
   double obj_value_trial_;     /**<the objective corresponding to the x_trial*/
   double
       pred_reduction_; /**< the predicted reduction evaluated at x_k and p_k*/
   double qp_obj_;      /**< the objective value of current qp*/
-  double rho_;         /**< penalty parameter*/
-  ActiveType* Active_Set_bounds_;
-  ActiveType* Active_Set_constraints_;
+  double penalty_parameter_; /**< penalty parameter*/
   OptimalityStatus opt_status_;
-  UpdateFlags
-      QPinfoFlag_; /**<indicates which QP problem bounds should be updated*/
-  bool isaccept_;  // is the new point accepted?
-  std::shared_ptr<QPhandler> myLP_;
-  std::shared_ptr<QPhandler> myQP_;
+
+  /** Object to solve LPs. */
+  std::shared_ptr<QPhandler> lp_solver_;
+  /** Object to solve step computation QPs. */
+  std::shared_ptr<QPhandler> qp_solver_;
+  /** Object to track which QP data needs to be updated. */
+  QpUpdateTracker qp_update_tracker_;
+  /** Flag indicating whether the step computation QP has been initialized. */
+  bool qp_solver_initialized_;
+
+  bool isaccept_; // is the new point accepted?
   std::shared_ptr<SpTripletMat>
-      hessian_; /**< the SparseMatrix object for hessain
+      current_lagrangian_hessian_; /**< the SparseMatrix object for hessain
                      *of  f(x)-sum_{i=1}^m lambda_i c_i(x)*/
   std::shared_ptr<SpTripletMat>
-      jacobian_; /** <the SparseMatrix object for Jacobian
+      current_constraint_jacobian_; /** <the SparseMatrix object for Jacobian
                       *from c(x)*/
-  std::shared_ptr<Stats> stats_;
-  std::shared_ptr<Vector> c_k_; /**< the constraints' value evaluated at x_k_*/
-  std::shared_ptr<Vector> c_l_; /* the lower bounds for constraints*/
+  std::shared_ptr<Statistics> solver_statistics_;
+  std::shared_ptr<Vector> current_constraint_values_; /**< the constraints'
+                                                         value evaluated at
+                                                         x_k_*/
+  std::shared_ptr<Vector> trial_constraint_values_;   /* the constraints' value
+                                                         evaluated at x_trial_*/
   std::shared_ptr<Vector>
-      c_trial_; /* the constraints' value evaluated at x_trial_*/
-  std::shared_ptr<Vector> c_u_;             /* the upper constraints vector*/
-  std::shared_ptr<Vector> grad_f_;          /**< gradient evaluated at x_k*/
-  std::shared_ptr<Vector> multiplier_cons_; /**< multiplier for constraints*/
-  std::shared_ptr<Vector> multiplier_vars_; /**< multipliers for variables*/
-  std::shared_ptr<Vector> p_k_;             /* search direction at x_k*/
-  std::shared_ptr<Vector> x_k_;             /**< current iterate point*/
-  std::shared_ptr<Vector> x_l_;             /* the lower bounds for variables*/
+      current_objective_gradient_; /**< gradient evaluated at x_k*/
   std::shared_ptr<Vector>
-      x_trial_; /**< the trial point from the search direction
+      constraint_multipliers_;                /**< multiplier for constraints*/
+  std::shared_ptr<Vector> bound_multipliers_; /**< multipliers for variables*/
+  std::shared_ptr<Vector> trial_step_;        /* search direction at x_k*/
+  std::shared_ptr<Vector> current_iterate_;   /**< current iterate point*/
+  std::shared_ptr<Vector>
+      trial_iterate_; /**< the trial point from the search direction
                      *x_trial = x_k+p_k*/
-
-  std::shared_ptr<Vector> x_u_; /* the upper bounds for variables*/
 
   /** CPU time at the beginning of the optimization run. */
   double cpu_time_at_start_;
@@ -429,8 +468,6 @@ private:
 
   /** Option values */
   //@{
-  /** print level for journalist */ // TODO: This should be removed!
-  int print_level_;
   /** Maximum number of iterations. */
   int max_num_iterations_;
   /** Maximum cpu time for one solve (in seconds). */
@@ -495,7 +532,7 @@ private:
   double max_cputime_;
 
   /** QP solver usde for ??? */
-  Solver qp_solver_choice_;
+  QpSolver qp_solver_choice_;
   //@}
 
 }; // END_OF_ALG_CLASS

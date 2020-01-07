@@ -34,9 +34,9 @@ public:
 
   const std::shared_ptr<Vector>& getG() const override;
 
-  std::shared_ptr<const SpHbMat> getH() const override;
+  std::shared_ptr<const SparseHbMatrix> getH() const override;
 
-  std::shared_ptr<const SpHbMat> getA() const override;
+  std::shared_ptr<const SparseHbMatrix> getA() const override;
   //@}
 
   CplexInterface(NLPInfo nlp_info, QPType qptype,
@@ -50,15 +50,16 @@ public:
    * @brief Solve a regular QP with given data and options.
    *
    */
-  void optimizeQP(std::shared_ptr<Stats> stats) override;
+  void optimize_qp(std::shared_ptr<Statistics> stats) override;
 
   /**
    * @brief Solve a regular LP with given data and options
    */
 
-  void optimizeLP(std::shared_ptr<Stats> stats) override;
+  void optimize_lp(std::shared_ptr<Statistics> stats) override;
 
-  bool test_optimality(ActiveType* W_c = NULL, ActiveType* W_b = NULL) override;
+  bool test_optimality(ActivityStatus* W_c = NULL,
+                       ActivityStatus* W_b = NULL) override;
 
   /**-------------------------------------------------------**/
   /**                    Getters                            **/
@@ -69,7 +70,7 @@ public:
    * @return the pointer to the optimal solution
    *
    */
-  std::shared_ptr<const Vector> get_optimal_solution() const override
+  std::shared_ptr<const Vector> get_primal_solution() const override
   {
     return x_qp_;
   }
@@ -107,7 +108,8 @@ public:
    * working set for bounds
    *
    */
-  void get_working_set(ActiveType* W_constr, ActiveType* W_bounds) override;
+  void get_working_set(ActivityStatus* W_constr,
+                       ActivityStatus* W_bounds) override;
 
   Exitflag get_status() override;
 
@@ -126,7 +128,7 @@ public:
 
   void set_ubA(int location, double value) override;
 
-  void set_g(int location, double value) override;
+  void set_gradient(int location, double value) override;
   //@}
 
   /**@name Setters for dense vector, by vector value*/
@@ -139,15 +141,15 @@ public:
 
   void set_ubA(std::shared_ptr<const Vector> rhs) override;
 
-  void set_g(std::shared_ptr<const Vector> rhs) override;
+  void set_gradient(std::shared_ptr<const Vector> rhs) override;
   //@}
 
   /**@name Setters for matrix*/
   //@{
-  void set_H(std::shared_ptr<const SpTripletMat> rhs) override;
+  void set_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
 
-  void set_A(std::shared_ptr<const SpTripletMat> rhs,
-             IdentityInfo I_info) override;
+  void set_jacobian(std::shared_ptr<const SpTripletMat> rhs,
+                    IdentityMatrixPositions I_info) override;
   //@}
 
   void reset_constraints() override;
@@ -181,7 +183,7 @@ private:
   /**-------------------------------------------------------**/
 
 private:
-  IdentityInfo I_info_;
+  IdentityMatrixPositions I_info_;
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
   Exitflag status_;
   QPType qptype_;

@@ -7,64 +7,94 @@
 #include "sqphot/QPhandler.hpp"
 #include "IpOptionsList.hpp"
 #include "sqphot/QOREInterface.hpp"
+#include "sqphot/SQPDebug.hpp"
 #include "sqphot/qpOASESInterface.hpp"
 
 using namespace std;
+using namespace Ipopt;
 
 namespace SQPhotstart {
 
-QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
-                     QPType qptype, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                     Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+QPhandler::QPhandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
+                     SmartPtr<Journalist> jnlst,
+                     SmartPtr<const OptionsList> options)
  : nlp_sizes_(nlp_sizes)
  , jnlst_(jnlst)
 {
-  // Determine which solver should be used
-  int enum_int;
-  options->GetEnumValue("qp_solver_choice", enum_int, "");
-  qp_solver_choice_ = Solver(enum_int);
-
+  // Initialize the matrix structure: where in the Jacobian are multiples of the
+  // identity
   int num_vars = nlp_sizes->get_num_variables();
   int num_cons = nlp_sizes->get_num_constraints();
 #ifdef NEW_FORMULATION
-  nConstr_QP_ = num_cons + num_vars;
-  nVar_QP_ = num_vars * 3 + 2 * num_cons;
-  I_info_A_.length = 5;
-  I_info_A_.irow = new int[5];
-  I_info_A_.jcol = new int[5];
-  I_info_A_.size = new int[5];
-  I_info_A_.value = new double[5];
-  I_info_A_.irow[0] = I_info_A_.irow[1] = 1;
-  I_info_A_.irow[2] = I_info_A_.irow[3] = I_info_A_.irow[4] = nlp_info.nCon + 1;
-  I_info_A_.jcol[0] = num_vars + 1;
-  I_info_A_.jcol[1] = num_vars + num_cons + 1;
-  I_info_A_.jcol[2] = 1;
-  I_info_A_.jcol[3] = num_vars + num_cons * 2 + 1;
-  I_info_A_.jcol[4] = num_vars * 2 + num_cons * 2 + 1;
-  I_info_A_.size[0] = I_info_A_.size[1] = num_cons;
-  I_info_A_.size[2] = I_info_A_.size[3] = I_info_A_.size[4] = num_vars;
-  I_info_A_.value[0] = I_info_A_.value[2] = I_info_A_.value[3] = 1.0;
-  I_info_A_.value[1] = I_info_A_.value[4] = -1.0;
-
+  num_qp_constraints_ = num_cons + num_vars;
+  num_qp_variables_ = num_vars * 3 + 2 * num_cons;
+  // Add the different matrices
+  //
+  // TODO which vars?
+  identity_matrix_positions_.add_matrix(1, num_vars + 1, num_cons, 1.);
+  // WHICH BLOCK?
+  identity_matrix_positions_.add_matrix(1, num_vars + num_cons + 1, num_cons,
+                                        -1.);
+  // WHICH BLOCK?
+  identity_matrix_positions_.add_matrix(num_cons + 1, 1, num_vars, 1.);
+  // WHICH BLOCK?
+  identity_matrix_positions_.add_matrix(
+      num_cons + 1, num_vars + 2 * num_cons + 1, num_vars, 1.);
+  // WHICH BLOCK
+  identity_matrix_positions_.add_matrix(
+      num_cons + 1, 2 * num_vars + 2 * num_cons + 1, num_vars, -1);
+#if 0
+  identity_matrix_positions_.length = 5;
+  identity_matrix_positions_.irow = new int[5];
+  identity_matrix_positions_.jcol = new int[5];
+  identity_matrix_positions_.size = new int[5];
+  identity_matrix_positions_.value = new double[5];
+  identity_matrix_positions_.irow[0] = identity_matrix_positions_.irow[1] = 1;
+  identity_matrix_positions_.irow[2] = identity_matrix_positions_.irow[3] = identity_matrix_positions_.irow[4] = num_cons + 1;
+  identity_matrix_positions_.jcol[0] = num_vars + 1;
+  identity_matrix_positions_.jcol[1] = num_vars + num_cons + 1;
+  identity_matrix_positions_.jcol[2] = 1;
+  identity_matrix_positions_.jcol[3] = num_vars + num_cons * 2 + 1;
+  identity_matrix_positions_.jcol[4] = num_vars * 2 + num_cons * 2 + 1;
+  identity_matrix_positions_.size[0] = identity_matrix_positions_.size[1] = num_cons;
+  identity_matrix_positions_.size[2] = identity_matrix_positions_.size[3] = identity_matrix_positions_.size[4] = num_vars;
+  identity_matrix_positions_.value[0] = identity_matrix_positions_.value[2] = identity_matrix_positions_.value[3] = 1.0;
+  identity_matrix_positions_.value[1] = identity_matrix_positions_.value[4] = -1.0;
+#endif
 #else
-  nConstr_QP_ = num_cons;
-  nVar_QP_ = num_vars + 2 * num_cons;
-  I_info_A_.length = 2;
-  I_info_A_.irow = new int[2];
-  I_info_A_.jcol = new int[2];
-  I_info_A_.size = new int[2];
-  I_info_A_.value = new double[2];
-  I_info_A_.irow[0] = I_info_A_.irow[1] = 1;
-  I_info_A_.jcol[0] = num_vars + 1;
-  I_info_A_.jcol[1] = num_vars + num_cons + 1;
-  I_info_A_.size[0] = I_info_A_.size[1] = num_cons;
-  I_info_A_.value[0] = 1.0;
-  I_info_A_.value[1] = -1.0;
+  // TODO: make IdentityMatrixPosition a class
+  num_qp_constraints_ = num_cons;
+  num_qp_variables_ = num_vars + 2 * num_cons;
+
+  // WHICH BLOCK
+  identity_matrix_positions_.add_matrix(1, num_vars + 1, num_cons, 1.);
+  identity_matrix_positions_.add_matrix(1, num_vars + num_cons + 1, num_cons,
+                                        -1.);
+#if 0
+  identity_matrix_positions_.length = 2;
+  identity_matrix_positions_.irow = new int[2];
+  identity_matrix_positions_.jcol = new int[2];
+  identity_matrix_positions_.size = new int[2];
+  identity_matrix_positions_.value = new double[2];
+  identity_matrix_positions_.irow[0] = identity_matrix_positions_.irow[1] = 1;
+  identity_matrix_positions_.jcol[0] = num_vars + 1;
+  identity_matrix_positions_.jcol[1] = num_vars + num_cons + 1;
+  identity_matrix_positions_.size[0] = identity_matrix_positions_.size[1] = num_cons;
+  identity_matrix_positions_.value[0] = 1.0;
+  identity_matrix_positions_.value[1] = -1.0;
+#endif
 #endif
 
-  W_b_ = new ActiveType[nVar_QP_];
-  W_c_ = new ActiveType[nConstr_QP_];
+  // Allocate memory for the working sets
+  bounds_working_set_ = new ActivityStatus[num_qp_variables_];
+  constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
 
+  // Determine which solver should be used
+  int enum_int;
+  options->GetEnumValue("qp_solver_choice", enum_int, "");
+  qp_solver_choice_ = QpSolver(enum_int);
+
+  // Create solver objects
   switch (qp_solver_choice_) {
     case QPOASES:
       solverInterface_ =
@@ -76,7 +106,7 @@ QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
       break;
     case GUROBI:
 #ifdef USE_GUROBI
-      isolverInterface_ =
+      solverInterface_ =
           make_shared<GurobiInterface>(nlp_sizes, qptype, options, jnlst);
 #endif
       break;
@@ -90,13 +120,14 @@ QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  qpOASESInterface_ = make_shared<qpOASESInterface>(nlp_sizes, qptype, options);
+  qpOASESInterface_ =
+      make_shared<qpOASESInterface>(nlp_sizes, qptype, options, jnlst);
   QOREInterface_ =
       make_shared<QOREInterface>(nlp_sizes, qptype, options, jnlst);
-  W_b_qpOASES_ = new ActiveType[nVar_QP_];
-  W_c_qpOASES_ = new ActiveType[nConstr_QP_];
-  W_b_qore_ = new ActiveType[nVar_QP_];
-  W_c_qore_ = new ActiveType[nConstr_QP_];
+  W_b_qpOASES_ = new ActivityStatus[num_qp_variables_];
+  W_c_qpOASES_ = new ActivityStatus[num_qp_constraints_];
+  W_b_qore_ = new ActivityStatus[num_qp_variables_];
+  W_c_qore_ = new ActivityStatus[num_qp_constraints_];
 #endif
 #endif
 }
@@ -106,18 +137,10 @@ QPhandler::QPhandler(std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes,
  */
 QPhandler::~QPhandler()
 {
-  delete[] W_b_;
-  W_b_ = NULL;
-  delete[] W_c_;
-  W_c_ = NULL;
-  delete[] I_info_A_.irow;
-  I_info_A_.irow = NULL;
-  delete[] I_info_A_.jcol;
-  I_info_A_.jcol = NULL;
-  delete[] I_info_A_.size;
-  I_info_A_.size = NULL;
-  delete[] I_info_A_.value;
-  I_info_A_.value = NULL;
+  delete[] bounds_working_set_;
+  bounds_working_set_ = NULL;
+  delete[] constraints_working_set_;
+  constraints_working_set_ = NULL;
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
   delete[] W_b_qpOASES_;
@@ -165,46 +188,58 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
   /*-------------------------------------------------------------*/
   int num_vars = nlp_sizes_->get_num_variables();
   int num_cons = nlp_sizes_->get_num_constraints();
+
+  // TODO: There should be no difference between qpOASES and QORE
+
   if (qp_solver_choice_ != QORE) {
-#ifndef NEW_FORMULATION
+#ifdef NEW_FORMULATION
+    const double* c_k_vals = c_k->get_values();
+    const double* c_l_vals = c_l->get_values();
+    const double* c_u_vals = c_u->get_values();
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lbA(i,
-                                c_l->get_value(i) - c_k->get_value(i)); // must
-      // place before set_ubA
-      solverInterface_->set_ubA(i, c_u->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_lbA(i, c_l_vals[i] - c_k_vals[i]);
+      solverInterface_->set_ubA(i, c_u_vals[i] - c_k_vals[i]);
     }
+    const double* x_k_vals = x_k->get_values();
+    const double* x_l_vals = x_l->get_values();
+    const double* x_u_vals = x_u->get_values();
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(
-          i, std::max(x_l->get_value(i) - x_k->get_value(i), -delta));
-      solverInterface_->set_ub(
-          i, std::min(x_u->get_value(i) - x_k->get_value(i), delta));
-    }
-    /**
-     * only set the upper bound for the last half to be infinity(those are slack
-     * variables).
-     * The lower bounds are initialized as 0
-     */
-    for (int i = 0; i < num_cons * 2; i++)
-      solverInterface_->set_ub(num_vars + i, INF);
-#else
-    for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lbA(i, c_l->value(i) - c_k->value(i)); // must
-      // place before set_ubA
-      solverInterface_->set_ubA(i, c_u->value(i) - c_k->value(i));
-    }
-    for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lbA(num_cons + i,
-                                x_l->value(i) - x_k->value(i)); // must
-      // place before set_ubA
-      solverInterface_->set_ubA(num_cons + i, x_u->value(i) - x_k->value(i));
+      solverInterface_->set_lbA(num_cons + i, x_l_vals[i] - x_k_vals[i]);
+      solverInterface_->set_ubA(num_cons + i, x_u_vals[i] - x_k_vals[i]);
     }
 
     for (int i = 0; i < num_vars; i++) {
       solverInterface_->set_lb(i, -delta);
       solverInterface_->set_ub(i, delta);
     }
-    for (int i = num_vars; i < nVar_QP_; i++)
+    for (int i = num_vars; i < num_qp_variables_; i++) {
+      solverInterface_->set_lb(i, 0.);
       solverInterface_->set_ub(i, INF);
+    }
+#else
+    const double* c_k_vals = c_k->get_values();
+    const double* c_l_vals = c_l->get_values();
+    const double* c_u_vals = c_u->get_values();
+    for (int i = 0; i < num_cons; i++) {
+      solverInterface_->set_lbA(i, c_l_vals[i] - c_k_vals[i]);
+      solverInterface_->set_ubA(i, c_u_vals[i] - c_k_vals[i]);
+    }
+    const double* x_k_vals = x_k->get_values();
+    const double* x_l_vals = x_l->get_values();
+    const double* x_u_vals = x_u->get_values();
+    for (int i = 0; i < num_vars; i++) {
+      solverInterface_->set_lb(i, max(x_l_vals[i] - x_k_vals[i], -delta));
+      solverInterface_->set_ub(i, min(x_u_vals[i] - x_k_vals[i], delta));
+    }
+    /**
+     * only set the upper bound for the last half to be infinity(those are slack
+     * variables).
+     * The lower bounds are initialized as 0
+     */
+    for (int i = 0; i < num_cons * 2; i++) {
+      solverInterface_->set_lb(num_vars + i, 0.);
+      solverInterface_->set_ub(num_vars + i, INF);
+    }
 #endif
   }
   /*-------------------------------------------------------------*/
@@ -212,37 +247,48 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
   /*-------------------------------------------------------------*/
   else {
 #ifndef NEW_FORMULATION
+    // For p_k
+    const double* x_k_vals = x_k->get_values();
+    const double* x_l_vals = x_l->get_values();
+    const double* x_u_vals = x_u->get_values();
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(
-          i, std::max(x_l->get_value(i) - x_k->get_value(i), -delta));
-      solverInterface_->set_ub(
-          i, std::min(x_u->get_value(i) - x_k->get_value(i), delta));
+      solverInterface_->set_lb(i, max(x_l_vals[i] - x_k_vals[i], -delta));
+      solverInterface_->set_ub(i, min(x_u_vals[i] - x_k_vals[i], delta));
     }
 
+    // For u,v
     for (int i = 0; i < num_cons * 2; i++) {
       solverInterface_->set_lb(num_vars + i, 0.);
       solverInterface_->set_ub(num_vars + i, INF);
     }
 #endif
 
+    const double* c_k_vals = c_k->get_values();
+    const double* c_l_vals = c_l->get_values();
+    const double* c_u_vals = c_u->get_values();
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lb(nVar_QP_ + i,
-                               c_l->get_value(i) - c_k->get_value(i));
-      solverInterface_->set_ub(nVar_QP_ + i,
-                               c_u->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_lb(num_qp_variables_ + i,
+                               c_l_vals[i] - c_k_vals[i]);
+      solverInterface_->set_ub(num_qp_variables_ + i,
+                               c_u_vals[i] - c_k_vals[i]);
     }
 
 #ifdef NEW_FORMULATION
+    const double* x_k_vals = x_k->get_values();
+    const double* x_l_vals = x_l->get_values();
+    const double* x_u_vals = x_u->get_values();
     for (int i = 0; i < num_vars; i++) {
       solverInterface_->set_lb(i, -delta);
       solverInterface_->set_ub(i, delta);
-      solverInterface_->set_lb(nVar_QP_ + num_cons + i,
-                               x_l->value(i) - x_k->value(i));
-      solverInterface_->set_ub(nVar_QP_ + num_cons + i,
-                               x_u->value(i) - x_k->value(i));
+
+      solverInterface_->set_lb(num_qp_variables_ + num_cons + i,
+                               x_l_vals[i] - x_k_vals[i]);
+      solverInterface_->set_ub(num_qp_variables_ + num_cons + i,
+                               x_u_vals[i] - x_k_vals[i]);
     }
-    for (int i = num_vars; i < nVar_QP_; i++)
+    for (int i = num_vars; i < num_qp_variables_; i++) {
       solverInterface_->set_ub(i, INF);
+    }
 // DEBUG
 //        solverInterface_->getLb()->print("lb");
 //        solverInterface_->getUb()->print("ub");
@@ -258,28 +304,27 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
  * @param rho       Penalty Parameter
  */
 
-void QPhandler::set_g(shared_ptr<const Vector> grad, double rho)
+void QPhandler::set_gradient(shared_ptr<const Vector> grad, double rho)
 {
   int num_vars = nlp_sizes_->get_num_variables();
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  for (int i = 0; i < nVar_QP_; i++)
+  for (int i = 0; i < num_qp_variables_; i++)
     if (i < num_vars) {
-      qpOASESInterface_->set_g(i, grad->value(i));
-      QOREInterface_->set_g(i, grad->value(i));
+      qpOASESInterface_->set_gradient(i, grad->get_value(i));
+      QOREInterface_->set_gradient(i, grad->get_value(i));
     } else {
-      qpOASESInterface_->set_g(i, rho);
-      QOREInterface_->set_g(i, rho);
+      qpOASESInterface_->set_gradient(i, rho);
+      QOREInterface_->set_gradient(i, rho);
     }
 #endif
 #endif
-  for (int i = 0; i < nVar_QP_; i++)
-    if (i < num_vars)
-      solverInterface_->set_g(i, grad->get_value(i));
-
-    else
-      solverInterface_->set_g(i, rho);
-
+  for (int i = 0; i < num_vars; i++) {
+    solverInterface_->set_gradient(i, grad->get_value(i));
+  }
+  for (int i = num_vars; i < num_qp_variables_; i++) {
+    solverInterface_->set_gradient(i, rho);
+  }
   // DEBUG
   //    solverInterface_->getG()->print("G");
 }
@@ -295,15 +340,15 @@ void QPhandler::set_g(shared_ptr<const Vector> grad, double rho)
  * @param hessian the Lagragian hessian evaluated at x_k and lambda_k from nlp
  * readers.
  */
-void QPhandler::set_H(shared_ptr<const SpTripletMat> hessian)
+void QPhandler::set_hessian(shared_ptr<const SpTripletMat> hessian)
 {
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  qpOASESInterface_->set_H_values(hessian);
-  QOREInterface_->set_H_values(hessian);
+  qpOASESInterface_->set_hessian(hessian);
+  QOREInterface_->set_hessian(hessian);
 #endif
 #endif
-  solverInterface_->set_H(hessian);
+  solverInterface_->set_hessian(hessian);
 }
 
 /**
@@ -311,15 +356,15 @@ void QPhandler::set_H(shared_ptr<const SpTripletMat> hessian)
  * The matrix A in QP problem will be concatenate as [J I -I]
  * @param jacobian  the Matrix object for Jacobian from c(x)
  */
-void QPhandler::set_A(shared_ptr<const SpTripletMat> jacobian)
+void QPhandler::set_jacobian(shared_ptr<const SpTripletMat> jacobian)
 {
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  qpOASESInterface_->set_A_values(jacobian, I_info_A_);
-  QOREInterface_->set_A_values(jacobian, I_info_A_);
+  qpOASESInterface_->set_jacobian(jacobian, identity_matrix_positions_);
+  QOREInterface_->set_jacobian(jacobian, identity_matrix_positions_);
 #endif
 #endif
-  solverInterface_->set_A(jacobian, I_info_A_);
+  solverInterface_->set_jacobian(jacobian, identity_matrix_positions_);
 }
 
 /**
@@ -342,25 +387,25 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
   int num_cons = nlp_sizes_->get_num_constraints();
 #ifndef NEW_FORMULATION
   if (qp_solver_choice_ != QORE) {
-    if (qp_solver_choice_ == GUROBI || qp_solver_choice_ == CPLEX)
+    if (qp_solver_choice_ == GUROBI || qp_solver_choice_ == CPLEX) {
       solverInterface_->reset_constraints();
-
+    }
     for (int i = 0; i < num_cons; i++) {
       solverInterface_->set_lbA(i, c_l->get_value(i) - c_k->get_value(i));
     }
 
     for (int i = 0; i < num_vars; i++) {
       solverInterface_->set_lb(
-          i, std::max(x_l->get_value(i) - x_k->get_value(i), -delta));
+          i, max(x_l->get_value(i) - x_k->get_value(i), -delta));
       solverInterface_->set_ub(
-          i, std::min(x_u->get_value(i) - x_k->get_value(i), delta));
+          i, min(x_u->get_value(i) - x_k->get_value(i), delta));
     }
   } else {
     for (int i = 0; i < num_vars; i++) {
       solverInterface_->set_lb(
-          i, std::max(x_l->get_value(i) - x_k->get_value(i), -delta));
+          i, max(x_l->get_value(i) - x_k->get_value(i), -delta));
       solverInterface_->set_ub(
-          i, std::min(x_u->get_value(i) - x_k->get_value(i), delta));
+          i, min(x_u->get_value(i) - x_k->get_value(i), delta));
     }
     for (int i = 0; i < num_cons; i++) {
       solverInterface_->set_lb(num_vars + 2 * num_cons + i,
@@ -370,21 +415,23 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
     }
   }
 #else
-  if (QPsolverChoice_ == QORE) {
+  if (qp_solver_choice_ == QORE) {
     for (int i = 0; i < num_vars; i++) {
       solverInterface_->set_lb(i, -delta);
       solverInterface_->set_ub(i, delta);
     }
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lb(nVar_QP_ + i, c_l->value(i) - c_k->value(i));
-      solverInterface_->set_ub(nVar_QP_ + i, c_u->value(i) - c_k->value(i));
+      solverInterface_->set_lb(num_qp_variables_ + i,
+                               c_l->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_ub(num_qp_variables_ + i,
+                               c_u->get_value(i) - c_k->get_value(i));
     }
 
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(nVar_QP_ + num_cons + i,
-                               x_l->value(i) - x_k->value(i));
-      solverInterface_->set_ub(nVar_QP_ + num_cons + i,
-                               x_u->value(i) - x_k->value(i));
+      solverInterface_->set_lb(num_qp_variables_ + num_cons + i,
+                               x_l->get_value(i) - x_k->get_value(i));
+      solverInterface_->set_ub(num_qp_variables_ + num_cons + i,
+                               x_u->get_value(i) - x_k->get_value(i));
     }
   } else {
     for (int i = 0; i < num_vars; i++) {
@@ -393,12 +440,14 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
     }
 
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lbA(i, c_l->value(i) - c_k->value(i));
-      solverInterface_->set_ubA(i, c_u->value(i) - c_k->value(i));
+      solverInterface_->set_lbA(i, c_l->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_ubA(i, c_u->get_value(i) - c_k->get_value(i));
     }
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lbA(num_cons + i, x_l->value(i) - x_k->value(i));
-      solverInterface_->set_ubA(num_cons + i, x_u->value(i) - x_k->value(i));
+      solverInterface_->set_lbA(num_cons + i,
+                                x_l->get_value(i) - x_k->get_value(i));
+      solverInterface_->set_ubA(num_cons + i,
+                                x_u->get_value(i) - x_k->get_value(i));
     }
   }
 #endif
@@ -419,14 +468,14 @@ void QPhandler::update_penalty(double rho)
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
   int num_cons = nlp_sizes_->get_num_constraints();
-  for (int i = num_vars; i < num_vars + num_cons * 2; i++) {
-    qpOASESInterface_->set_g(i, rho);
-    QOREInterface_->set_g(i, rho);
+  for (int i = num_vars; i < num_qp_variables_; i++) {
+    qpOASESInterface_->set_gradient(i, rho);
+    QOREInterface_->set_gradient(i, rho);
   }
 #endif
 #endif
-  for (int i = num_vars; i < nVar_QP_; i++)
-    solverInterface_->set_g(i, rho);
+  for (int i = num_vars; i < num_qp_variables_; i++)
+    solverInterface_->set_gradient(i, rho);
 }
 
 /**
@@ -443,21 +492,20 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad)
 #ifdef COMPARE_QP_SOLVER
 
   for (int i = 0; i < num_vars; i++) {
-    qpOASESInterface_->set_g(i, grad->value(i));
-    QOREInterface_->set_g(i, grad->value(i));
+    qpOASESInterface_->set_gradient(i, grad->get_value(i));
+    QOREInterface_->set_gradient(i, grad->get_value(i));
   }
 #endif
 #endif
   for (int i = 0; i < num_vars; i++)
-    solverInterface_->set_g(i, grad->get_value(i));
+    solverInterface_->set_gradient(i, grad->get_value(i));
 }
 
 /**
  *@brief Solve the QP with objective and constraints defined by its class
  *members
  */
-void QPhandler::solveQP(shared_ptr<Stats> stats,
-                        Ipopt::SmartPtr<const Ipopt::OptionsList> options)
+QpSolverExitStatus QPhandler::solve_qp(shared_ptr<Statistics> stats)
 {
 
 //    solverInterface_->getA()->print_full("A");
@@ -471,23 +519,27 @@ void QPhandler::solveQP(shared_ptr<Stats> stats,
   QOREInterface_->optimizeQP(stats);
   qpOASESInterface_->optimizeQP(stats);
   bool qpOASES_optimal =
-      OptimalityTest(qpOASESInterface_, QPOASES, W_b_qpOASES_, W_c_qpOASES_);
+      test_optimality(qpOASESInterface_, QPOASES, W_b_qpOASES_, W_c_qpOASES_);
   bool qore_optimal =
-      OptimalityTest(QOREInterface_, QORE, W_b_qore_, W_c_qore_);
-  if (!qpOASES_optimal || !qore_optimal)
+      test_optimality(QOREInterface_, QORE, W_b_qore_, W_c_qore_);
+  if (!qpOASES_optimal || !qore_optimal) {
     testQPsolverDifference();
-
-#endif
-#endif
-
-  solverInterface_->optimizeQP(stats);
-
-  // manually check if the optimality condition is satisfied
-  bool isOptimal =
-      test_optimality(solverInterface_, qp_solver_choice_, W_b_, W_c_);
-  if (!isOptimal) {
-    THROW_EXCEPTION(QP_NOT_OPTIMAL, QP_NOT_OPTIMAL_MSG);
   }
+
+#endif
+#endif
+
+  QpSolverExitStatus qp_exit_status = solverInterface_->optimize_qp(stats);
+
+  // Check if the QP solver really returned an optimal solution.
+  if (qp_exit_status == QPEXIT_OPTIMAL) {
+    bool isOptimal =
+        test_optimality(solverInterface_, qp_solver_choice_,
+                        bounds_working_set_, constraints_working_set_);
+    assert(isOptimal);
+  }
+
+  return qp_exit_status;
 }
 
 double QPhandler::get_objective()
@@ -501,11 +553,11 @@ void QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian)
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  QOREInterface_->set_H_values(Hessian);
-  qpOASESInterface_->set_H_values(Hessian);
+  QOREInterface_->set_hessian(Hessian);
+  qpOASESInterface_->set_hessian(Hessian);
 #endif
 #endif
-  solverInterface_->set_H(Hessian);
+  solverInterface_->set_hessian(Hessian);
 }
 
 void QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian)
@@ -513,11 +565,11 @@ void QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian)
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-  QOREInterface_->set_A_values(Jacobian, I_info_A_);
-  qpOASESInterface_->set_A_values(Jacobian, I_info_A_);
+  QOREInterface_->set_jacobian(Jacobian, identity_matrix_positions_);
+  qpOASESInterface_->set_jacobian(Jacobian, identity_matrix_positions_);
 #endif
 #endif
-  solverInterface_->set_A(Jacobian, I_info_A_);
+  solverInterface_->set_jacobian(Jacobian, identity_matrix_positions_);
 }
 
 void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
@@ -528,12 +580,14 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
   for (int i = 0; i < num_vars; i++) {
-    qpOASESInterface_->set_lb(i,
-                              std::max(x_l->value(i) - x_k->value(i), -delta));
-    qpOASESInterface_->set_ub(i,
-                              std::min(x_u->value(i) - x_k->value(i), delta));
-    QOREInterface_->set_lb(i, std::max(x_l->value(i) - x_k->value(i), -delta));
-    QOREInterface_->set_ub(i, std::min(x_u->value(i) - x_k->value(i), delta));
+    qpOASESInterface_->set_lb(
+        i, max(x_l->get_value(i) - x_k->get_value(i), -delta));
+    qpOASESInterface_->set_ub(
+        i, min(x_u->get_value(i) - x_k->get_value(i), delta));
+    QOREInterface_->set_lb(i,
+                           max(x_l->get_value(i) - x_k->get_value(i), -delta));
+    QOREInterface_->set_ub(i,
+                           min(x_u->get_value(i) - x_k->get_value(i), delta));
   }
 #endif
 #endif
@@ -547,19 +601,18 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
 
   for (int i = 0; i < num_vars; i++) {
     solverInterface_->set_lb(
-        i, std::max(x_l->get_value(i) - x_k->get_value(i), -delta));
-    solverInterface_->set_ub(
-        i, std::min(x_u->get_value(i) - x_k->get_value(i), delta));
+        i, max(x_l->get_value(i) - x_k->get_value(i), -delta));
+    solverInterface_->set_ub(i,
+                             min(x_u->get_value(i) - x_k->get_value(i), delta));
   }
 
 #endif
 }
 
-void QPhandler::WriteQPData(const string filename)
+void QPhandler::write_qp_data(const string filename)
 {
 
-  solverInterface_->WriteQPDataToFile(Ipopt::J_LAST_LEVEL, Ipopt::J_USER1,
-                                      filename);
+  solverInterface_->WriteQPDataToFile(J_LAST_LEVEL, J_USER1, filename);
 }
 
 Exitflag QPhandler::get_status()
@@ -568,18 +621,23 @@ Exitflag QPhandler::get_status()
 }
 
 bool QPhandler::test_optimality(shared_ptr<QPSolverInterface> qpsolverInterface,
-                                Solver qpSolver, ActiveType* W_b,
-                                ActiveType* W_c)
+                                QpSolver qpSolver,
+                                ActivityStatus* bounds_working_set,
+                                ActivityStatus* constraints_working_set)
 {
   qpOptimalStatus_ = qpsolverInterface->get_optimality_status();
-  return (qpsolverInterface->test_optimality(W_c, W_b));
+  return (qpsolverInterface->test_optimality(constraints_working_set,
+                                             bounds_working_set));
 }
 
-double QPhandler::get_infea_measure_model() const
+double QPhandler::get_model_infeasibility() const
 {
+  // Here we compute the constraint violation from the penatly values.
+  // The QP primal variables are ordered so that the SQP primal variables
+  // are first, and the remaining ones are the penalty variables.
   int num_vars = nlp_sizes_->get_num_variables();
-  return solverInterface_->get_optimal_solution()->calc_one_norm(
-      num_vars, nVar_QP_ - num_vars);
+  return solverInterface_->get_primal_solution()->calc_subvector_one_norm(
+      num_vars, num_qp_variables_ - num_vars);
 }
 
 const OptimalityStatus& QPhandler::get_QpOptimalStatus() const
@@ -587,72 +645,80 @@ const OptimalityStatus& QPhandler::get_QpOptimalStatus() const
   return qpOptimalStatus_;
 }
 
-void QPhandler::get_active_set(ActiveType* A_c, ActiveType* A_b,
+void QPhandler::get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
                                shared_ptr<Vector> x, shared_ptr<Vector> Ax)
 {
   // use the class member to get the qp problem information
   auto lb = solverInterface_->getLb();
   auto ub = solverInterface_->getUb();
   if (x == nullptr) {
-    x = make_shared<Vector>(nVar_QP_);
-    x->copy_vector(get_optimal_solution());
+    x = make_shared<Vector>(num_qp_variables_);
+    x->copy_vector(get_primal_solution());
   }
   if (Ax == nullptr) {
-    Ax = make_shared<Vector>(nConstr_QP_);
+    Ax = make_shared<Vector>(num_qp_constraints_);
     auto A = solverInterface_->getA();
     A->multiply(x, Ax);
   }
 
-  for (int i = 0; i < nVar_QP_; i++) {
+  for (int i = 0; i < num_qp_variables_; i++) {
     if (abs(x->get_value(i) - lb->get_value(i)) < sqrt_m_eps) {
       if (abs(ub->get_value(i) - x->get_value(i)) < sqrt_m_eps) {
-        A_b[i] = ACTIVE_BOTH_SIDE;
-      } else
+        A_b[i] = ACTIVE_BOTH_SIDES;
+      } else {
         A_b[i] = ACTIVE_BELOW;
-    } else if (abs(ub->get_value(i) - x->get_value(i)) < sqrt_m_eps)
+      }
+    } else if (abs(ub->get_value(i) - x->get_value(i)) < sqrt_m_eps) {
       A_b[i] = ACTIVE_ABOVE;
-    else
+    } else {
       A_b[i] = INACTIVE;
+    }
   }
   if (qp_solver_choice_ == QORE) {
     // if no x and Ax are input
-    for (int i = 0; i < nConstr_QP_; i++) {
-      if (abs(Ax->get_value(i) - lb->get_value(i + nVar_QP_)) < sqrt_m_eps) {
-        if (abs(ub->get_value(i + nVar_QP_) - Ax->get_value(i)) < sqrt_m_eps) {
-          A_c[i] = ACTIVE_BOTH_SIDE;
-        } else
+    for (int i = 0; i < num_qp_constraints_; i++) {
+      if (abs(Ax->get_value(i) - lb->get_value(i + num_qp_variables_)) <
+          sqrt_m_eps) {
+        if (abs(ub->get_value(i + num_qp_variables_) - Ax->get_value(i)) <
+            sqrt_m_eps) {
+          A_c[i] = ACTIVE_BOTH_SIDES;
+        } else {
           A_c[i] = ACTIVE_BELOW;
-      } else if (abs(ub->get_value(i + nVar_QP_) - Ax->get_value(i)) <
-                 sqrt_m_eps)
+        }
+      } else if (abs(ub->get_value(i + num_qp_variables_) - Ax->get_value(i)) <
+                 sqrt_m_eps) {
         A_c[i] = ACTIVE_ABOVE;
-      else
+      } else {
         A_c[i] = INACTIVE;
+      }
     }
   } else {
     auto lbA = solverInterface_->getUbA();
     auto ubA = solverInterface_->getUbA();
-    for (int i = 0; i < nConstr_QP_; i++) {
+    for (int i = 0; i < num_qp_constraints_; i++) {
       if (abs(Ax->get_value(i) - lbA->get_value(i)) < sqrt_m_eps) {
         if (abs(ubA->get_value(i) - Ax->get_value(i)) < sqrt_m_eps) {
-          A_c[i] = ACTIVE_BOTH_SIDE;
-        } else
+          A_c[i] = ACTIVE_BOTH_SIDES;
+        } else {
           A_c[i] = ACTIVE_BELOW;
-      } else if (abs(ubA->get_value(i) - Ax->get_value(i)) < sqrt_m_eps)
+        }
+      } else if (abs(ubA->get_value(i) - Ax->get_value(i)) < sqrt_m_eps) {
         A_c[i] = ACTIVE_ABOVE;
-      else
+      } else {
         A_c[i] = INACTIVE;
+      }
     }
   }
 }
 
-void QPhandler::set_g(double rho)
+void QPhandler::set_gradient(double rho)
 {
   int num_vars = nlp_sizes_->get_num_variables();
   for (int i = 0; i < num_vars; i++) {
-    solverInterface_->set_g(i, rho);
+    solverInterface_->set_gradient(i, rho);
   }
-  for (int i = num_vars; i < nVar_QP_; i++) {
-    solverInterface_->set_g(i, rho);
+  for (int i = num_vars; i < num_qp_variables_; i++) {
+    solverInterface_->set_gradient(i, rho);
   }
 }
 
@@ -665,45 +731,56 @@ void QPhandler::set_bounds_debug(double delta, shared_ptr<const Vector> x_l,
                                  shared_ptr<const Vector> c_u,
                                  shared_ptr<const Vector> c_k)
 {
+  int num_vars = nlp_sizes_->get_num_variables();
+  int num_cons = nlp_sizes_->get_num_constraints();
 
   for (int i = 0; i < num_cons; i++) {
-    qpOASESInterface_->set_lbA(i, c_l->value(i) - c_k->value(i));
-    qpOASESInterface_->set_ubA(i, c_u->value(i) - c_k->value(i));
+    qpOASESInterface_->set_lbA(i, c_l->get_value(i) - c_k->get_value(i));
+    qpOASESInterface_->set_ubA(i, c_u->get_value(i) - c_k->get_value(i));
   }
 
   for (int i = 0; i < num_vars; i++) {
-    qpOASESInterface_->set_lb(i,
-                              std::max(x_l->value(i) - x_k->value(i), -delta));
-    qpOASESInterface_->set_ub(i,
-                              std::min(x_u->value(i) - x_k->value(i), delta));
+    qpOASESInterface_->set_lb(
+        i, max(x_l->get_value(i) - x_k->get_value(i), -delta));
+    qpOASESInterface_->set_ub(
+        i, min(x_u->get_value(i) - x_k->get_value(i), delta));
   }
   /**
    * only set the upper bound for the last 2*nCon entries (those are slack
    * variables).
    * The lower bounds are initialized as 0
    */
-  for (int i = 0; i < num_cons * 2; i++)
+  for (int i = 0; i < num_cons * 2; i++) {
     qpOASESInterface_->set_ub(num_vars + i, INF);
+  }
 
   /*-------------------------------------------------------------*/
   /* Only set lb and ub, where lb = [lbx;lbA]; and ub=[ubx; ubA] */
   /*-------------------------------------------------------------*/
   for (int i = 0; i < num_vars; i++) {
-    QOREInterface_->set_lb(i, std::max(x_l->value(i) - x_k->value(i), -delta));
-    QOREInterface_->set_ub(i, std::min(x_u->value(i) - x_k->value(i), delta));
+    QOREInterface_->set_lb(i,
+                           max(x_l->get_value(i) - x_k->get_value(i), -delta));
+    QOREInterface_->set_ub(i,
+                           min(x_u->get_value(i) - x_k->get_value(i), delta));
   }
 
-  for (int i = 0; i < nConstr_QP_ * 2; i++)
+  for (int i = 0; i < num_cons * 2; i++) {
     QOREInterface_->set_ub(num_vars + i, INF);
+  }
 
-  for (int i = 0; i < nConstr_QP_; i++) {
-    QOREInterface_->set_lb(nVar_QP_ + i, c_l->value(i) - c_k->value(i));
-    QOREInterface_->set_ub(nVar_QP_ + i, c_u->value(i) - c_k->value(i));
+  for (int i = 0; i < num_cons; i++) {
+    QOREInterface_->set_lb(num_qp_variables_ + i,
+                           c_l->get_value(i) - c_k->get_value(i));
+    QOREInterface_->set_ub(num_qp_variables_ + i,
+                           c_u->get_value(i) - c_k->get_value(i));
   }
 }
 
 bool QPhandler::testQPsolverDifference()
 {
+  int num_vars = nlp_sizes_->get_num_variables();
+  int num_cons = nlp_sizes_->get_num_constraints();
+
   shared_ptr<Vector> qpOASESsol = make_shared<Vector>(num_vars);
   shared_ptr<Vector> QOREsol = make_shared<Vector>(num_vars);
   shared_ptr<Vector> difference = make_shared<Vector>(num_vars);
@@ -713,12 +790,13 @@ bool QPhandler::testQPsolverDifference()
   QOREsol->copy_vector(QOREInterface_->get_optimal_solution());
   difference->copy_vector(qpOASESsol);
   difference->add_vector(-1., QOREsol);
-  double diff_norm = difference->one_norm();
+  double diff_norm = difference->calc_one_norm();
   if (diff_norm > 1.0e-8) {
     printf("difference is %10e\n", diff_norm);
     qpOASESsol->print("qpOASESsol");
     QOREsol->print("QOREsol");
-    QOREInterface_->WriteQPDataToFile(jnlst_, J_ALL, J_DBG);
+    // TODO activate this again
+    // QOREInterface_->WriteQPDataToFile(jnlst_, J_ALL, J_DBG);
   }
   assert(diff_norm < 1.0e-8);
   return true;

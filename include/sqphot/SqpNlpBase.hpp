@@ -105,6 +105,9 @@ public:
   {
   }
 
+  /** @name Name of the NLP. */
+  virtual const std::string& get_nlp_name() const = 0;
+
   /**
    *@brief get the information about sizes
    */
