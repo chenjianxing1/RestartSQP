@@ -162,7 +162,8 @@ int main(int argc, char* argv[])
     }
   }
 
-  //    H_qore->print_full("H");
+  A_qore->print("A");
+  H_qore->print_full("H");
 
   /////////////////////////////////////////////////////
   //  Create a dummy Algorithm object to get options //
@@ -220,6 +221,8 @@ int main(int argc, char* argv[])
   shared_ptr<Statistics> stats_qpOASES = make_shared<Statistics>();
   auto A_qpOASES = convert_csr_to_csc(A_qore);
   auto H_qpOASES = convert_csr_to_csc(H_qore);
+
+  A_qpOASES->print("A_qpOASES");
 
   auto lb_qpOASES = make_shared<Vector>(nVar);
   auto ub_qpOASES = make_shared<Vector>(nVar);

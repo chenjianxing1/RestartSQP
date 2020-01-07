@@ -109,30 +109,30 @@ public:
 
   /** @name Setters */
   //@{
-  void set_lb(int location, double value) override;
+  void set_lower_variable_bounds(int location, double value) override;
 
-  void set_lb(std::shared_ptr<const Vector> rhs) override;
+  void set_lower_variable_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_ub(int location, double value) override;
+  void set_upper_variable_bounds(int location, double value) override;
 
-  void set_ub(std::shared_ptr<const Vector> rhs) override;
+  void set_upper_variable_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_lbA(int location, double value) override;
+  void set_lower_constraint_bounds(int location, double value) override;
 
-  void set_lbA(std::shared_ptr<const Vector> rhs) override;
+  void set_lower_constraint_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_ubA(int location, double value) override;
+  void set_upper_constraint_bounds(int location, double value) override;
 
-  void set_ubA(std::shared_ptr<const Vector> rhs) override;
+  void set_upper_constraint_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_gradient(int location, double value) override;
+  void set_linear_objective_coefficients(int location, double value) override;
 
-  void set_gradient(std::shared_ptr<const Vector> rhs) override;
+  void set_linear_objective_coefficients(std::shared_ptr<const Vector> rhs) override;
 
-  void set_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
+  void set_objective_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
 
   void
-  set_jacobian(std::shared_ptr<const SpTripletMat> rhs,
+  set_constraint_jacobian(std::shared_ptr<const SpTripletMat> rhs,
                IdentityMatrixPositions& identity_matrix_positions) override;
 
   //@}
@@ -144,40 +144,40 @@ public:
   void reset_constraints() override;
 
   //@{
-  const std::shared_ptr<Vector>& getLb() const override
+  std::shared_ptr<const Vector> get_lower_variable_bounds() const override
   {
     return lb_;
-  };
+  }
 
-  const std::shared_ptr<Vector>& getUb() const override
+  std::shared_ptr<const Vector> get_upper_variable_bounds() const override
   {
     return ub_;
-  };
+  }
 
-  const std::shared_ptr<Vector>& getLbA() const override
+  std::shared_ptr<const Vector> get_lower_constraint_bounds() const override
   {
     return lbA_;
-  };
+  }
 
-  const std::shared_ptr<Vector>& getUbA() const override
+  std::shared_ptr<const Vector> get_upper_constraint_bounds() const override
   {
     return ubA_;
-  };
+  }
 
-  const std::shared_ptr<Vector>& getG() const override
+  std::shared_ptr<const Vector> get_linear_objective_coefficients() const override
   {
     return g_;
-  };
+  }
 
-  std::shared_ptr<const SparseHbMatrix> getH() const override
+  std::shared_ptr<const SparseHbMatrix> get_objective_hessian() const override
   {
     return H_;
-  };
+  }
 
-  std::shared_ptr<const SparseHbMatrix> getA() const override
+  std::shared_ptr<const SparseHbMatrix> get_constraint_jacobian() const override
   {
     return A_;
-  };
+  }
   //@}
 
   bool test_optimality(ActivityStatus* W_c = NULL,
@@ -240,11 +240,6 @@ private:
   int num_qp_variables_;
   /** Number of constraints in the QP. */
   int num_qp_constraints_;
-
-  /** Number of variables in the NLP. */
-  int num_nlp_variables_;
-  /** Number of constraints in the NLP. */
-  int num_nlp_constraints_;
 
   OptimalityStatus qpOptimalStatus_;
 

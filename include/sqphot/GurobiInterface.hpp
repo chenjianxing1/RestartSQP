@@ -25,19 +25,19 @@ public:
 
   /**@name Getters for private members*/
   //@{
-  const std::shared_ptr<Vector>& getLb() const override;
+  const std::shared_ptr<Vector>& get_lower_variable_bounds() const override;
 
-  const std::shared_ptr<Vector>& getUb() const override;
+  const std::shared_ptr<Vector>& get_upper_variable_bounds() const override;
 
-  const std::shared_ptr<Vector>& getLbA() const override;
+  const std::shared_ptr<Vector>& get_lower_constraint_bounds() const override;
 
-  const std::shared_ptr<Vector>& getUbA() const override;
+  const std::shared_ptr<Vector>& get_upper_constraint_bounds() const override;
 
-  const std::shared_ptr<Vector>& getG() const override;
+  const std::shared_ptr<Vector>& get_linear_objective_coefficients() const override;
 
-  std::shared_ptr<const SparseHbMatrix> getH() const override;
+  std::shared_ptr<const SparseHbMatrix> get_objective_hessian() const override;
 
-  std::shared_ptr<const SparseHbMatrix> getA() const override;
+  std::shared_ptr<const SparseHbMatrix> get_constraint_jacobian() const override;
   //@}
 
   /** Default destructor*/
@@ -111,35 +111,35 @@ public:
   /**-------------------------------------------------------**/
   /**@name Setters, by location and value*/
   //@{
-  void set_lb(int location, double value) override;
+  void set_lower_variable_bounds(int location, double value) override;
 
-  void set_ub(int location, double value) override;
+  void set_upper_variable_bounds(int location, double value) override;
 
-  void set_lbA(int location, double value) override;
+  void set_lower_constraint_bounds(int location, double value) override;
 
-  void set_ubA(int location, double value) override;
+  void set_upper_constraint_bounds(int location, double value) override;
 
-  void set_gradient(int location, double value) override;
+  void set_linear_objective_coefficients(int location, double value) override;
   //@}
 
   /**@name Setters for dense vector, by vector value*/
   //@{
-  void set_ub(std::shared_ptr<const Vector> rhs) override;
+  void set_upper_variable_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_lb(std::shared_ptr<const Vector> rhs) override;
+  void set_lower_variable_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_lbA(std::shared_ptr<const Vector> rhs) override;
+  void set_lower_constraint_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_ubA(std::shared_ptr<const Vector> rhs) override;
+  void set_upper_constraint_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_gradient(std::shared_ptr<const Vector> rhs) override;
+  void set_linear_objective_coefficients(std::shared_ptr<const Vector> rhs) override;
   //@}
 
   /**@name Setters for matrix*/
   //@{
-  void set_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
+  void set_objective_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
 
-  void set_jacobian(std::shared_ptr<const SpTripletMat> rhs,
+  void set_constraint_jacobian(std::shared_ptr<const SpTripletMat> rhs,
                     IdentityMatrixPositions I_info) override;
   //@}
 

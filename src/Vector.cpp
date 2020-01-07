@@ -27,7 +27,7 @@ Vector::Vector(int size, const double* values)
 {
   // Reserve the memory
   // AW: remove initialization
-  values_ = new double[size_]();
+  values_ = new double[size_];
 
   // Initialize the values from provded values
   for (int i = 0; i < size_; i++) {

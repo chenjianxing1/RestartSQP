@@ -45,9 +45,6 @@ qpOASESInterface::qpOASESInterface(
   // Get the option values for this object
   get_option_values_(options);
 
-  num_nlp_variables_ = nlp_sizes->get_num_variables();
-  num_nlp_constraints_ = nlp_sizes->get_num_constraints();
-
 #ifdef NEW_FORMULATION
   num_qp_constraints_ =
       nlp_sizes->get_num_constraints() + nlp_sizes->get_num_variables();
@@ -372,7 +369,7 @@ shared_ptr<const Vector> qpOASESInterface::get_primal_solution() const
 shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
 {
   // create a new vector with the data
-  shared_ptr<Vector> retval = make_shared<Vector>(num_nlp_variables_);
+  shared_ptr<Vector> retval = make_shared<Vector>(num_qp_variables_);
 
 // copy the values from the beginning of the y_qp_ vector
 #ifdef NEW_FORMULATION
@@ -380,8 +377,7 @@ shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
   // bounds for p, u and v slack variables, multpliers for x bounds, multipliers
   // for constraints
   //  retval->copy_values(y_qp_->get_values() + 3 * num_nlp_constraints_);
-  retval->copy_values(y_qp_->get_values() + num_nlp_variables_ +
-                      2 * num_nlp_constraints_);
+  retval->copy_values(y_qp_->get_values());
 #else
   retval->copy_values(y_qp_->get_values());
 #endif
@@ -395,7 +391,7 @@ shared_ptr<const Vector> qpOASESInterface::get_bounds_multipliers() const
 shared_ptr<const Vector> qpOASESInterface::get_constraints_multipliers() const
 {
   // create a new vector with the data
-  shared_ptr<Vector> retval = make_shared<Vector>(num_nlp_constraints_);
+  shared_ptr<Vector> retval = make_shared<Vector>(num_qp_constraints_);
 
   // copy the value from the second part of the y_qp_ vector
   retval->copy_values(y_qp_->get_values() + num_qp_variables_);
@@ -441,32 +437,32 @@ Exitflag qpOASESInterface::get_status()
 }
 
 //@}
-void qpOASESInterface::set_lb(int location, double value)
+void qpOASESInterface::set_lower_variable_bounds(int location, double value)
 {
   lb_->set_value(location, value);
 }
 
-void qpOASESInterface::set_ub(int location, double value)
+void qpOASESInterface::set_upper_variable_bounds(int location, double value)
 {
   ub_->set_value(location, value);
 }
 
-void qpOASESInterface::set_lbA(int location, double value)
+void qpOASESInterface::set_lower_constraint_bounds(int location, double value)
 {
   lbA_->set_value(location, value);
 }
 
-void qpOASESInterface::set_ubA(int location, double value)
+void qpOASESInterface::set_upper_constraint_bounds(int location, double value)
 {
   ubA_->set_value(location, value);
 }
 
-void qpOASESInterface::set_gradient(int location, double value)
+void qpOASESInterface::set_linear_objective_coefficients(int location, double value)
 {
   g_->set_value(location, value);
 }
 
-void qpOASESInterface::set_hessian(shared_ptr<const SpTripletMat> rhs)
+void qpOASESInterface::set_objective_hessian(shared_ptr<const SpTripletMat> rhs)
 {
   // Remember that a change is made to the Hessian matrix
   qp_matrices_changed_ = true;
@@ -487,7 +483,7 @@ void qpOASESInterface::set_hessian(shared_ptr<const SpTripletMat> rhs)
   H_qpOASES_->createDiagInfo();
 }
 
-void qpOASESInterface::set_jacobian(
+void qpOASESInterface::set_constraint_jacobian(
     shared_ptr<const SQPhotstart::SpTripletMat> rhs,
     IdentityMatrixPositions& identity_matrix_positions)
 {
@@ -509,27 +505,27 @@ void qpOASESInterface::set_jacobian(
   }
 }
 
-void qpOASESInterface::set_ub(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_upper_variable_bounds(shared_ptr<const Vector> rhs)
 {
   ub_->copy_vector(rhs);
 }
 
-void qpOASESInterface::set_lb(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_lower_variable_bounds(shared_ptr<const Vector> rhs)
 {
   lb_->copy_vector(rhs);
 }
 
-void qpOASESInterface::set_lbA(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_lower_constraint_bounds(shared_ptr<const Vector> rhs)
 {
   lbA_->copy_vector(rhs);
 }
 
-void qpOASESInterface::set_ubA(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_upper_constraint_bounds(shared_ptr<const Vector> rhs)
 {
   ubA_->copy_vector(rhs);
 }
 
-void qpOASESInterface::set_gradient(shared_ptr<const Vector> rhs)
+void qpOASESInterface::set_linear_objective_coefficients(shared_ptr<const Vector> rhs)
 {
   g_->copy_vector(rhs);
 }

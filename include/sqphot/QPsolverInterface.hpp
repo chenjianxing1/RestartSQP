@@ -49,20 +49,20 @@ DECLARE_STD_EXCEPTION(INVALID_WORKING_SET);
 class QPSolverInterface
 {
 public:
-  /**@name Getters for private members*/
-  virtual const std::shared_ptr<Vector>& getLb() const = 0;
+  /**@name Getters for current QP data. */
+  virtual std::shared_ptr<const Vector> get_lower_variable_bounds() const = 0;
 
-  virtual const std::shared_ptr<Vector>& getUb() const = 0;
+  virtual std::shared_ptr<const Vector> get_upper_variable_bounds() const = 0;
 
-  virtual const std::shared_ptr<Vector>& getLbA() const = 0;
+  virtual std::shared_ptr<const Vector> get_lower_constraint_bounds() const = 0;
 
-  virtual const std::shared_ptr<Vector>& getUbA() const = 0;
+  virtual std::shared_ptr<const Vector> get_upper_constraint_bounds() const = 0;
 
-  virtual const std::shared_ptr<Vector>& getG() const = 0;
+  virtual std::shared_ptr<const Vector> get_linear_objective_coefficients() const = 0;
 
-  virtual std::shared_ptr<const SparseHbMatrix> getH() const = 0;
+  virtual std::shared_ptr<const SparseHbMatrix> get_objective_hessian() const = 0;
 
-  virtual std::shared_ptr<const SparseHbMatrix> getA() const = 0;
+  virtual std::shared_ptr<const SparseHbMatrix> get_constraint_jacobian() const = 0;
   //@}
 
   /** Default constructor*/
@@ -147,36 +147,36 @@ public:
   /**-------------------------------------------------------**/
   /**@name Setters, by location and value*/
   //@{
-  virtual void set_lb(int location, double value) = 0;
+  virtual void set_lower_variable_bounds(int location, double value) = 0;
 
-  virtual void set_ub(int location, double value) = 0;
+  virtual void set_upper_variable_bounds(int location, double value) = 0;
 
-  virtual void set_lbA(int location, double value) = 0;
+  virtual void set_lower_constraint_bounds(int location, double value) = 0;
 
-  virtual void set_ubA(int location, double value) = 0;
+  virtual void set_upper_constraint_bounds(int location, double value) = 0;
 
-  virtual void set_gradient(int location, double value) = 0;
+  virtual void set_linear_objective_coefficients(int location, double value) = 0;
   //@}
 
   /**@name Setters for dense vector, by vector value*/
   //@{
-  virtual void set_ub(std::shared_ptr<const Vector> rhs) = 0;
+  virtual void set_upper_variable_bounds(std::shared_ptr<const Vector> rhs) = 0;
 
-  virtual void set_lb(std::shared_ptr<const Vector> rhs) = 0;
+  virtual void set_lower_variable_bounds(std::shared_ptr<const Vector> rhs) = 0;
 
-  virtual void set_lbA(std::shared_ptr<const Vector> rhs) = 0;
+  virtual void set_lower_constraint_bounds(std::shared_ptr<const Vector> rhs) = 0;
 
-  virtual void set_ubA(std::shared_ptr<const Vector> rhs) = 0;
+  virtual void set_upper_constraint_bounds(std::shared_ptr<const Vector> rhs) = 0;
 
-  virtual void set_gradient(std::shared_ptr<const Vector> rhs) = 0;
+  virtual void set_linear_objective_coefficients(std::shared_ptr<const Vector> rhs) = 0;
   //@}
 
   /**@name Setters for matrix*/
   //@{
-  virtual void set_hessian(std::shared_ptr<const SpTripletMat> rhs) = 0;
+  virtual void set_objective_hessian(std::shared_ptr<const SpTripletMat> rhs) = 0;
 
   virtual void
-  set_jacobian(std::shared_ptr<const SpTripletMat> rhs,
+  set_constraint_jacobian(std::shared_ptr<const SpTripletMat> rhs,
                IdentityMatrixPositions& identity_matrix_positions) = 0;
   //@}
 

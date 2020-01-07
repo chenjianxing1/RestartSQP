@@ -30,18 +30,14 @@ public:
 
   /** Constructor.
    *
-   *   This one only sets the dimensions and allocates memory but no data is
-   * initialized.
+   *  This constructor initializes the sizes and format type, but does not allocate memory.
    */
   SparseHbMatrix(int num_rows, int num_columns, bool is_compressed_row);
 
   /**
-   * @brief A constructor
-   * @param nnz the number of nonzero entries
-   * @param RowNum the number of rows
-   * @param ColNum the number of columns
+   *  This constructor initializes sizes and format type, and allocates memory.
    */
-  SparseHbMatrix(int nnz, int num_rows, int num_columns,
+  SparseHbMatrix(int num_entries_, int num_rows, int num_columns,
                  bool is_compressed_row);
 
   /**

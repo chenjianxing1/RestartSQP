@@ -697,7 +697,7 @@ void QOREInterface::set_qp_solver_options_()
   QPSetInt(solver_, "maxiter", qp_solver_max_num_iterations_);
 }
 
-void QOREInterface::set_jacobian(
+void QOREInterface::set_constraint_jacobian(
     shared_ptr<const SpTripletMat> rhs,
     IdentityMatrixPositions& identity_matrix_positions)
 {
@@ -709,7 +709,7 @@ void QOREInterface::set_jacobian(
   }
 }
 
-void QOREInterface::set_hessian(shared_ptr<const SpTripletMat> rhs)
+void QOREInterface::set_objective_hessian(shared_ptr<const SpTripletMat> rhs)
 {
   if (!H_->is_initialized())
     H_->set_structure(rhs);

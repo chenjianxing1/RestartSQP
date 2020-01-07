@@ -34,18 +34,19 @@ SparseHbMatrix::SparseHbMatrix(int num_rows, int num_columns,
  * @param num_rows: number of rows of a matrix
  * @param num_columns: number of columns of a matrix
  */
-SparseHbMatrix::SparseHbMatrix(int num_entries, int num_rows, int num_columns,
+SparseHbMatrix::SparseHbMatrix(int num_entries_, int num_rows, int num_columns,
                                bool is_compressed_row_format)
  : row_indices_(NULL)
  , column_indices_(NULL)
  , values_(NULL)
  , triplet_order_(NULL)
- , num_entries_(num_entries)
+ , num_entries_(num_entries_)
  , num_rows_(num_rows)
  , num_columns_(num_columns)
  , is_initialized_(false)
  , is_compressed_row_format_(is_compressed_row_format)
 {
+  allocate_memory_();
 }
 
 void SparseHbMatrix::allocate_memory_()
@@ -89,6 +90,7 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
   int i_nnz = 0;
   if (row_oriented) {
     if (is_compressed_row_format) {
+      row_indices_[0] = 0;
       for (int i = 0; i < num_rows; i++) {
         for (int j = 0; j < num_columns; j++) {
           // identify nonzero entry
@@ -101,6 +103,7 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
         row_indices_[i + 1] = i_nnz;
       }
     } else { // if it is condensed column
+      column_indices_[0] = 0;
       for (int j = 0; j < num_columns; j++) {
         for (int i = 0; i < num_rows; i++) {
           if (data[j + i * num_columns] != 0.) {
@@ -114,6 +117,7 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
     }
   } else {
     if (is_compressed_row_format) {
+      row_indices_[0] = 0;
       for (int j = 0; j < num_rows; j++) {
         for (int i = 0; i < num_columns; i++) {
           if (data[j + i * num_rows] != 0.) {
@@ -125,6 +129,7 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
         row_indices_[j + 1] = i_nnz;
       }
     } else {
+      column_indices_[0] = 0;
       for (int i = 0; i < num_columns; i++) {
         for (int j = 0; j < num_rows; j++) {
           // identify nonzero entry
@@ -141,7 +146,6 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
   assert(i_nnz == num_entries_);
 
   is_initialized_ = true;
-  triplet_order_ = new int[num_entries_];
 }
 
 /**

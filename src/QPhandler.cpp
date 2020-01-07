@@ -197,24 +197,24 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     const double* c_l_vals = c_l->get_values();
     const double* c_u_vals = c_u->get_values();
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lbA(i, c_l_vals[i] - c_k_vals[i]);
-      solverInterface_->set_ubA(i, c_u_vals[i] - c_k_vals[i]);
+      solverInterface_->set_lower_constraint_bounds(i, c_l_vals[i] - c_k_vals[i]);
+      solverInterface_->set_upper_constraint_bounds(i, c_u_vals[i] - c_k_vals[i]);
     }
     const double* x_k_vals = x_k->get_values();
     const double* x_l_vals = x_l->get_values();
     const double* x_u_vals = x_u->get_values();
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lbA(num_cons + i, x_l_vals[i] - x_k_vals[i]);
-      solverInterface_->set_ubA(num_cons + i, x_u_vals[i] - x_k_vals[i]);
+      solverInterface_->set_lower_constraint_bounds(num_cons + i, x_l_vals[i] - x_k_vals[i]);
+      solverInterface_->set_upper_constraint_bounds(num_cons + i, x_u_vals[i] - x_k_vals[i]);
     }
 
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(i, -delta);
-      solverInterface_->set_ub(i, delta);
+      solverInterface_->set_lower_variable_bounds(i, -delta);
+      solverInterface_->set_upper_variable_bounds(i, delta);
     }
     for (int i = num_vars; i < num_qp_variables_; i++) {
-      solverInterface_->set_lb(i, 0.);
-      solverInterface_->set_ub(i, INF);
+      solverInterface_->set_lower_variable_bounds(i, 0.);
+      solverInterface_->set_upper_variable_bounds(i, INF);
     }
 #else
     const double* c_k_vals = c_k->get_values();
@@ -267,9 +267,9 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     const double* c_l_vals = c_l->get_values();
     const double* c_u_vals = c_u->get_values();
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lb(num_qp_variables_ + i,
+      solverInterface_->set_lower_variable_bounds(num_qp_variables_ + i,
                                c_l_vals[i] - c_k_vals[i]);
-      solverInterface_->set_ub(num_qp_variables_ + i,
+      solverInterface_->set_upper_variable_bounds(num_qp_variables_ + i,
                                c_u_vals[i] - c_k_vals[i]);
     }
 
@@ -278,16 +278,16 @@ void QPhandler::set_bounds(double delta, shared_ptr<const Vector> x_l,
     const double* x_l_vals = x_l->get_values();
     const double* x_u_vals = x_u->get_values();
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(i, -delta);
-      solverInterface_->set_ub(i, delta);
+      solverInterface_->set_lower_variable_bounds(i, -delta);
+      solverInterface_->set_upper_variable_bounds(i, delta);
 
-      solverInterface_->set_lb(num_qp_variables_ + num_cons + i,
+      solverInterface_->set_lower_variable_bounds(num_qp_variables_ + num_cons + i,
                                x_l_vals[i] - x_k_vals[i]);
-      solverInterface_->set_ub(num_qp_variables_ + num_cons + i,
+      solverInterface_->set_upper_variable_bounds(num_qp_variables_ + num_cons + i,
                                x_u_vals[i] - x_k_vals[i]);
     }
     for (int i = num_vars; i < num_qp_variables_; i++) {
-      solverInterface_->set_ub(i, INF);
+      solverInterface_->set_upper_variable_bounds(i, INF);
     }
 // DEBUG
 //        solverInterface_->getLb()->print("lb");
@@ -320,10 +320,10 @@ void QPhandler::set_gradient(shared_ptr<const Vector> grad, double rho)
 #endif
 #endif
   for (int i = 0; i < num_vars; i++) {
-    solverInterface_->set_gradient(i, grad->get_value(i));
+    solverInterface_->set_linear_objective_coefficients(i, grad->get_value(i));
   }
   for (int i = num_vars; i < num_qp_variables_; i++) {
-    solverInterface_->set_gradient(i, rho);
+    solverInterface_->set_linear_objective_coefficients(i, rho);
   }
   // DEBUG
   //    solverInterface_->getG()->print("G");
@@ -348,7 +348,7 @@ void QPhandler::set_hessian(shared_ptr<const SpTripletMat> hessian)
   QOREInterface_->set_hessian(hessian);
 #endif
 #endif
-  solverInterface_->set_hessian(hessian);
+  solverInterface_->set_objective_hessian(hessian);
 }
 
 /**
@@ -364,7 +364,7 @@ void QPhandler::set_jacobian(shared_ptr<const SpTripletMat> jacobian)
   QOREInterface_->set_jacobian(jacobian, identity_matrix_positions_);
 #endif
 #endif
-  solverInterface_->set_jacobian(jacobian, identity_matrix_positions_);
+  solverInterface_->set_constraint_jacobian(jacobian, identity_matrix_positions_);
 }
 
 /**
@@ -417,36 +417,36 @@ void QPhandler::update_bounds(double delta, shared_ptr<const Vector> x_l,
 #else
   if (qp_solver_choice_ == QORE) {
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(i, -delta);
-      solverInterface_->set_ub(i, delta);
+      solverInterface_->set_lower_variable_bounds(i, -delta);
+      solverInterface_->set_upper_variable_bounds(i, delta);
     }
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lb(num_qp_variables_ + i,
+      solverInterface_->set_lower_variable_bounds(num_qp_variables_ + i,
                                c_l->get_value(i) - c_k->get_value(i));
-      solverInterface_->set_ub(num_qp_variables_ + i,
+      solverInterface_->set_upper_variable_bounds(num_qp_variables_ + i,
                                c_u->get_value(i) - c_k->get_value(i));
     }
 
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(num_qp_variables_ + num_cons + i,
+      solverInterface_->set_lower_variable_bounds(num_qp_variables_ + num_cons + i,
                                x_l->get_value(i) - x_k->get_value(i));
-      solverInterface_->set_ub(num_qp_variables_ + num_cons + i,
+      solverInterface_->set_upper_variable_bounds(num_qp_variables_ + num_cons + i,
                                x_u->get_value(i) - x_k->get_value(i));
     }
   } else {
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lb(i, -delta);
-      solverInterface_->set_ub(i, delta);
+      solverInterface_->set_lower_variable_bounds(i, -delta);
+      solverInterface_->set_upper_variable_bounds(i, delta);
     }
 
     for (int i = 0; i < num_cons; i++) {
-      solverInterface_->set_lbA(i, c_l->get_value(i) - c_k->get_value(i));
-      solverInterface_->set_ubA(i, c_u->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_lower_constraint_bounds(i, c_l->get_value(i) - c_k->get_value(i));
+      solverInterface_->set_upper_constraint_bounds(i, c_u->get_value(i) - c_k->get_value(i));
     }
     for (int i = 0; i < num_vars; i++) {
-      solverInterface_->set_lbA(num_cons + i,
+      solverInterface_->set_lower_constraint_bounds(num_cons + i,
                                 x_l->get_value(i) - x_k->get_value(i));
-      solverInterface_->set_ubA(num_cons + i,
+      solverInterface_->set_upper_constraint_bounds(num_cons + i,
                                 x_u->get_value(i) - x_k->get_value(i));
     }
   }
@@ -475,7 +475,7 @@ void QPhandler::update_penalty(double rho)
 #endif
 #endif
   for (int i = num_vars; i < num_qp_variables_; i++)
-    solverInterface_->set_gradient(i, rho);
+    solverInterface_->set_linear_objective_coefficients(i, rho);
 }
 
 /**
@@ -498,7 +498,7 @@ void QPhandler::update_grad(shared_ptr<const Vector> grad)
 #endif
 #endif
   for (int i = 0; i < num_vars; i++)
-    solverInterface_->set_gradient(i, grad->get_value(i));
+    solverInterface_->set_linear_objective_coefficients(i, grad->get_value(i));
 }
 
 /**
@@ -557,7 +557,7 @@ void QPhandler::update_H(shared_ptr<const SpTripletMat> Hessian)
   qpOASESInterface_->set_hessian(Hessian);
 #endif
 #endif
-  solverInterface_->set_hessian(Hessian);
+  solverInterface_->set_objective_hessian(Hessian);
 }
 
 void QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian)
@@ -569,7 +569,7 @@ void QPhandler::update_A(shared_ptr<const SpTripletMat> Jacobian)
   qpOASESInterface_->set_jacobian(Jacobian, identity_matrix_positions_);
 #endif
 #endif
-  solverInterface_->set_jacobian(Jacobian, identity_matrix_positions_);
+  solverInterface_->set_constraint_jacobian(Jacobian, identity_matrix_positions_);
 }
 
 void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
@@ -594,8 +594,8 @@ void QPhandler::update_delta(double delta, shared_ptr<const Vector> x_l,
 
 #ifdef NEW_FORMULATION
   for (int i = 0; i < num_vars; i++) {
-    solverInterface_->set_lb(i, -delta);
-    solverInterface_->set_ub(i, delta);
+    solverInterface_->set_lower_variable_bounds(i, -delta);
+    solverInterface_->set_upper_variable_bounds(i, delta);
   }
 #else
 
@@ -649,15 +649,15 @@ void QPhandler::get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
                                shared_ptr<Vector> x, shared_ptr<Vector> Ax)
 {
   // use the class member to get the qp problem information
-  auto lb = solverInterface_->getLb();
-  auto ub = solverInterface_->getUb();
+  auto lb = solverInterface_->get_lower_variable_bounds();
+  auto ub = solverInterface_->get_upper_variable_bounds();
   if (x == nullptr) {
     x = make_shared<Vector>(num_qp_variables_);
     x->copy_vector(get_primal_solution());
   }
   if (Ax == nullptr) {
     Ax = make_shared<Vector>(num_qp_constraints_);
-    auto A = solverInterface_->getA();
+    auto A = solverInterface_->get_constraint_jacobian();
     A->multiply(x, Ax);
   }
 
@@ -693,8 +693,8 @@ void QPhandler::get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
       }
     }
   } else {
-    auto lbA = solverInterface_->getUbA();
-    auto ubA = solverInterface_->getUbA();
+    auto lbA = solverInterface_->get_upper_constraint_bounds();
+    auto ubA = solverInterface_->get_upper_constraint_bounds();
     for (int i = 0; i < num_qp_constraints_; i++) {
       if (abs(Ax->get_value(i) - lbA->get_value(i)) < sqrt_m_eps) {
         if (abs(ubA->get_value(i) - Ax->get_value(i)) < sqrt_m_eps) {
@@ -715,10 +715,10 @@ void QPhandler::set_gradient(double rho)
 {
   int num_vars = nlp_sizes_->get_num_variables();
   for (int i = 0; i < num_vars; i++) {
-    solverInterface_->set_gradient(i, rho);
+    solverInterface_->set_linear_objective_coefficients(i, rho);
   }
   for (int i = num_vars; i < num_qp_variables_; i++) {
-    solverInterface_->set_gradient(i, rho);
+    solverInterface_->set_linear_objective_coefficients(i, rho);
   }
 }
 
