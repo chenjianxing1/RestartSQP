@@ -10,7 +10,7 @@
 #include "IpTNLP.hpp"
 #include "sqphot/SqpNlpBase.hpp"
 
-namespace SQPhotstart {
+namespace RestartSqp {
 /**
  * This is part of SQPhotstart
  *
@@ -51,8 +51,9 @@ public:
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not
    */
-  bool get_starting_point(std::shared_ptr<Vector> x_0,
-                          std::shared_ptr<Vector> lambda_0) override;
+  bool get_starting_point(std::shared_ptr<Vector> primal_point,
+                          std::shared_ptr<Vector> bound_multipliers,
+                          std::shared_ptr<Vector> constraint_multipliers) override;
 
   /**
    *@brief Evaluate the objective value
@@ -77,13 +78,13 @@ public:
    * Always call this before the first time using @Eval_Jacobian
    */
   bool get_jacobian_structure(std::shared_ptr<const Vector> x,
-                              std::shared_ptr<SpTripletMat> Jacobian) override;
+                              std::shared_ptr<SparseTripletMatrix> Jacobian) override;
 
   /**
    *@brief Evaluate Jacobian at point x
    */
   bool eval_jacobian(std::shared_ptr<const Vector> x,
-                     std::shared_ptr<SpTripletMat> Jacobian) override;
+                     std::shared_ptr<SparseTripletMatrix> Jacobian) override;
 
   /**
    * @brief Get the structure of the Hessian
@@ -91,14 +92,14 @@ public:
    */
   bool get_hessian_structure(std::shared_ptr<const Vector> x,
                              std::shared_ptr<const Vector> lambda,
-                             std::shared_ptr<SpTripletMat> Hessian) override;
+                             std::shared_ptr<SparseTripletMatrix> Hessian) override;
 
   /**
    *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
    */
   bool eval_hessian(std::shared_ptr<const Vector> x,
                     std::shared_ptr<const Vector> lambda,
-                    std::shared_ptr<SpTripletMat> Hessian) override;
+                    std::shared_ptr<SparseTripletMatrix> Hessian) override;
 
 private:
   /** @name Hide unused default methods. */

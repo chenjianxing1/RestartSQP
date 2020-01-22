@@ -26,12 +26,14 @@
 #include "sqphot/Types.hpp"
 #endif
 
-namespace SQPhotstart {
+#include <limits>
 
-// AW the following should be options.
-const double INF = 1.0e18;
-const double m_eps = 1.0e-16;
-const double sqrt_m_eps = 1.0e-8;
+namespace RestartSqp {
+
+const double INF = std::numeric_limits<double>::infinity();
+
+//const double m_eps = 1.0e-16;
+//const double sqrt_m_eps = 1.0e-8;
 
 /** Function that returns true if all elements in the integer arrays a
  *  and b of length length are equal. */

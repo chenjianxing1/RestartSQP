@@ -13,7 +13,7 @@
 #include <gurobi_c++.h>
 #endif
 
-namespace SQPhotstart {
+namespace RestartSqp {
 DECLARE_STD_EXCEPTION(GRB_SOLVER_FAILS);
 class GurobiInterface : public QPSolverInterface
 {

@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <iterator>
 #include <random>
-#include <sqphot/SpTripletMat.hpp>
-#include <sqphot/Vector.hpp>
+#include "sqphot/SparseTripletMatrix.hpp"
+#include "sqphot/Vector.hpp"
 #include <stdlib.h> /* srand, rand */
 #include <time.h>
-#include <unit_test_utils.hpp>
+#include "unit_test_utils.hpp"
 
-using namespace SQPhotstart;
+using namespace RestartSqp;
 using namespace std;
 
 bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
@@ -18,10 +18,10 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
   /**-------------------------------------------------------**/
   /**     Testing on Row Oriented Input Data                **/
   /**-------------------------------------------------------**/
-  shared_ptr<SpTripletMat> m_row_oriented =
-      make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
+  shared_ptr<SparseTripletMatrix> m_row_oriented =
+      make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, true);
 
-  m_row_oriented->get_dense_matrix(dense_matrix_out->get_values(), true);
+  m_row_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), true);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "row_oriented_matrix")) {
@@ -55,11 +55,11 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
   /**     Testing on Column Oriented Input Data             **/
   /**-------------------------------------------------------**/
 
-  shared_ptr<SpTripletMat> m_col_oriented =
-      make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, false);
+  shared_ptr<SparseTripletMatrix> m_col_oriented =
+      make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, false);
 
   dense_matrix_out->set_to_zero();
-  m_col_oriented->get_dense_matrix(dense_matrix_out->get_values(), false);
+  m_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), false);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "col_oriented_matrix")) {
@@ -108,9 +108,10 @@ bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum,
     }
   }
 
-  shared_ptr<SpTripletMat> sparse_matrix =
-      make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
+  shared_ptr<SparseTripletMatrix> sparse_matrix =
+      make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, true);
 
+  result_sparse->set_to_zero();
   sparse_matrix->multiply(vector, result_sparse);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->get_values(),
@@ -150,8 +151,8 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(
     }
   }
 
-  shared_ptr<SpTripletMat> sparse_matrix =
-      make_shared<SpTripletMat>(dense_matrix_in, rowNum, colNum, true);
+  shared_ptr<SparseTripletMatrix> sparse_matrix =
+      make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, true);
   sparse_matrix->multiply_transpose(vector, result_sparse);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(result_sparse->get_values(),

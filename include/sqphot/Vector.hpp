@@ -15,7 +15,7 @@
 #include "IpJournalist.hpp"
 #include "sqphot/Types.hpp"
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 /**
  *  This class implements numerical vectors, with some basic
@@ -35,7 +35,7 @@ public:
    *  memory, and copies the values in vector_values to its internal
    *  array.
    */
-  Vector(int size, const double* get_values);
+  Vector(int size, const double* values);
 
   /** Copy Constructor */
   Vector(const Vector&);
@@ -170,6 +170,36 @@ public:
     }
   }
 
+  /** Copy the values from a vector into a subvector of this vector, starting at given position. */
+  void copy_into_subvector(std::shared_ptr<const Vector> rhs, int position)
+  {
+    copy_into_subvector(*rhs, position);
+  }
+
+  /** Copy the values from a vector into a subvector of this vector, starting at given position. */
+  void copy_into_subvector(const Vector& rhs, int position)
+  {
+    assert(rhs.size_+position <= size_);
+    for (int i=0; i<rhs.size_; ++i) {
+      values_[position+i] = rhs.values_[i];
+    }
+  }
+
+
+  /** Copy the values from a subvector of a larger vector starting at given position into this vector. */
+  void copy_from_subvector(std::shared_ptr<const Vector> rhs, int position)
+  {
+    copy_from_subvector(*rhs, position);
+  }
+
+  /** Copy the values from a subvector of a larger vector starting at given position into this vector. */
+  void copy_from_subvector(const Vector& rhs, int position)
+  {
+    assert(size_+position <= rhs.size_);
+    for (int i=0; i<size_; ++i) {
+      values_[i] = rhs.values_[position+i];
+    }
+  }
   /** set all entries to be 0*/
   void set_to_zero()
   {
@@ -234,7 +264,7 @@ public:
   }
 
   /** Return the array with the vector elements (const version) */
-  double* get_values() const
+  const double* get_values() const
   {
     return values_;
   }
@@ -257,12 +287,8 @@ public:
     values_[location] = value;
   }
 
-  /** Print vector or write to a file. */
-  void write_to_file(std::string name, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                     Ipopt::EJournalLevel level,
-                     Ipopt::EJournalCategory category, QpSolver qpsolver) const;
-  // AW: Replace qpsolver argument
-  // Also, why are the both a print and a write_to_file method
+  /** Write vector data to a file, using the provided file pointer. */
+  void write_to_file(FILE* file, const std::string& vector_name) const;
 
 private:
   /** Default Constructor.  Make this private so that it is not

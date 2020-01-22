@@ -5,23 +5,24 @@
 
 using namespace std;
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 /** @name constructor/destructor */
 //@{
 /** Constructor that sets dimensions and type  No memory is allocated. */
 SparseHbMatrix::SparseHbMatrix(int num_rows, int num_columns,
-                               bool is_compressed_row_format)
- : row_indices_(NULL)
- , column_indices_(NULL)
- , values_(NULL)
- , triplet_order_(NULL)
- , num_entries_(-1)
- , is_initialized_(false)
+                               bool is_compressed_row_format, bool is_symmetric)
+ : is_initialized_(false)
+ , is_compressed_row_format_(is_compressed_row_format)
+ , is_symmetric_(is_symmetric)
  , num_rows_(num_rows)
  , num_columns_(num_columns)
+ , num_entries_(-1)
+ , column_indices_(NULL)
+ , row_indices_(NULL)
+ , values_(NULL)
  , num_triplet_entries_(-1)
- , is_compressed_row_format_(is_compressed_row_format)
+ , triplet_order_(NULL)
 {
 }
 
@@ -34,17 +35,19 @@ SparseHbMatrix::SparseHbMatrix(int num_rows, int num_columns,
  * @param num_rows: number of rows of a matrix
  * @param num_columns: number of columns of a matrix
  */
-SparseHbMatrix::SparseHbMatrix(int num_entries_, int num_rows, int num_columns,
-                               bool is_compressed_row_format)
- : row_indices_(NULL)
- , column_indices_(NULL)
- , values_(NULL)
- , triplet_order_(NULL)
- , num_entries_(num_entries_)
+SparseHbMatrix::SparseHbMatrix(int num_entries, int num_rows, int num_columns,
+                               bool is_compressed_row_format, bool is_symmetric)
+ : is_initialized_(false)
+ , is_compressed_row_format_(is_compressed_row_format)
+ , is_symmetric_(is_symmetric)
  , num_rows_(num_rows)
  , num_columns_(num_columns)
- , is_initialized_(false)
- , is_compressed_row_format_(is_compressed_row_format)
+ , num_entries_(num_entries)
+ , column_indices_(NULL)
+ , row_indices_(NULL)
+ , values_(NULL)
+ , num_triplet_entries_(-1)
+ , triplet_order_(NULL)
 {
   allocate_memory_();
 }
@@ -59,9 +62,6 @@ void SparseHbMatrix::allocate_memory_()
     row_indices_ = new int[num_entries_];
   }
   values_ = new double[num_entries_];
-  triplet_order_ = new int[num_entries_];
-  for (int i = 0; i < num_entries_; i++)
-    triplet_order_[i] = i;
 }
 
 void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
@@ -207,7 +207,7 @@ tuple_sort_rule_compressed_row(const tuple<int, int, int, double>& left,
 //@{
 
 void add_triplet_to_element_list_(
-    shared_ptr<const SpTripletMat> triplet_matrix,
+    shared_ptr<const SparseTripletMatrix> triplet_matrix,
     vector<tuple<int, int, int, double>>& ele_list)
 {
   bool is_symmetric = triplet_matrix->is_symmetric();
@@ -289,6 +289,7 @@ void SparseHbMatrix::set_structure_from_list_(
         column_indices_[current_column] = i;
       }
     }
+    // We should not have empty columns
     for (int i = current_column + 1; i <= num_columns_; i++) {
       column_indices_[i] = num_entries_;
     }
@@ -310,11 +311,11 @@ void SparseHbMatrix::set_structure_from_list_(
  *
  */
 void SparseHbMatrix::set_structure(
-    shared_ptr<const SpTripletMat> triplet_matrix)
+    shared_ptr<const SparseTripletMatrix> triplet_matrix)
 {
   assert(is_initialized_ == false);
 
-  is_symmetric_ = triplet_matrix->is_symmetric();
+  assert(is_symmetric_ == triplet_matrix->is_symmetric());
 
   // We will need to keep track of the order of the elements in the original
   // matrix
@@ -351,12 +352,12 @@ void SparseHbMatrix::set_structure(
  *
  */
 void SparseHbMatrix::set_structure(
-    shared_ptr<const SpTripletMat> triplet_matrix,
+    shared_ptr<const SparseTripletMatrix> triplet_matrix,
     IdentityMatrixPositions& identity_matrix_positions)
 {
   assert(is_initialized_ == false);
   assert(!triplet_matrix->is_symmetric());
-  is_symmetric_ = false;
+  assert(is_symmetric_ == false);
 
   // We will need to keep track of the order of the elements in the original
   // matrix
@@ -420,8 +421,10 @@ void SparseHbMatrix::set_values(
 }
 #endif
 
-void SparseHbMatrix::set_values(shared_ptr<const SpTripletMat> triplet_matrix)
+void SparseHbMatrix::set_values(shared_ptr<const SparseTripletMatrix> triplet_matrix)
 {
+  assert(triplet_order_);
+
   int num_trip_entries = triplet_matrix->get_num_entries();
   const int* trip_row_indices = triplet_matrix->get_row_indices();
   const int* trip_col_indices = triplet_matrix->get_column_indices();
@@ -449,6 +452,8 @@ void SparseHbMatrix::set_values(shared_ptr<const SpTripletMat> triplet_matrix)
 
 //@}
 
+#if 0
+We need to handle CSR and CSC formates separately since the arrays have different lengths
 void SparseHbMatrix::copy(shared_ptr<const SparseHbMatrix> rhs)
 {
 
@@ -465,33 +470,11 @@ void SparseHbMatrix::copy(shared_ptr<const SparseHbMatrix> rhs)
     column_indices_[i] = rhs->get_column_index_at_entry(i);
   }
 }
+#endif
 
-void SparseHbMatrix::set_zero()
+shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
 {
-  if (is_compressed_row_format_) {
-    for (int i = 0; i < num_entries_; i++) {
-      values_[i] = 0;
-      column_indices_[i] = 0;
-      triplet_order_[i] = i;
-    }
-    for (int i = 0; i < num_rows_ + 1; i++) {
-      row_indices_[i] = 0;
-    }
-  } else {
-    for (int i = 0; i < num_entries_; i++) {
-      values_[i] = 0;
-      row_indices_[i] = 0;
-      triplet_order_[i] = i;
-    }
-    for (int i = 0; i < num_columns_ + 1; i++) {
-      column_indices_[i] = 0;
-    }
-  }
-}
-
-shared_ptr<SpTripletMat> SparseHbMatrix::convert_to_triplet() const
-{
-  shared_ptr<SpTripletMat> result;
+  shared_ptr<SparseTripletMatrix> result;
 
   if (is_symmetric_) {
     // First count the number of nonzeros in the lower triangular part
@@ -525,7 +508,7 @@ shared_ptr<SpTripletMat> SparseHbMatrix::convert_to_triplet() const
 
     // Create the Triplet matrix with allocated memory
     bool allocate = true;
-    result = make_shared<SpTripletMat>(num_trip_entries, num_rows_,
+    result = make_shared<SparseTripletMatrix>(num_trip_entries, num_rows_,
                                        num_columns_, is_symmetric_, allocate);
 
     // Now loop over all elements again and add the lower triangular elements
@@ -569,7 +552,7 @@ shared_ptr<SpTripletMat> SparseHbMatrix::convert_to_triplet() const
   } else {
     // This is a non-symmetric matrix
     bool allocate = true;
-    result = make_shared<SpTripletMat>(num_entries_, num_rows_, num_columns_,
+    result = make_shared<SparseTripletMatrix>(num_entries_, num_rows_, num_columns_,
                                        is_symmetric_, allocate);
 
     // Now loop over all elements again and add all elements
@@ -609,71 +592,32 @@ shared_ptr<SpTripletMat> SparseHbMatrix::convert_to_triplet() const
   return result;
 }
 
-void SparseHbMatrix::write_to_file(const char* name,
-                                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                                   Ipopt::EJournalLevel level,
-                                   Ipopt::EJournalCategory category,
-                                   QpSolver solver)
+void SparseHbMatrix::write_to_file(FILE* file, const string& matrix_name) const
 {
-#ifdef DEBUG
-#ifdef PRINT_QP_IN_CPP
-  const char* var_type_int;
-  const char* var_type_double;
-  var_type_int = (solver == QPOASES) ? "sparse_int_t" : "qp_int";
-  var_type_double = (solver == QPOASES) ? "real_t" : "double";
-  jnlst->Printf(level, category, "%s %s_jc[] = \n{", var_type_int, name);
-  int i;
-  for (i = 0; i < num_columns_ + 1; i++) {
-    if (i % 10 == 0 && i > 1)
-      jnlst->Printf(level, category, "\n");
-    if (i == num_columns_)
-      jnlst->Printf(level, category, "%d};\n\n", ColIndex_[i]);
-    else
-      jnlst->Printf(level, category, "%d, ", ColIndex_[i]);
-  }
-  jnlst->Printf(level, category, "%s %s_ir[] = \n{", var_type_int, name);
-  for (i = 0; i < EntryNum_; i++) {
-    if (i % 10 == 0 && i > 1)
-      jnlst->Printf(level, category, "\n");
-    if (i == EntryNum_ - 1)
-      jnlst->Printf(level, category, "%d};\n\n", RowIndex_[i]);
-    else
-      jnlst->Printf(level, category, "%d, ", RowIndex_[i]);
-  }
-  jnlst->Printf(level, category, "%s %s_val[] = \n{", var_type_double, name);
-  for (i = 0; i < EntryNum_; i++) {
-    if (i % 10 == 0 && i > 1)
-      jnlst->Printf(level, category, "\n");
-    if (i == EntryNum_ - 1)
-      jnlst->Printf(level, category, "%23.16e};\n\n", MatVal_[i]);
-    else
-      jnlst->Printf(level, category, "%23.16e, ", MatVal_[i]);
-  }
-#else
-  int i;
-  if (solver == QORE) {
-    for (i = 0; i < num_rows_ + 1; i++) {
-      jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
-    }
-    for (i = 0; i < EntryNum_; i++) {
-      jnlst->Printf(level, category, "%d\n", ColIndex_[i]);
-    }
-    for (i = 0; i < EntryNum_; i++) {
-      jnlst->Printf(level, category, "%23.16e\n", MatVal_[i]);
-    }
-  } else if (solver == QPOASES) {
-    for (i = 0; i < EntryNum_; i++) {
-      jnlst->Printf(level, category, "%d\n", RowIndex_[i]);
-    }
-    for (i = 0; i < num_columns_ + 1; i++) {
-      jnlst->Printf(level, category, "%d\n", ColIndex_[i]);
-    }
-    for (i = 0; i < EntryNum_; i++) {
-      jnlst->Printf(level, category, "%23.16e\n", MatVal_[i]);
+  assert(is_initialized_);
+
+  fprintf(file, "Matrix %s with %d nonzero elements:\n", matrix_name.c_str(), num_entries_);
+
+  if (is_compressed_row_format_) {
+    for (int row=0; row<num_rows_; ++row) {
+      int start = row_indices_[row];
+      int end = row_indices_[row+1];
+      for (int i=start; i<end; ++i) {
+        int col = column_indices_[i];
+        fprintf(file, "%d %d %23.16e\n", row+1, col+1, values_[i]);
+      }
     }
   }
-#endif
-#endif
+  else {
+    for (int col=0; col<num_columns_; ++col) {
+      int start = column_indices_[col];
+      int end = column_indices_[col+1];
+      for (int i=start; i<end; ++i) {
+        int row = row_indices_[i];
+        fprintf(file, "%d %d %23.16e\n", row+1, col+1, values_[i]);
+      }
+    }
+  }
 }
 
 void SparseHbMatrix::get_dense_matrix(double* dense_matrix,
@@ -748,95 +692,113 @@ void SparseHbMatrix::get_dense_matrix(double* dense_matrix,
   }
 }
 
-void SparseHbMatrix::multiply_transpose(shared_ptr<const Vector> p,
-                                        shared_ptr<Vector> result) const
+void SparseHbMatrix::multiply(shared_ptr<const Vector> p,
+                              shared_ptr<Vector> result, double factor) const
 {
-
-  result->set_to_zero();
+  assert(p->get_dim() == num_columns_);
+  assert(result->get_dim() == num_rows_);
+  // For now we just implement this for factor = 1 and -1
+  assert(factor == 1. || factor == -1.);
 
   if (is_compressed_row_format_) {
-    int row;
-    for (int i = 1; i < num_rows_ + 1; i++) {
-      if (row_indices_[i] > 0) {
-        row = i - 1;
-        break;
+    if (factor == 1.) {
+      for (int row = 0; row < num_rows_; row++) {
+        int start = row_indices_[row];
+        int end = row_indices_[row + 1];
+        for (int i = start; i < end; i++) {
+          int col = column_indices_[i];
+          result->add_number_to_element(row, values_[i] * p->get_value(col));
+        }
       }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      while (i == row_indices_[row + 1]) {
-        row++;
+    } else {
+      for (int row = 0; row < num_rows_; row++) {
+        int start = row_indices_[row];
+        int end = row_indices_[row + 1];
+        for (int i = start; i < end; i++) {
+          int col = column_indices_[i];
+          result->add_number_to_element(row, -values_[i] * p->get_value(col));
+        }
       }
-      result->add_number_to_element(column_indices_[i],
-                                    values_[i] * p->get_value(row));
     }
   } else {
-    int col;
-    // find the col corresponding to the first nonzero entry
-    for (int i = 1; i < num_columns_ + 1; i++) {
-      if (column_indices_[i] > 0) {
-        col = i - 1;
-        break;
+    if (factor == 1.) {
+      for (int col = 0; col < num_columns_; col++) {
+        int start = column_indices_[col];
+        int end = column_indices_[col + 1];
+        for (int i = start; i < end; i++) {
+          int row = row_indices_[i];
+          result->add_number_to_element(row, values_[i] * p->get_value(col));
+        }
       }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      // go to the next col
-      while (i == column_indices_[col + 1]) {
-        col++;
+    } else {
+      for (int col = 0; col < num_columns_; col++) {
+        int start = column_indices_[col];
+        int end = column_indices_[col + 1];
+        for (int i = start; i < end; i++) {
+          int row = row_indices_[i];
+          result->add_number_to_element(row, -values_[i] * p->get_value(col));
+        }
       }
-      result->add_number_to_element(col,
-                                    values_[i] * p->get_value(row_indices_[i]));
     }
   }
 }
 
-void SparseHbMatrix::multiply(shared_ptr<const Vector> p,
-                              shared_ptr<Vector> result) const
+void SparseHbMatrix::multiply_transpose(shared_ptr<const Vector> p,
+                                        shared_ptr<Vector> result,
+                                        double factor) const
 {
-
-  result->set_to_zero();
-
+  assert(p->get_dim() == num_rows_);
+  assert(result->get_dim() == num_columns_);
+  // For now we just implement this for factor = 1 and -1
+  assert(factor == 1. || factor == -1.);
   if (is_compressed_row_format_) {
-    int row;
-    // find the row corresponding to the first nonzero entry
-    for (int i = 1; i < num_rows_ + 1; i++) {
-      if (row_indices_[i] > 0) {
-        row = i - 1;
-        break;
+    if (factor == 1.) {
+      for (int row = 0; row < num_rows_; row++) {
+        int start = row_indices_[row];
+        int end = row_indices_[row + 1];
+        for (int i = start; i < end; i++) {
+          int col = column_indices_[i];
+          result->add_number_to_element(col, values_[i] * p->get_value(row));
+        }
       }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      // go to the next row
-      while (i == row_indices_[row + 1]) {
-        row++;
+    } else {
+      for (int row = 0; row < num_rows_; row++) {
+        int start = row_indices_[row];
+        int end = row_indices_[row + 1];
+        for (int i = start; i < end; i++) {
+          int col = column_indices_[i];
+          result->add_number_to_element(col, -values_[i] * p->get_value(row));
+        }
       }
-      result->add_number_to_element(row, values_[i] *
-                                             p->get_value(column_indices_[i]));
     }
   } else {
-    int col;
-    // find the col corresponding to the first nonzero entry
-    for (int i = 1; i < num_columns_ + 1; i++) {
-      if (column_indices_[i] > 0) {
-        col = i - 1;
-        break;
+    if (factor == 1.) {
+      for (int col = 0; col < num_columns_; col++) {
+        int start = column_indices_[col];
+        int end = column_indices_[col + 1];
+        for (int i = start; i < end; i++) {
+          int row = row_indices_[i];
+          result->add_number_to_element(col, values_[i] * p->get_value(row));
+        }
       }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      // go to the next col
-      while (i == column_indices_[col + 1]) {
-        col++;
+    } else {
+      for (int col = 0; col < num_columns_; col++) {
+        int start = column_indices_[col];
+        int end = column_indices_[col + 1];
+        for (int i = start; i < end; i++) {
+          int row = row_indices_[i];
+          result->add_number_to_element(col, -values_[i] * p->get_value(row));
+        }
       }
-      result->add_number_to_element(row_indices_[i],
-                                    values_[i] * p->get_value(col));
     }
   }
 }
 
 //@{
-void SparseHbMatrix::print_full(const char* name,
-                                Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                                Ipopt::EJournalLevel level,
-                                Ipopt::EJournalCategory category) const
+void SparseHbMatrix::print_dense(const char* name,
+                                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+                                 Ipopt::EJournalLevel level,
+                                 Ipopt::EJournalCategory category) const
 {
   char mat_val[99];
   auto dense_matrix = new double[num_rows_ * num_columns_]();
@@ -903,7 +865,12 @@ void SparseHbMatrix::print(const char* name,
                            Ipopt::EJournalLevel level,
                            Ipopt::EJournalCategory category) const
 {
+  bool new_format = false;
 
+  if (new_format) {
+    write_to_file(stdout, name);
+  }
+  else {
   if (is_compressed_row_format_) {
     cout << name << "= " << endl;
     cout << "ColIndex: ";
@@ -935,10 +902,13 @@ void SparseHbMatrix::print(const char* name,
     cout << get_value_at_entry(i) << " ";
   cout << " " << endl;
 
+  if (triplet_order_) {
   cout << "order:    ";
-  for (int i = 0; i < num_entries_; i++)
-    cout << get_order_at_entry(i) << " ";
+  for (int i = 0; i < num_triplet_entries_; i++)
+    cout << i << ":" << get_order_at_entry(i) << " ";
   cout << " " << endl;
+  }
+  }
 }
 #if 0
 /** @name norms */

@@ -7,14 +7,14 @@ extern "C" {
 }
 
 #include "sqphot/MessageHandling.hpp"
-#include "sqphot/QOREInterface.hpp"
+#include "sqphot/QoreInterface.hpp"
+#include "sqphot/QpOasesInterface.hpp"
 #include "sqphot/SparseHbMatrix.hpp"
 #include "sqphot/SqpAlgorithm.hpp"
 #include "sqphot/Vector.hpp"
-#include "sqphot/qpOASESInterface.hpp"
 #include <memory>
 
-using namespace SQPhotstart;
+using namespace RestartSqp;
 using namespace std;
 
 shared_ptr<SparseHbMatrix>
@@ -30,15 +30,55 @@ convert_csr_to_csc(shared_ptr<const SparseHbMatrix> csr_matrix)
 
   bool is_compressed_row = false;
   bool row_oriented = true;
+  bool is_symmetric = csr_matrix->is_symmetric();
   shared_ptr<SparseHbMatrix> csc_matrix = make_shared<SparseHbMatrix>(
       csr_matrix->get_num_rows(), csr_matrix->get_num_columns(),
-      is_compressed_row);
+      is_compressed_row, is_symmetric);
   csc_matrix->copy_from_dense_matrix(dense_matrix, csr_matrix->get_num_rows(),
                                      csr_matrix->get_num_columns(),
                                      row_oriented, is_compressed_row);
   delete[] dense_matrix;
 
   return csc_matrix;
+}
+
+shared_ptr<Vector> read_vector(FILE* file, string name)
+{
+  char string_buf[128];
+  int size;
+  fscanf(file, "%*s %s %*s %d %*s", string_buf, &size);
+  assert(strncmp(string_buf, name.c_str(), 128) == 0);
+
+  shared_ptr<Vector> retval = make_shared<Vector>(size);
+  double* vec_vals = retval->get_non_const_values();
+  for (int i = 0; i < size; ++i) {
+    fscanf(file, "%le", &vec_vals[i]);
+  }
+
+  return retval;
+}
+
+shared_ptr<SparseTripletMatrix> read_triplet_matrix(FILE* file, int nRows,
+                                                    int nCols,
+                                                    bool is_symmetric,
+                                                    string name)
+{
+  char string_buf[128];
+  int nnz;
+  fscanf(file, "%*s %s %*s %d %*s %*s", string_buf, &nnz);
+  assert(strncmp(string_buf, name.c_str(), 128) == 0);
+
+  shared_ptr<SparseTripletMatrix> retval =
+      make_shared<SparseTripletMatrix>(nnz, nRows, nCols, is_symmetric);
+  int* row_indices = retval->get_nonconst_row_indices();
+  int* columns_indices = retval->get_nonconst_column_indices();
+  double* values = retval->get_nonconst_values();
+
+  for (int i = 0; i < nnz; ++i) {
+    fscanf(file, "%d %d %le", &row_indices[i], &columns_indices[i], &values[i]);
+  }
+
+  return retval;
 }
 
 int main(int argc, char* argv[])
@@ -58,7 +98,44 @@ int main(int argc, char* argv[])
     return 1;
   } else if (file == NULL)
     perror("Error opening file");
-  else {
+
+  shared_ptr<Vector> g;
+
+  shared_ptr<SparseTripletMatrix> A_triplet;
+  shared_ptr<SparseTripletMatrix> H_triplet;
+
+  shared_ptr<Vector> lb;
+  shared_ptr<Vector> ub;
+  shared_ptr<Vector> lbA;
+  shared_ptr<Vector> ubA;
+
+  // Find out whether this is a file in the "new" format where the matrix is in
+  // triplet format
+  bool read_triplet_format = false;
+  if (fgets(buffer, 100, file) != NULL) {
+    if (strncmp(buffer, "Vector", 6) == 0) {
+      read_triplet_format = true;
+    }
+  }
+  // Rewind the file pointer
+  fseek(file, 0L, SEEK_SET);
+
+  if (read_triplet_format) {
+    g = read_vector(file, "g");
+    nVar = g->get_dim();
+    lb = read_vector(file, "lb");
+    assert(lb->get_dim() == nVar);
+    ub = read_vector(file, "ub");
+    assert(ub->get_dim() == nVar);
+
+    lbA = read_vector(file, "lbA");
+    nCon = lbA->get_dim();
+    ubA = read_vector(file, "ubA");
+    assert(ubA->get_dim() == nCon);
+
+    H_triplet = read_triplet_matrix(file, nVar, nVar, true, "H");
+    A_triplet = read_triplet_matrix(file, nCon, nVar, false, "A");
+  } else {
     // begin Reading Data
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &nVar);
@@ -72,98 +149,99 @@ int main(int argc, char* argv[])
     if (fgets(buffer, 100, file) != NULL) {
       sscanf(buffer, "%d", &Hnnz);
     }
-  }
 
-  shared_ptr<Vector> x_qore = make_shared<Vector>(nCon + nVar);
-  shared_ptr<Vector> y_qore_constr = make_shared<Vector>(nCon);
-  shared_ptr<Vector> y_qore_bounds = make_shared<Vector>(nVar);
+    g = make_shared<Vector>(nVar);
+    shared_ptr<Vector> all_lb = make_shared<Vector>(nCon + nVar);
+    shared_ptr<Vector> all_ub = make_shared<Vector>(nCon + nVar);
+    shared_ptr<SparseHbMatrix> A_csr =
+        make_shared<SparseHbMatrix>(Annz, nCon, nVar, true, false);
+    shared_ptr<SparseHbMatrix> H_csr =
+        make_shared<SparseHbMatrix>(Hnnz, nVar, nVar, true, true);
 
-  shared_ptr<Vector> x_qpOASES = make_shared<Vector>(nVar);
-  shared_ptr<Vector> y_qpOASES_constr = make_shared<Vector>(nCon);
-  shared_ptr<Vector> y_qpOASES_bounds = make_shared<Vector>(nVar);
-
-  shared_ptr<Vector> lb_qore = make_shared<Vector>(nCon + nVar);
-  shared_ptr<Vector> ub_qore = make_shared<Vector>(nCon + nVar);
-  shared_ptr<Vector> g = make_shared<Vector>(nVar);
-
-  shared_ptr<SparseHbMatrix> A_qore =
-      make_shared<SparseHbMatrix>(Annz, nCon, nVar, true);
-  shared_ptr<SparseHbMatrix> H_qore =
-      make_shared<SparseHbMatrix>(Hnnz, nVar, nVar, true);
-
-  qp_int A_ir_qore[nCon + 1]; // row index
-  qp_int A_jc_qore[Annz];     // column index
-  double A_val_qore[Annz];    // matrix value
-
-  qp_int H_ir_qore[nVar + 1]; // row index
-  qp_int H_jc_qore[Hnnz];     // column index
-  double H_val_qore[Hnnz];    // matrix value
-
-  for (i = 0; i < nCon + nVar; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%lf", &tmp_double);
-      lb_qore->set_value(i, tmp_double);
+    for (i = 0; i < nCon + nVar; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%lf", &tmp_double);
+        all_lb->set_value(i, tmp_double);
+      }
     }
-  }
 
-  for (i = 0; i < nCon + nVar; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%lf", &tmp_double);
-      ub_qore->set_value(i, tmp_double);
+    for (i = 0; i < nCon + nVar; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%lf", &tmp_double);
+        all_ub->set_value(i, tmp_double);
+      }
     }
-  }
 
-  for (i = 0; i < nVar; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%lf", &tmp_double);
-      g->set_value(i, tmp_double);
+    for (i = 0; i < nVar; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%lf", &tmp_double);
+        g->set_value(i, tmp_double);
+      }
     }
-  }
 
-  for (i = 0; i < nCon + 1; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%d", &tmp_int);
-      A_qore->set_row_index_at_entry(i, tmp_int);
+    for (i = 0; i < nCon + 1; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%d", &tmp_int);
+        A_csr->set_row_index_at_entry(i, tmp_int);
+      }
     }
-  }
 
-  for (i = 0; i < Annz; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%d", &tmp_int);
-      A_qore->set_column_index_at_entry(i, tmp_int);
+    for (i = 0; i < Annz; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%d", &tmp_int);
+        A_csr->set_column_index_at_entry(i, tmp_int);
+      }
     }
-  }
 
-  for (i = 0; i < Annz; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%lf", &tmp_double);
-      A_qore->set_value_at_entry(i, tmp_double);
+    for (i = 0; i < Annz; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%lf", &tmp_double);
+        A_csr->set_value_at_entry(i, tmp_double);
+      }
     }
-  }
 
-  for (i = 0; i < nVar + 1; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%d", &tmp_int);
-      H_qore->set_row_index_at_entry(i, tmp_int);
+    for (i = 0; i < nVar + 1; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%d", &tmp_int);
+        H_csr->set_row_index_at_entry(i, tmp_int);
+      }
     }
-  }
 
-  for (i = 0; i < Hnnz; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%d", &tmp_int);
-      H_qore->set_column_index_at_entry(i, tmp_int);
+    for (i = 0; i < Hnnz; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%d", &tmp_int);
+        H_csr->set_column_index_at_entry(i, tmp_int);
+      }
     }
-  }
 
-  for (i = 0; i < Hnnz; i++) {
-    if (fgets(buffer, 100, file) != NULL) {
-      sscanf(buffer, "%lf", &tmp_double);
-      H_qore->set_value_at_entry(i, tmp_double);
+    for (i = 0; i < Hnnz; i++) {
+      if (fgets(buffer, 100, file) != NULL) {
+        sscanf(buffer, "%lf", &tmp_double);
+        H_csr->set_value_at_entry(i, tmp_double);
+      }
     }
+
+    A_csr->print("A_csr");
+    H_csr->print("H_csr");
+
+    A_triplet = make_shared<SparseTripletMatrix>(A_csr);
+    H_triplet = make_shared<SparseTripletMatrix>(H_csr);
+
+    lb = make_shared<Vector>(nVar, all_lb->get_values());
+    ub = make_shared<Vector>(nVar, all_ub->get_values());
+    lbA = make_shared<Vector>(nCon, all_lb->get_values() + nVar);
+    ubA = make_shared<Vector>(nCon, all_ub->get_values() + nVar);
   }
 
-  A_qore->print("A");
-  H_qore->print_full("H");
+  lb->print("lb");
+  ub->print("ub");
+  lbA->print("lbA");
+  ubA->print("ubA");
+  g->print("g");
+  A_triplet->print("A_triplet");
+  H_triplet->print("H_triplet");
+
+  IdentityMatrixPositions identity_positions;
 
   /////////////////////////////////////////////////////
   //  Create a dummy Algorithm object to get options //
@@ -187,82 +265,140 @@ int main(int argc, char* argv[])
 
   shared_ptr<Statistics> stats_qore = make_shared<Statistics>();
 
-  shared_ptr<QOREInterface> qore_inferface =
-      make_shared<QOREInterface>(H_qore, A_qore, g, lb_qore, ub_qore, options);
+  shared_ptr<QoreInterface> qore_interface =
+      make_shared<QoreInterface>(nVar, nCon, QP_TYPE_QP, options, jnlst);
+  qore_interface->get_lower_variable_bounds_nonconst()->copy_vector(lb);
+  qore_interface->get_upper_variable_bounds_nonconst()->copy_vector(ub);
+  qore_interface->get_lower_constraint_bounds_nonconst()->copy_vector(lbA);
+  qore_interface->get_upper_constraint_bounds_nonconst()->copy_vector(ubA);
+  qore_interface->get_linear_objective_coefficients_nonconst()->copy_vector(g);
+  qore_interface->set_constraint_jacobian(A_triplet, identity_positions);
+  qore_interface->set_objective_hessian(H_triplet);
+
   try {
-    qore_inferface->optimize_qp(stats_qore);
+    qore_interface->optimize(stats_qore);
   } catch (...) {
   }
-  switch (qore_inferface->get_status()) {
-    case QPERROR_EXCEED_MAX_ITER:
-      exitflag_qore = "EXCEED_ITER_LIMIT";
-      break;
-    case QPSOLVER_OPTIMAL:
+
+  shared_ptr<Vector> x_qore;
+  shared_ptr<Vector> y_qore_constr;
+  shared_ptr<Vector> y_qore_bounds;
+  double obj_qore;
+  KktError kkt_error_qore;
+
+  QpSolverExitStatus qore_exit_status = qore_interface->get_solver_status();
+  if (qore_exit_status == QPEXIT_OPTIMAL) {
+    x_qore = make_shared<Vector>(
+        nVar, qore_interface->get_primal_solution()->get_values());
+    y_qore_constr = make_shared<Vector>(
+        nCon, qore_interface->get_constraint_multipliers()->get_values());
+    y_qore_bounds = make_shared<Vector>(
+        nVar, qore_interface->get_bounds_multipliers()->get_values());
+    obj_qore = qore_interface->get_optimal_objective_value();
+    kkt_error_qore = qore_interface->calc_kkt_error();
+  } else {
+    x_qore = make_shared<Vector>(nVar);
+    y_qore_constr = make_shared<Vector>(nCon);
+    y_qore_bounds = make_shared<Vector>(nVar);
+    x_qore->set_to_zero();
+    y_qore_constr->set_to_zero();
+    y_qore_bounds->set_to_zero();
+    obj_qore = 0.;
+  }
+
+  switch (qore_exit_status) {
+    case QPEXIT_OPTIMAL:
       exitflag_qore = "OPTIMAL";
       break;
-    case QPERROR_INFEASIBLE:
+    case QPEXIT_INFEASIBLE:
       exitflag_qore = "INFEASIBLE";
       break;
-    case QPERROR_UNBOUNDED:
+    case QPEXIT_UNBOUNDED:
       exitflag_qore = "UNBOUNDED";
+      break;
+    case QPEXIT_INTERNAL_ERROR:
+      exitflag_qore = "INTERNAL_ERROR";
       break;
     default:
       exitflag_qore = "UNKNOWN";
   }
-  qore_inferface->test_optimality();
-  x_qore->copy_vector(qore_inferface->get_primal_solution());
-  y_qore_constr->copy_vector(qore_inferface->get_constraints_multipliers());
-  y_qore_bounds->copy_vector(qore_inferface->get_bounds_multipliers());
-  double obj_qore = qore_inferface->get_obj_value();
 
   ///////////////////////////////////////////////////////////
   //                     QPOASES                           //
   ///////////////////////////////////////////////////////////
   shared_ptr<Statistics> stats_qpOASES = make_shared<Statistics>();
-  auto A_qpOASES = convert_csr_to_csc(A_qore);
-  auto H_qpOASES = convert_csr_to_csc(H_qore);
 
-  A_qpOASES->print("A_qpOASES");
+  shared_ptr<QpOasesInterface> qpoases_interface =
+      make_shared<QpOasesInterface>(nVar, nCon, QP_TYPE_QP, options, jnlst);
+  qpoases_interface->get_lower_variable_bounds_nonconst()->copy_vector(lb);
+  qpoases_interface->get_upper_variable_bounds_nonconst()->copy_vector(ub);
+  qpoases_interface->get_lower_constraint_bounds_nonconst()->copy_vector(lbA);
+  qpoases_interface->get_upper_constraint_bounds_nonconst()->copy_vector(ubA);
+  qpoases_interface->get_linear_objective_coefficients_nonconst()->copy_vector(
+      g);
+  qpoases_interface->set_constraint_jacobian(A_triplet, identity_positions);
+  qpoases_interface->set_objective_hessian(H_triplet);
 
-  auto lb_qpOASES = make_shared<Vector>(nVar);
-  auto ub_qpOASES = make_shared<Vector>(nVar);
-  auto lbA_qpOASES = make_shared<Vector>(nCon);
-  auto ubA_qpOASES = make_shared<Vector>(nCon);
-
-  lb_qpOASES->copy_values(lb_qore->get_values());
-  ub_qpOASES->copy_values(ub_qore->get_values());
-  lbA_qpOASES->copy_values(lb_qore->get_values() + nVar);
-  ubA_qpOASES->copy_values(ub_qore->get_values() + nVar);
-
-  shared_ptr<qpOASESInterface> qpoases_interface =
-      make_shared<qpOASESInterface>(H_qpOASES, A_qpOASES, g, lb_qore, ub_qore,
-                                    lbA_qpOASES, ubA_qpOASES, options);
   try {
-    qpoases_interface->optimize_qp(stats_qpOASES);
+    qpoases_interface->optimize(stats_qpOASES);
   } catch (...) {
   }
-  x_qpOASES->copy_vector(qpoases_interface->get_primal_solution());
-  y_qpOASES_constr->copy_vector(
-      qpoases_interface->get_constraints_multipliers());
-  y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
 
-  qpoases_interface->test_optimality();
-  double obj_qpOASES = qpoases_interface->get_obj_value();
-  switch (qpoases_interface->get_status()) {
-    case QPERROR_EXCEED_MAX_ITER:
-      exitflag_qpOASES = "EXCEED_ITER_LIMIT";
-      break;
-    case QPSOLVER_OPTIMAL:
+#if 0
+  shared_ptr<Vector> x_qpOASES = make_shared<Vector>(
+      nVar, qpoases_interface->get_primal_solution()->get_values());
+  shared_ptr<Vector> y_qpOASES_constr = make_shared<Vector>(
+      nCon, qpoases_interface->get_constraint_multipliers()->get_values());
+  shared_ptr<Vector> y_qpOASES_bounds = make_shared<Vector>(
+      nVar, qpoases_interface->get_bounds_multipliers()->get_values());
+#endif
+  shared_ptr<Vector> x_qpOASES;
+  shared_ptr<Vector> y_qpOASES_constr;
+  shared_ptr<Vector> y_qpOASES_bounds;
+  double obj_qpOASES;
+  KktError kkt_error_qpoases;
+
+  QpSolverExitStatus qpOASES_exit_status = qpoases_interface->get_solver_status();
+  if (qpOASES_exit_status == QPEXIT_OPTIMAL) {
+    x_qpOASES = make_shared<Vector>(
+        nVar, qpoases_interface->get_primal_solution()->get_values());
+    y_qpOASES_constr = make_shared<Vector>(
+        nCon, qpoases_interface->get_constraint_multipliers()->get_values());
+    y_qpOASES_bounds = make_shared<Vector>(
+        nVar, qpoases_interface->get_bounds_multipliers()->get_values());
+    obj_qpOASES = qpoases_interface->get_optimal_objective_value();
+    kkt_error_qpoases = qpoases_interface->calc_kkt_error();
+  } else {
+    x_qpOASES = make_shared<Vector>(nVar);
+    y_qpOASES_constr = make_shared<Vector>(nCon);
+    y_qpOASES_bounds = make_shared<Vector>(nVar);
+    x_qpOASES->set_to_zero();
+    y_qpOASES_constr->set_to_zero();
+    y_qpOASES_bounds->set_to_zero();
+    obj_qpOASES = 0.;
+  }
+
+//  x_qpOASES->copy_vector(qpoases_interface->get_primal_solution());
+//  y_qpOASES_constr->copy_vector(
+//      qpoases_interface->get_constraint_multipliers());
+//  y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
+
+  switch (qpoases_interface->get_solver_status()) {
+    case QPEXIT_OPTIMAL:
       exitflag_qpOASES = "OPTIMAL";
       break;
-    case QPERROR_INFEASIBLE:
+    case QPEXIT_INFEASIBLE:
       exitflag_qpOASES = "INFEASIBLE";
       break;
-    case QPERROR_UNBOUNDED:
+    case QPEXIT_UNBOUNDED:
       exitflag_qpOASES = "UNBOUNDED";
       break;
-    case QPERROR_NOTINITIALISED:
-      exitflag_qpOASES = "NOTINITIALISED";
+    case QPEXIT_INTERNAL_ERROR:
+      exitflag_qpOASES = "INTERNAL_ERROR";
+      break;
+#if 0
+    case QPERROR_EXCEED_MAX_ITER:
+      exitflag_qpOASES = "EXCEED_ITER_LIMIT";
       break;
     case QPERROR_PREPARINGAUXILIARYQP:
       exitflag_qpOASES = "PREPARINGAUXILIARYQP";
@@ -276,13 +412,14 @@ int main(int argc, char* argv[])
     case QPERROR_HOMOTOPYQPSOLVED:
       exitflag_qpOASES = "HOMOTOPYQPSOLVED";
       break;
+#endif
     default:
       exitflag_qpOASES = "UNKNOWN";
   }
 
-  //////////////////////////////////////////////////////////
-  //                     PRINT OUT RESULTS                 /"
-  ///////////////////////////////////////////////////////////e
+  ///////////////////////////////////////////////////////////
+  //                     PRINT OUT RESULTS                 //
+  ///////////////////////////////////////////////////////////
   string* pname = new string(argv[1]);
   std::size_t found = pname->find_last_of("/\\");
   printf(DOUBLE_LONG_DIVIDER);
@@ -302,20 +439,18 @@ int main(int argc, char* argv[])
   printf("%30s    %23.16e    %23.16e\n", "||y_c||",
          y_qore_constr->calc_inf_norm(), y_qpOASES_constr->calc_inf_norm());
   printf("%30s    %23.16e    %23.16e\n", "KKT Error",
-         qore_inferface->get_optimality_status().KKT_error,
-         qpoases_interface->get_optimality_status().KKT_error);
+         kkt_error_qore.worst_violation, kkt_error_qpoases.worst_violation);
   printf("%30s    %23.16e    %23.16e\n", "Primal Feasibility Violation",
-         qore_inferface->get_optimality_status().primal_violation,
-         qpoases_interface->get_optimality_status().primal_violation);
+         kkt_error_qore.primal_infeasibility,
+         kkt_error_qpoases.primal_infeasibility);
   printf("%30s    %23.16e    %23.16e\n", "Dual Feasibility  Violation",
-         qore_inferface->get_optimality_status().dual_violation,
-         qpoases_interface->get_optimality_status().dual_violation);
-  printf("%30s    %23.16e    %23.16e\n", "Stationarity Violation",
-         qore_inferface->get_optimality_status().stationarity_violation,
-         qpoases_interface->get_optimality_status().stationarity_violation);
+         kkt_error_qore.dual_infeasibility,
+         kkt_error_qpoases.dual_infeasibility);
   printf("%30s    %23.16e    %23.16e\n", "Complemtarity Violation",
-         qore_inferface->get_optimality_status().compl_violation,
-         qpoases_interface->get_optimality_status().compl_violation);
+         kkt_error_qore.complementarity_violation,
+         kkt_error_qpoases.complementarity_violation);
+  printf("%30s    %23.16e    %23.16e\n", "Working Set Violation",
+         kkt_error_qore.working_set_error, kkt_error_qpoases.working_set_error);
   printf(DOUBLE_LONG_DIVIDER);
 
   delete pname;

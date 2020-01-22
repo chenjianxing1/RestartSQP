@@ -8,11 +8,11 @@
 #define SQPALGORITHM_HPP_
 
 #include "IpOptionsList.hpp"
-#include "sqphot/QPhandler.hpp"
+#include "sqphot/QpHandler.hpp"
 #include "sqphot/SQPDebug.hpp"
 #include "sqphot/Statistics.hpp"
 
-namespace SQPhotstart {
+namespace RestartSqp {
 /**
  *
  * @brief This is the class with method solve a NLP problem by using SQP(SL1QP)
@@ -90,7 +90,7 @@ public:
     return exit_flag_;
   }
 
-  inline OptimalityStatus get_opt_status() const
+  inline KktError get_opt_status() const
   {
     return opt_status_;
   }
@@ -243,7 +243,7 @@ private:
    * be
    * true;
    */
-  void update_radius();
+  void update_trust_region_radius();
 
   /**
    * @brief Update the penalty parameter
@@ -290,7 +290,7 @@ private:
    * @brief This function will setup the data for the LP subproblem
    */
 
-  void setupLP();
+  void setup_lp();
 
   /**
    * @brief This function extracts the Lagragian multipliers for constraints
@@ -415,48 +415,58 @@ private:
   /** Constraint violation of trial step in linear constraint model. */
   double current_model_infeasibility_;
 
-  double actual_reduction_; /**< the actual_reduction evaluated at x_k and p_k*/
-  double trust_region_radius_; /**< trust-region radius*/
+  /** Current value of the trust region radius. */
+  double trust_region_radius_;
+  /** Actual reduction in the penalty function with trial step. */
+  double actual_reduction_;
+  /** Predicted reduction in penalty function with trial step. */
+  double pred_reduction_;
+
+
   double infea_measure_model_; /**< the one norm of all slack variables in the
                                   QP */
   double trial_step_norm_;     /**< the infinity norm of p_k*/
   double obj_value_;           /**<the objective corresponding to the x_k*/
   double obj_value_trial_;     /**<the objective corresponding to the x_trial*/
-  double
-      pred_reduction_; /**< the predicted reduction evaluated at x_k and p_k*/
+
   double qp_obj_;      /**< the objective value of current qp*/
   double penalty_parameter_; /**< penalty parameter*/
-  OptimalityStatus opt_status_;
+  KktError opt_status_;
 
   /** Object to solve LPs. */
-  std::shared_ptr<QPhandler> lp_solver_;
+  std::shared_ptr<QpHandler> lp_solver_;
   /** Object to solve step computation QPs. */
-  std::shared_ptr<QPhandler> qp_solver_;
+  std::shared_ptr<QpHandler> qp_solver_;
   /** Object to track which QP data needs to be updated. */
   QpUpdateTracker qp_update_tracker_;
   /** Flag indicating whether the step computation QP has been initialized. */
   bool qp_solver_initialized_;
 
   bool isaccept_; // is the new point accepted?
-  std::shared_ptr<SpTripletMat>
-      current_lagrangian_hessian_; /**< the SparseMatrix object for hessain
-                     *of  f(x)-sum_{i=1}^m lambda_i c_i(x)*/
-  std::shared_ptr<SpTripletMat>
-      current_constraint_jacobian_; /** <the SparseMatrix object for Jacobian
-                      *from c(x)*/
+
+  /** Primal current iterate. */
+  std::shared_ptr<Vector> current_iterate_;
+  /** Current estimate of the constraint multipliers. */
+  std::shared_ptr<Vector> constraint_multipliers_;
+  /** Current estimate of the bound multipliers. */
+  std::shared_ptr<Vector> bound_multipliers_;
+
+  /** Gradient of the objective function at the current iterate. */
+  std::shared_ptr<Vector> current_objective_gradient_;
+  /** Value of the constraint bodies at the current iterate. */
+  std::shared_ptr<Vector> current_constraint_values_;
+  /** Constraint Jacobian at the current iterate. */
+  std::shared_ptr<SparseTripletMatrix> current_constraint_jacobian_;
+  /** Hessian of the Lagrangian function at the current primal-dual iterate. */
+  std::shared_ptr<SparseTripletMatrix> current_lagrangian_hessian_;
+
+  /** KKT error for the current iterate. */
+  KktError current_kkt_error_;
+
   std::shared_ptr<Statistics> solver_statistics_;
-  std::shared_ptr<Vector> current_constraint_values_; /**< the constraints'
-                                                         value evaluated at
-                                                         x_k_*/
-  std::shared_ptr<Vector> trial_constraint_values_;   /* the constraints' value
-                                                         evaluated at x_trial_*/
-  std::shared_ptr<Vector>
-      current_objective_gradient_; /**< gradient evaluated at x_k*/
-  std::shared_ptr<Vector>
-      constraint_multipliers_;                /**< multiplier for constraints*/
-  std::shared_ptr<Vector> bound_multipliers_; /**< multipliers for variables*/
-  std::shared_ptr<Vector> trial_step_;        /* search direction at x_k*/
-  std::shared_ptr<Vector> current_iterate_;   /**< current iterate point*/
+  std::shared_ptr<Vector> trial_constraint_values_; /* the constraints' value
+                                                       evaluated at x_trial_*/
+  std::shared_ptr<Vector> trial_step_;              /* search direction at x_k*/
   std::shared_ptr<Vector>
       trial_iterate_; /**< the trial point from the search direction
                      *x_trial = x_k+p_k*/

@@ -5,7 +5,7 @@
 #include "sqphot/Statistics.hpp"
 #include "sqphot/Utils.hpp"
 
-#include "sqphot/QPsolverInterface.hpp"
+#include "sqphot/QpSolverInterface.hpp"
 
 // TODO: We should get ride of this
 #include "sqphot/SQPDebug.hpp"
@@ -14,12 +14,12 @@
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-#include "sqphot/QOREInterface.hpp"
-#include "sqphot/qpOASESInterface.hpp"
+#include "sqphot/QoreInterface.hpp"
+#include "sqphot/QpOasesInterface.hpp"
 #endif
 #endif
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 /** Class for storing which quantities in a QP need to be updated. */
 class QpUpdateTracker
@@ -50,7 +50,7 @@ public:
   {
     return update_bounds_;
   }
-  bool need_trust_region_radius_update() const
+  bool need_trust_region_radius_decrease() const
   {
     return update_trust_region_radius_;
   }
@@ -78,7 +78,7 @@ public:
   {
     update_bounds_ = true;
   }
-  void trigger_trust_region_radius_update()
+  void trigger_trust_region_radius_decrease()
   {
     update_trust_region_radius_ = true;
   }
@@ -160,21 +160,21 @@ private:
  *  It contains the methods to setup the QP problem in
  *  the following format.
  *
- *  not NEW_FORMULATION:
+ *  Formulation without slacks for the variables:
  *
- * 	minimize  1/2 p_k^T H_k p^k + g_k^T p_k+rho*e^T *(u+v)
+ * 	minimize  1/2 p^T H_k p + g_k^T p+rho*e^T *(u+v)
  * 	subject to c_l<=c_k+J_k p+u-v<=c_u,
- * 		       max(-delta,x_l) <= x_k+p_k <= min(delta,x_u)
+ * 		       max(-delta,x_l-x_k) <= p <= min(delta,x_u-x_k)
  *		       u,v>=0
  *
  *  Order of variables: x = (p, u, v)
  *
- *  NEW_FORMULATION:
+ *  Formulation with slacks for the variables:
  *
- * 	minimize  1/2 p_k^T H_k p^k + g_k^T p_k+rho*[e^T *(u+v) + e^T(w+t)]
+ * 	minimize  1/2 p^T H_k p + g_k^T p+rho*[e^T *(u+v) + e^T(w+t)]
  * 	subject to c_l<=c_k+J_k p+u-v<=c_u,
- * 		       x_l<=x_k+p_k+w-t<=x_u,
- *		       -delta<=p_i<=delta,   (these are bounds)
+ * 		       x_l<=x_k+p+w-t<=x_u,
+ *		       -delta<=p<=delta,   (these are bounds)
  *		       u,v,w,t>=0
  *
  *  Order of variables: x = (p, u, v, w, t)
@@ -188,30 +188,25 @@ private:
  * -process the data required by individual solver.
  */
 
-class QPhandler
+class QpHandler
 {
 
   ///////////////////////////////////////////////////////////
   //                      PUBLIC METHODS                   //
   ///////////////////////////////////////////////////////////
 public:
-  QPhandler(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype,
+  QpHandler(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype,
             Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   /** Default destructor */
-  virtual ~QPhandler();
+  virtual ~QpHandler();
 
   /**
-   * @brief Solve the QP subproblem according to the bounds setup before.
+   * @brief Solve the QP/LP subproblem according to the data set up before.
    * */
-  QpSolverExitStatus solve_qp(std::shared_ptr<Statistics> stats);
+  QpSolverExitStatus solve(std::shared_ptr<Statistics> stats);
 
-  /** Solve the LP that has been set up before. */
-  QpSolverExitStatus solve_lp(std::shared_ptr<Statistics> stats)
-  {
-    return solverInterface_->optimize_lp(stats);
-  }
   /** @name Getters */
   //@{
   /**
@@ -225,7 +220,7 @@ public:
    */
   std::shared_ptr<const Vector> get_primal_solution() const
   {
-    return solverInterface_->get_primal_solution();
+    return qp_solver_interface_->get_primal_solution();
   }
 
   /**
@@ -234,26 +229,26 @@ public:
    */
   double get_model_infeasibility() const;
   /**
-   *@brief Get the multipliers corresponding to the bound variables
+   *@brief Get the multipliers corresponding to the NLP bound variables
    */
-  std::shared_ptr<const Vector> get_bounds_multipliers() const
-  {
-    return solverInterface_->get_bounds_multipliers();
-  }
+  std::shared_ptr<const Vector> get_bounds_multipliers() const;
 
   /**
-   * @brief Get the multipliers corresponding to the constraints
+   * @brief Get the multipliers corresponding to the NLP constraints
    */
-  std::shared_ptr<const Vector> get_constraints_multipliers() const
-  {
-    return solverInterface_->get_constraints_multipliers();
-  }
+  std::shared_ptr<const Vector> get_constraint_multipliers() const;
 
   /**
    * @brief Get the objective value of the QP
    */
-  double get_objective();
+  double get_qp_objective() const;
 
+  /**
+   * @brief Get the most recent KKT error
+   */
+  double get_qp_kkt_error() const;
+
+#if 0
   /**
    * @brief manually calculate the active set from the class member
    * solverInterface
@@ -266,12 +261,13 @@ public:
   void get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
                       std::shared_ptr<Vector> x = nullptr,
                       std::shared_ptr<Vector> Ax = nullptr);
-
+#endif
+#if 0
   /**
    * @brief Get the return status of QPsolver
    */
   Exitflag get_status();
-
+#endif
   //@}
 
   /** @name Setters*/
@@ -289,7 +285,7 @@ public:
   * @param c_l        the lower bounds for constraints
   * @param c_u        the upper bounds for constraints
   */
-  void set_bounds(double delta, std::shared_ptr<const Vector> x_l,
+  void set_bounds(double trust_region_radius, std::shared_ptr<const Vector> x_l,
                   std::shared_ptr<const Vector> x_u,
                   std::shared_ptr<const Vector> x_k,
                   std::shared_ptr<const Vector> c_l,
@@ -303,10 +299,12 @@ public:
    * @param grad 	Gradient vector from nlp class
    * @param rho  	Penalty Parameter
    */
-  void set_gradient(std::shared_ptr<const Vector> grad, double rho);
+  void set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> gradient, double penalty_parameter);
+#if 0
+  void set_linear_qp_objective_coefficients(double rho);
+#endif
 
-  void set_gradient(double rho);
-
+#if 0
   /**
    * Set up the H for the first time in the QP
    * problem.
@@ -322,21 +320,20 @@ public:
    * @return
    */
 
-  void set_hessian(std::shared_ptr<const SpTripletMat> hessian);
+  void set_hessian(std::shared_ptr<const SparseTripletMatrix> hessian);
 
   /** @brief setup the matrix A for the QP subproblems according to the
    * information from current iterate*/
-  void set_jacobian(std::shared_ptr<const SpTripletMat> jacobian);
+  void set_jacobian(std::shared_ptr<const SparseTripletMatrix> jacobian);
 
   //@}
-
+#endif
   /** @name Update QPdata */
 
   //@{
-  void update_delta(double delta, std::shared_ptr<const Vector> x_l,
-                    std::shared_ptr<const Vector> x_u,
-                    std::shared_ptr<const Vector> x_k);
+  void decrease_trust_region(double trust_region);
 
+#if 0
   /**
    * @brief This function updates the bounds on x if there is any changes to the
    * values of trust-region or the iterate
@@ -347,35 +344,42 @@ public:
                      std::shared_ptr<const Vector> c_l,
                      std::shared_ptr<const Vector> c_u,
                      std::shared_ptr<const Vector> c_k);
-
+#endif
   /**
    * @brief This function updates the vector g in the QP subproblem when there
    * are any change to the values of penalty parameter
    *
    * @param rho		penalty parameter
    */
-  void update_penalty(double rho);
+  void update_penalty_parameter(double penalty_parameter);
 
+#if 1
   /**
    * @brief This function updates the vector g in the QP subproblem when there
    * are any change to the values of gradient in NLP
    *
    * @param grad		the gradient vector from NLP
    */
-  void update_grad(std::shared_ptr<const Vector> grad);
+  void set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> grad);
+#endif
+
+  void set_linear_qp_objective_coefficients_to_zero()
+  {
+    qp_solver_interface_->get_linear_objective_coefficients_nonconst()->set_to_zero();
+  }
 
   /*  @brief Update the SparseMatrix H of the QP
    *  problems when there is any change to the
    *  true function Hessian
    *
    *  */
-  void update_H(std::shared_ptr<const SpTripletMat> Hessian);
+  void set_hessian(std::shared_ptr<const SparseTripletMatrix> Hessian);
 
   /**
    * @brief Update the Matrix H of the QP problems
    * when there is any change to the Jacobian to the constraints.
    */
-  void update_A(std::shared_ptr<const SpTripletMat> Jacobian);
+  void set_jacobian(std::shared_ptr<const SparseTripletMatrix> Jacobian);
 
   //@}
 
@@ -385,16 +389,18 @@ public:
    * This creates a file that can be used to run the solver stand-alone for
    * debugging.
    */
-  void write_qp_data(const std::string filename);
+  void write_qp_data(const std::string& filename);
 
+#if 0
   /**
    * @brief Test the KKT conditions for the certain qpsolver
    */
-  bool test_optimality(std::shared_ptr<QPSolverInterface> qpsolverInterface,
+  bool test_optimality(std::shared_ptr<QpSolverInterface> qpsolverInterface,
                        QpSolver qpSolver, ActivityStatus* W_b,
                        ActivityStatus* W_c);
+#endif
 
-  const OptimalityStatus& get_QpOptimalStatus() const;
+  const KktError& get_QpOptimalStatus() const;
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
@@ -419,13 +425,13 @@ private:
   //@{
 
   /** Default constructor */
-  QPhandler();
+  QpHandler();
 
   /** Copy Constructor */
-  QPhandler(const QPhandler&);
+  QpHandler(const QpHandler&);
 
   /** Overloaded Equals Operator */
-  void operator=(const QPhandler&);
+  void operator=(const QpHandler&);
   //@}
 
   /**public class member*/
@@ -442,32 +448,38 @@ private:
   ///////////////////////////////////////////////////////////
 
 private:
-  std::shared_ptr<QPSolverInterface>
-      solverInterface_; /**<an interface to the standard
+  std::shared_ptr<QpSolverInterface>
+      qp_solver_interface_; /**<an interface to the standard
                              QP solver specified by the user*/
 
-  IdentityMatrixPositions identity_matrix_positions_;
+  /** Flag indicating whether this is the formulation that permits the bounds to be violated. */
+  bool slack_formulation_;
 
-  /** Container with the sizes of the NLP */
-  std::shared_ptr<const SqpNlpSizeInfo> nlp_sizes_;
+  /** Object that stores some meta-structure of the constraint Jacobian, namely
+   * cthe position of identiy matrices for slack variables. */
+  IdentityMatrixPositions identity_matrix_positions_;
 
   /** Journalist for output. */
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
+
+  /** Number of variables in the NLP. */
+  int num_nlp_variables_;
+  /** Number of constraints in the NLP. */
+  int num_nlp_constraints_;
 
   /** Number of variables in the QP. */
   int num_qp_variables_;
   /** Number of constraints in the QP. */
   int num_qp_constraints_;
 
-  /** Working set for the bounds. */
-  ActivityStatus* bounds_working_set_; // working set for bounds;
-  /** Working set for the constraints. */
-  ActivityStatus* constraints_working_set_; // working set for constraints;
-
   /** Indicates which solver is used to solve the QPs. */
   QpSolver qp_solver_choice_;
 
-  OptimalityStatus qpOptimalStatus_;
+  /** Store the value for the penalty parameter used most recently */
+  double last_penalty_parameter_;
+
+  /** KKT error (worst violation) from the most recent QP/LP solve. */
+  double last_kkt_error_;
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER

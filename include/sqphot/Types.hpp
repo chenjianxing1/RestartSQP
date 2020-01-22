@@ -9,7 +9,7 @@
 
 /** Declaration of all non-built in types (except for classes) */
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 enum PrintLevel
 {
@@ -35,8 +35,8 @@ enum PrintLevel
 
 enum QPType
 {
-  LP = 1, /** solving a linear program*/
-  QP = 2  /** solving a regular quadratic subproblem **/
+  QP_TYPE_LP = 1, /** solving a linear program*/
+  QP_TYPE_QP = 2  /** solving a regular quadratic subproblem **/
 };
 
 enum Exitflag
@@ -77,7 +77,7 @@ enum ActivityStatus
 {
   ACTIVE_ABOVE = 1,
   ACTIVE_BELOW = -1,
-  ACTIVE_BOTH_SIDES = -99,
+  ACTIVE_EQUALITY = -99,
   INACTIVE = 0
 };
 

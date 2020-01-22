@@ -17,7 +17,7 @@
 #include <sys/resource.h>
 #endif
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 void print_matrix(double* M, int length, int width)
 {

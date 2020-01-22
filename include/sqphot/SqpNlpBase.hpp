@@ -7,11 +7,11 @@
 #ifndef SQPHOTSTART_SQPNLPBASE_HPP
 #define SQPHOTSTART_SQPNLPBASE_HPP
 
-#include "sqphot/SpTripletMat.hpp"
+#include "sqphot/SparseTripletMatrix.hpp"
 #include "sqphot/Vector.hpp"
 #include <memory>
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 /** Simple class for storing the size information about an NLP. */
 class SqpNlpSizeInfo
@@ -125,8 +125,9 @@ public:
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not
    */
-  virtual bool get_starting_point(std::shared_ptr<Vector> x_0,
-                                  std::shared_ptr<Vector> lambda_0) = 0;
+  virtual bool get_starting_point(std::shared_ptr<Vector> primal_point,
+                                  std::shared_ptr<Vector> bound_multipliers,
+                                  std::shared_ptr<Vector> constraint_multipliers) = 0;
 
   /**
    *@brief Evaluate the objective value
@@ -152,13 +153,13 @@ public:
    */
   virtual bool
   get_jacobian_structure(std::shared_ptr<const Vector> x,
-                         std::shared_ptr<SpTripletMat> jacobian) = 0;
+                         std::shared_ptr<SparseTripletMatrix> jacobian) = 0;
 
   /**
    *@brief Evaluate Jacobian at point x
    */
   virtual bool eval_jacobian(std::shared_ptr<const Vector> x,
-                             std::shared_ptr<SpTripletMat> jacobian) = 0;
+                             std::shared_ptr<SparseTripletMatrix> jacobian) = 0;
 
   /**
    * @brief Get the structure of the Hessian
@@ -166,14 +167,14 @@ public:
    */
   virtual bool get_hessian_structure(std::shared_ptr<const Vector> x,
                                      std::shared_ptr<const Vector> lambda,
-                                     std::shared_ptr<SpTripletMat> hessian) = 0;
+                                     std::shared_ptr<SparseTripletMatrix> hessian) = 0;
 
   /**
    *@brief Evaluate Hessian of Lagragian function at  (x, lambda)
    */
   virtual bool eval_hessian(std::shared_ptr<const Vector> x,
                             std::shared_ptr<const Vector> lambda,
-                            std::shared_ptr<SpTripletMat> hessian) = 0;
+                            std::shared_ptr<SparseTripletMatrix> hessian) = 0;
 
 private:
   /** Copy Constructor */

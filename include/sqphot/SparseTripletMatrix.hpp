@@ -8,11 +8,42 @@
 #ifndef SQPHOTSTART_SPTRIPLETMAT_HPP_
 #define SQPHOTSTART_SPTRIPLETMAT_HPP_
 
-#include "sqphot/Matrix.hpp"
 #include "sqphot/Utils.hpp"
 #include "sqphot/Vector.hpp"
 
-namespace SQPhotstart {
+namespace RestartSqp {
+
+// Matrix base class.  It is very simple since we onlt need to do matrix-vector products with general matrices. */
+class Matrix
+{
+public:
+  /** Default constructor. */
+  Matrix() {}
+
+  /** Default destructor. */
+  virtual ~Matrix() {}
+
+  /** This methods add the multiple of the matrix with the vector p to the result vector. */
+  virtual void multiply(std::shared_ptr<const Vector> p,
+                        std::shared_ptr<Vector> result,
+                        double factor = 1.) const = 0;
+
+  /** This methods add the multiple of the transpose of this matrix with the vector p to the result vector. */
+  virtual void multiply_transpose(std::shared_ptr<const Vector> p,
+                                  std::shared_ptr<Vector> result,
+                                  double factor = 1.) const = 0;
+
+private:
+  /** Copy Constructor */
+  Matrix(const Matrix&);
+
+  /** Overloaded Equals Operator */
+  void operator=(const Matrix&);
+
+};
+
+// Forward definition
+class SparseHbMatrix;
 
 /** This is the class for SparseMatrix, it stores the sparse matrix
  *  data in triplet, in class member @values_. It contains the methods
@@ -20,61 +51,56 @@ namespace SQPhotstart {
  *  perform a matrix vector multiplication.
  */
 
-class SpTripletMat : public Matrix
+class SparseTripletMatrix: public Matrix
 {
 public:
   /** constructor/destructor */
   //@{
   /** Constructor for an empty Sparse Matrix with N non-zero entries.
    *  It sets the property of the matrix, but */
-  SpTripletMat(int nnz, int num_rows, int num_columns,
+  SparseTripletMatrix(int nnz, int num_rows, int num_columns,
                bool is_symmetric = false, bool allocate = true);
 
   /**
    *@brief
    *
    */
-  SpTripletMat(const double* data, int num_rows, int num_columns,
+  SparseTripletMatrix(const double* data, int num_rows, int num_columns,
                bool row_oriented);
 
-  /** Default destructor*/
-  ~SpTripletMat() override;
+  /** Constructor from a sparse Harwell Boeing matrix. */
+  SparseTripletMatrix(std::shared_ptr<const SparseHbMatrix> sp_hb_matrix);
+
+  /** Destructor*/
+  ~SparseTripletMatrix();
   //@}
 
   /**
    *@brief print the sparse matrix in triplet form
    */
-  void print(const char* name,
+  void print(const std::string& matrix_name,
              Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
              Ipopt::EJournalLevel level = Ipopt::J_ALL,
-             Ipopt::EJournalCategory category = Ipopt::J_DBG) const override;
+             Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
   /**
    * @brief print the sparse matrix in the sense form
    */
   void
-  print_full(const char* name,
+  print_dense(const char* name,
              Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
              Ipopt::EJournalLevel level = Ipopt::J_ALL,
-             Ipopt::EJournalCategory category = Ipopt::J_DBG) const override;
+             Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
-  /**
-   * @brief Multiplies the matrix with a vector p, the pointer to the
-   * matrix-vector
-   * product will be stored in the class member of another Vector class object
-   * called "result"
-   * */
-  virtual void multiply(std::shared_ptr<const Vector> p,
-                        std::shared_ptr<Vector> result) const;
+  /** This methods add the multiple of the matrix with the vector p to the result vector. */
+  void multiply(std::shared_ptr<const Vector> p,
+                        std::shared_ptr<Vector> result,
+                double factor = 1.) const override;
 
-  /**
-   * @brief Multiplies the matrix transpose with a vector p, the pointer to the
-   * matrix-vector
-   * product will be stored in the class member of another Vector class object
-   * called "result"
-   * */
-  virtual void multiply_transpose(std::shared_ptr<const Vector> p,
-                                  std::shared_ptr<Vector> result) const;
+  /** This methods add the multiple of the transpose of this matrix with the vector p to the result vector. */
+  void multiply_transpose(std::shared_ptr<const Vector> p,
+                                  std::shared_ptr<Vector> result,
+                          double factor = 1.) const override;
 
   //@}
   /**
@@ -93,17 +119,17 @@ public:
   double calc_one_norm() const;
 #endif
 
-  bool is_compressed_row_format() const override
+  bool is_compressed_row_format() const
   {
     return false;
   };
 
-  bool is_symmetric() const override
+  bool is_symmetric() const
   {
     return is_symmetric_;
   }
 
-  inline bool is_initialized() const override
+  inline bool is_initialized() const
   {
     return is_initialized_;
   }
@@ -119,7 +145,7 @@ public:
   /**
    *@brief make a deep copy of a matrix information
    */
-  virtual void copy(std::shared_ptr<const SpTripletMat> rhs,
+  virtual void copy(std::shared_ptr<const SparseTripletMatrix> rhs,
                     bool deep_copy = true);
 
   /**@name Extract Matrix info*/
@@ -134,67 +160,67 @@ public:
     return num_rows_;
   }
 
-  inline int get_num_entries() const override
+  inline int get_num_entries() const
   {
     return num_entries_;
   }
 
-  inline const int* get_row_indices() const override
+  inline const int* get_row_indices() const
   {
     return row_indices_;
   }
 
-  inline const int* get_column_indices() const override
+  inline const int* get_column_indices() const
   {
     return column_indices_;
   }
 
-  inline const double* get_values() const override
+  inline const double* get_values() const
   {
     return values_;
   }
 
-  inline const int* get_order() const override
+  inline const int* get_order() const
   {
     return order_;
   }
 
-  inline int* get_nonconst_row_indices() override
+  inline int* get_nonconst_row_indices()
   {
     return row_indices_;
   }
 
-  inline int* get_nonconst_column_indices() override
+  inline int* get_nonconst_column_indices()
   {
     return column_indices_;
   }
 
-  inline double* get_nonconst_values() override
+  inline double* get_nonconst_values()
   {
     return values_;
   }
 
-  inline int* get_nonconst_order() override
+  inline int* get_nonconst_order()
   {
     return order_;
   }
 
-  inline int get_row_index_at_entry(int i) const override
+  inline int get_row_index_at_entry(int i) const
   {
     return row_indices_[i];
   }
 
-  inline int get_column_index_at_entry(int i) const override
+  inline int get_column_index_at_entry(int i) const
   {
     return column_indices_[i];
   }
 
-  inline double get_value_at_entry(int i) const override
+  inline double get_value_at_entry(int i) const
   {
     return values_[i];
   }
 
-  inline int get_order_at_entry(int i) const override
+  inline int get_order_at_entry(int i) const
   {
     return order_[i];
   }
@@ -261,17 +287,16 @@ public:
   ///////////////////////////////////////////////////////////
 private:
   /** Default constructor*/
+  SparseTripletMatrix();
 
-  SpTripletMat();
+  /** Copy Constructor */
+  SparseTripletMatrix(const SparseTripletMatrix&);
+
+  /** Overloaded Equals Operator */
+  void operator=(const SparseTripletMatrix&);
 
   /** free all memory*/
   void free_memory_();
-
-  /** Copy Constructor */
-  SpTripletMat(const SpTripletMat&);
-
-  /** Overloaded Equals Operator */
-  void operator=(const SpTripletMat&);
 
   ///////////////////////////////////////////////////////////
   //                     PRIVATE  MEMBERS                  //

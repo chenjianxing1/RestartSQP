@@ -7,7 +7,7 @@
 #ifndef SQPHOTSTART_STATISTICS_HPP
 #define SQPHOTSTART_STATISTICS_HPP
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 class Statistics
 {

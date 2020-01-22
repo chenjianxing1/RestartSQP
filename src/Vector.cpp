@@ -11,7 +11,7 @@
 using namespace Ipopt;
 using namespace std;
 
-namespace SQPhotstart {
+namespace RestartSqp {
 
 Vector::Vector(int size)
  : size_(size)
@@ -76,32 +76,12 @@ void Vector::print(const string name, SmartPtr<Journalist> jnlst,
   }
 }
 
-void Vector::write_to_file(string name, SmartPtr<Journalist> jnlst,
-                           EJournalLevel level, EJournalCategory category,
-                           QpSolver qpsolver) const
+void Vector::write_to_file(FILE* file, const string& vector_name) const
 {
-// AW Instead of having DEBUG here, set the level accordingly
-#ifdef DEBUG
-#ifdef PRINT_QP_IN_CPP
-  const char* var_type;
-  var_type = (qpsolver == QPOASES) ? "real_t" : "double const";
-
-  jnlst->Printf(level, category, "%s %s[%i] = {", var_type, name.c_str(),
-                size_);
+  fprintf(file, "Vector %s with %d elements:\n", vector_name.c_str(), size_);
   for (int i = 0; i < size_; i++) {
-    if (i % 10 == 0 && i > 1)
-      jnlst->Printf(level, category, "\n");
-    if (i == Dim() - 1)
-      jnlst->Printf(level, category, "%23.16e};\n\n", values_[i]);
-    else
-      jnlst->Printf(level, category, "%23.16e, ", values_[i]);
+    fprintf(file, "%23.16e\n", values_[i]);
   }
-#else
-  // print in file
-  for (int i = 0; i < size_; i++) {
-    jnlst->Printf(level, category, "%23.16e\n", values_[i]);
-  }
-#endif
-#endif
 }
+
 }

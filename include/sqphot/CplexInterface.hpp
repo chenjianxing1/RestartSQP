@@ -13,7 +13,7 @@
 
 #include "sqphot/QPsolverInterface.hpp"
 
-namespace SQPhotstart {
+namespace RestartSqp {
 DECLARE_STD_EXCEPTION(CPLEX_SOLVER_FAILS);
 
 class CplexInterface : public QPSolverInterface
