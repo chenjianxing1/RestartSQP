@@ -56,7 +56,6 @@ public:
       std::shared_ptr<const SparseTripletMatrix> triplet_matrix,
       IdentityMatrixPositions& identity_matrix_positions) override;
 
-
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //
   ///////////////////////////////////////////////////////////
@@ -93,7 +92,6 @@ private:
   //                      PRIVATE MEMBERS                  //
   ///////////////////////////////////////////////////////////
 private:
-
   /** qpOASES solver instance. */
   std::shared_ptr<qpOASES::SQProblem> qpoases_solver_;
 

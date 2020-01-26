@@ -18,13 +18,18 @@ class IdentityMatrixPositions
 {
 public:
   /** Default constructor. */
-  IdentityMatrixPositions() {}
+  IdentityMatrixPositions()
+  {
+  }
 
   /** Destructor. */
-  ~IdentityMatrixPositions() {}
+  ~IdentityMatrixPositions()
+  {
+  }
 
   /** Add an identity matrix. */
-  void add_matrix(int row_offset, int column_offset, int dimension, double multiplicator)
+  void add_matrix(int row_offset, int column_offset, int dimension,
+                  double multiplicator)
   {
     row_offsets_.push_back(row_offset);
     column_offsets_.push_back(column_offset);
@@ -37,7 +42,7 @@ public:
   /** Return number of matrices. */
   int get_num_matrices() const
   {
-    return (int) row_offsets_.size();
+    return (int)row_offsets_.size();
   }
   /** Return row offset of matrix i. Counting starts at 1. */
   int get_row_offset(int i) const
@@ -84,7 +89,6 @@ private:
   std::vector<double> multiplicators_;
 };
 
-
 /**
  *@brief This is a derived class of Matrix.
  * It strored matrix in Harwell-Boeing format which is required by qpOASES and
@@ -93,7 +97,7 @@ private:
  * Harwell-Boeing format and then stored to its class members
  */
 
-class SparseHbMatrix: public Matrix
+class SparseHbMatrix : public Matrix
 {
 
 public:
@@ -102,9 +106,11 @@ public:
 
   /** Constructor.
    *
-   *  This constructor initializes the sizes and format type, but does not allocate memory.
+   *  This constructor initializes the sizes and format type, but does not
+   * allocate memory.
    */
-  SparseHbMatrix(int num_rows, int num_columns, bool is_compressed_row, bool is_symmetric = false);
+  SparseHbMatrix(int num_rows, int num_columns, bool is_compressed_row,
+                 bool is_symmetric = false);
 
   /**
    *  This constructor initializes sizes and format type, and allocates memory.
@@ -188,20 +194,22 @@ public:
              Ipopt::EJournalLevel level = Ipopt::J_ALL,
              Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
-  void
-  print_dense(const char* name = nullptr,
-             Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
-             Ipopt::EJournalLevel level = Ipopt::J_ALL,
-             Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
+  void print_dense(const char* name = nullptr,
+                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+                   Ipopt::EJournalLevel level = Ipopt::J_ALL,
+                   Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
-  /** This methods add the multiple of the matrix with the vector p to the result vector.  The factor says which multiple of the product is added. */
-  void multiply(std::shared_ptr<const Vector> p,
-                std::shared_ptr<Vector> result,
+  /** This methods add the multiple of the matrix with the vector p to the
+   * result vector.  The factor says which multiple of the product is added. */
+  void multiply(std::shared_ptr<const Vector> p, std::shared_ptr<Vector> result,
                 double factor = 1.) const override;
 
-  /** This methods add the multiple of the transpose of this matrix with the vector p to the result vector.   The factor says which multiple of the product is added. */
+  /** This methods add the multiple of the transpose of this matrix with the
+   * vector p to the result vector.   The factor says which multiple of the
+   * product is added. */
   void multiply_transpose(std::shared_ptr<const Vector> p,
-                          std::shared_ptr<Vector> result, double factor = 1.) const override;
+                          std::shared_ptr<Vector> result,
+                          double factor = 1.) const override;
 
 #if 0
   /**
@@ -336,7 +344,8 @@ public:
     return is_compressed_row_format_;
   }
 
-  /** Write the matrix to a file, using the provided file pointer.  The output is in triplet format. */
+  /** Write the matrix to a file, using the provided file pointer.  The output
+   * is in triplet format. */
   void write_to_file(FILE* file, const std::string& matrix_name) const;
 
   ///////////////////////////////////////////////////////////
@@ -361,6 +370,11 @@ private:
   /** Set the structure from an (unsorted) list of triplet elements. */
   void set_structure_from_list_(
       std::vector<std::tuple<int, int, int, double>> elements_list);
+
+  /** Add entries of the triplet matrix to the list of elements. */
+  void add_triplet_to_element_list_(
+      std::shared_ptr<const SparseTripletMatrix> triplet_matrix,
+      std::vector<std::tuple<int, int, int, double>>& ele_list);
 
 #if 0
     template <typename T>

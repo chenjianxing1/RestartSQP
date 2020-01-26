@@ -40,15 +40,20 @@ typedef struct
 } KktError;
 
 /** Function for computing the different parts of the KKT error, given data and
- *  values.  This is used for the NLP and QP error. */
+ *  values.  This is used for the NLP and QP error.
+ *
+ *  For the computation fo the QP error, we need to give the Hessian matrix,
+ * and for the NLP error, we need to give the constraint violation.  The method
+ * figures out which to use by is_nlp flag. */
 KktError
 calc_kkt_error_(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
-                Ipopt::EJournalLevel level,
+                Ipopt::EJournalLevel level, bool is_nlp,
                 std::shared_ptr<const Vector> lower_variable_bounds,
                 std::shared_ptr<const Vector> upper_variable_bounds,
                 std::shared_ptr<const Vector> lower_constraint_bounds,
                 std::shared_ptr<const Vector> upper_constraint_bounds,
                 std::shared_ptr<const Vector> linear_objective_coefficients,
+                std::shared_ptr<const Vector> constraint_values,
                 std::shared_ptr<const Matrix> jacobian,
                 std::shared_ptr<const Matrix> hessian,
                 std::shared_ptr<const Vector> primal_solution,
@@ -57,15 +62,6 @@ calc_kkt_error_(Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
                 const ActivityStatus* bounds_working_set,
                 const ActivityStatus* constraints_working_set);
 
-#if 0
-DECLARE_STD_EXCEPTION(QP_NOT_OPTIMAL);
-
-DECLARE_STD_EXCEPTION(LP_NOT_OPTIMAL);
-
-DECLARE_STD_EXCEPTION(QPSOLVER_INTERNAL_ERROR);
-
-DECLARE_STD_EXCEPTION(INVALID_WORKING_SET);
-#endif
 /**
  *
  * Base class for QP solvers to solving problems of the form

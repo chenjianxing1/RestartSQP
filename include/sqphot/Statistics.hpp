@@ -28,9 +28,9 @@ public:
   {
     num_qp_iterations_ = 0;
     num_sqp_iterations_ = 0;
-    num_trial_penalty_parameters_ = 0;
-    num_penalty_parameter_failed_ = 0;
-    num_penalty_parameter_increase_ = 0;
+    num_candidate_penalty_parameters_ = 0;
+    num_penalty_parameter_rejected_ = 0;
+    num_penalty_parameter_increased_ = 0;
     num_second_order_corrections_ = 0;
   }
 
@@ -48,23 +48,23 @@ public:
 
   /* Increase the counter that keeps track of how many times a trial penalty
    * parameter was not accepted. */
-  inline void trial_penalty_parameter_not_accepted()
+  inline void candidate_penalty_parameter_not_accepted()
   {
-    num_penalty_parameter_failed_++;
+    num_penalty_parameter_rejected_++;
   }
 
   /* Increase the counter that keeps track of how many times a new penalty
    * parameter values was tried. */
   void try_new_penalty_parameter()
   {
-    num_trial_penalty_parameters_++;
+    num_candidate_penalty_parameters_++;
   }
 
   /* Increase the counter that keeps track of how many times a new penalty
    * parameter values was accepted. */
   inline void penalty_parameter_increased()
   {
-    num_penalty_parameter_increase_++;
+    num_penalty_parameter_increased_++;
   }
 
   /* Increase the counter for second order corrections. */
@@ -82,13 +82,13 @@ public:
   int num_sqp_iterations_;
 
   /** Number of times a new penalty parameter was tried. */
-  int num_trial_penalty_parameters_;
+  int num_candidate_penalty_parameters_;
 
   /** Number of times the penalty parameter was increased. */
-  int num_penalty_parameter_failed_;
+  int num_penalty_parameter_rejected_;
 
   /** Number of times a new penalty parameter was accepted. */
-  int num_penalty_parameter_increase_;
+  int num_penalty_parameter_increased_;
 
   /** Number of second order correction steps. */
   int num_second_order_corrections_;

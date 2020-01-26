@@ -33,11 +33,13 @@ public:
 
   const std::shared_ptr<Vector>& get_upper_constraint_bounds() const override;
 
-  const std::shared_ptr<Vector>& get_linear_objective_coefficients() const override;
+  const std::shared_ptr<Vector>&
+  get_linear_objective_coefficients() const override;
 
   std::shared_ptr<const SparseHbMatrix> get_objective_hessian() const override;
 
-  std::shared_ptr<const SparseHbMatrix> get_constraint_jacobian() const override;
+  std::shared_ptr<const SparseHbMatrix>
+  get_constraint_jacobian() const override;
   //@}
 
   /** Default destructor*/
@@ -132,7 +134,8 @@ public:
 
   void set_upper_constraint_bounds(std::shared_ptr<const Vector> rhs) override;
 
-  void set_linear_objective_coefficients(std::shared_ptr<const Vector> rhs) override;
+  void
+  set_linear_objective_coefficients(std::shared_ptr<const Vector> rhs) override;
   //@}
 
   /**@name Setters for matrix*/
@@ -140,7 +143,7 @@ public:
   void set_objective_hessian(std::shared_ptr<const SpTripletMat> rhs) override;
 
   void set_constraint_jacobian(std::shared_ptr<const SpTripletMat> rhs,
-                    IdentityMatrixPositions I_info) override;
+                               IdentityMatrixPositions I_info) override;
   //@}
 
   void reset_model();

@@ -24,7 +24,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int num_rows, int num_columns,
   m_csc_row_oriented->copy_from_dense_matrix(
       dense_matrix_in, num_rows, num_columns, row_oriented, is_compressed_row);
 
-  m_csc_row_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values());
+  m_csc_row_oriented->get_dense_matrix(
+      dense_matrix_out->get_non_const_values());
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               num_rows * num_columns,
@@ -62,7 +63,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int num_rows, int num_columns,
   m_csr_row_oriented->copy_from_dense_matrix(
       dense_matrix_in, num_rows, num_columns, row_oriented, is_compressed_row);
 
-  m_csr_row_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values());
+  m_csr_row_oriented->get_dense_matrix(
+      dense_matrix_out->get_non_const_values());
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               num_rows * num_columns,
@@ -102,7 +104,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int num_rows, int num_columns,
   m_csc_col_oriented->copy_from_dense_matrix(
       dense_matrix_in, num_rows, num_columns, row_oriented, is_compressed_row);
 
-  m_csc_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), false);
+  m_csc_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                       false);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               num_rows * num_columns,
@@ -142,7 +145,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int num_rows, int num_columns,
   m_csr_col_oriented->copy_from_dense_matrix(
       dense_matrix_in, num_rows, num_columns, row_oriented, is_compressed_row);
 
-  m_csr_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), false);
+  m_csr_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                       false);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               num_rows * num_columns,
@@ -353,7 +357,7 @@ bool TEST_TRIPLET_HB_MATIRX_CONVERSION(int num_rows, int num_columns,
   /**-------------------------------------------------------**/
   shared_ptr<SparseTripletMatrix> m_triplet_in =
       make_shared<SparseTripletMatrix>(dense_matrix_in, num_rows, num_columns,
-                                true); // condensed column sparse matrix
+                                       true); // condensed column sparse matrix
   bool is_compressed_row_format = false;
   auto m_csc = make_shared<SparseHbMatrix>(num_rows, num_columns,
                                            is_compressed_row_format);
@@ -362,7 +366,8 @@ bool TEST_TRIPLET_HB_MATIRX_CONVERSION(int num_rows, int num_columns,
   m_csc->set_values(m_triplet_in);
 
   auto m_triplet_csc_out = m_csc->convert_to_triplet();
-  m_triplet_csc_out->get_dense_matrix(dense_matrix_out->get_non_const_values(), true);
+  m_triplet_csc_out->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                      true);
 
   /**-------------------------------------------------------**/
   /**             Condensed Column matrix                   **/
@@ -393,7 +398,8 @@ bool TEST_TRIPLET_HB_MATIRX_CONVERSION(int num_rows, int num_columns,
   m_csr->set_structure(m_triplet_in);
   m_csr->set_values(m_triplet_in);
   auto m_triplet_csr_out = m_csc->convert_to_triplet();
-  m_triplet_csr_out->get_dense_matrix(dense_matrix_out->get_non_const_values(), true);
+  m_triplet_csr_out->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                      true);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               m_triplet_in->get_num_entries())) {

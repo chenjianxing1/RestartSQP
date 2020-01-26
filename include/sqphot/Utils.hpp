@@ -32,8 +32,8 @@ namespace RestartSqp {
 
 const double INF = std::numeric_limits<double>::infinity();
 
-//const double m_eps = 1.0e-16;
-//const double sqrt_m_eps = 1.0e-8;
+// const double m_eps = 1.0e-16;
+// const double sqrt_m_eps = 1.0e-8;
 
 /** Function that returns true if all elements in the integer arrays a
  *  and b of length length are equal. */

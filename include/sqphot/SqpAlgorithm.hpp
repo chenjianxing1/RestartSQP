@@ -97,7 +97,7 @@ public:
 
   inline double get_final_objective() const
   {
-    return obj_value_;
+    return current_objective_value_;
   }
 
   inline std::shared_ptr<Statistics> get_stats() const
@@ -146,6 +146,9 @@ private:
    */
   void print_initial_output_();
 
+  /** Print iteration output. */
+  void print_iteration_output_();
+
   /** Calculate the search direction.
    *
    *  For this, the QP is solved.
@@ -193,7 +196,7 @@ private:
    * measure
    *       at the trial point
    */
-  void get_trial_point_info();
+  void calc_trial_point_();
   ;
 
   /**
@@ -224,7 +227,7 @@ private:
    * information by reading from nlp_ object. The corresponding flags of class
    * member QPinfoFlag_ will set to be true.
    */
-  void ratio_test();
+  void perform_ratio_test_();
 
   /**
    * @brief Update the trust region radius.
@@ -243,7 +246,12 @@ private:
    * be
    * true;
    */
-  void update_trust_region_radius();
+  void update_trust_region_radius_();
+
+  /** Copy trial quantities to current quantities and evaluate gradients at new
+   * iterate
+   */
+  void accept_trial_point_();
 
   /**
    * @brief Update the penalty parameter
@@ -252,22 +260,6 @@ private:
 
   /**@name Get the search direction from the LP/QP handler*/
   //@{
-  /**
-   * @brief This function extracts the search direction for NLP from the QP
-   * subproblem
-   * solved, and copies it to the class member _p_k
-   *
-   * It will truncate the optimal solution of QP into two parts, the first half
-   * (with
-   * length equal to the number of variables) to be the search direction.
-   *
-   * @param qphandler the QPhandler class object used for solving a QP
-   * subproblem with
-   * specified QP information
-   */
-
-  void extract_trial_step_();
-
   /**
    *@brief get the objective value of QP from myQP object
    *@relates QPhandler.hpp
@@ -284,28 +276,29 @@ private:
    * that, the data in the QP problem will be updated according to the class
    * member qp_update_tracker_
    */
-  void setup_qp_();
+  void setup_qp_(double penalty_parameter);
 
   /**
    * @brief This function will setup the data for the LP subproblem
    */
+  void setup_lp_();
 
-  void setup_lp();
-
-  /**
-   * @brief This function extracts the Lagragian multipliers for constraints
-   * in NLP and copies it to the class member multiplier_cons_.
-   *
-   *   Note that the QP subproblem will return a multiplier for the constraints
-   *   and the bound in a single vector, so we only take the first #constraints
-   *   number of elements as an approximation of multipliers for the nlp problem
-   *
-   * @param qphandler the QPhandler class object used for solving a QP
-   * subproblem
-   * with specified QP information
+  /** Calculate constraint violated of the model in l1-norm, for a given step.
    */
+  double calc_model_infeasibility_(std::shared_ptr<const Vector> step);
 
-  void get_multipliers();
+  /** Update the predicted reduction of the merit function for the current trial
+   * step and penalty parameter */
+  void update_predicted_reduction_();
+
+  /** Return a small number close to machine precision relative to current data
+   * that is added the quantities to prevent wrong decisions due to numerical
+   * error. */
+  double numerical_error_buffer_();
+
+  /** Increase the penalty parameter and compute the new candidate step and the
+   * corresponding violation of the linearized constraints. */
+  void increase_penalty_parameter_();
 
   /**
    * @brief alloocate memory for class members.
@@ -337,7 +330,7 @@ private:
    */
   void classify_constraints_types_();
 
-  void print_final_stats();
+  void print_final_stats_();
   //@}
 
   ///////////////////////////////////////////////////////////
@@ -405,51 +398,19 @@ private:
   /** Number of constraints. */
   int num_constraints_;
 
+  /** Flag indicating whether this is the formulation that permits the bounds to
+   *  be violated. */
+  bool slack_formulation_;
+
   /** Exit flag.  If set to UNKNOWN the algorithm loop should still progress. */
   Exitflag exit_flag_;
-
-  /** Constraint violation at current iterate in l1-norm. */
-  double current_infeasibility_;
-  /** Constraint violation at trial iterate in l1-norm. */
-  double trial_infeasibility_;
-  /** Constraint violation of trial step in linear constraint model. */
-  double current_model_infeasibility_;
-
-  /** Current value of the trust region radius. */
-  double trust_region_radius_;
-  /** Actual reduction in the penalty function with trial step. */
-  double actual_reduction_;
-  /** Predicted reduction in penalty function with trial step. */
-  double pred_reduction_;
-
-
-  double infea_measure_model_; /**< the one norm of all slack variables in the
-                                  QP */
-  double trial_step_norm_;     /**< the infinity norm of p_k*/
-  double obj_value_;           /**<the objective corresponding to the x_k*/
-  double obj_value_trial_;     /**<the objective corresponding to the x_trial*/
-
-  double qp_obj_;      /**< the objective value of current qp*/
-  double penalty_parameter_; /**< penalty parameter*/
-  KktError opt_status_;
-
-  /** Object to solve LPs. */
-  std::shared_ptr<QpHandler> lp_solver_;
-  /** Object to solve step computation QPs. */
-  std::shared_ptr<QpHandler> qp_solver_;
-  /** Object to track which QP data needs to be updated. */
-  QpUpdateTracker qp_update_tracker_;
-  /** Flag indicating whether the step computation QP has been initialized. */
-  bool qp_solver_initialized_;
-
-  bool isaccept_; // is the new point accepted?
 
   /** Primal current iterate. */
   std::shared_ptr<Vector> current_iterate_;
   /** Current estimate of the constraint multipliers. */
-  std::shared_ptr<Vector> constraint_multipliers_;
+  std::shared_ptr<Vector> current_constraint_multipliers_;
   /** Current estimate of the bound multipliers. */
-  std::shared_ptr<Vector> bound_multipliers_;
+  std::shared_ptr<Vector> current_bound_multipliers_;
 
   /** Gradient of the objective function at the current iterate. */
   std::shared_ptr<Vector> current_objective_gradient_;
@@ -460,8 +421,54 @@ private:
   /** Hessian of the Lagrangian function at the current primal-dual iterate. */
   std::shared_ptr<SparseTripletMatrix> current_lagrangian_hessian_;
 
+  /** Constraint violation at current iterate in l1-norm. */
+  double current_infeasibility_;
+  /** Constraint violation at trial iterate in l1-norm. */
+  double trial_infeasibility_;
+  /** Constraint violation of trial step in linear constraint model. */
+  double
+      trial_model_infeasibility_; // TODO: Does that need to be a class member?
+
   /** KKT error for the current iterate. */
   KktError current_kkt_error_;
+
+  /** Current value of the trust region radius. */
+  double trust_region_radius_;
+  /** Actual reduction in the penalty function with trial step. */
+  double actual_reduction_;
+  /** Predicted reduction in penalty function with trial step. */
+  double predicted_reduction_;
+
+  double infea_measure_model_; /**< the one norm of all slack variables in the
+                                  QP */
+  double trial_step_norm_;     /**< the infinity norm of p_k*/
+
+  /** Value of the objective function at the current iterate x_k */
+  double current_objective_value_;
+  /** Value of the objective function at the trial point x_k */
+  double
+      trial_objective_value_; /**<the objective corresponding to the x_trial*/
+
+  double qp_obj_; /**< the objective value of current qp*/
+
+  /** Current value of the penalty parameter. */
+  double current_penalty_parameter_;
+
+  /** KKT error from the most recent optimality check. */
+  KktError opt_status_;
+
+  /** Object to solve LPs. */
+  std::shared_ptr<QpHandler> lp_solver_;
+  /** Object to solve step computation QPs. */
+  std::shared_ptr<QpHandler> qp_solver_;
+  /** Object to track which QP data needs to be updated. */
+  QpUpdateTracker qp_update_tracker_;
+  /** Flag indicating whether the step computation QP has been initialized. */
+  bool qp_solver_initialized_;
+  /** Store the penalty parameter value used in the most recent QP solve. */
+  double last_qp_penalty_parameter_;
+
+  bool trial_point_is_accepted_; // is the new point accepted?
 
   std::shared_ptr<Statistics> solver_statistics_;
   std::shared_ptr<Vector> trial_constraint_values_; /* the constraints' value
@@ -501,6 +508,8 @@ private:
   double trust_region_decrease_factor_;
   /** Factor by which the trust region is increased. */
   double trust_region_increase_factor_;
+  /** Flag indicating whether every trial step should be accepted. */
+  bool disable_trust_region_;
 
   /** Initial penalty parameter value. */
   double penalty_parameter_init_value_;

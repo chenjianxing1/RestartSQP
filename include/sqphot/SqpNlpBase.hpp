@@ -125,9 +125,10 @@ public:
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not
    */
-  virtual bool get_starting_point(std::shared_ptr<Vector> primal_point,
-                                  std::shared_ptr<Vector> bound_multipliers,
-                                  std::shared_ptr<Vector> constraint_multipliers) = 0;
+  virtual bool
+  get_starting_point(std::shared_ptr<Vector> primal_point,
+                     std::shared_ptr<Vector> bound_multipliers,
+                     std::shared_ptr<Vector> constraint_multipliers) = 0;
 
   /**
    *@brief Evaluate the objective value
@@ -165,9 +166,10 @@ public:
    * @brief Get the structure of the Hessian
    * Always call this before the first time using @Eval_Hessian
    */
-  virtual bool get_hessian_structure(std::shared_ptr<const Vector> x,
-                                     std::shared_ptr<const Vector> lambda,
-                                     std::shared_ptr<SparseTripletMatrix> hessian) = 0;
+  virtual bool
+  get_hessian_structure(std::shared_ptr<const Vector> x,
+                        std::shared_ptr<const Vector> lambda,
+                        std::shared_ptr<SparseTripletMatrix> hessian) = 0;
 
   /**
    *@brief Evaluate Hessian of Lagragian function at  (x, lambda)

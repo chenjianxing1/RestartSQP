@@ -74,22 +74,25 @@ KktError QpSolverInterface::calc_kkt_error(EJournalLevel level) const
   assert(solver_status_ == QPEXIT_OPTIMAL);
   assert(working_set_up_to_date_);
 
+  bool is_nlp = false;
   KktError retval = calc_kkt_error_(
-      jnlst_, level, lower_variable_bounds_, upper_variable_bounds_,
+      jnlst_, level, is_nlp, lower_variable_bounds_, upper_variable_bounds_,
       lower_constraint_bounds_, upper_constraint_bounds_,
-      linear_objective_coefficients_, jacobian_, hessian_, primal_solution_,
-      bound_multipliers_, constraint_multipliers_, bounds_working_set_,
-      constraints_working_set_);
+      linear_objective_coefficients_, nullptr, jacobian_, hessian_,
+      primal_solution_, bound_multipliers_, constraint_multipliers_,
+      bounds_working_set_, constraints_working_set_);
 
   return retval;
 }
 
 KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
+                         bool is_nlp,
                          shared_ptr<const Vector> lower_variable_bounds,
                          shared_ptr<const Vector> upper_variable_bounds,
                          shared_ptr<const Vector> lower_constraint_bounds,
                          shared_ptr<const Vector> upper_constraint_bounds,
                          shared_ptr<const Vector> linear_objective_coefficients,
+                         shared_ptr<const Vector> constraint_values,
                          shared_ptr<const Matrix> jacobian,
                          shared_ptr<const Matrix> hessian,
                          shared_ptr<const Vector> primal_solution,
@@ -118,24 +121,27 @@ KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
                          upper_variable_bounds->get_value(i)));
   }
 
-  shared_ptr<Vector> Ax;
+  shared_ptr<const Vector> constraint_body;
 
-  // If there are constraints, also add their constraint violation
-  if (jacobian) {
-
-    // Compute the jacobian-vector project
-    Ax = make_shared<Vector>(num_constraints);
+  // Compute the constraint body
+  if (!is_nlp && jacobian) {
+    // Compute the jacobian-vector project (this is for the QP)
+    shared_ptr<Vector> Ax = make_shared<Vector>(num_constraints);
     Ax->set_to_zero();
     jacobian->multiply(primal_solution, Ax);
+    constraint_body = Ax;
+  } else {
+    constraint_body = constraint_values;
+  }
 
-    for (int i = 0; i < num_constraints; i++) {
-      primal_infeasibility = max(
-          primal_infeasibility,
-          max(0.0, lower_constraint_bounds->get_value(i) - Ax->get_value(i)));
-      primal_infeasibility = max(
-          primal_infeasibility,
-          max(0.0, Ax->get_value(i) - upper_constraint_bounds->get_value(i)));
-    }
+  for (int i = 0; i < num_constraints; i++) {
+    primal_infeasibility = max(primal_infeasibility,
+                               max(0.0, lower_constraint_bounds->get_value(i) -
+                                            constraint_body->get_value(i)));
+    primal_infeasibility =
+        max(primal_infeasibility,
+            max(0.0, constraint_body->get_value(i) -
+                         upper_constraint_bounds->get_value(i)));
   }
 
   /*-------------------------------------------------------*/
@@ -150,7 +156,7 @@ KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
   lagrangian_gradient->copy_vector(linear_objective_coefficients);
 
   // Add the Hessian part
-  if (hessian) {
+  if (!is_nlp && hessian) {
     hessian->multiply(primal_solution, lagrangian_gradient);
   }
 
@@ -190,11 +196,13 @@ KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
     complementarity_violation =
         max(complementarity_violation,
             min(max(0., constraint_multipliers->get_value(i)),
-                Ax->get_value(i) - lower_constraint_bounds->get_value(i)));
+                constraint_body->get_value(i) -
+                    lower_constraint_bounds->get_value(i)));
     complementarity_violation =
         max(complementarity_violation,
             min(max(0., -constraint_multipliers->get_value(i)),
-                -Ax->get_value(i) + upper_constraint_bounds->get_value(i)));
+                -constraint_body->get_value(i) +
+                    upper_constraint_bounds->get_value(i)));
   }
 
   /*-------------------------------------------------------*/
@@ -237,22 +245,22 @@ KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
     for (int i = 0; i < num_constraints; ++i) {
       switch (constraints_working_set[i]) {
         case ACTIVE_ABOVE:
-          working_set_error = max(
-              working_set_error,
-              fabs(Ax->get_value(i) - upper_constraint_bounds->get_value(i)));
+          working_set_error = max(working_set_error,
+                                  fabs(constraint_body->get_value(i) -
+                                       upper_constraint_bounds->get_value(i)));
           break;
         case ACTIVE_BELOW:
-          working_set_error = max(
-              working_set_error,
-              fabs(Ax->get_value(i) - lower_constraint_bounds->get_value(i)));
+          working_set_error = max(working_set_error,
+                                  fabs(constraint_body->get_value(i) -
+                                       lower_constraint_bounds->get_value(i)));
           break;
         case ACTIVE_EQUALITY:
-          working_set_error = max(
-              working_set_error,
-              fabs(Ax->get_value(i) - upper_constraint_bounds->get_value(i)));
-          working_set_error = max(
-              working_set_error,
-              fabs(Ax->get_value(i) - lower_constraint_bounds->get_value(i)));
+          working_set_error = max(working_set_error,
+                                  fabs(constraint_body->get_value(i) -
+                                       upper_constraint_bounds->get_value(i)));
+          working_set_error = max(working_set_error,
+                                  fabs(constraint_body->get_value(i) -
+                                       lower_constraint_bounds->get_value(i)));
           break;
         case INACTIVE:
           // Nothing to check here
@@ -268,8 +276,15 @@ KktError calc_kkt_error_(SmartPtr<Journalist> jnlst, EJournalLevel level,
   worst_violation = max(worst_violation, working_set_error);
 
   // Write output
+  string problem_name;
+  if (is_nlp) {
+    problem_name = "NLP";
+  } else {
+    problem_name = "QP";
+  }
   if (jnlst->ProduceOutput(level, J_MAIN)) {
-    jnlst->Printf(level, J_MAIN, "\nOptimality error in QP solution:\n");
+    jnlst->Printf(level, J_MAIN, "\nOptimality error in %s solution:\n",
+                  problem_name.c_str());
     jnlst->Printf(level, J_MAIN,
                   "  Worst violation......................: %9.2e\n",
                   worst_violation);

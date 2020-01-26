@@ -1,11 +1,11 @@
+#include "sqphot/SparseTripletMatrix.hpp"
+#include "sqphot/Vector.hpp"
+#include "unit_test_utils.hpp"
 #include <algorithm>
 #include <iterator>
 #include <random>
-#include "sqphot/SparseTripletMatrix.hpp"
-#include "sqphot/Vector.hpp"
 #include <stdlib.h> /* srand, rand */
 #include <time.h>
-#include "unit_test_utils.hpp"
 
 using namespace RestartSqp;
 using namespace std;
@@ -21,7 +21,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
   shared_ptr<SparseTripletMatrix> m_row_oriented =
       make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, true);
 
-  m_row_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), true);
+  m_row_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                   true);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "row_oriented_matrix")) {
@@ -59,7 +60,8 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
       make_shared<SparseTripletMatrix>(dense_matrix_in, rowNum, colNum, false);
 
   dense_matrix_out->set_to_zero();
-  m_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(), false);
+  m_col_oriented->get_dense_matrix(dense_matrix_out->get_non_const_values(),
+                                   false);
 
   if (TEST_EQUAL_DOUBLE_ARRAY(dense_matrix_in, dense_matrix_out->get_values(),
                               rowNum * colNum, "col_oriented_matrix")) {

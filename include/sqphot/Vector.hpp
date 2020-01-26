@@ -170,34 +170,37 @@ public:
     }
   }
 
-  /** Copy the values from a vector into a subvector of this vector, starting at given position. */
+  /** Copy the values from a vector into a subvector of this vector, starting at
+   * given position. */
   void copy_into_subvector(std::shared_ptr<const Vector> rhs, int position)
   {
     copy_into_subvector(*rhs, position);
   }
 
-  /** Copy the values from a vector into a subvector of this vector, starting at given position. */
+  /** Copy the values from a vector into a subvector of this vector, starting at
+   * given position. */
   void copy_into_subvector(const Vector& rhs, int position)
   {
-    assert(rhs.size_+position <= size_);
-    for (int i=0; i<rhs.size_; ++i) {
-      values_[position+i] = rhs.values_[i];
+    assert(rhs.size_ + position <= size_);
+    for (int i = 0; i < rhs.size_; ++i) {
+      values_[position + i] = rhs.values_[i];
     }
   }
 
-
-  /** Copy the values from a subvector of a larger vector starting at given position into this vector. */
+  /** Copy the values from a subvector of a larger vector starting at given
+   * position into this vector. */
   void copy_from_subvector(std::shared_ptr<const Vector> rhs, int position)
   {
     copy_from_subvector(*rhs, position);
   }
 
-  /** Copy the values from a subvector of a larger vector starting at given position into this vector. */
+  /** Copy the values from a subvector of a larger vector starting at given
+   * position into this vector. */
   void copy_from_subvector(const Vector& rhs, int position)
   {
-    assert(size_+position <= rhs.size_);
-    for (int i=0; i<size_; ++i) {
-      values_[i] = rhs.values_[position+i];
+    assert(size_ + position <= rhs.size_);
+    for (int i = 0; i < size_; ++i) {
+      values_[i] = rhs.values_[position + i];
     }
   }
   /** set all entries to be 0*/

@@ -51,12 +51,13 @@ bool SqpTNlp::get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
   double* c_U = c_u->get_non_const_values();
 
   bool retval;
-  retval = ipopt_tnlp_->get_bounds_info(num_variables_, x_L, x_U, num_constraints_, c_L, c_U);
+  retval = ipopt_tnlp_->get_bounds_info(num_variables_, x_L, x_U,
+                                        num_constraints_, c_L, c_U);
   if (!retval) {
     return false;
   }
   // TODO: Figure out if this is necessary:
-  for (int i=0; i<num_variables_; ++i) {
+  for (int i = 0; i < num_variables_; ++i) {
     if (x_L[i] <= -NLP_INF) {
       x_L[i] = -INF;
     }
@@ -64,7 +65,7 @@ bool SqpTNlp::get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
       x_U[i] = INF;
     }
   }
-  for (int i=0; i<num_constraints_; ++i) {
+  for (int i = 0; i < num_constraints_; ++i) {
     if (c_L[i] <= -NLP_INF) {
       c_L[i] = -INF;
     }
@@ -131,8 +132,9 @@ bool SqpTNlp::eval_f(shared_ptr<const Vector> x, double& obj_value)
 bool SqpTNlp::eval_constraints(shared_ptr<const Vector> x,
                                shared_ptr<Vector> constraints)
 {
-  return ipopt_tnlp_->eval_g(num_variables_, x->get_values(), true, num_constraints_,
-                      constraints->get_non_const_values());
+  return ipopt_tnlp_->eval_g(num_variables_, x->get_values(), true,
+                             num_constraints_,
+                             constraints->get_non_const_values());
 }
 
 /**
@@ -142,7 +144,7 @@ bool SqpTNlp::eval_gradient(shared_ptr<const Vector> x,
                             shared_ptr<Vector> gradient)
 {
   return ipopt_tnlp_->eval_grad_f(num_variables_, x->get_values(), true,
-                           gradient->get_non_const_values());
+                                  gradient->get_non_const_values());
 }
 
 /**
@@ -154,9 +156,9 @@ bool SqpTNlp::get_jacobian_structure(shared_ptr<const Vector> x,
                                      shared_ptr<SparseTripletMatrix> Jacobian)
 {
   return ipopt_tnlp_->eval_jac_g(num_variables_, x->get_values(), true,
-                          num_constraints_, num_nonzeros_jacobian_,
-                          Jacobian->get_nonconst_row_indices(),
-                          Jacobian->get_nonconst_column_indices(), NULL);
+                                 num_constraints_, num_nonzeros_jacobian_,
+                                 Jacobian->get_nonconst_row_indices(),
+                                 Jacobian->get_nonconst_column_indices(), NULL);
 }
 
 /**
@@ -167,8 +169,8 @@ bool SqpTNlp::eval_jacobian(shared_ptr<const Vector> x,
                             shared_ptr<SparseTripletMatrix> Jacobian)
 {
   return ipopt_tnlp_->eval_jac_g(num_variables_, x->get_values(), true,
-                          num_constraints_, num_nonzeros_jacobian_, NULL, NULL,
-                          Jacobian->get_nonconst_values());
+                                 num_constraints_, num_nonzeros_jacobian_, NULL,
+                                 NULL, Jacobian->get_nonconst_values());
 }
 
 /**
@@ -179,18 +181,11 @@ bool SqpTNlp::get_hessian_structure(shared_ptr<const Vector> x,
                                     shared_ptr<const Vector> lambda,
                                     shared_ptr<SparseTripletMatrix> Hessian)
 {
-  // We need to change the sign of the multipliers
-  // TOO: Make consistent
-  int dim_lambda = lambda->get_dim();
-  double scale_factor = -1.;
-  shared_ptr<Vector> negative_lambda = make_shared<Vector>(dim_lambda);
-  negative_lambda->copy_vector(lambda, scale_factor);
-
   return ipopt_tnlp_->eval_h(num_variables_, x->get_values(), true, 1.0,
-                      num_constraints_, negative_lambda->get_values(), true,
-                      num_nonzeros_hessian_,
-                      Hessian->get_nonconst_row_indices(),
-                      Hessian->get_nonconst_column_indices(), NULL);
+                             num_constraints_, lambda->get_values(), true,
+                             num_nonzeros_hessian_,
+                             Hessian->get_nonconst_row_indices(),
+                             Hessian->get_nonconst_column_indices(), NULL);
 }
 
 /**
@@ -200,9 +195,15 @@ bool SqpTNlp::eval_hessian(shared_ptr<const Vector> x,
                            shared_ptr<const Vector> lambda,
                            shared_ptr<SparseTripletMatrix> Hessian)
 {
+  // We need to change the sign of the multipliers
+  int dim_lambda = lambda->get_dim();
+  double scale_factor = -1.;
+  shared_ptr<Vector> negative_lambda = make_shared<Vector>(dim_lambda);
+  negative_lambda->copy_vector(lambda, scale_factor);
+
   return ipopt_tnlp_->eval_h(num_variables_, x->get_values(), true, 1,
-                      num_constraints_, lambda->get_values(), true,
-                      num_nonzeros_hessian_, NULL, NULL,
-                      Hessian->get_nonconst_values());
+                             num_constraints_, negative_lambda->get_values(),
+                             true, num_nonzeros_hessian_, NULL, NULL,
+                             Hessian->get_nonconst_values());
 }
 }

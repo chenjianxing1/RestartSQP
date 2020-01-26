@@ -196,7 +196,7 @@ class QpHandler
   ///////////////////////////////////////////////////////////
 public:
   QpHandler(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype,
-            Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+            bool slack_formulation, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   /** Default destructor */
@@ -299,7 +299,9 @@ public:
    * @param grad 	Gradient vector from nlp class
    * @param rho  	Penalty Parameter
    */
-  void set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> gradient, double penalty_parameter);
+  void
+  set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> gradient,
+                                       double penalty_parameter);
 #if 0
   void set_linear_qp_objective_coefficients(double rho);
 #endif
@@ -365,7 +367,8 @@ public:
 
   void set_linear_qp_objective_coefficients_to_zero()
   {
-    qp_solver_interface_->get_linear_objective_coefficients_nonconst()->set_to_zero();
+    qp_solver_interface_->get_linear_objective_coefficients_nonconst()
+        ->set_to_zero();
   }
 
   /*  @brief Update the SparseMatrix H of the QP
@@ -452,7 +455,8 @@ private:
       qp_solver_interface_; /**<an interface to the standard
                              QP solver specified by the user*/
 
-  /** Flag indicating whether this is the formulation that permits the bounds to be violated. */
+  /** Flag indicating whether this is the formulation that permits the bounds to
+   *  be violated. */
   bool slack_formulation_;
 
   /** Object that stores some meta-structure of the constraint Jacobian, namely

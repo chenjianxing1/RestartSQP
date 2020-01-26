@@ -13,22 +13,29 @@
 
 namespace RestartSqp {
 
-// Matrix base class.  It is very simple since we onlt need to do matrix-vector products with general matrices. */
+// Matrix base class.  It is very simple since we onlt need to do matrix-vector
+// products with general matrices. */
 class Matrix
 {
 public:
   /** Default constructor. */
-  Matrix() {}
+  Matrix()
+  {
+  }
 
   /** Default destructor. */
-  virtual ~Matrix() {}
+  virtual ~Matrix()
+  {
+  }
 
-  /** This methods add the multiple of the matrix with the vector p to the result vector. */
+  /** This methods add the multiple of the matrix with the vector p to the
+   * result vector. */
   virtual void multiply(std::shared_ptr<const Vector> p,
                         std::shared_ptr<Vector> result,
                         double factor = 1.) const = 0;
 
-  /** This methods add the multiple of the transpose of this matrix with the vector p to the result vector. */
+  /** This methods add the multiple of the transpose of this matrix with the
+   * vector p to the result vector. */
   virtual void multiply_transpose(std::shared_ptr<const Vector> p,
                                   std::shared_ptr<Vector> result,
                                   double factor = 1.) const = 0;
@@ -39,7 +46,6 @@ private:
 
   /** Overloaded Equals Operator */
   void operator=(const Matrix&);
-
 };
 
 // Forward definition
@@ -51,7 +57,7 @@ class SparseHbMatrix;
  *  perform a matrix vector multiplication.
  */
 
-class SparseTripletMatrix: public Matrix
+class SparseTripletMatrix : public Matrix
 {
 public:
   /** constructor/destructor */
@@ -59,14 +65,14 @@ public:
   /** Constructor for an empty Sparse Matrix with N non-zero entries.
    *  It sets the property of the matrix, but */
   SparseTripletMatrix(int nnz, int num_rows, int num_columns,
-               bool is_symmetric = false, bool allocate = true);
+                      bool is_symmetric = false, bool allocate = true);
 
   /**
    *@brief
    *
    */
   SparseTripletMatrix(const double* data, int num_rows, int num_columns,
-               bool row_oriented);
+                      bool row_oriented);
 
   /** Constructor from a sparse Harwell Boeing matrix. */
   SparseTripletMatrix(std::shared_ptr<const SparseHbMatrix> sp_hb_matrix);
@@ -86,20 +92,20 @@ public:
   /**
    * @brief print the sparse matrix in the sense form
    */
-  void
-  print_dense(const char* name,
-             Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
-             Ipopt::EJournalLevel level = Ipopt::J_ALL,
-             Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
+  void print_dense(const char* name,
+                   Ipopt::SmartPtr<Ipopt::Journalist> jnlst = nullptr,
+                   Ipopt::EJournalLevel level = Ipopt::J_ALL,
+                   Ipopt::EJournalCategory category = Ipopt::J_DBG) const;
 
-  /** This methods add the multiple of the matrix with the vector p to the result vector. */
-  void multiply(std::shared_ptr<const Vector> p,
-                        std::shared_ptr<Vector> result,
+  /** This methods add the multiple of the matrix with the vector p to the
+   * result vector. */
+  void multiply(std::shared_ptr<const Vector> p, std::shared_ptr<Vector> result,
                 double factor = 1.) const override;
 
-  /** This methods add the multiple of the transpose of this matrix with the vector p to the result vector. */
+  /** This methods add the multiple of the transpose of this matrix with the
+   * vector p to the result vector. */
   void multiply_transpose(std::shared_ptr<const Vector> p,
-                                  std::shared_ptr<Vector> result,
+                          std::shared_ptr<Vector> result,
                           double factor = 1.) const override;
 
   //@}

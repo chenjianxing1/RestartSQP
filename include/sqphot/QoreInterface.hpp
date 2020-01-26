@@ -29,8 +29,7 @@ class QoreInterface : public QpSolverInterface
 public:
   /**Constructor*/
 
-  QoreInterface(int num_qp_variables, int num_qp_constraints,
-                QPType qp_type,
+  QoreInterface(int num_qp_variables, int num_qp_constraints, QPType qp_type,
                 Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 

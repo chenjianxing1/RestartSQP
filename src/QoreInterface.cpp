@@ -147,8 +147,8 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
       H_values = hessian_->get_values();
     }
     int rv = QPSetData(qore_solver_, num_qp_variables_, num_qp_constraints_,
-                       A_row_indices, A_col_indices, A_values,
-                       H_row_indices, H_col_indices, H_values);
+                       A_row_indices, A_col_indices, A_values, H_row_indices,
+                       H_col_indices, H_values);
     assert(rv == QPSOLVER_OK);
   }
 
@@ -228,8 +228,8 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     jnlst_->Printf(J_ERROR, J_MAIN, "qore error (%d): %s\n",
                    (int)solver_status_, qore_error_message.c_str());
     write_qp_data_to_file("qore_failure_qp.txt");
-    //assert(false && "Not trying to fix qore solution yet");
-    //handle_error(QP_TYPE_QP, stats);
+    // assert(false && "Not trying to fix qore solution yet");
+    // handle_error(QP_TYPE_QP, stats);
     solve_successful = false;
   }
 

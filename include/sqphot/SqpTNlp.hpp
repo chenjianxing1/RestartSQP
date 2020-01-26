@@ -17,6 +17,10 @@ namespace RestartSqp {
  * This class enables user to read data from NLP class object with more friendly
  * names and the use of Matrix and Vector objects for data.
  *
+ * IMPORTANT: The Lagrangian function here is defined as L(x,l) = f(x) - sum_i
+ * l_ic_j(c)
+ *
+ *            THIS IS DIFFERENT FROM IPOPT's DEFINITION!!
  */
 class SqpTNlp : public SqpNlpBase
 {
@@ -51,9 +55,10 @@ public:
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not
    */
-  bool get_starting_point(std::shared_ptr<Vector> primal_point,
-                          std::shared_ptr<Vector> bound_multipliers,
-                          std::shared_ptr<Vector> constraint_multipliers) override;
+  bool
+  get_starting_point(std::shared_ptr<Vector> primal_point,
+                     std::shared_ptr<Vector> bound_multipliers,
+                     std::shared_ptr<Vector> constraint_multipliers) override;
 
   /**
    *@brief Evaluate the objective value
@@ -77,8 +82,9 @@ public:
    * @brief Get the matrix structure of the Jacobian
    * Always call this before the first time using @Eval_Jacobian
    */
-  bool get_jacobian_structure(std::shared_ptr<const Vector> x,
-                              std::shared_ptr<SparseTripletMatrix> Jacobian) override;
+  bool get_jacobian_structure(
+      std::shared_ptr<const Vector> x,
+      std::shared_ptr<SparseTripletMatrix> Jacobian) override;
 
   /**
    *@brief Evaluate Jacobian at point x
@@ -90,9 +96,10 @@ public:
    * @brief Get the structure of the Hessian
    * Always call this before the first time using @Eval_Hessian
    */
-  bool get_hessian_structure(std::shared_ptr<const Vector> x,
-                             std::shared_ptr<const Vector> lambda,
-                             std::shared_ptr<SparseTripletMatrix> Hessian) override;
+  bool
+  get_hessian_structure(std::shared_ptr<const Vector> x,
+                        std::shared_ptr<const Vector> lambda,
+                        std::shared_ptr<SparseTripletMatrix> Hessian) override;
 
   /**
    *@brief Evaluate Hessian of Lagragian function at  (x, lambda)

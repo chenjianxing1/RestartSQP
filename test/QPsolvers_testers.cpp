@@ -358,7 +358,8 @@ int main(int argc, char* argv[])
   double obj_qpOASES;
   KktError kkt_error_qpoases;
 
-  QpSolverExitStatus qpOASES_exit_status = qpoases_interface->get_solver_status();
+  QpSolverExitStatus qpOASES_exit_status =
+      qpoases_interface->get_solver_status();
   if (qpOASES_exit_status == QPEXIT_OPTIMAL) {
     x_qpOASES = make_shared<Vector>(
         nVar, qpoases_interface->get_primal_solution()->get_values());
@@ -378,10 +379,10 @@ int main(int argc, char* argv[])
     obj_qpOASES = 0.;
   }
 
-//  x_qpOASES->copy_vector(qpoases_interface->get_primal_solution());
-//  y_qpOASES_constr->copy_vector(
-//      qpoases_interface->get_constraint_multipliers());
-//  y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
+  //  x_qpOASES->copy_vector(qpoases_interface->get_primal_solution());
+  //  y_qpOASES_constr->copy_vector(
+  //      qpoases_interface->get_constraint_multipliers());
+  //  y_qpOASES_bounds->copy_vector(qpoases_interface->get_bounds_multipliers());
 
   switch (qpoases_interface->get_solver_status()) {
     case QPEXIT_OPTIMAL:

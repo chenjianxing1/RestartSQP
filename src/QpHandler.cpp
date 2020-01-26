@@ -16,21 +16,16 @@ using namespace Ipopt;
 namespace RestartSqp {
 
 QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
-                     SmartPtr<Journalist> jnlst,
+                     bool slack_formulation, SmartPtr<Journalist> jnlst,
                      SmartPtr<const OptionsList> options)
  : jnlst_(jnlst)
  , last_penalty_parameter_(-1.)
+ , slack_formulation_(slack_formulation)
 {
   // Initialize the matrix structure: where in the Jacobian are multiples of the
   // identity
   num_nlp_variables_ = nlp_sizes->get_num_variables();
   num_nlp_constraints_ = nlp_sizes->get_num_constraints();
-
-#ifdef NEW_FORMULATION
-  slack_formulation_ = true;
-#else
-  slack_formulation_ = false;
-#endif
 
   if (!slack_formulation_) {
     num_qp_variables_ = num_nlp_variables_ + 2 * num_nlp_constraints_;
@@ -589,6 +584,15 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
       jnlst_->Printf(J_WARNING, J_MAIN, "WARNING: QP solver KKT error is %e\n",
                      last_kkt_error_);
     }
+    if (jnlst_->ProduceOutput(J_MOREVECTOR, J_MAIN)) {
+      jnlst_->Printf(J_MOREVECTOR, J_MAIN, "\nQP solver solution:\n");
+      qp_solver_interface_->get_primal_solution()->print(
+          "primal solution", jnlst_, J_MOREVECTOR, J_MAIN);
+      qp_solver_interface_->get_bounds_multipliers()->print(
+          "bound multipliers", jnlst_, J_MOREVECTOR, J_MAIN);
+      qp_solver_interface_->get_constraint_multipliers()->print(
+          "constraint multipliers", jnlst_, J_MOREVECTOR, J_MAIN);
+    }
   } else {
     last_kkt_error_ = 1e20;
     assert(false && "We do not handle failures of the QP solvers yet");
@@ -678,11 +682,11 @@ void QpHandler::decrease_trust_region(double trust_region)
     for (int i = 0; i < num_nlp_variables_; i++) {
       double current_bound = qp_solver_interface_->get_lower_variable_bound(i);
       if (current_bound < -trust_region) {
-      qp_solver_interface_->set_lower_variable_bound(i, -trust_region);
+        qp_solver_interface_->set_lower_variable_bound(i, -trust_region);
       }
       current_bound = qp_solver_interface_->get_upper_variable_bound(i);
       if (current_bound > trust_region) {
-      qp_solver_interface_->set_lower_variable_bound(i, trust_region);
+        qp_solver_interface_->set_upper_variable_bound(i, trust_region);
       }
     }
   }

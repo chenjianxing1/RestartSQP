@@ -54,25 +54,17 @@ Vector::~Vector()
 }
 
 /** print the vector*/
-void Vector::print(const string name, SmartPtr<Journalist> jnlst,
+void Vector::print(const string vector_name, SmartPtr<Journalist> jnlst,
                    EJournalLevel level, EJournalCategory category) const
 {
   if (!IsValid(jnlst)) {
-    printf("%s = :\n", name.c_str());
-
-    printf("{ ");
-    for (int i = 0; i < size_; i++) {
-      printf("%23.16e ", values_[i]);
-    }
-    printf("}\n\n");
+    write_to_file(stdout, vector_name);
   } else {
-    jnlst->Printf(level, category, name.c_str());
-    jnlst->Printf(level, category, " =: \n");
-    jnlst->Printf(level, category, "{ ");
+    jnlst->Printf(level, category, "Vector %s with %d elements:\n",
+                  vector_name.c_str(), size_);
     for (int i = 0; i < size_; i++) {
-      jnlst->Printf(level, category, "%23.16e ", values_[i]);
+      jnlst->Printf(level, category, "%5d %23.16e\n", i, values_[i]);
     }
-    jnlst->Printf(level, category, "}\n\n");
   }
 }
 
@@ -80,8 +72,7 @@ void Vector::write_to_file(FILE* file, const string& vector_name) const
 {
   fprintf(file, "Vector %s with %d elements:\n", vector_name.c_str(), size_);
   for (int i = 0; i < size_; i++) {
-    fprintf(file, "%23.16e\n", values_[i]);
+    fprintf(file, "%5d %23.16e\n", i, values_[i]);
   }
 }
-
 }

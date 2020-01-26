@@ -206,11 +206,20 @@ tuple_sort_rule_compressed_row(const tuple<int, int, int, double>& left,
 
 //@{
 
-void add_triplet_to_element_list_(
+void SparseHbMatrix::add_triplet_to_element_list_(
     shared_ptr<const SparseTripletMatrix> triplet_matrix,
     vector<tuple<int, int, int, double>>& ele_list)
 {
-  bool is_symmetric = triplet_matrix->is_symmetric();
+  // If this is a symmetrix matrix, we need to make sure that all diagonal
+  // elements are included even if they are zero.
+  // We track which diagonal elements were set with the following array.
+  bool* diagonal_is_set = nullptr;
+  if (is_symmetric_) {
+    diagonal_is_set = new bool[num_rows_];
+    for (int i = 0; i < num_rows_; ++i) {
+      diagonal_is_set[i] = false;
+    }
+  }
 
   // Populate the touples with the matrix structure of the triplet matrix
   int num_entries_triplet = triplet_matrix->get_num_entries();
@@ -222,11 +231,26 @@ void add_triplet_to_element_list_(
     ele_list.emplace_back(trip_row_indices[i] - 1, trip_column_indices[i] - 1,
                           counter, 0.);
     counter++;
-    if (is_symmetric && (trip_row_indices[i] != trip_column_indices[i])) {
-      ele_list.emplace_back(trip_column_indices[i] - 1, trip_row_indices[i] - 1,
-                            counter, 0.);
-      counter++;
+    if (is_symmetric_) {
+      if (trip_row_indices[i] != trip_column_indices[i]) {
+        ele_list.emplace_back(trip_column_indices[i] - 1,
+                              trip_row_indices[i] - 1, counter, 0.);
+        counter++;
+      } else {
+        diagonal_is_set[trip_row_indices[i] - 1] = true;
+      }
     }
+  }
+
+  // Now add those diagonal elements that were not yet included
+  if (is_symmetric_) {
+    for (int i = 0; i < num_rows_; ++i) {
+      if (!diagonal_is_set[i]) {
+        ele_list.emplace_back(i, i, counter, 0.);
+        counter++;
+      }
+    }
+    delete[] diagonal_is_set;
   }
 }
 
@@ -247,10 +271,12 @@ void SparseHbMatrix::set_structure_from_list_(
       int row_idx = get<0>(elements_list[i]);
       int col_idx = get<1>(elements_list[i]);
       int pos_triplet = get<2>(elements_list[i]);
+      double constant_element = get<3>(elements_list[i]);
       column_indices_[i] = col_idx;
       if (pos_triplet >= 0) {
         // This entry comes from a triplet matrix
         triplet_order_[pos_triplet] = i;
+        values_[i] = constant_element;
       } else {
         // This entry comes from an identity matrix
         double identity_factor = pos_triplet = get<3>(elements_list[i]);
@@ -274,11 +300,13 @@ void SparseHbMatrix::set_structure_from_list_(
       int row_idx = get<0>(elements_list[i]);
       int col_idx = get<1>(elements_list[i]);
       int pos_triplet = get<2>(elements_list[i]);
+      double constant_element = get<3>(elements_list[i]);
       row_indices_[i] = row_idx;
       assert(row_idx < num_rows_);
       if (pos_triplet >= 0) {
         // This entry comes from a triplet matrix
         triplet_order_[pos_triplet] = i;
+        values_[i] = constant_element;
       } else {
         // This entry comes from an identity matrix
         double identity_factor = pos_triplet = get<3>(elements_list[i]);
@@ -421,7 +449,8 @@ void SparseHbMatrix::set_values(
 }
 #endif
 
-void SparseHbMatrix::set_values(shared_ptr<const SparseTripletMatrix> triplet_matrix)
+void SparseHbMatrix::set_values(
+    shared_ptr<const SparseTripletMatrix> triplet_matrix)
 {
   assert(triplet_order_);
 
@@ -429,6 +458,10 @@ void SparseHbMatrix::set_values(shared_ptr<const SparseTripletMatrix> triplet_ma
   const int* trip_row_indices = triplet_matrix->get_row_indices();
   const int* trip_col_indices = triplet_matrix->get_column_indices();
   const double* trip_values = triplet_matrix->get_values();
+
+  for (int i = 0; i < num_entries_; ++i) {
+    values_[i] = 0.;
+  }
 
   if (is_symmetric_) {
     int j = 0;
@@ -440,7 +473,8 @@ void SparseHbMatrix::set_values(shared_ptr<const SparseTripletMatrix> triplet_ma
         j++;
       }
     }
-    assert(j == num_triplet_entries_);
+    assert(j <=
+           num_triplet_entries_); // There might be artifical diagonal elements
   } else {
     assert(num_trip_entries == num_triplet_entries_);
 
@@ -508,8 +542,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
 
     // Create the Triplet matrix with allocated memory
     bool allocate = true;
-    result = make_shared<SparseTripletMatrix>(num_trip_entries, num_rows_,
-                                       num_columns_, is_symmetric_, allocate);
+    result = make_shared<SparseTripletMatrix>(
+        num_trip_entries, num_rows_, num_columns_, is_symmetric_, allocate);
 
     // Now loop over all elements again and add the lower triangular elements
     int i_ele = 0;
@@ -552,8 +586,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
   } else {
     // This is a non-symmetric matrix
     bool allocate = true;
-    result = make_shared<SparseTripletMatrix>(num_entries_, num_rows_, num_columns_,
-                                       is_symmetric_, allocate);
+    result = make_shared<SparseTripletMatrix>(
+        num_entries_, num_rows_, num_columns_, is_symmetric_, allocate);
 
     // Now loop over all elements again and add all elements
     int i_ele = 0;
@@ -596,25 +630,25 @@ void SparseHbMatrix::write_to_file(FILE* file, const string& matrix_name) const
 {
   assert(is_initialized_);
 
-  fprintf(file, "Matrix %s with %d nonzero elements:\n", matrix_name.c_str(), num_entries_);
+  fprintf(file, "Matrix %s with %d nonzero elements:\n", matrix_name.c_str(),
+          num_entries_);
 
   if (is_compressed_row_format_) {
-    for (int row=0; row<num_rows_; ++row) {
+    for (int row = 0; row < num_rows_; ++row) {
       int start = row_indices_[row];
-      int end = row_indices_[row+1];
-      for (int i=start; i<end; ++i) {
+      int end = row_indices_[row + 1];
+      for (int i = start; i < end; ++i) {
         int col = column_indices_[i];
-        fprintf(file, "%d %d %23.16e\n", row+1, col+1, values_[i]);
+        fprintf(file, "%d %d %23.16e\n", row + 1, col + 1, values_[i]);
       }
     }
-  }
-  else {
-    for (int col=0; col<num_columns_; ++col) {
+  } else {
+    for (int col = 0; col < num_columns_; ++col) {
       int start = column_indices_[col];
-      int end = column_indices_[col+1];
-      for (int i=start; i<end; ++i) {
+      int end = column_indices_[col + 1];
+      for (int i = start; i < end; ++i) {
         int row = row_indices_[i];
-        fprintf(file, "%d %d %23.16e\n", row+1, col+1, values_[i]);
+        fprintf(file, "%d %d %23.16e\n", row + 1, col + 1, values_[i]);
       }
     }
   }
@@ -869,45 +903,44 @@ void SparseHbMatrix::print(const char* name,
 
   if (new_format) {
     write_to_file(stdout, name);
-  }
-  else {
-  if (is_compressed_row_format_) {
-    cout << name << "= " << endl;
-    cout << "ColIndex: ";
-    for (int i = 0; i < num_entries_; i++)
-      cout << get_column_index_at_entry(i) << " ";
-    cout << " " << endl;
-
-    cout << "RowIndex: ";
-    for (int i = 0; i < num_rows_ + 1; i++)
-      cout << get_row_index_at_entry(i) << " ";
-    cout << " " << endl;
   } else {
-    // for compressed column format
-    cout << name << "= " << endl;
-    cout << "ColIndex: ";
-    for (int i = 0; i < num_columns_ + 1; i++)
-      cout << get_column_index_at_entry(i) << " ";
+    if (is_compressed_row_format_) {
+      cout << name << "= " << endl;
+      cout << "ColIndex: ";
+      for (int i = 0; i < num_entries_; i++)
+        cout << get_column_index_at_entry(i) << " ";
+      cout << " " << endl;
 
-    cout << " " << endl;
-    cout << "RowIndex: ";
+      cout << "RowIndex: ";
+      for (int i = 0; i < num_rows_ + 1; i++)
+        cout << get_row_index_at_entry(i) << " ";
+      cout << " " << endl;
+    } else {
+      // for compressed column format
+      cout << name << "= " << endl;
+      cout << "ColIndex: ";
+      for (int i = 0; i < num_columns_ + 1; i++)
+        cout << get_column_index_at_entry(i) << " ";
+
+      cout << " " << endl;
+      cout << "RowIndex: ";
+
+      for (int i = 0; i < num_entries_; i++)
+        cout << get_row_index_at_entry(i) << " ";
+      cout << " " << endl;
+    }
+    cout << "MatVal:   ";
 
     for (int i = 0; i < num_entries_; i++)
-      cout << get_row_index_at_entry(i) << " ";
+      cout << get_value_at_entry(i) << " ";
     cout << " " << endl;
-  }
-  cout << "MatVal:   ";
 
-  for (int i = 0; i < num_entries_; i++)
-    cout << get_value_at_entry(i) << " ";
-  cout << " " << endl;
-
-  if (triplet_order_) {
-  cout << "order:    ";
-  for (int i = 0; i < num_triplet_entries_; i++)
-    cout << i << ":" << get_order_at_entry(i) << " ";
-  cout << " " << endl;
-  }
+    if (triplet_order_) {
+      cout << "order:    ";
+      for (int i = 0; i < num_triplet_entries_; i++)
+        cout << i << ":" << get_order_at_entry(i) << " ";
+      cout << " " << endl;
+    }
   }
 }
 #if 0
