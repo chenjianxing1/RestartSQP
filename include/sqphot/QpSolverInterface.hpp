@@ -205,12 +205,11 @@ public:
   /**
    * @brief Solve the QP or LP with the current data.
    *
-   *  This sets the solver_status of the solve.  If the solve was successful,
-   * this also sets the primal and dual solution, optimal objective value.
-   *
-   *  This returns false if the solution was not successful.
+   *  This returns the QP solver_exit status of the solve.  If the solve was
+   * successful,
+   *  this also sets the primal and dual solution, optimal objective value.
    */
-  bool optimize(std::shared_ptr<Statistics> stats);
+  QpSolverExitStatus optimize(std::shared_ptr<Statistics> stats);
 
   /** Exit flag from the most recent solve. */
   QpSolverExitStatus get_solver_status() const
@@ -277,6 +276,13 @@ public:
     return constraints_working_set_;
   }
 
+  /** Return the number of QP solver iterations from the most recent solve. */
+  int get_num_qp_iterations() const
+  {
+    assert(solver_status_ == QPEXIT_OPTIMAL);
+    return qp_solver_iterations_;
+  }
+
   /** This method checks the KKT conditions for the most solution of the most
    *  recent solve.  It returns the maximum violation (KKT error). */
   KktError calc_kkt_error(Ipopt::EJournalLevel level = Ipopt::J_NONE) const;
@@ -286,7 +292,8 @@ public:
 
 protected:
   /** Implementation of the optimization method. */
-  virtual bool optimize_impl(std::shared_ptr<Statistics> stats = nullptr) = 0;
+  virtual QpSolverExitStatus
+  optimize_impl(std::shared_ptr<Statistics> stats = nullptr) = 0;
 
   /** Method for computing the working set from the most recent solve. */
   virtual void retrieve_working_set_() = 0;
@@ -339,6 +346,9 @@ protected:
   ActivityStatus* bounds_working_set_;
   /** Working set for the regular constraints. */
   ActivityStatus* constraints_working_set_;
+
+  /** Number or QP solver iterations. */
+  int qp_solver_iterations_;
   //@}
 
   /** Journalist for output. */

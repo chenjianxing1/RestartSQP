@@ -73,7 +73,8 @@ private:
   //@}
 
   /** Implementation of the optimziation method. */
-  bool optimize_impl(std::shared_ptr<Statistics> stats = nullptr) override;
+  QpSolverExitStatus
+  optimize_impl(std::shared_ptr<Statistics> stats = nullptr) override;
 
   /** Method for computing the working set from the most recent solve. */
   void retrieve_working_set_() override;

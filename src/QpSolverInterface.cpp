@@ -42,7 +42,7 @@ QpSolverInterface::~QpSolverInterface()
   constraints_working_set_ = NULL;
 }
 
-bool QpSolverInterface::optimize(shared_ptr<Statistics> stats)
+QpSolverExitStatus QpSolverInterface::optimize(shared_ptr<Statistics> stats)
 {
   bool write_all_qps = false;
   string qp_type_str;
@@ -58,15 +58,17 @@ bool QpSolverInterface::optimize(shared_ptr<Statistics> stats)
   }
 
   working_set_up_to_date_ = false;
-  bool solve_success = optimize_impl(stats);
-  if (solve_success) {
+  QpSolverExitStatus qp_solver_exit_status = optimize_impl(stats);
+  solver_status_ = qp_solver_exit_status;
+  if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
     // TODO: Could postpone computation of working set until it is actually
     // needed, but this will require that some data members are declared
     // mutable
     retrieve_working_set_();
     working_set_up_to_date_ = true;
   }
-  return solve_success;
+
+  return qp_solver_exit_status;
 }
 
 KktError QpSolverInterface::calc_kkt_error(EJournalLevel level) const

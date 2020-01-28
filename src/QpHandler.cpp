@@ -16,12 +16,17 @@ using namespace Ipopt;
 namespace RestartSqp {
 
 QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
-                     bool slack_formulation, SmartPtr<Journalist> jnlst,
+                     bool slack_formulation, const std::string& problem_name,
+                     SmartPtr<Journalist> jnlst,
                      SmartPtr<const OptionsList> options)
  : jnlst_(jnlst)
  , last_penalty_parameter_(-1.)
  , slack_formulation_(slack_formulation)
 {
+  // For the problem name, we don't want to include the path here
+  std::size_t found = problem_name.find_last_of("/\\");
+  problem_name_ = problem_name.substr(found + 1);
+
   // Initialize the matrix structure: where in the Jacobian are multiples of the
   // identity
   num_nlp_variables_ = nlp_sizes->get_num_variables();
@@ -570,11 +575,12 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
 #endif
 #endif
 
-  qp_solver_interface_->optimize(stats);
-  QpSolverExitStatus qp_exit_status = qp_solver_interface_->get_solver_status();
+  QpSolverExitStatus qp_solver_exit_status =
+      qp_solver_interface_->optimize(stats);
+  qp_solver_interface_->get_solver_status();
 
   // Check if the QP solver really returned an optimal solution.
-  if (qp_exit_status == QPEXIT_OPTIMAL) {
+  if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
     double qp_error_tol = 1e-8;
     KktError qp_kkt_error = qp_solver_interface_->calc_kkt_error(J_DETAILED);
     last_kkt_error_ = qp_kkt_error.worst_violation;
@@ -595,10 +601,29 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     }
   } else {
     last_kkt_error_ = 1e20;
+    write_qp_data(problem_name_ + "qpdata.log");
+    switch (qp_solver_exit_status) {
+      case QPEXIT_INFEASIBLE:
+        THROW_EXCEPTION(SQP_EXCEPTION_INFEASIBLE,
+                        "QP solver claims that QP is infeasible.");
+      case QPEXIT_UNBOUNDED:
+        THROW_EXCEPTION(SQP_EXCEPTION_UNBOUNDED,
+                        "QP solver claims that QP is unbounded.");
+      case QPEXIT_ITERLIMIT:
+        THROW_EXCEPTION(SQP_EXCEPTION_MAXITER,
+                        "QP solver runs out of iterations.");
+      case QPEXIT_INTERNAL_ERROR:
+        THROW_EXCEPTION(SQP_EXCEPTION_INTERNAL_ERROR,
+                        "QP solver encoutered some interial error.");
+      default:
+        THROW_EXCEPTION(
+            SQP_EXCEPTION_UNKNOWN,
+            "QP solver encoutered some error that has not been classified.");
+    }
     assert(false && "We do not handle failures of the QP solvers yet");
   }
 
-  return qp_exit_status;
+  return qp_solver_exit_status;
 }
 
 shared_ptr<const Vector> QpHandler::get_bounds_multipliers() const

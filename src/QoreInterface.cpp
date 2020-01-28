@@ -108,10 +108,8 @@ QoreInterface::~QoreInterface()
  * @brief Solve a regular QP with given data and options.
  */
 
-bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
+QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
 {
-  bool solve_successful = false;
-
   // If not done earlier, allocate the QORE solver object
   if (!qore_solver_) {
     int num_nnz_jacobian = 0;
@@ -181,15 +179,15 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
                  linear_objective_coefficients_->get_values(), 0, 0);
 
   // Get the solver status
-  solver_status_ = get_qore_exit_status_(qore_retval);
+  QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_(qore_retval);
+  solver_status_ = qp_solver_exit_status;
 
   // reset the flag that remembers whether QP matrices have changed
   qp_matrices_changed_ = false;
 
   // Check if the solve was successful
-  if (solver_status_ == QPEXIT_OPTIMAL) {
+  if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
     first_qp_solved_ = true;
-    solve_successful = true;
 
     // Retrieve the primal solution
     int rv = QPGetDblVector(qore_solver_, "primalsol",
@@ -210,9 +208,13 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     constraint_multipliers_->copy_from_subvector(qore_dual_solution,
                                                  num_qp_variables_);
 
+    // Determine the number of QP solver iterations
+    rv = QPGetInt(qore_solver_, "itercount", &qp_solver_iterations_);
+    assert(rv == QPSOLVER_OK);
+
   } else {
     string qore_error_message;
-    switch (solver_status_) {
+    switch (qp_solver_exit_status) {
       case QPEXIT_INFEASIBLE:
         qore_error_message = "INFEASIBLE";
         break;
@@ -226,11 +228,8 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
         qore_error_message = "NEED TO ADD TO OUTPUT";
     }
     jnlst_->Printf(J_ERROR, J_MAIN, "qore error (%d): %s\n",
-                   (int)solver_status_, qore_error_message.c_str());
+                   (int)qp_solver_exit_status, qore_error_message.c_str());
     write_qp_data_to_file("qore_failure_qp.txt");
-    // assert(false && "Not trying to fix qore solution yet");
-    // handle_error(QP_TYPE_QP, stats);
-    solve_successful = false;
   }
 
   // Update solver statistics
@@ -240,7 +239,7 @@ bool QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     stats->increase_qp_iteration_counter(num_qp_iterations);
   }
 
-  return solve_successful;
+  return qp_solver_exit_status;
 }
 
 QpSolverExitStatus QoreInterface::get_qore_exit_status_(int qore_retval)

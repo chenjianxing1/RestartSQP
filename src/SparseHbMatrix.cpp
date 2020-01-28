@@ -255,7 +255,7 @@ void SparseHbMatrix::add_triplet_to_element_list_(
 }
 
 void SparseHbMatrix::set_structure_from_list_(
-    vector<tuple<int, int, int, double>> elements_list)
+    vector<tuple<int, int, int, double>>& elements_list)
 {
   // Here we also need to allocated memory for the permutation vector
   triplet_order_ = new int[num_triplet_entries_];
@@ -459,10 +459,11 @@ void SparseHbMatrix::set_values(
   const int* trip_col_indices = triplet_matrix->get_column_indices();
   const double* trip_values = triplet_matrix->get_values();
 
-  for (int i = 0; i < num_entries_; ++i) {
+#if 0
+  for (int i = 0; i < num_trip_entries; ++i) {
     values_[i] = 0.;
   }
-
+#endif
   if (is_symmetric_) {
     int j = 0;
     for (int i = 0; i < num_trip_entries; i++) {

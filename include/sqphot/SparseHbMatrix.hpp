@@ -369,7 +369,7 @@ private:
 
   /** Set the structure from an (unsorted) list of triplet elements. */
   void set_structure_from_list_(
-      std::vector<std::tuple<int, int, int, double>> elements_list);
+      std::vector<std::tuple<int, int, int, double>>& elements_list);
 
   /** Add entries of the triplet matrix to the list of elements. */
   void add_triplet_to_element_list_(

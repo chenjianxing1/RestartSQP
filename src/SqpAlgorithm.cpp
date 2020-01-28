@@ -151,6 +151,7 @@ void SqpAlgorithm::print_initial_output_()
     int num_vars_lower = 0;
     int num_vars_upper = 0;
     int num_vars_both = 0;
+    int num_vars_fixed = 0;
     for (int i = 0; i < num_variables_; ++i) {
       switch (bound_type_[i]) {
         case BOUNDED_BELOW:
@@ -163,7 +164,8 @@ void SqpAlgorithm::print_initial_output_()
           num_vars_both++;
           break;
         case IS_EQUALITY:
-          assert(false && "should not get here");
+          num_vars_fixed++;
+          break;
         default:
           break;
       }
@@ -177,6 +179,9 @@ void SqpAlgorithm::print_initial_output_()
     jnlst_->Printf(J_SUMMARY, J_MAIN,
                    "   with lower and upper bounds..........: %10d \n",
                    num_vars_both);
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "   fixed................................: %10d \n",
+                   num_vars_fixed);
 
     // Count the number of constraints of different types
     int num_cons_lower = 0;
@@ -223,21 +228,21 @@ void SqpAlgorithm::print_initial_output_()
   // iterate
   jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "======================================"
                                         "======================================"
-                                        "==========================\n");
+                                        "================================\n");
   jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
-                 "%6s %23s %9s %9s %8s %9s   %9s %9s  %9s\n", "iter",
+                 "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                  "objective", "||c_k||", "||p_k||", "Delta", "ratio", "pen par",
-                 "QP_KKT", "NLP_KKT");
+                 "QP_KKT", "QP it", "NLP_KKT");
   jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "=================================="
                                         "=================================="
-                                        "======"
-                                        "============================\n");
+                                        "============="
+                                        "===========================\n");
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
-      "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %9.3e\n",
+      "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
       solver_statistics_->num_sqp_iterations_, current_objective_value_,
       current_infeasibility_, trial_step_norm_, trust_region_radius_, 0.,
-      current_penalty_parameter_, 0., current_kkt_error_.worst_violation);
+      current_penalty_parameter_, 0., 0, current_kkt_error_.worst_violation);
   // qp_solver_->get_QpOptimalStatus().KKT_error);
 
   // Print some information about constant problem data
@@ -340,6 +345,7 @@ void SqpAlgorithm::calculate_search_direction_()
   if (exit_status != QPEXIT_OPTIMAL) {
     const string& nlp_name = sqp_nlp_->get_nlp_name();
     qp_solver_->write_qp_data(nlp_name + "qpdata.log");
+
     assert(false && "Still need to decide how to handle QP solver error.");
     // exit_flag_ = qp_solver_->get_status();
     // break;
@@ -362,33 +368,34 @@ void SqpAlgorithm::print_iteration_output_()
 {
   if (solver_statistics_->num_sqp_iterations_ % 10 == 0) {
     jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
-                   "%6s %23s %9s %9s %8s %9s   %9s %9s  %9s\n", "iter",
+                   "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                    "objective", "||c_k||", "||p_k||", "Delta", "ratio",
-                   "pen par", "QP_KKT", "NLP_KKT");
+                   "pen par", "QP_KKT", "QP it", "NLP_KKT");
     jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "=================================="
                                           "=================================="
-                                          "======"
-                                          "============================\n");
+                                          "============="
+                                          "===========================\n");
   } else {
     jnlst_->Printf(J_DETAILED, J_MAIN,
-                   "%6s %23s %9s %9s %8s %9s   %9s %9s  %9s\n", "iter",
+                   "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                    "objective", "||c_k||", "||p_k||", "Delta", "ratio",
-                   "pen par", "QP_KKT", "NLP_KKT");
+                   "pen par", "QP_KKT", "QP it", "NLP_KKT");
     jnlst_->Printf(J_DETAILED, J_MAIN, "=================================="
                                        "=================================="
-                                       "======"
-                                       "============================\n");
+                                       "============="
+                                       "===========================\n");
   }
 
   double qp_kkt_error = qp_solver_->get_qp_kkt_error();
   double model_ratio = actual_reduction_ / predicted_reduction_;
-  jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
-                 "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %9.3e\n",
-                 solver_statistics_->num_sqp_iterations_,
-                 current_objective_value_, current_infeasibility_,
-                 trial_step_norm_, trust_region_radius_, model_ratio,
-                 current_penalty_parameter_, qp_kkt_error,
-                 current_kkt_error_.worst_violation);
+  int qp_iterations = qp_solver_->get_num_qp_iterations();
+  jnlst_->Printf(
+      J_ITERSUMMARY, J_MAIN,
+      "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
+      solver_statistics_->num_sqp_iterations_, current_objective_value_,
+      current_infeasibility_, trial_step_norm_, trust_region_radius_,
+      model_ratio, current_penalty_parameter_, qp_kkt_error, qp_iterations,
+      current_kkt_error_.worst_violation);
 
   // If desired, we print more information
   if (jnlst_->ProduceOutput(J_DETAILED, J_MAIN)) {
@@ -500,58 +507,78 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
   // Print initial output
   print_initial_output_();
 
-  // Main loop
-  while (solver_statistics_->num_sqp_iterations_ < max_num_iterations_ &&
-         exit_flag_ == UNKNOWN) {
+  // Main loop.  We catch exceptions to figure out final error code.
+  try {
+    while (solver_statistics_->num_sqp_iterations_ < max_num_iterations_ &&
+           exit_flag_ == UNKNOWN) {
 
-    // Solve the QP to get the trial step
-    calculate_search_direction_();
+      // Solve the QP to get the trial step
+      calculate_search_direction_();
 
-    //        p_k_->print("p_k_");
-    // TODO: Remove me
-    qp_obj_ = get_obj_QP();
+      //        p_k_->print("p_k_");
+      // TODO: Remove me
+      qp_obj_ = get_obj_QP();
 
-    // Update the penalty parameter if necessary.  In this process, a new trial
-    // step might be computed.
-    update_penalty_parameter_();
+      // Update the penalty parameter if necessary.  In this process, a new
+      // trial
+      // step might be computed.
+      update_penalty_parameter_();
 
-    // Calculate the trial point and evaluate the functions at that point.
-    calc_trial_point_();
+      // Calculate the trial point and evaluate the functions at that point.
+      calc_trial_point_();
 
-    // Check if the current iterate is acceptable
-    perform_ratio_test_();
+      // Check if the current iterate is acceptable
+      perform_ratio_test_();
 
-    if (trial_point_is_accepted_) {
-      accept_trial_point_();
-    } else {
-      // Calculate the second-order-correction steps
-      if (perform_second_order_correction_step_) {
-        second_order_correction();
+      if (trial_point_is_accepted_) {
+        accept_trial_point_();
+      } else {
+        // Calculate the second-order-correction steps
+        if (perform_second_order_correction_step_) {
+          second_order_correction();
+        }
       }
-    }
 
-    // Update the radius and the QP bounds if the radius has been changed
-    solver_statistics_->increase_sqp_iteration_counter();
-    /* output some information to the console*/
+      // Update the radius and the QP bounds if the radius has been changed
+      solver_statistics_->increase_sqp_iteration_counter();
+      /* output some information to the console*/
 
-    // Compute the NLP KKT error and set exit_flag_ to indicate whether we
-    // should stop..
-    check_optimality();
-
-    // Print output
-    print_iteration_output_();
-
-    // exit the loop if required.
-    if (exit_flag_ != UNKNOWN) {
-      break;
-    }
-
-    try {
-      update_trust_region_radius_();
-    } catch (SMALL_TRUST_REGION) {
+      // Compute the NLP KKT error and set exit_flag_ to indicate whether we
+      // should stop..
       check_optimality();
-      break;
+
+      // Print output
+      print_iteration_output_();
+
+      // exit the loop if required.
+      if (exit_flag_ != UNKNOWN) {
+        break;
+      }
+
+      // Update the trust region radius
+      update_trust_region_radius_();
     }
+  } catch (SQP_EXCEPTION_PENALTY_TOO_LARGE& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = PENALTY_TOO_LARGE;
+  } catch (SQP_EXCEPTION_TRUST_REGION_TOO_SMALL& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = TRUST_REGION_TOO_SMALL;
+  } catch (SQP_EXCEPTION_INFEASIBLE& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = QPERROR_INFEASIBLE;
+  } catch (SQP_EXCEPTION_UNBOUNDED& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = QPERROR_UNBOUNDED;
+  } catch (SQP_EXCEPTION_MAXITER& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = QPERROR_EXCEED_MAX_ITER;
+  } catch (SQP_EXCEPTION_INTERNAL_ERROR& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = QPERROR_INTERNAL_ERROR;
+  } catch (SQP_EXCEPTION_UNKNOWN& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = QPERROR_UNKNOWN;
   }
 
   // check if the current iterates get_status before exiting
@@ -823,10 +850,12 @@ void SqpAlgorithm::allocate_memory_()
   solver_statistics_ = make_shared<Statistics>();
 
   // Create the QP solver objects.  This also reads the option values
-  qp_solver_ = make_shared<QpHandler>(nlp_sizes, QP_TYPE_QP, slack_formulation_,
-                                      jnlst_, options_);
-  lp_solver_ = make_shared<QpHandler>(nlp_sizes, QP_TYPE_LP, slack_formulation_,
-                                      jnlst_, options_);
+  qp_solver_ =
+      make_shared<QpHandler>(nlp_sizes, QP_TYPE_QP, slack_formulation_,
+                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
+  lp_solver_ =
+      make_shared<QpHandler>(nlp_sizes, QP_TYPE_LP, slack_formulation_,
+                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
 
   // For the LP, the objective will never change.  We set the NLP gradient to
   // zero, and sjust sum up all slack variables by setting the penalty parameter
@@ -1021,7 +1050,8 @@ void SqpAlgorithm::increase_penalty_parameter_()
   if (current_penalty_parameter_ >= penalty_parameter_max_value_) {
     jnlst_->Printf(J_ERROR, J_MAIN, "Penalty parameter becomes too large: %e\n",
                    current_penalty_parameter_);
-    assert(false && "Penalty parameter becomes too large");
+    THROW_EXCEPTION(SQP_EXCEPTION_PENALTY_TOO_LARGE,
+                    "Penalty parameter becomes too large.")
   }
 
   // Increase the penalty parameter
@@ -1819,43 +1849,46 @@ void SqpAlgorithm::print_final_stats_()
 {
   jnlst_->Printf(J_SUMMARY, J_MAIN, "======================================"
                                     "===================================="
-                                    "============================\n");
+                                    "==================================\n");
 
   // Determine string describing the exit status
-  string exit_status;
+  string exit_message;
   switch (exit_flag_) {
     case OPTIMAL:
-      exit_status = "Optimal solution found.";
+      exit_message = "Optimal solution found.";
       break;
     case PRED_REDUCTION_NEGATIVE:
-      exit_status = "Error: Predict reduction is negative.";
+      exit_message = "Error: Predict reduction is negative.";
       break;
     case INVALID_NLP:
-      exit_status = "Error: Invalid NLP.";
+      exit_message = "Error: Invalid NLP.";
       break;
     case EXCEED_MAX_ITERATIONS:
-      exit_status = "Maximum number of iterations exceeded.";
+      exit_message = "Maximum number of iterations exceeded.";
       break;
     case EXCEED_MAX_CPU_TIME:
-      exit_status = "CPU time limit exceeded.";
+      exit_message = "CPU time limit exceeded.";
       break;
     case EXCEED_MAX_WALLCLOCK_TIME: // TODO NEXT
-      exit_status = "Wallclock time limit exceeded.";
+      exit_message = "Wallclock time limit exceeded.";
       break;
     case TRUST_REGION_TOO_SMALL:
-      exit_status = "Trust region becomes too small.";
+      exit_message = "Trust region becomes too small.";
+      break;
+    case PENALTY_TOO_LARGE:
+      exit_message = "Penalty parameter becomes too large.";
       break;
     case QPERROR_INFEASIBLE:
-      exit_status = "Error: QP solver claims that QP is infeasible.";
+      exit_message = "Error: QP solver claims that QP is infeasible.";
       break;
     case QPERROR_UNBOUNDED:
-      exit_status = "Error: QP solver claims that QP is unbounded.";
+      exit_message = "Error: QP solver claims that QP is unbounded.";
       break;
     case QPERROR_EXCEED_MAX_ITER:
-      exit_status = "Error: QP solver exceeded internal iteration limit.";
+      exit_message = "Error: QP solver exceeded internal iteration limit.";
       break;
     case QPERROR_UNKNOWN:
-      exit_status = "Error: Unknown QP solver error.";
+      exit_message = "Error: Unknown QP solver error.";
       break;
 #if 0
     case QP_OPTIMAL:
@@ -1865,11 +1898,11 @@ void SqpAlgorithm::print_final_stats_()
     case QPERROR_AUXILIARYQPSOLVED:
     case QPERROR_PERFORMINGHOMOTOPY:
     case QPERROR_HOMOTOPYQPSOLVED:
-      exit_status = "Should not appear as exit code.";
+      exit_message = "Should not appear as exit code.";
       break;
 #endif
     default:
-      exit_status =
+      exit_message =
           "Error: exit_flag has uncaught value " + to_string(exit_flag_) + ".";
       break;
   }
@@ -1877,7 +1910,7 @@ void SqpAlgorithm::print_final_stats_()
   // Print the exit status
   jnlst_->Printf(J_SUMMARY, J_MAIN,
                  "Exit status.........................:  %s\n",
-                 exit_status.c_str());
+                 exit_message.c_str());
   jnlst_->Printf(J_SUMMARY, J_MAIN,
                  "Number of Variables.................:  %d\n", num_variables_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,

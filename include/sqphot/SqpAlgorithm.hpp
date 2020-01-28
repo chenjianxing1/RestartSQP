@@ -90,9 +90,9 @@ public:
     return exit_flag_;
   }
 
-  inline KktError get_opt_status() const
+  inline KktError get_kkt_error() const
   {
-    return opt_status_;
+    return current_kkt_error_;
   }
 
   inline double get_final_objective() const
@@ -453,9 +453,6 @@ private:
 
   /** Current value of the penalty parameter. */
   double current_penalty_parameter_;
-
-  /** KKT error from the most recent optimality check. */
-  KktError opt_status_;
 
   /** Object to solve LPs. */
   std::shared_ptr<QpHandler> lp_solver_;

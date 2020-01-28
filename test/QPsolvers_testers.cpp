@@ -275,9 +275,11 @@ int main(int argc, char* argv[])
   qore_interface->set_constraint_jacobian(A_triplet, identity_positions);
   qore_interface->set_objective_hessian(H_triplet);
 
+  QpSolverExitStatus qore_exit_status;
   try {
-    qore_interface->optimize(stats_qore);
+    qore_exit_status = qore_interface->optimize(stats_qore);
   } catch (...) {
+    qore_exit_status = QPEXIT_UNKNOWN_STATUS;
   }
 
   shared_ptr<Vector> x_qore;
@@ -286,7 +288,6 @@ int main(int argc, char* argv[])
   double obj_qore;
   KktError kkt_error_qore;
 
-  QpSolverExitStatus qore_exit_status = qore_interface->get_solver_status();
   if (qore_exit_status == QPEXIT_OPTIMAL) {
     x_qore = make_shared<Vector>(
         nVar, qore_interface->get_primal_solution()->get_values());
@@ -339,9 +340,11 @@ int main(int argc, char* argv[])
   qpoases_interface->set_constraint_jacobian(A_triplet, identity_positions);
   qpoases_interface->set_objective_hessian(H_triplet);
 
+  QpSolverExitStatus qpOASES_exit_status;
   try {
-    qpoases_interface->optimize(stats_qpOASES);
+    qpOASES_exit_status = qpoases_interface->optimize(stats_qpOASES);
   } catch (...) {
+    qpOASES_exit_status = QPEXIT_UNKNOWN_STATUS;
   }
 
 #if 0
@@ -358,8 +361,6 @@ int main(int argc, char* argv[])
   double obj_qpOASES;
   KktError kkt_error_qpoases;
 
-  QpSolverExitStatus qpOASES_exit_status =
-      qpoases_interface->get_solver_status();
   if (qpOASES_exit_status == QPEXIT_OPTIMAL) {
     x_qpOASES = make_shared<Vector>(
         nVar, qpoases_interface->get_primal_solution()->get_values());

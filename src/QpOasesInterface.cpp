@@ -177,10 +177,8 @@ QpSolverExitStatus QpOasesInterface::get_qpoases_exit_status_()
  * After the QP being solved, it updates the stats, adding the iteration
  * number used to solve the QP to the qp_iter in object stats
  */
-bool QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
+QpSolverExitStatus QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
 {
-  bool solve_successful = false;
-
   qpOASES::int_t num_qp_iterations =
       qp_solver_max_num_iterations_; // TODO modify it
 
@@ -251,15 +249,14 @@ bool QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
   }
 
   // Get the solver status from qpOASES
-  solver_status_ = get_qpoases_exit_status_();
+  QpSolverExitStatus qp_solver_exit_status = get_qpoases_exit_status_();
 
   // reset the flag that remembers whether QP matrices have changed
   qp_matrices_changed_ = false;
 
   // Check if the solve was successful
-  if (solver_status_ == QPEXIT_OPTIMAL) {
+  if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
     first_qp_solved_ = true;
-    solve_successful = true;
 
     // Retrieve the primal solution from qpOASES
     qpoases_solver_->getPrimalSolution(
@@ -278,9 +275,13 @@ bool QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
     constraint_multipliers_->copy_from_subvector(qpOASES_dual_solution,
                                                  num_qp_variables_);
 
+    // Determine the number of QP solver iterations. The counter returned from
+    // qpOASES does only count the updates, but we want to know how many linear
+    // system solves, so we add one.
+    qp_solver_iterations_ = num_qp_iterations + 1;
   } else {
     string qpOASES_error_message;
-    switch (solver_status_) {
+    switch (qp_solver_exit_status) {
       case QPEXIT_INFEASIBLE:
         qpOASES_error_message = "INFEASIBLE";
         break;
@@ -296,17 +297,16 @@ bool QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
     jnlst_->Printf(J_ERROR, J_MAIN, "qpOASES error (%d): %s\n",
                    (int)solver_status_, qpOASES_error_message.c_str());
     write_qp_data_to_file("qpoases_failure_qp.txt");
-    // assert(false && "Not trying to fix qpOASES solution yet");
-    // handle_error(QP_TYPE_QP, stats);
-    solve_successful = false;
+
+    qp_solver_iterations_ = 0;
   }
 
   // Update solver statistics
   if (stats != nullptr) {
-    stats->increase_qp_iteration_counter((int)num_qp_iterations);
+    stats->increase_qp_iteration_counter(qp_solver_iterations_);
   }
 
-  return solve_successful;
+  return qp_solver_exit_status;
 }
 
 //@}

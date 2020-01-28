@@ -196,7 +196,8 @@ class QpHandler
   ///////////////////////////////////////////////////////////
 public:
   QpHandler(std::shared_ptr<const SqpNlpSizeInfo>, QPType qptype,
-            bool slack_formulation, Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
+            bool slack_formulation, const std::string& problem_name,
+            Ipopt::SmartPtr<Ipopt::Journalist> jnlst,
             Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   /** Default destructor */
@@ -248,6 +249,12 @@ public:
    */
   double get_qp_kkt_error() const;
 
+  /** Return the number of QP solver iterations since the last solve. */
+  int get_num_qp_iterations() const
+  {
+    return qp_solver_interface_->get_num_qp_iterations();
+  }
+
 #if 0
   /**
    * @brief manually calculate the active set from the class member
@@ -261,12 +268,6 @@ public:
   void get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
                       std::shared_ptr<Vector> x = nullptr,
                       std::shared_ptr<Vector> Ax = nullptr);
-#endif
-#if 0
-  /**
-   * @brief Get the return status of QPsolver
-   */
-  Exitflag get_status();
 #endif
   //@}
 
@@ -394,17 +395,6 @@ public:
    */
   void write_qp_data(const std::string& filename);
 
-#if 0
-  /**
-   * @brief Test the KKT conditions for the certain qpsolver
-   */
-  bool test_optimality(std::shared_ptr<QpSolverInterface> qpsolverInterface,
-                       QpSolver qpSolver, ActivityStatus* W_b,
-                       ActivityStatus* W_c);
-#endif
-
-  const KktError& get_QpOptimalStatus() const;
-
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
 
@@ -458,6 +448,9 @@ private:
   /** Flag indicating whether this is the formulation that permits the bounds to
    *  be violated. */
   bool slack_formulation_;
+
+  /** Problem name (for output) */
+  std::string problem_name_;
 
   /** Object that stores some meta-structure of the constraint Jacobian, namely
    * cthe position of identiy matrices for slack variables. */
