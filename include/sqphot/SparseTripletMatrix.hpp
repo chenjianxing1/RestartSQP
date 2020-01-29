@@ -116,15 +116,11 @@ public:
    */
   void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
-/**
- * @brief calculate the one norm of the matrix
- *
- * @return the calculated one-norm
- */
-#if 0
-  double calc_one_norm() const;
-#endif
-
+  /**
+   * @brief calculate the one norm of the matrix
+   *
+   * @return the calculated one-norm
+   */
   bool is_compressed_row_format() const
   {
     return false;
@@ -140,14 +136,6 @@ public:
     return is_initialized_;
   }
 
-#if 0
-  /**
-   * @brief calculate the infinity norm of the matrix
-   *
-   * @return the calculated inf-norm
-   */
-  double calc_inf_norm();
-#endif
   /**
    *@brief make a deep copy of a matrix information
    */
@@ -230,47 +218,6 @@ public:
   {
     return order_[i];
   }
-#if 0
-  inline const int get_row_indices(int i) const
-  {
-    return row_indices_[i];
-  }
-
-  inline const int get_column_indices(int i) const
-  {
-    return column_indices_[i];
-  }
-
-  inline const double get_values(int i) const
-  {
-    return values_[i];
-  }
-
-  inline const int order(int i) const
-  {
-    return order_[i];
-  }
-
-  inline const int* get_row_indices() const
-  {
-    return row_indices_;
-  }
-
-  inline const int* get_column_indices() const
-  {
-    return column_indices_;
-  }
-
-  inline const double* get_values() const
-  {
-    return values_;
-  }
-
-  inline const int* order() const
-  {
-    return order_;
-  }
-#endif
   //@}
 
   inline void set_value_at_entry(int location, double value_to_assign)

@@ -35,9 +35,9 @@ public:
       fprintf(file, "%10s   %10s    %10s    %10s    %10s    %10s    ", "name",
               "nVar", "nConstr", "iter", "QP_iter", "exitflag");
 
-      fprintf(file, "%23s    %23s    %23s    %23s    %23s    %23s\n",
-              "objective", "||p||", "primal_violation", "dual_violation",
-              "stationarity_violation", "compl_violation");
+      fprintf(file, "%23s    %23s    %23s    %23s    %23s\n", "objective",
+              "primal_violation", "dual_violation", "stationarity_violation",
+              "compl_violation");
 
     } else {
       file = fopen(filename.c_str(), "a"); // append at the end
@@ -66,10 +66,10 @@ public:
             alg.get_num_constr(), stats->num_sqp_iterations_,
             stats->num_qp_iterations_, alg.get_exit_flag());
 #if 1
-    fprintf(file, "%23.16e  %9.2e  %9.2e  %9.2e  %9.2e  %9.2e\n",
-            alg.get_final_objective(), alg.get_norm_p(),
-            kkt_error.primal_infeasibility, kkt_error.dual_infeasibility,
-            kkt_error.complementarity_violation, kkt_error.working_set_error);
+    fprintf(file, "%23.16e  %9.2e  %9.2e  %9.2e  %9.2e\n",
+            alg.get_final_objective(), kkt_error.primal_infeasibility,
+            kkt_error.dual_infeasibility, kkt_error.complementarity_violation,
+            kkt_error.working_set_error);
 #endif
   }
 

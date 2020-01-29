@@ -7,25 +7,6 @@
 #ifndef SQPHOTSTART_UTILS_HPP_
 #define SQPHOTSTART_UTILS_HPP_
 
-#if 0
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <iterator>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <vector>
-
-#include "IpTNLP.hpp"
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/SQPDebug.hpp"
-#include "sqphot/Types.hpp"
-#endif
-
 #include <limits>
 
 namespace RestartSqp {

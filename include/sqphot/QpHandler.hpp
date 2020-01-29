@@ -303,51 +303,11 @@ public:
   void
   set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> gradient,
                                        double penalty_parameter);
-#if 0
-  void set_linear_qp_objective_coefficients(double rho);
-#endif
-
-#if 0
-  /**
-   * Set up the H for the first time in the QP
-   * problem.
-   * It will be concatenated as [H_k 0]
-   * 			                  [0   0]
-   * where H_k is the Lagragian hessian evaluated at x_k
-   * and lambda_k.
-   *
-   * This method should only be called for once.
-   *
-   * @param hessian the Lagragian hessian evaluated
-   * at x_k and lambda_k from nlp readers.
-   * @return
-   */
-
-  void set_hessian(std::shared_ptr<const SparseTripletMatrix> hessian);
-
-  /** @brief setup the matrix A for the QP subproblems according to the
-   * information from current iterate*/
-  void set_jacobian(std::shared_ptr<const SparseTripletMatrix> jacobian);
-
-  //@}
-#endif
   /** @name Update QPdata */
 
   //@{
   void decrease_trust_region(double trust_region);
 
-#if 0
-  /**
-   * @brief This function updates the bounds on x if there is any changes to the
-   * values of trust-region or the iterate
-   */
-  void update_bounds(double delta, std::shared_ptr<const Vector> x_l,
-                     std::shared_ptr<const Vector> x_u,
-                     std::shared_ptr<const Vector> x_k,
-                     std::shared_ptr<const Vector> c_l,
-                     std::shared_ptr<const Vector> c_u,
-                     std::shared_ptr<const Vector> c_k);
-#endif
   /**
    * @brief This function updates the vector g in the QP subproblem when there
    * are any change to the values of penalty parameter
@@ -356,7 +316,6 @@ public:
    */
   void update_penalty_parameter(double penalty_parameter);
 
-#if 1
   /**
    * @brief This function updates the vector g in the QP subproblem when there
    * are any change to the values of gradient in NLP
@@ -364,7 +323,6 @@ public:
    * @param grad		the gradient vector from NLP
    */
   void set_linear_qp_objective_coefficients(std::shared_ptr<const Vector> grad);
-#endif
 
   void set_linear_qp_objective_coefficients_to_zero()
   {

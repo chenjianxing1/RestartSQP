@@ -326,40 +326,7 @@ void SparseTripletMatrix::multiply(shared_ptr<const Vector> p,
     }
   }
 }
-#if 0
-double SpTripletMat::calc_inf_norm()
-{
-  // TODO: test it!
 
-  shared_ptr<Vector> rowSums = make_shared<Vector>(num_rows_);
-  for (int i = 0; i < num_entries_; i++) {
-    rowSums->add_number_to_element(get_row_indices()[i] - 1, abs(values_[i]));
-    if (is_symmetric_)
-      rowSums->add_number_to_element(get_column_indices()[i] - 1, abs(values_[i]));
-  }
-
-  double InfNorm =
-      rowSums->calc_inf_norm(); // same as calculating the MAX of an array
-
-  return InfNorm;
-}
-
-double SpTripletMat::calc_one_norm()
-{
-
-  shared_ptr<Vector> colSums = make_shared<Vector>(num_columns_);
-  for (int i = 0; i < num_entries_; i++) {
-    colSums->add_number_to_element(get_column_indices()[i] - 1, abs(values_[i]));
-    if (is_symmetric_)
-      colSums->add_number_to_element(get_row_indices()[i] - 1, abs(values_[i]));
-  }
-
-  double OneNorm =
-      colSums->calc_inf_norm(); // same as calculating the MAX of an array
-
-  return OneNorm;
-}
-#endif
 void SparseTripletMatrix::copy(shared_ptr<const SparseTripletMatrix> rhs,
                                bool deep_copy)
 {

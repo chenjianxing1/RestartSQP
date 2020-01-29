@@ -33,13 +33,6 @@ public:
                 Ipopt::SmartPtr<const Ipopt::OptionsList> options,
                 Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
-#if 0
-  QoreInterface(std::shared_ptr<SparseHbMatrix> H,
-                std::shared_ptr<SparseHbMatrix> A, std::shared_ptr<Vector> g,
-                std::shared_ptr<Vector> lb, std::shared_ptr<Vector> ub,
-                Ipopt::SmartPtr<const Ipopt::OptionsList> options = nullptr);
-#endif
-
   /** Default destructor*/
   ~QoreInterface() override;
 

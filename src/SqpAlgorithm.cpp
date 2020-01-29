@@ -241,7 +241,7 @@ void SqpAlgorithm::print_initial_output_()
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
       solver_statistics_->num_sqp_iterations_, current_objective_value_,
-      current_infeasibility_, trial_step_norm_, trust_region_radius_, 0.,
+      current_infeasibility_, 0., trust_region_radius_, 0.,
       current_penalty_parameter_, 0., 0, current_kkt_error_.worst_violation);
   // qp_solver_->get_QpOptimalStatus().KKT_error);
 
@@ -335,10 +335,11 @@ void SqpAlgorithm::print_initial_output_()
   jnlst_->FlushBuffer();
 }
 
-void SqpAlgorithm::calculate_search_direction_()
+void SqpAlgorithm::calculate_search_direction_(
+    shared_ptr<const Vector> qp_constraint_body)
 {
   // Set the data for the QP corresponding to the current iterate
-  setup_qp_(current_penalty_parameter_);
+  setup_qp_(qp_constraint_body);
 
   // Solve the QP
   QpSolverExitStatus exit_status = qp_solver_->solve(solver_statistics_);
@@ -362,6 +363,15 @@ void SqpAlgorithm::calculate_search_direction_()
   // Here, the trial_step_ vector has the length num_variables_, but the primal
   // solution of the QP solver includes the slack variables.
   trial_step_->copy_values(qp_solver_->get_primal_solution()->get_values());
+
+  // Compute the violation of the linearized constraints; this is used in
+  // penalty update and computation of the predicted reduction.
+  trial_model_infeasibility_ = calc_model_infeasibility_(trial_step_);
+
+  // Get the multipliers from QP as trial multipliers
+  trial_constraint_multipliers_->copy_vector(
+      qp_solver_->get_constraint_multipliers());
+  trial_bound_multipliers_->copy_vector(qp_solver_->get_bounds_multipliers());
 }
 
 void SqpAlgorithm::print_iteration_output_()
@@ -389,35 +399,45 @@ void SqpAlgorithm::print_iteration_output_()
   double qp_kkt_error = qp_solver_->get_qp_kkt_error();
   double model_ratio = actual_reduction_ / predicted_reduction_;
   int qp_iterations = qp_solver_->get_num_qp_iterations();
+  double trial_step_norm = trial_step_->calc_inf_norm();
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
       solver_statistics_->num_sqp_iterations_, current_objective_value_,
-      current_infeasibility_, trial_step_norm_, trust_region_radius_,
+      current_infeasibility_, trial_step_norm, trust_region_radius_,
       model_ratio, current_penalty_parameter_, qp_kkt_error, qp_iterations,
       current_kkt_error_.worst_violation);
 
   // If desired, we print more information
   if (jnlst_->ProduceOutput(J_DETAILED, J_MAIN)) {
     jnlst_->Printf(J_DETAILED, J_MAIN, "\n");
-    jnlst_->Printf(J_DETAILED, J_MAIN, "current_infeasibility.........: %e\n",
-                   current_infeasibility_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "trial_infeasibility...........: %e\n",
-                   trial_infeasibility_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "current model infeasibility...: %e\n",
-                   trial_model_infeasibility_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "trust region radius...........: %e\n",
-                   trust_region_radius_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "actual reduction..............: %e\n",
-                   actual_reduction_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "predicted reduction...........: %e\n",
-                   predicted_reduction_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "current objective value.......: %e\n",
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "current objective value.......: %23.16e\n",
                    current_objective_value_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "trial objective value.........: %e\n",
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "trial objective value.........: %23.16e\n",
                    trial_objective_value_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "penalty parameter.............: %e\n",
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "penalty parameter.............: %9.2e\n",
                    current_penalty_parameter_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "current_infeasibility.........: %9.2e\n",
+                   current_infeasibility_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "trial_infeasibility...........: %9.2e\n",
+                   trial_infeasibility_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "current model infeasibility...: %9.2e\n",
+                   trial_model_infeasibility_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "trust region radius...........: %9.2e\n",
+                   trust_region_radius_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "actual reduction..............: %9.2e\n",
+                   actual_reduction_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "predicted reduction...........: %9.2e\n",
+                   predicted_reduction_);
     jnlst_->Printf(J_DETAILED, J_MAIN, "\n");
   }
 
@@ -502,7 +522,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
 
   // Check if the starting point is already optimal.  This also computes the KKT
   // error for the current iterate
-  check_optimality();
+  check_optimality_();
 
   // Print initial output
   print_initial_output_();
@@ -513,11 +533,10 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
            exit_flag_ == UNKNOWN) {
 
       // Solve the QP to get the trial step
-      calculate_search_direction_();
-
-      //        p_k_->print("p_k_");
-      // TODO: Remove me
-      qp_obj_ = get_obj_QP();
+      current_constraint_values_->print("cur c before main QP", jnlst_,
+                                        J_DETAILED, J_MAIN);
+      shared_ptr<const Vector> qp_constraint_body = current_constraint_values_;
+      calculate_search_direction_(qp_constraint_body);
 
       // Update the penalty parameter if necessary.  In this process, a new
       // trial
@@ -525,18 +544,19 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
       update_penalty_parameter_();
 
       // Calculate the trial point and evaluate the functions at that point.
-      calc_trial_point_();
+      calc_trial_point_and_values_();
 
       // Check if the current iterate is acceptable
       perform_ratio_test_();
 
+      // If requested by the options, do the second order correction step.
+      if (!trial_point_is_accepted_ && perform_second_order_correction_step_) {
+        second_order_correction_();
+      }
+
+      // Accept the new iterate
       if (trial_point_is_accepted_) {
         accept_trial_point_();
-      } else {
-        // Calculate the second-order-correction steps
-        if (perform_second_order_correction_step_) {
-          second_order_correction();
-        }
       }
 
       // Update the radius and the QP bounds if the radius has been changed
@@ -545,7 +565,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
 
       // Compute the NLP KKT error and set exit_flag_ to indicate whether we
       // should stop..
-      check_optimality();
+      check_optimality_();
 
       // Print output
       print_iteration_output_();
@@ -617,7 +637,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
  *  function cannot be solved, it will assign _exitflag the	corresponding
  *  code according to the error type.
  */
-void SqpAlgorithm::check_optimality()
+void SqpAlgorithm::check_optimality_()
 {
   // FIXME: not sure if it is better to use the new multiplier or the old one
 
@@ -661,11 +681,8 @@ void SqpAlgorithm::check_optimality()
   }
 }
 
-void SqpAlgorithm::calc_trial_point_()
+void SqpAlgorithm::calc_trial_point_and_values_()
 {
-  // calculate the infinity norm of the search direction
-  trial_step_norm_ = trial_step_->calc_inf_norm();
-
   // Compute the trial iterate
   trial_iterate_->set_to_sum_of_vectors(1., current_iterate_, 1., trial_step_);
 
@@ -784,7 +801,6 @@ void SqpAlgorithm::initialize_iterates_()
   // Initalize algorithmic quantities
   trust_region_radius_ = trust_region_init_value_;
   current_penalty_parameter_ = penalty_parameter_init_value_;
-  trial_step_norm_ = 0.0;
 
   if (disable_trust_region_) {
     trust_region_radius_ = 1e3;
@@ -830,10 +846,13 @@ void SqpAlgorithm::allocate_memory_()
 
   // Create Vector objects that hold the iterate values
   current_iterate_ = make_shared<Vector>(num_variables_);
-  trial_iterate_ = make_shared<Vector>(num_variables_);
   current_constraint_multipliers_ = make_shared<Vector>(num_constraints_);
   current_bound_multipliers_ = make_shared<Vector>(num_variables_);
+
+  trial_iterate_ = make_shared<Vector>(num_variables_);
   trial_step_ = make_shared<Vector>(num_variables_);
+  trial_constraint_multipliers_ = make_shared<Vector>(num_constraints_);
+  trial_bound_multipliers_ = make_shared<Vector>(num_variables_);
 
   // Create objects that hold evaluated quantities
   current_constraint_values_ = make_shared<Vector>(num_constraints_);
@@ -877,7 +896,7 @@ double SqpAlgorithm::compute_constraint_violation_(
     shared_ptr<const Vector> constraint_values)
 {
   double current_infeasibility_ = 0.0;
-  for (int i = 0; i < current_constraint_values_->get_dim(); i++) {
+  for (int i = 0; i < constraint_values->get_dim(); i++) {
     if (constraint_values->get_value(i) <
         lower_constraint_bounds_->get_value(i))
       current_infeasibility_ += (lower_constraint_bounds_->get_value(i) -
@@ -910,6 +929,7 @@ double SqpAlgorithm::calc_model_infeasibility_(shared_ptr<const Vector> step)
   if (num_constraints_ > 0) {
     // Compute Jacobian vector product with step
     shared_ptr<Vector> constraint_body = make_shared<Vector>(num_constraints_);
+
     constraint_body->copy_vector(current_constraint_values_);
     current_constraint_jacobian_->multiply(step, constraint_body);
 
@@ -952,7 +972,7 @@ double SqpAlgorithm::calc_model_infeasibility_(shared_ptr<const Vector> step)
  * member QPinfoFlag_
  */
 
-void SqpAlgorithm::setup_qp_(double penalty_parameter)
+void SqpAlgorithm::setup_qp_(shared_ptr<const Vector> qp_constraint_body)
 {
   /** If this is the first QP that needs to be solved, set the initial values,
    * including matrix structures. */
@@ -963,9 +983,9 @@ void SqpAlgorithm::setup_qp_(double penalty_parameter)
     qp_solver_->set_bounds(trust_region_radius_, lower_variable_bounds_,
                            upper_variable_bounds_, current_iterate_,
                            lower_constraint_bounds_, upper_constraint_bounds_,
-                           current_constraint_values_);
+                           qp_constraint_body);
     qp_solver_->set_linear_qp_objective_coefficients(
-        current_objective_gradient_, penalty_parameter);
+        current_objective_gradient_, current_penalty_parameter_);
 
     // Initialize the update tracker
     qp_update_tracker_.reset();
@@ -975,13 +995,13 @@ void SqpAlgorithm::setup_qp_(double penalty_parameter)
 
     // Store the value of the penalty parameter that was just used so we know it
     // next time to decide if we need to update it.
-    last_qp_penalty_parameter_ = penalty_parameter;
+    last_qp_penalty_parameter_ = current_penalty_parameter_;
 
     return;
   }
 
   // Check if the penalty parameter value has changed
-  if (penalty_parameter != last_qp_penalty_parameter_) {
+  if (current_penalty_parameter_ != last_qp_penalty_parameter_) {
     qp_update_tracker_.trigger_penalty_parameter_update();
   }
 
@@ -1000,16 +1020,16 @@ void SqpAlgorithm::setup_qp_(double penalty_parameter)
     qp_solver_->set_bounds(trust_region_radius_, lower_variable_bounds_,
                            upper_variable_bounds_, current_iterate_,
                            lower_constraint_bounds_, upper_constraint_bounds_,
-                           current_constraint_values_);
+                           qp_constraint_body);
   } else if (qp_update_tracker_.need_trust_region_radius_decrease()) {
     qp_solver_->decrease_trust_region(trust_region_radius_);
   }
 
   if (qp_update_tracker_.need_gradient_update()) {
     qp_solver_->set_linear_qp_objective_coefficients(
-        current_objective_gradient_, penalty_parameter);
+        current_objective_gradient_, current_penalty_parameter_);
   } else if (qp_update_tracker_.need_penalty_parameter_update()) {
-    qp_solver_->update_penalty_parameter(penalty_parameter);
+    qp_solver_->update_penalty_parameter(current_penalty_parameter_);
   }
 
   // Reset the update tracker
@@ -1017,7 +1037,7 @@ void SqpAlgorithm::setup_qp_(double penalty_parameter)
 
   // Store the value of the penalty parameter that was just used so we know it
   // next time to decide if we need to update it.
-  last_qp_penalty_parameter_ = penalty_parameter;
+  last_qp_penalty_parameter_ = current_penalty_parameter_;
 }
 
 double SqpAlgorithm::numerical_error_buffer_()
@@ -1063,11 +1083,8 @@ void SqpAlgorithm::increase_penalty_parameter_()
   solver_statistics_->try_new_penalty_parameter();
 
   // Solve the QP for the new penalty parameter
-  calculate_search_direction_();
-
-  // Compute the violation of the linearized constraints at the candidate
-  // trial step
-  trial_model_infeasibility_ = calc_model_infeasibility_(trial_step_);
+  shared_ptr<const Vector> qp_constraint_body = current_constraint_values_;
+  calculate_search_direction_(qp_constraint_body);
 }
 
 void SqpAlgorithm::update_predicted_reduction_()
@@ -1120,7 +1137,7 @@ void SqpAlgorithm::perform_ratio_test_()
   }
 
   // The predicted reduction has already been computed in the
-  // update_penalty_parameter_ method
+  // update_penalty_parameter_ or second_order_correction_ method
 
   // Compute the actual reduction in the merit function
   double current_penalty_value =
@@ -1136,6 +1153,12 @@ void SqpAlgorithm::perform_ratio_test_()
   // amount
   actual_reduction_ += numerical_error_buffer_();
 
+  jnlst_->Printf(J_DETAILED, J_MAIN, "\nRatio test:\n");
+  jnlst_->Printf(J_DETAILED, J_MAIN, "   predicted reduction: %9.2e\n",
+                 predicted_reduction_);
+  jnlst_->Printf(J_DETAILED, J_MAIN, "      actual reduction: %9.2e\n\n",
+                 actual_reduction_);
+
   if (predicted_reduction_ <= 0.) {
     //    myQP_->WriteQPData(problem_name_+"qpdata.log");
     jnlst_->Printf(J_ERROR, J_MAIN, "Predicted reduction is non-positive: %e\n",
@@ -1150,45 +1173,6 @@ void SqpAlgorithm::perform_ratio_test_()
   } else {
     trial_point_is_accepted_ = false;
   }
-
-#ifdef DEBUG
-#ifdef CHECK_TR_ALG
-  SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
-  if (IsNull(debug_jrnl)) {
-    debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out", J_ITERSUMMARY);
-  }
-  int debug_print_level = 0;
-  debug_jrnl->SetAllPrintLevels((EJournalLevel)debug_print_level);
-  debug_jrnl->SetPrintLevel(J_DBG, J_ALL);
-
-  jnlst_->Printf(J_ALL, J_DBG, "\n");
-  jnlst_->Printf(J_ALL, J_DBG, SINGLE_DIVIDER);
-  jnlst_->Printf(J_ALL, J_DBG, "       The actual reduction is %23.16e\n",
-                 actual_reduction_);
-  jnlst_->Printf(J_ALL, J_DBG, "       The pred reduction is   %23.16e\n",
-                 predicted_reduction_);
-  double ratio = actual_reduction_ / predicted_reduction_;
-  jnlst_->Printf(J_ALL, J_DBG, "       The calculated ratio is %23.16e\n",
-                 ratio);
-  jnlst_->Printf(J_ALL, J_DBG, "       The correct decision is ");
-  if (ratio >= trust_region_ratio_accept_tol_)
-    jnlst_->Printf(J_ALL, J_DBG, "to ACCEPT the trial point\n");
-  else
-    jnlst_->Printf(J_ALL, J_DBG, "to REJECT the trial point and change the "
-                                 "trust-region radius\n");
-  jnlst_->Printf(J_ALL, J_DBG, "       The TRUE decision is ");
-
-  if (actual_reduction_ >=
-      (trust_region_ratio_accept_tol_ * predicted_reduction_)) {
-    jnlst_->Printf(J_ALL, J_DBG, "to ACCEPT the trial point\n");
-  } else
-    jnlst_->Printf(J_ALL, J_DBG, "to REJECT the trial point and change the "
-                                 "trust-region radius\n");
-  jnlst_->Printf(J_ALL, J_DBG, SINGLE_DIVIDER);
-  jnlst_->Printf(J_ALL, J_DBG, "\n");
-
-#endif
-#endif
 }
 
 void SqpAlgorithm::accept_trial_point_()
@@ -1203,9 +1187,8 @@ void SqpAlgorithm::accept_trial_point_()
   current_constraint_values_->copy_vector(trial_constraint_values_);
 
   // Get the new multiplier iterate from the QP solution
-  current_constraint_multipliers_->copy_vector(
-      qp_solver_->get_constraint_multipliers());
-  current_bound_multipliers_->copy_vector(qp_solver_->get_bounds_multipliers());
+  current_constraint_multipliers_->copy_vector(trial_constraint_multipliers_);
+  current_bound_multipliers_->copy_vector(trial_bound_multipliers_);
 
   // Evaluate the derivatives at the new iterate
   bool retval =
@@ -1251,7 +1234,9 @@ void SqpAlgorithm::update_trust_region_radius_()
 
     // The actual reduction is not sufficiently large, so let's decrease the
     // trust region radius
-    trust_region_radius_ = trust_region_decrease_factor_ * trust_region_radius_;
+    double trial_step_size = trial_step_->calc_inf_norm();
+    trust_region_radius_ = trust_region_decrease_factor_ *
+                           min(trust_region_radius_, trial_step_size);
 
     // Tell the QP solver that the radius was decreased
     qp_update_tracker_.trigger_trust_region_radius_decrease();
@@ -1347,8 +1332,7 @@ void SqpAlgorithm::update_penalty_parameter_()
                  "\nCheck if the penalty parameter (%e) has to be increased.\n",
                  current_penalty_parameter_);
 
-  // Compute the violation of the linearized cnostraints at the trial step
-  trial_model_infeasibility_ = calc_model_infeasibility_(trial_step_);
+  // Consider the violation of the linearized cnostraints at the trial step
   jnlst_->Printf(J_DETAILED, J_MAIN, "  trial model infeasibility: %e\n",
                  trial_model_infeasibility_);
 
@@ -1435,11 +1419,6 @@ void SqpAlgorithm::update_penalty_parameter_()
                      candidate_infeasibility_reduction);
       while (candidate_infeasibility_reduction <
              eps1_ * lp_infeasibility_reduction) {
-#if 0
-      &&
-            (solver_statistics_->num_candidate_penalty_parameters_ <
-             penalty_iter_max_))) {
-#endif
         // increase the penalty parameter and recompute the trial step and
         // the corresponding violation of the linearized constraints
         increase_penalty_parameter_();
@@ -1483,6 +1462,9 @@ void SqpAlgorithm::update_penalty_parameter_()
                    predicted_reduction_, eps2_ * current_penalty_parameter_ *
                                              predicted_infeasibility_reduction);
     increase_penalty_parameter_();
+
+    // Update the predicted reduction to match the new penalty parameter
+    update_penalty_parameter_();
 
     // Update reduction in the violation of the linearized constraints
     predicted_infeasibility_reduction =
@@ -1639,12 +1621,11 @@ void SqpAlgorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
                                 "Maximum number of iteration for the algorithm",
                                 3000);
   reg_options->AddStringOption2(
-      "perform_second_order_correction_step",
+      "perform_second_order_correction",
       "Tells the algorithm to calculate the second-order correction step "
-      "during the main iteration"
-      "yes",
-      "no", "not calculate the soc steps", "yes",
-      "will calculate the soc steps", "");
+      "during the main iteration",
+      "no", "no", "not calculate the soc steps", "yes",
+      "will calculate the soc steps");
   reg_options->AddStringOption2("slack_formulation",
                                 "Indicates whether the SQP solver addresses "
                                 "the formulation that introduces slack "
@@ -1726,7 +1707,7 @@ void SqpAlgorithm::get_option_values_()
   options_->GetNumericValue("eps2", eps2_, "");
   options_->GetIntegerValue("penalty_iter_max", penalty_iter_max_, "");
 
-  options_->GetBoolValue("perform_second_order_correction_step",
+  options_->GetBoolValue("perform_second_order_correction",
                          perform_second_order_correction_step_, "");
   options_->GetBoolValue("slack_formulation", slack_formulation_, "");
 
@@ -1747,100 +1728,60 @@ void SqpAlgorithm::get_option_values_()
   qp_solver_choice_ = QpSolver(enum_int);
 }
 
-void SqpAlgorithm::second_order_correction()
+void SqpAlgorithm::second_order_correction_()
 {
-  // FIXME: check correctness
-  if ((!trial_point_is_accepted_) && perform_second_order_correction_step_) {
-    trial_point_is_accepted_ = false;
+  jnlst_->Printf(J_DETAILED, J_MAIN, "\nTry second-order correction step.\n");
 
-#ifdef DEBUG
-//#ifdef CHECK_SOC
-//        EJournalLevel debug_print_level = old_options_->debug_print_level;
-//        SmartPtr<Journal> debug_jrnl = jnlst_->GetJournal("Debug");
-//        if (IsNull(debug_jrnl)) {
-//            debug_jrnl = jnlst_->AddFileJournal("Debug", "debug.out",
-//            J_ITERSUMMARY);
-//        }
-//        debug_jrnl->SetAllPrintLevels(debug_print_level);
-//        debug_jrnl->SetPrintLevel(J_DBG, J_ALL);
-//
-//
-//        cout << "       Entering the SOC STEP calculation\n";
-//        cout << "       class member isaccept is ";
-//        if (isaccept_)
-//            cout << "TRUE" << endl;
-//        else
-//            cout << "FALSE" << endl;
-//        cout << "---------------------------------------------------------\n";
-//
-//        cout << endl;
-//#endif
-#endif
+  // Store backup of original trial step for the case that the second-order
+  // correction step is not accepted.
+  Vector trial_step_backup(*trial_step_);
+  double trial_model_infeasibility_backup = trial_model_infeasibility_;
+  Vector trial_iterate_backup(*trial_iterate_);
+  double trial_objective_value_backup = trial_objective_value_;
+  Vector trial_constraint_values_backup(*trial_constraint_values_);
+  double trial_infeasibility_backup = trial_infeasibility_;
+  Vector trial_constraint_multipliers_backup(*trial_constraint_multipliers_);
+  Vector trial_bound_multipliers_backup(*trial_bound_multipliers_);
+  double predicted_reduction_backup = predicted_reduction_;
+  double actual_reduction_backup = actual_reduction_;
 
-    shared_ptr<Vector> p_k_tmp = make_shared<Vector>(
-        num_variables_); // for temporarily storing data for p_k
-    p_k_tmp->copy_vector(trial_step_);
+  // Compute new constraint values by adding the current step
+  shared_ptr<Vector> qp_constraint_body =
+      make_shared<Vector>(*current_constraint_values_);
+  current_constraint_jacobian_->multiply(trial_step_, qp_constraint_body);
 
-    shared_ptr<Vector> s_k =
-        make_shared<Vector>(num_variables_); // for storing solution for SOC
-    shared_ptr<Vector> tmp_sol =
-        make_shared<Vector>(num_variables_ + 2 * num_constraints_);
+  // Setup the new QP and solve it
+  qp_update_tracker_.trigger_bounds_update();
+  calculate_search_direction_(qp_constraint_body);
 
-    double norm_p_k_tmp = trial_step_norm_;
-    double qp_obj_tmp = qp_obj_;
-    shared_ptr<Vector> Hp = make_shared<Vector>(num_variables_);
-    Hp->copy_vector(current_objective_gradient_);
-    current_lagrangian_hessian_->multiply(trial_step_, Hp); // Hp = H_k*p_k
-    qp_solver_->set_linear_qp_objective_coefficients(
-        Hp, current_penalty_parameter_);
-    qp_solver_->set_bounds(trust_region_radius_, lower_variable_bounds_,
-                           upper_variable_bounds_, trial_iterate_,
-                           lower_constraint_bounds_, upper_constraint_bounds_,
-                           trial_constraint_values_);
-    trial_step_norm_ = trial_step_->calc_inf_norm();
+  // We need to trigger a bounds update because the next QP will be solved with
+  // the original constraint body
+  qp_update_tracker_.trigger_bounds_update();
 
-    QpSolverExitStatus exit_status = qp_solver_->solve(solver_statistics_);
+  // Compute new trial point
+  calc_trial_point_and_values_();
 
-    if (exit_status != QPEXIT_OPTIMAL) {
-      const string& nlp_name = sqp_nlp_->get_nlp_name();
-      qp_solver_->write_qp_data(nlp_name + "qpdata.log");
-      assert(false && "Still need to decide how to handle QP solver error.");
-      // exit_flag_ = qp_solver_->get_status();
-      // break;
-    }
+  // Check the ratio text again, but using the (not-updated) predicted reduction
+  // from the original step
+  perform_ratio_test_();
 
-    tmp_sol->copy_vector(qp_solver_->get_primal_solution());
-    s_k->copy_vector(tmp_sol);
-
-    qp_obj_ =
-        get_obj_QP() +
-        (qp_obj_tmp - current_penalty_parameter_ * trial_model_infeasibility_);
-    trial_step_->add_vector(1., s_k);
-    calc_trial_point_();
-    perform_ratio_test_();
-    if (!trial_point_is_accepted_) {
-      trial_step_->copy_vector(p_k_tmp);
-      qp_obj_ = qp_obj_tmp;
-      trial_step_norm_ = norm_p_k_tmp;
-      qp_solver_->set_linear_qp_objective_coefficients(
-          current_objective_gradient_, current_penalty_parameter_);
-      qp_solver_->set_bounds(trust_region_radius_, lower_variable_bounds_,
-                             upper_variable_bounds_, current_iterate_,
-                             lower_constraint_bounds_, upper_constraint_bounds_,
-                             current_constraint_values_);
-    }
+  // TAKE ME OUT!
+  trial_point_is_accepted_ = false;
+  // If second-order correction step is not accepted, restore the original
+  // values
+  if (!trial_point_is_accepted_) {
+    trial_step_->copy_vector(trial_step_backup);
+    trial_model_infeasibility_ = trial_model_infeasibility_backup;
+    trial_iterate_->copy_vector(trial_iterate_backup);
+    trial_objective_value_ = trial_objective_value_backup;
+    trial_constraint_values_->copy_vector(trial_constraint_values_backup);
+    trial_infeasibility_ = trial_infeasibility_backup;
+    predicted_reduction_ = predicted_reduction_backup;
+    actual_reduction_ = actual_reduction_backup;
+    trial_constraint_multipliers_->copy_vector(
+        trial_constraint_multipliers_backup);
+    trial_bound_multipliers_->copy_vector(trial_bound_multipliers_backup);
   }
-}
-
-/**
-*@brief get the objective value of QP from myQP object
-*@relates QPhandler.hpp
-*@return QP obejctive
-*/
-
-double SqpAlgorithm::get_obj_QP()
-{
-  return (qp_solver_->get_qp_objective());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1890,17 +1831,6 @@ void SqpAlgorithm::print_final_stats_()
     case QPERROR_UNKNOWN:
       exit_message = "Error: Unknown QP solver error.";
       break;
-#if 0
-    case QP_OPTIMAL:
-    case QPERROR_NOTINITIALISED:
-    case CONVERGE_TO_NONOPTIMAL:
-    case QPERROR_PREPARINGAUXILIARYQP:
-    case QPERROR_AUXILIARYQPSOLVED:
-    case QPERROR_PERFORMINGHOMOTOPY:
-    case QPERROR_HOMOTOPYQPSOLVED:
-      exit_message = "Should not appear as exit code.";
-      break;
-#endif
     default:
       exit_message =
           "Error: exit_flag has uncaught value " + to_string(exit_flag_) + ".";
@@ -1934,9 +1864,6 @@ void SqpAlgorithm::print_final_stats_()
   jnlst_->Printf(J_SUMMARY, J_MAIN,
                  "Complmentarity Violation ...........: %23.16e\n",
                  current_kkt_error_.complementarity_violation);
-  jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "||p_k||.............................: %23.16e\n",
-                 trial_step_norm_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
                  "||c_k||.............................: %23.16e\n",
                  current_infeasibility_);

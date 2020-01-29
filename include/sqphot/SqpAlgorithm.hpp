@@ -105,11 +105,6 @@ public:
     return solver_statistics_;
   }
 
-  inline double get_norm_p() const
-  {
-    return trial_step_norm_;
-  }
-
   inline int get_num_constr() const
   {
     return num_constraints_;
@@ -153,7 +148,8 @@ private:
    *
    *  For this, the QP is solved.
    */
-  void calculate_search_direction_();
+  void
+  calculate_search_direction_(std::shared_ptr<const Vector> qp_constraint_body);
 
   /**
    * @brief This is the function that checks if the current point is optimal,
@@ -166,7 +162,7 @@ private:
    *  function cannot be solved, it will assign _exitflag the	corresponding
    *  code according to the error type.
    */
-  void check_optimality();
+  void check_optimality_();
 
   /**
   * @brief This function calculates the infeasibility for given x_k and c_k with
@@ -196,7 +192,7 @@ private:
    * measure
    *       at the trial point
    */
-  void calc_trial_point_();
+  void calc_trial_point_and_values_();
   ;
 
   /**
@@ -207,7 +203,7 @@ private:
    *
    */
 
-  void second_order_correction();
+  void second_order_correction_();
 
   /**
    *
@@ -258,16 +254,6 @@ private:
    */
   void update_penalty_parameter_();
 
-  /**@name Get the search direction from the LP/QP handler*/
-  //@{
-  /**
-   *@brief get the objective value of QP from myQP object
-   *@relates QPhandler.hpp
-   *@return QP obejctive
-   */
-  double get_obj_QP();
-  //@}
-
   /**
    * @brief This function will set up the data for the QP subproblem
    *
@@ -276,7 +262,7 @@ private:
    * that, the data in the QP problem will be updated according to the class
    * member qp_update_tracker_
    */
-  void setup_qp_(double penalty_parameter);
+  void setup_qp_(std::shared_ptr<const Vector> qp_constraint_body);
 
   /**
    * @brief This function will setup the data for the LP subproblem
@@ -426,8 +412,7 @@ private:
   /** Constraint violation at trial iterate in l1-norm. */
   double trial_infeasibility_;
   /** Constraint violation of trial step in linear constraint model. */
-  double
-      trial_model_infeasibility_; // TODO: Does that need to be a class member?
+  double trial_model_infeasibility_;
 
   /** KKT error for the current iterate. */
   KktError current_kkt_error_;
@@ -439,17 +424,8 @@ private:
   /** Predicted reduction in penalty function with trial step. */
   double predicted_reduction_;
 
-  double infea_measure_model_; /**< the one norm of all slack variables in the
-                                  QP */
-  double trial_step_norm_;     /**< the infinity norm of p_k*/
-
   /** Value of the objective function at the current iterate x_k */
   double current_objective_value_;
-  /** Value of the objective function at the trial point x_k */
-  double
-      trial_objective_value_; /**<the objective corresponding to the x_trial*/
-
-  double qp_obj_; /**< the objective value of current qp*/
 
   /** Current value of the penalty parameter. */
   double current_penalty_parameter_;
@@ -465,15 +441,24 @@ private:
   /** Store the penalty parameter value used in the most recent QP solve. */
   double last_qp_penalty_parameter_;
 
-  bool trial_point_is_accepted_; // is the new point accepted?
+  /** Flag indicating whether the trial point is accepted by ratio test. */
+  bool trial_point_is_accepted_;
 
+  /** Object that collects the solver statistics (iteration counts, etc) */
   std::shared_ptr<Statistics> solver_statistics_;
-  std::shared_ptr<Vector> trial_constraint_values_; /* the constraints' value
-                                                       evaluated at x_trial_*/
-  std::shared_ptr<Vector> trial_step_;              /* search direction at x_k*/
-  std::shared_ptr<Vector>
-      trial_iterate_; /**< the trial point from the search direction
-                     *x_trial = x_k+p_k*/
+
+  /** Trial step computed by QP. */
+  std::shared_ptr<Vector> trial_step_;
+  /** Trial iterate */
+  std::shared_ptr<Vector> trial_iterate_;
+  /** Trial constraint multipliers. */
+  std::shared_ptr<Vector> trial_constraint_multipliers_;
+  /** Trial bound multipliers. */
+  std::shared_ptr<Vector> trial_bound_multipliers_;
+  /** Value of the objective function at the trial point x_k */
+  double trial_objective_value_;
+  /** Constraint values at trial point. */
+  std::shared_ptr<Vector> trial_constraint_values_;
 
   /** CPU time at the beginning of the optimization run. */
   double cpu_time_at_start_;

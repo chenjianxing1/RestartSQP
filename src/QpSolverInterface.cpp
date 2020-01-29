@@ -52,8 +52,11 @@ QpSolverExitStatus QpSolverInterface::optimize(shared_ptr<Statistics> stats)
     qp_type_str = "lp";
   }
   if (write_all_qps) {
-    write_qp_data_to_file("subprob_" + qp_type_str + to_string(file_counter_) +
-                          ".txt");
+    string filename =
+        "subprob_" + qp_type_str + to_string(file_counter_) + ".txt";
+    jnlst_->Printf(J_DETAILED, J_MAIN, "\nWriting QP data file %s\n\n",
+                   filename.c_str());
+    write_qp_data_to_file(filename);
     file_counter_++;
   }
 

@@ -170,18 +170,13 @@ public:
     column_indices_[i] = value;
   }
 
-//@}
-/**
- * @brief set the Matrix values to the matrix, convert from triplet format to
- * Harwell-Boeing Matrix format.
- * @param rhs entry values(orders are not yet under permutation)
- * @param I_info the 2 identity matrices information
- */
-#if 0
-  void set_values(std::shared_ptr<const SpTripletMat> triplet_matrix,
-                 IdentityMatrixPositions& identity_matrix_positions);
-#endif
-
+  //@}
+  /**
+   * @brief set the Matrix values to the matrix, convert from triplet format to
+   * Harwell-Boeing Matrix format.
+   * @param rhs entry values(orders are not yet under permutation)
+   * @param I_info the 2 identity matrices information
+   */
   void set_values(std::shared_ptr<const SparseTripletMatrix> triplet_matrix);
 
   void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
@@ -211,17 +206,6 @@ public:
                           std::shared_ptr<Vector> result,
                           double factor = 1.) const override;
 
-#if 0
-  /**
-   * @brief make a deep copy of a matrix information
-   */
-
-  void copy(std::shared_ptr<const SparseHbMatrix> rhs);
-
-  const double calc_one_norm() const;
-
-  const double calc_inf_norm() const;
-#endif
   /**
    * @brief convert the matrix data stored in the class members to a triplet
    * matrix
@@ -265,30 +249,7 @@ public:
   {
     return triplet_order_[i];
   }
-#if 0
-  inline int get_row_indices(int i) const
-  {
-    return RowIndex_[i];
-  }
 
-  inline int get_column_indices(int i)
-  {
-
-    return ColIndex_[i];
-  }
-
-  inline double get_value_at_entry(int i)
-  {
-
-    return MatVal_[i];
-  }
-
-  inline int get_order(int i)
-  {
-
-    return order_[i];
-  }
-#endif
   inline const int* get_row_indices() const
   {
     return row_indices_;
@@ -375,16 +336,6 @@ private:
   void add_triplet_to_element_list_(
       std::shared_ptr<const SparseTripletMatrix> triplet_matrix,
       std::vector<std::tuple<int, int, int, double>>& ele_list);
-
-#if 0
-    template <typename T>
-    static void print_tuple(std::vector<std::tuple<int,int,T>> tuple) {
-        for(int i = 0; i<tuple.size(); i++) {
-            printf("%d %d ", std::get<0>(tuple[i]),std::get<1>(tuple[i]));
-            std::cout<<std::get<2>(tuple[i])<<std::endl;
-        }
-    }
-#endif
 
   ///////////////////////////////////////////////////////////
   //                     PRIVATE  MEMBERS                  //

@@ -422,33 +422,6 @@ void SparseHbMatrix::set_structure(
 
 //@}
 
-/** @name setMatVal */
-//@{
-/**
- * @brief set the Matrix values to the matrix, convert from triplet format to
- * Harwell-Boeing Matrix format.
- * @param triplet_matrix entry values(orders are not yet under permutation)
- * @param I_info struct which stores identity matrices information
- */
-#if 0
-void SparseHbMatrix::set_values(
-    shared_ptr<const SpTripletMat> triplet_matrix,
-    IdentityMatrixPositions& identity_matrix_positions)
-{
-  // adding identity submatrices  to the matrix
-  int total_I_entries = 0;
-  int num_matrices = identity_matrix_positions.get_num_matrices();
-  for (int i = 0; i < num_matrices; i++) {
-    total_I_entries += identity_matrix_positions.get_dimension(i);
-  }
-
-  // assign each matrix entry to the corresponding position after permutation
-  for (int i = 0; i < num_entries_ - total_I_entries; i++) {
-    values_[triplet_order_[i]] = triplet_matrix->get_value_at_entry(i);
-  }
-}
-#endif
-
 void SparseHbMatrix::set_values(
     shared_ptr<const SparseTripletMatrix> triplet_matrix)
 {
@@ -459,11 +432,6 @@ void SparseHbMatrix::set_values(
   const int* trip_col_indices = triplet_matrix->get_column_indices();
   const double* trip_values = triplet_matrix->get_values();
 
-#if 0
-  for (int i = 0; i < num_trip_entries; ++i) {
-    values_[i] = 0.;
-  }
-#endif
   if (is_symmetric_) {
     int j = 0;
     for (int i = 0; i < num_trip_entries; i++) {
@@ -486,26 +454,6 @@ void SparseHbMatrix::set_values(
 }
 
 //@}
-
-#if 0
-We need to handle CSR and CSC formates separately since the arrays have different lengths
-void SparseHbMatrix::copy(shared_ptr<const SparseHbMatrix> rhs)
-{
-
-  assert(num_entries_ == rhs->get_num_entries());
-  assert(num_rows_ == rhs->get_num_rows());
-  assert(num_columns_ == rhs->get_num_columns());
-  for (int i = 0; i < num_entries_; i++) {
-    row_indices_[i] = rhs->get_row_index_at_entry(i);
-    values_[i] = rhs->get_value_at_entry(i);
-    triplet_order_[i] = rhs->get_order_at_entry(i);
-  }
-
-  for (int i = 0; i < num_columns_ + 1; i++) {
-    column_indices_[i] = rhs->get_column_index_at_entry(i);
-  }
-}
-#endif
 
 shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
 {
@@ -944,64 +892,5 @@ void SparseHbMatrix::print(const char* name,
     }
   }
 }
-#if 0
-/** @name norms */
-//@{
-const double SpHbMat::calc_one_norm() const
-{
-  // TODO: test on it!
-  shared_ptr<Vector> colSums = make_shared<Vector>(num_columns_);
-  if (is_compressed_row_format_) {
-    for (int i = 0; i < num_entries_; i++) {
-      colSums->add_number_to_element(get_column_indices(i), abs(values_[i]));
-    }
-  } else {
-    int col = 0;
-    for (int i = 1; i < num_columns_ + 1; i++) {
-      if (column_indices_[i] > 0) {
-        col = i - 1;
-        break;
-      }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      while (column_indices_[col + 1])
-        col++;
-      colSums->add_number_to_element(col, abs(values_[i]));
-    }
-  }
-
-  double oneNorm =
-      colSums->calc_inf_norm(); // same as calculating the MAX of an array
-  return oneNorm;
-}
-
-const double SpHbMat::calc_inf_norm() const
-{
-  // TODO: test on it!
-  shared_ptr<Vector> rowSums = make_shared<Vector>(num_rows_);
-  if (is_compressed_row_format_) {
-    for (int i = 0; i < num_entries_; i++) {
-      rowSums->add_number_to_element(get_row_indices(i), abs(values_[i]));
-    }
-  } else {
-    int row = 0;
-    for (int i = 1; i < num_rows_ + 1; i++) {
-      if (row_indices_[i] > 0) {
-        row = i - 1;
-        break;
-      }
-    }
-    for (int i = 0; i < num_entries_; i++) {
-      while (row_indices_[row + 1])
-        row++;
-      rowSums->add_number_to_element(row, abs(values_[i]));
-    }
-  }
-
-  double InfNorm =
-      rowSums->calc_inf_norm(); // same as calculating the MAX of an array
-  return InfNorm;
-}
-#endif
 //@}
 } // END_OF_NAMESPACE

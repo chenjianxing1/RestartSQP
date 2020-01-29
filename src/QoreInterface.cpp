@@ -67,33 +67,6 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
                            lp_solver_max_num_iterations_, "");
 }
 
-#if 0
-QoreInterface::QoreInterface(shared_ptr<SparseHbMatrix> H,
-                             shared_ptr<SparseHbMatrix> A, shared_ptr<Vector> g,
-                             shared_ptr<Vector> lb, shared_ptr<Vector> ub,
-                             SmartPtr<const OptionsList> options)
- : A_(A)
- , H_(H)
- , g_(g)
- , lb_(lb)
- , ub_(ub)
- , num_qp_variables_(A->get_num_columns())
- , num_qp_constraints_(A->get_num_rows())
- , first_qp_solved_(false)
- , qore_solver_(0)
-{
-  get_option_values_(options);
-
-  x_qp_ = make_shared<Vector>(num_qp_variables_ + num_qp_constraints_);
-  y_qp_ = make_shared<Vector>(num_qp_variables_ + num_qp_constraints_);
-  working_set_ = new int[num_qp_variables_ + num_qp_constraints_]();
-  rv_ = QPNew(&qore_solver_, num_qp_variables_, num_qp_constraints_, A->get_num_entries(),
-              H->get_num_entries());
-  assert(rv_ == QPSOLVER_OK);
-  set_qp_solver_options_();
-}
-#endif
-
 /**
  * @brief Destructor
  */
@@ -321,38 +294,6 @@ void QoreInterface::retrieve_working_set_()
     }
   }
 }
-
-#if 0
-void QoreInterface::handle_error(QPType qptype, shared_ptr<Statistics> stats)
-{
-  switch (status_) {
-    case QPSOLVER_OPTIMAL:
-      // do nothing here
-      break;
-    case QPSOLVER_INFEASIBLE:
-      assert(false && "We don't handle QP solver yet");
-      shared_ptr<Vector> x_0 = make_shared<Vector>(num_qp_variables_);
-      // setup the slack variables to satisfy the bound constraints
-      for (int i = 0; i < num_qp_constraints_; i++) {
-        x_0->set_value(i + num_qp_variables_ - 2 * num_qp_constraints_,
-                       max(0.0, lb_->get_value(num_qp_variables_ + i)));
-        x_0->set_value(i + num_qp_variables_ - num_qp_constraints_,
-                       -min(0.0, ub_->get_value(num_qp_variables_ + i)));
-      }
-
-      rv_ = QPOptimize(qore_solver_, lb_->get_values(), ub_->get_values(),
-                       g_->get_values(), x_0->get_values(), NULL);
-
-      int num_qp_iterations;
-      QPGetInt(qore_solver_, "itercount", &num_qp_iterations);
-      if (stats != nullptr)
-        stats->increase_qp_iteration_counter(num_qp_iterations);
-
-      assert(rv_ == QPSOLVER_OK);
-      break;
-  }
-}
-#endif
 
 void QoreInterface::set_qp_solver_options_()
 {

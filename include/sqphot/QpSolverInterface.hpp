@@ -130,11 +130,6 @@ public:
   {
     return linear_objective_coefficients_;
   }
-#if 0
-  std::shared_ptr<const SparseHbMatrix> get_objective_hessian() const = 0;
-
-  std::shared_ptr<const SparseHbMatrix> get_constraint_jacobian() const = 0;
-#endif
   //@}
 
   /** @name Non-const getter functions of QP data.  These need to be used to set
