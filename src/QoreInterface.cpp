@@ -19,6 +19,8 @@ QoreInterface::QoreInterface(int num_qp_variables, int num_qp_constraints,
  , qore_solver_(nullptr)
  , first_qp_solved_(false)
  , qp_matrices_changed_(true)
+ , qore_primal_solution_(NULL)
+ , qore_dual_solution_(NULL)
 {
   /** Get the options for this object. */
   get_option_values_(options);
@@ -41,6 +43,10 @@ QoreInterface::QoreInterface(int num_qp_variables, int num_qp_constraints,
     hessian_ = make_shared<SparseHbMatrix>(num_qp_variables_, num_qp_variables_,
                                            is_compressed_row, is_symmetric);
   }
+
+  // Allocate memory for QORE's optimal solutions. */
+  qore_primal_solution_ = new double[num_qp_variables + num_qp_constraints];
+  qore_dual_solution_ = new double[num_qp_variables + num_qp_constraints];
 }
 
 void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
@@ -75,6 +81,9 @@ QoreInterface::~QoreInterface()
   if (qore_solver_) {
     QPFree(&qore_solver_);
   }
+
+  delete[] qore_primal_solution_;
+  delete[] qore_dual_solution_;
 }
 
 /**
@@ -103,7 +112,6 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     const int* A_col_indices = NULL;
     const double* A_values = NULL;
     if (jacobian_) {
-      jacobian_->print("Jac");
       A_row_indices = jacobian_->get_row_indices();
       A_col_indices = jacobian_->get_column_indices();
       A_values = jacobian_->get_values();
@@ -112,7 +120,6 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     const int* H_col_indices = NULL;
     const double* H_values = NULL;
     if (hessian_) {
-      hessian_->print("Hess");
       H_row_indices = hessian_->get_row_indices();
       H_col_indices = hessian_->get_column_indices();
       H_values = hessian_->get_values();
@@ -122,6 +129,10 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
                        H_col_indices, H_values);
     assert(rv == QPSOLVER_OK);
   }
+
+  // Pointers specifying the QORE starting point (NULL if none)
+  double* qore_x;
+  double* qore_y;
 
   if (first_qp_solved_) {
     // If this is not the first QP, we need to tell the solver whether the
@@ -134,6 +145,14 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     }
     int rv = QPAdjust(qore_solver_, strange_factor);
     assert(rv == QPSOLVER_OK);
+
+    // Give QORE the starting point from the most recent solve
+    qore_x = qore_primal_solution_;
+    qore_y = qore_dual_solution_;
+  } else {
+    // In this case, we do not have a starting point yet
+    qore_x = NULL;
+    qore_y = NULL;
   }
 
   // Create arrays that include both variable and constraint bounds
@@ -149,10 +168,10 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   // TODO: Do we need to provide a starting point?
   int qore_retval =
       QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                 linear_objective_coefficients_->get_values(), 0, 0);
+                 linear_objective_coefficients_->get_values(), qore_x, qore_y);
 
   // Get the solver status
-  QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_(qore_retval);
+  QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_();
   solver_status_ = qp_solver_exit_status;
 
   // reset the flag that remembers whether QP matrices have changed
@@ -162,29 +181,32 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
     first_qp_solved_ = true;
 
-    // Retrieve the primal solution
-    int rv = QPGetDblVector(qore_solver_, "primalsol",
-                            primal_solution_->get_non_const_values());
+    // Retrieve the primal solution.  QORE's primal solution includes something
+    // related to the constraints and is long.  We need to extract the first
+    // part.
+    int rv = QPGetDblVector(qore_solver_, "primalsol", qore_primal_solution_);
     assert(rv == QPSOLVER_OK);
+
+    // Get the values for the variables
+    primal_solution_->copy_values(qore_primal_solution_);
 
     // Retrieve the dual solution.  They come in a single array and we need to
     // take them apart
-    Vector qore_dual_solution(num_qp_variables_ + num_qp_constraints_);
-    rv = QPGetDblVector(qore_solver_, "dualsol",
-                        qore_dual_solution.get_non_const_values());
+    rv = QPGetDblVector(qore_solver_, "dualsol", qore_dual_solution_);
     assert(rv == QPSOLVER_OK);
 
     // Get the values for the bound multipliers
-    bound_multipliers_->copy_from_subvector(qore_dual_solution, 0);
+    bound_multipliers_->copy_values(qore_dual_solution_);
 
     // Get the values for the constraint multipliers
-    constraint_multipliers_->copy_from_subvector(qore_dual_solution,
-                                                 num_qp_variables_);
+    constraint_multipliers_->copy_values(
+        &qore_dual_solution_[num_qp_variables_]);
 
     // Determine the number of QP solver iterations
-    rv = QPGetInt(qore_solver_, "itercount", &qp_solver_iterations_);
+    int itercount;
+    rv = QPGetInt(qore_solver_, "itercount", &itercount);
     assert(rv == QPSOLVER_OK);
-
+    qp_solver_iterations_ = itercount;
   } else {
     string qore_error_message;
     switch (qp_solver_exit_status) {
@@ -215,9 +237,11 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   return qp_solver_exit_status;
 }
 
-QpSolverExitStatus QoreInterface::get_qore_exit_status_(int qore_retval)
+QpSolverExitStatus QoreInterface::get_qore_exit_status_()
 {
-  switch (qore_retval) {
+  int qore_status;
+  QPGetInt(qore_solver_, "status", &qore_status);
+  switch (qore_status) {
     case QPSOLVER_ITER_LIMIT:
       return QPEXIT_ITERLIMIT;
     case QPSOLVER_INFEASIBLE:
@@ -228,7 +252,7 @@ QpSolverExitStatus QoreInterface::get_qore_exit_status_(int qore_retval)
       return QPEXIT_OPTIMAL;
     default:
       jnlst_->Printf(J_ERROR, J_MAIN, "QORE Error with return value = %d\n",
-                     qore_retval);
+                     qore_status);
       return QPEXIT_INTERNAL_ERROR;
   }
 }
@@ -269,7 +293,7 @@ void QoreInterface::retrieve_working_set_()
   }
 
   for (int i = 0; i < num_qp_constraints_; i++) {
-    switch (working_set[i]) {
+    switch (working_set[num_qp_variables_ + i]) {
       case -1:
         if (lower_constraint_bounds_->get_value(i) ==
             upper_constraint_bounds_->get_value(i)) {

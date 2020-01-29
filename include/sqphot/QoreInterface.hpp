@@ -75,7 +75,7 @@ private:
   void get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
   /** Translate QORE exit status into our QP status. */
-  QpSolverExitStatus get_qore_exit_status_(int qore_retval);
+  QpSolverExitStatus get_qore_exit_status_();
 
   /**
    * @brief set options of QP solver based on the user-defined values
@@ -103,6 +103,12 @@ private:
   /** Flag indicating whether the matrices (Jacobian or Hessian) have changed
    *  since the last call to qpOASES. */
   bool qp_matrices_changed_;
+
+  /** Most recent primal solution of QORE. */
+  double* qore_primal_solution_;
+
+  /** Most recent dual solution of QORE. */
+  double* qore_dual_solution_;
 
   /** @name Algorithmic options */
   //@{

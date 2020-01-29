@@ -51,8 +51,10 @@ shared_ptr<Vector> read_vector(FILE* file, string name)
 
   shared_ptr<Vector> retval = make_shared<Vector>(size);
   double* vec_vals = retval->get_non_const_values();
+  int idx;
   for (int i = 0; i < size; ++i) {
-    fscanf(file, "%le", &vec_vals[i]);
+    fscanf(file, "%d %le", &idx, &vec_vals[i]);
+    assert(idx == i);
   }
 
   return retval;
