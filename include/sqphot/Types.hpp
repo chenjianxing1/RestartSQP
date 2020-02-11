@@ -41,7 +41,7 @@ enum QPType
   QP_TYPE_QP = 2  /** solving a regular quadratic subproblem **/
 };
 
-enum Exitflag
+enum SqpSolverExitStatus
 {
   OPTIMAL = 0,
   INVALID_NLP = -1,

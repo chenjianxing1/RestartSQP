@@ -85,7 +85,7 @@ public:
 
   /** @name Getters*/
   //@{
-  inline Exitflag get_exit_flag() const
+  inline SqpSolverExitStatus get_exit_flag() const
   {
     return exit_flag_;
   }
@@ -317,6 +317,9 @@ private:
   void classify_constraints_types_();
 
   void print_final_stats_();
+
+  /** Call the finalize solution method to return results to the user. */
+  void return_results_();
   //@}
 
   ///////////////////////////////////////////////////////////
@@ -371,11 +374,6 @@ private:
   /** Indicates for each constraint whether it has lower and/or upper bounds. */
   ConstraintType* constraint_type_;
 
-  /** Indicates whether a bound is in the working set. */
-  ActivityStatus* bound_activity_status_;
-  /** Indicates whether a constraint is in the working set. */
-  ActivityStatus* constraint_activity_status_;
-
   /** Problem name. */
   std::string problem_name_;
 
@@ -389,7 +387,7 @@ private:
   bool slack_formulation_;
 
   /** Exit flag.  If set to UNKNOWN the algorithm loop should still progress. */
-  Exitflag exit_flag_;
+  SqpSolverExitStatus exit_flag_;
 
   /** Primal current iterate. */
   std::shared_ptr<Vector> current_iterate_;

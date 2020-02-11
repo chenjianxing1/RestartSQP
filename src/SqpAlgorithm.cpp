@@ -23,11 +23,9 @@ DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
  * Default Constructor
  */
 SqpAlgorithm::SqpAlgorithm()
- : constraint_activity_status_(nullptr)
- , current_output_file_name_("")
- , bound_activity_status_(nullptr)
- , constraint_type_(nullptr)
+ : current_output_file_name_("")
  , bound_type_(nullptr)
+ , constraint_type_(nullptr)
 {
   // Some of the following code was taking from the Ipopt code.
 
@@ -73,10 +71,6 @@ void SqpAlgorithm::free_memory_()
   constraint_type_ = nullptr;
   delete[] bound_type_;
   bound_type_ = nullptr;
-  delete[] bound_activity_status_;
-  bound_activity_status_ = nullptr;
-  delete[] constraint_activity_status_;
-  constraint_activity_status_ = nullptr;
 }
 
 void SqpAlgorithm::initialize_for_new_nlp_(const string& options_file_name)
@@ -626,6 +620,26 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
   // print the final summary message to the console
   print_final_stats_();
   jnlst_->FlushBuffer();
+
+  // Return the information back to the user
+  return_results_();
+}
+
+void SqpAlgorithm::return_results_()
+{
+  // Get the activity status from the QP solver if one is available
+  const ActivityStatus* bound_activity_status = NULL;
+  const ActivityStatus* constraint_activity_status = NULL;
+  if (qp_solver_->get_qp_solver_status() == QPEXIT_OPTIMAL) {
+    bound_activity_status = qp_solver_->get_bounds_working_set();
+    constraint_activity_status = qp_solver_->get_constraints_working_set();
+  }
+
+  sqp_nlp_->finalize_solution(
+      exit_flag_, current_iterate_, current_bound_multipliers_,
+      bound_activity_status, current_constraint_values_,
+      current_constraint_multipliers_, constraint_activity_status,
+      current_objective_value_, solver_statistics_);
 }
 
 /**
@@ -833,10 +847,6 @@ void SqpAlgorithm::allocate_memory_()
   // Allocate memory for the arrays that hold the constraint types
   constraint_type_ = new ConstraintType[num_constraints_];
   bound_type_ = new ConstraintType[num_variables_];
-
-  // Allocate memory for the arrays that hold the activity status
-  bound_activity_status_ = new ActivityStatus[num_variables_];
-  constraint_activity_status_ = new ActivityStatus[num_constraints_];
 
   // Create Vector objects that hold the bounds
   lower_variable_bounds_ = make_shared<Vector>(num_variables_);

@@ -206,4 +206,76 @@ bool SqpTNlp::eval_hessian(shared_ptr<const Vector> x,
                              true, num_nonzeros_hessian_, NULL, NULL,
                              Hessian->get_nonconst_values());
 }
+
+bool SqpTNlp::finalize_solution(
+    SqpSolverExitStatus status, shared_ptr<const Vector> primal_solution,
+    shared_ptr<const Vector> bound_multipliers,
+    const ActivityStatus* bound_activity_status,
+    shared_ptr<const Vector> constraint_values,
+    shared_ptr<const Vector> constraint_multipliers,
+    const ActivityStatus* constraint_activity_status, double objective_value,
+    shared_ptr<const Statistics>)
+{
+  // Translate SQP exit status to Ipopt exit status
+  SolverReturn ipopt_status;
+  switch (status) {
+    case OPTIMAL:
+      ipopt_status = SUCCESS;
+      break;
+    case EXCEED_MAX_ITERATIONS:
+      ipopt_status = MAXITER_EXCEEDED;
+      break;
+    case TRUST_REGION_TOO_SMALL:
+      ipopt_status = STOP_AT_TINY_STEP;
+      break;
+    case EXCEED_MAX_CPU_TIME:
+      ipopt_status = CPUTIME_EXCEEDED;
+      break;
+    case EXCEED_MAX_WALLCLOCK_TIME:
+      ipopt_status = CPUTIME_EXCEEDED;
+      break;
+    case PENALTY_TOO_LARGE:
+      ipopt_status = RESTORATION_FAILURE;
+      break;
+    default:
+      ipopt_status = INTERNAL_ERROR;
+      break;
+  }
+
+  // Get primal variables
+  Index n = primal_solution->get_dim();
+  const Number* x = primal_solution->get_values();
+
+  // Separate the bound multipliers into two parts
+  double* z_L = new double[n];
+  double* z_U = new double[n];
+  const double* mult_values = bound_multipliers->get_values();
+  for (int i = 0; i < n; ++i) {
+    z_L[i] = max(0., mult_values[i]);
+    z_U[i] = max(0., -mult_values[i]);
+  }
+
+  // Get constraint values
+  Index m = constraint_values->get_dim();
+  const Number* g = constraint_values->get_values();
+
+  // Create copy of constraint multipliers with reversed sign
+  Number* lambda = new double[m];
+  mult_values = constraint_multipliers->get_values();
+  for (int i = 0; i < m; ++i) {
+    lambda[i] = -mult_values[i];
+  }
+
+  // There are not Ipopt-specific objects
+  const IpoptData* ip_data = NULL;
+  IpoptCalculatedQuantities* ip_cq = NULL;
+
+  // Call the Ipopt method
+  ipopt_tnlp_->finalize_solution(ipopt_status, n, x, z_L, z_U, m, g, lambda,
+                                 objective_value, ip_data, ip_cq);
+
+  delete[] z_L;
+  delete[] z_U;
+  delete[] lambda;
+}
 }

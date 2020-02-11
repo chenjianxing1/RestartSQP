@@ -255,6 +255,23 @@ public:
     return qp_solver_interface_->get_num_qp_iterations();
   }
 
+  /** Return the activity status of the bounds. */
+  const ActivityStatus* get_bounds_working_set() const
+  {
+    return qp_solver_interface_->get_bounds_working_set();
+  }
+
+  /** Return the activity status of the constraints. */
+  const ActivityStatus* get_constraints_working_set() const
+  {
+    return qp_solver_interface_->get_constraints_working_set();
+  }
+
+  QpSolverExitStatus get_qp_solver_status() const
+  {
+    return qp_solver_interface_->get_solver_status();
+  }
+
 #if 0
   /**
    * @brief manually calculate the active set from the class member
@@ -352,21 +369,6 @@ public:
    * debugging.
    */
   void write_qp_data(const std::string& filename);
-
-#ifdef DEBUG
-#ifdef COMPARE_QP_SOLVER
-
-  void set_bounds_debug(double delta, std::shared_ptr<const Vector> x_k,
-                        std::shared_ptr<const Vector> x_l,
-                        std::shared_ptr<const Vector> x_u,
-                        std::shared_ptr<const Vector> c_k,
-                        std::shared_ptr<const Vector> c_l,
-                        std::shared_ptr<const Vector> c_u);
-
-  bool testQPsolverDifference();
-
-#endif
-#endif
 
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //

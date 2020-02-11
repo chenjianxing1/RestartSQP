@@ -8,6 +8,7 @@
 #define SQPHOTSTART_SQPNLPBASE_HPP
 
 #include "sqphot/SparseTripletMatrix.hpp"
+#include "sqphot/Statistics.hpp"
 #include "sqphot/Vector.hpp"
 #include <memory>
 
@@ -177,6 +178,18 @@ public:
   virtual bool eval_hessian(std::shared_ptr<const Vector> x,
                             std::shared_ptr<const Vector> lambda,
                             std::shared_ptr<SparseTripletMatrix> hessian) = 0;
+
+  /**
+   * @brief Return the results of the optimization run to the user.
+   */
+  virtual bool finalize_solution(
+      SqpSolverExitStatus status, std::shared_ptr<const Vector> primal_solution,
+      std::shared_ptr<const Vector> bound_multipliers,
+      const ActivityStatus* bound_activity_status,
+      std::shared_ptr<const Vector> constraint_values,
+      std::shared_ptr<const Vector> constraint_multipliers,
+      const ActivityStatus* constraint_activity_status, double objective_value,
+      std::shared_ptr<const Statistics>) = 0;
 
 private:
   /** Copy Constructor */

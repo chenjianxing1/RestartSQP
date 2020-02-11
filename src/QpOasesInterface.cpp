@@ -46,7 +46,7 @@ QpOasesInterface::QpOasesInterface(int num_qp_variables, int num_qp_constraints,
   get_option_values_(options);
 
   // Create the qpOASES solver object
-  qpoases_solver_ = make_shared<qpOASES::SQProblem>(
+  qpoases_solver_ = make_shared<qpOASES::SQProblemSchur>(
       (qpOASES::int_t)num_qp_variables_, (qpOASES::int_t)num_qp_constraints_);
 
   // Set the options for qpOASES

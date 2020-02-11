@@ -108,6 +108,19 @@ public:
                     std::shared_ptr<const Vector> lambda,
                     std::shared_ptr<SparseTripletMatrix> Hessian) override;
 
+  /**
+   * @brief Return the results of the optimization run to the user.
+   */
+  bool finalize_solution(SqpSolverExitStatus status,
+                         std::shared_ptr<const Vector> primal_solution,
+                         std::shared_ptr<const Vector> bound_multipliers,
+                         const ActivityStatus* bound_activity_status,
+                         std::shared_ptr<const Vector> constraint_values,
+                         std::shared_ptr<const Vector> constraint_multipliers,
+                         const ActivityStatus* constraint_activity_status,
+                         double objective_value,
+                         std::shared_ptr<const Statistics>) override;
+
 private:
   /** @name Hide unused default methods. */
   //@{
