@@ -1,7 +1,7 @@
 #ifndef SQPHOTSTART_QPHANDLER_HPP_
 #define SQPHOTSTART_QPHANDLER_HPP_
 
-#include "sqphot/SqpNlpBase.hpp"
+#include "sqphot/SqpNlp.hpp"
 #include "sqphot/Statistics.hpp"
 #include "sqphot/Utils.hpp"
 

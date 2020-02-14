@@ -6,9 +6,9 @@
 #ifndef SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 #define SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 
-#include "IpException.hpp"
 #include "sqphot/SQPDebug.hpp"
 #include "sqphot/SparseHbMatrix.hpp"
+#include "sqphot/SqpTNlp.hpp"
 #include "sqphot/Statistics.hpp"
 #include "sqphot/Vector.hpp"
 #include <memory>

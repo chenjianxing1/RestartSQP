@@ -62,7 +62,7 @@ public:
    *
    * @param sqp_nlp: nlp object defining the NLP to be solved
    */
-  void optimize_nlp(std::shared_ptr<SqpNlpBase> sqp_nlp,
+  void optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
                     const std::string options_file_name = "sqp.opt");
 
   /**
@@ -71,7 +71,7 @@ public:
    * TO BE IMPLEMENTED
    */
 
-  void ReOptimize(std::shared_ptr<SqpNlpBase> sqp_nlp)
+  void ReOptimize(std::shared_ptr<SqpNlp> sqp_nlp)
   {
   }
 
@@ -339,7 +339,7 @@ private:
   void get_option_values_();
 
   /** SqpNlp object that evaluates all NLP information. */
-  std::shared_ptr<SqpNlpBase> sqp_nlp_;
+  std::shared_ptr<SqpNlp> sqp_nlp_;
 
   /** Options and output infrastructure.
    *
@@ -381,6 +381,8 @@ private:
   int num_variables_;
   /** Number of constraints. */
   int num_constraints_;
+  /** Number of equality contraints (subset of the constraints). */
+  int num_equality_constraints_;
 
   /** Flag indicating whether this is the formulation that permits the bounds to
    *  be violated. */

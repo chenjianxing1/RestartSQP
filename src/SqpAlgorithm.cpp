@@ -492,11 +492,11 @@ void SqpAlgorithm::print_iteration_output_()
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
+void SqpAlgorithm::optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
                                 std::string options_file_name)
 {
   // Make NLP object directly accessible to all methods
-  sqp_nlp_ = sqp_nlp;
+  sqp_nlp_ = make_shared<SqpNlp>(sqp_tnlp);
 
   // Store the
 
@@ -512,7 +512,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
   initialize_iterates_();
 
   // Initialize exit flag to UNKOWN to indicate that loop is not finished
-  exit_flag_ = UNKNOWN;
+  exit_flag_ = UNKNOWN_EXIT_STATUS;
 
   // Check if the starting point is already optimal.  This also computes the KKT
   // error for the current iterate
@@ -524,7 +524,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
   // Main loop.  We catch exceptions to figure out final error code.
   try {
     while (solver_statistics_->num_sqp_iterations_ < max_num_iterations_ &&
-           exit_flag_ == UNKNOWN) {
+           exit_flag_ == UNKNOWN_EXIT_STATUS) {
 
       // Solve the QP to get the trial step
       current_constraint_values_->print("cur c before main QP", jnlst_,
@@ -565,7 +565,7 @@ void SqpAlgorithm::optimize_nlp(shared_ptr<SqpNlpBase> sqp_nlp,
       print_iteration_output_();
 
       // exit the loop if required.
-      if (exit_flag_ != UNKNOWN) {
+      if (exit_flag_ != UNKNOWN_EXIT_STATUS) {
         break;
       }
 
@@ -1315,16 +1315,22 @@ static ConstraintType classify_single_constraint(double lower_bound,
 
 void SqpAlgorithm::classify_constraints_types_()
 {
-
-  for (int i = 0; i < num_constraints_; i++) {
-    constraint_type_[i] =
-        classify_single_constraint(lower_constraint_bounds_->get_value(i),
-                                   upper_constraint_bounds_->get_value(i));
-  }
+  // Determine which of the variables have lower and/or upper bounds
   for (int i = 0; i < num_variables_; i++) {
     bound_type_[i] =
         classify_single_constraint(lower_variable_bounds_->get_value(i),
                                    upper_variable_bounds_->get_value(i));
+  }
+  // Determine which of the constraints have lower and/or upper bounds
+  // At the same time, count the equality constraints;
+  num_equality_constraints_ = 0;
+  for (int i = 0; i < num_constraints_; i++) {
+    constraint_type_[i] =
+        classify_single_constraint(lower_constraint_bounds_->get_value(i),
+                                   upper_constraint_bounds_->get_value(i));
+    if (constraint_type_[i] == IS_EQUALITY) {
+      num_equality_constraints_++;
+    }
   }
 }
 
@@ -1847,45 +1853,94 @@ void SqpAlgorithm::print_final_stats_()
       break;
   }
 
+  // Determine the number of active constraints (only if solve was successful)
+  int num_active_lower_bounds = 0;
+  int num_active_upper_bounds = 0;
+  int num_active_lower_inequalities = 0;
+  int num_active_upper_inequalities = 0;
+
+  if (exit_flag_ == OPTIMAL) {
+    const ActivityStatus* bound_activity_status;
+    bound_activity_status = qp_solver_->get_bounds_working_set();
+    for (int i = 0; i < num_variables_; ++i) {
+      if (bound_activity_status[i] == ACTIVE_ABOVE) {
+        num_active_upper_bounds++;
+      } else if (bound_activity_status[i] == ACTIVE_BELOW) {
+        num_active_lower_bounds++;
+      }
+    }
+
+    const ActivityStatus* constraint_activity_status;
+    constraint_activity_status = qp_solver_->get_constraints_working_set();
+    for (int i = 0; i < num_constraints_; ++i) {
+      if (constraint_activity_status[i] == ACTIVE_ABOVE) {
+        num_active_upper_inequalities++;
+      } else if (constraint_activity_status[i] == ACTIVE_BELOW) {
+        num_active_lower_inequalities++;
+      }
+    }
+  }
+
   // Print the exit status
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Exit status.........................:  %s\n",
+                 "\nExit status............................:  %s\n",
                  exit_message.c_str());
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of Variables.................:  %d\n", num_variables_);
+                 "Number of Variables....................:  %d\n",
+                 num_variables_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of Constraints...............:  %d\n",
-                 num_constraints_);
+                 "Number of Equality Constraints.........:  %d\n",
+                 num_equality_constraints_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of Major Iterations..........:  %d\n",
+                 "Number of Inquality Constraints........:  %d\n\n",
+                 num_constraints_ - num_equality_constraints_);
+
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                 "Number of Major Iterations.............:  %d\n",
                  solver_statistics_->num_sqp_iterations_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "QP Solver Iterations................:  %d\n",
+                 "Number of QP Solver Iterations.........:  %d\n\n",
                  solver_statistics_->num_qp_iterations_);
+
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Final Objectives....................: %23.16e\n",
+                 "Final Objectives.......................: %23.16e\n",
                  current_objective_value_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Constraint Violation................: %23.16e\n",
+                 "Constraint Violation...................: %23.16e\n",
                  current_kkt_error_.primal_infeasibility);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Dual Infeasibility..................: %23.16e\n",
+                 "Dual Infeasibility.....................: %23.16e\n",
                  current_kkt_error_.dual_infeasibility);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Complmentarity Violation ...........: %23.16e\n",
+                 "Complmentarity Violation...............: %23.16e\n",
                  current_kkt_error_.complementarity_violation);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "||c_k||.............................: %23.16e\n",
+                 "||c_k||................................: %23.16e\n\n",
                  current_infeasibility_);
+
+  if (exit_flag_ == OPTIMAL) {
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "Number of active lower bounds..........:  %d\n",
+                   num_active_lower_bounds);
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "Number of active upper bounds..........:  %d\n",
+                   num_active_upper_bounds);
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "Number of active lower inequalities....:  %d\n",
+                   num_active_lower_inequalities);
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "Number of active upper inequalities....:  %d\n\n",
+                   num_active_upper_inequalities);
+  }
 
   double cpu_time_now = get_cpu_time_since_start();
   double wallclock_time_now = get_wallclock_time_since_start();
 
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "CPU time used.......................: %12.4f secs\n",
+                 "CPU time used..........................: %12.4f secs\n",
                  cpu_time_now - cpu_time_at_start_);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Wall clock time passed..............: %12.4f secs\n",
+                 "Wall clock time passed.................: %12.4f secs\n",
                  wallclock_time_now - wallclock_time_at_start_);
 
   jnlst_->Printf(J_SUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);

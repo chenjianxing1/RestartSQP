@@ -6,7 +6,7 @@
 #include <memory>
 #include <sqphot/QpHandler.hpp>
 #include <sqphot/SqpAlgorithm.hpp>
-#include <sqphot/SqpTNlp.hpp>
+#include <sqphot/SqpIpoptNlp.hpp>
 #include <sqphot/Utils.hpp>
 #include <stdio.h>
 #include <string.h>
@@ -86,7 +86,9 @@ int main(int argc, char** args)
   SmartPtr<OptionsList> dummy_options = new OptionsList();
   SmartPtr<TNLP> ampl_tnlp =
       new AmplTNLP(ConstPtr(alg.get_jnlst()), dummy_options, args);
-  shared_ptr<SqpTNlp> sqp_nlp = make_shared<SqpTNlp>(ampl_tnlp, args[1]);
+  string nlp_name(args[1]);
+  shared_ptr<SqpIpoptNlp> sqp_nlp =
+      make_shared<SqpIpoptNlp>(ampl_tnlp, nlp_name);
 
   // Solve the AMPL model
   // alg.initialize(sqp_nlp, args[1]);

@@ -11,7 +11,6 @@
 #include "IpOptionsList.hpp"
 #include "qpOASES.hpp"
 #include "sqphot/QpSolverInterface.hpp"
-#include "sqphot/SqpNlpBase.hpp"
 
 namespace RestartSqp {
 
