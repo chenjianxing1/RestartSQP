@@ -251,6 +251,12 @@ public:
   }
   //@}
 
+  /** Set the initial working set for the bounds and the constraints.  This is
+   * only allowed if no QP
+   * has been solved yet. */
+  void set_initial_working_sets(const ActivityStatus* bounds_working_set,
+                                const ActivityStatus* constraints_working_set);
+
   /**
    *  Working set for the bounds for most recent solve.
    */
@@ -337,9 +343,11 @@ protected:
 
   /** Flag indicating whether the working set information is up-to-date. */
   bool working_set_up_to_date_;
-  /** Working set for the bound constraints. */
+  /** Working set for the bound constraints.  If NULL, no QP has been solved and
+   * no initial working set has been provided. */
   ActivityStatus* bounds_working_set_;
-  /** Working set for the regular constraints. */
+  /** Working set for the regular constraints.  If NULL, no QP has been solved
+   * and no initial working set has been provided. */
   ActivityStatus* constraints_working_set_;
 
   /** Number or QP solver iterations. */

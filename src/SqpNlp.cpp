@@ -56,21 +56,38 @@ bool SqpNlp::get_bounds_info(shared_ptr<Vector> x_l, shared_ptr<Vector> x_u,
   // We translate very large bounds into true Inf values
   for (int i = 0; i < num_variables_; ++i) {
     if (x_L[i] <= -NLP_INF) {
-      x_L[i] = -INF;
+      x_L[i] = -SqpInf;
     }
     if (x_U[i] >= NLP_INF) {
-      x_U[i] = INF;
+      x_U[i] = SqpInf;
     }
   }
   for (int i = 0; i < num_constraints_; ++i) {
     if (c_L[i] <= -NLP_INF) {
-      c_L[i] = -INF;
+      c_L[i] = -SqpInf;
     }
     if (c_U[i] >= NLP_INF) {
-      c_U[i] = INF;
+      c_U[i] = SqpInf;
     }
   }
   return true;
+}
+
+bool SqpNlp::use_initial_working_set()
+{
+  return sqp_tnlp_->use_initial_working_set();
+}
+
+bool SqpNlp::get_initial_working_sets(int num_variables,
+                                      ActivityStatus* bounds_working_set,
+                                      int num_constraints,
+                                      ActivityStatus* constraints_working_set)
+{
+  assert(num_variables == num_variables_);
+  assert(num_constraints == num_constraints_);
+  return sqp_tnlp_->get_initial_working_sets(num_variables, bounds_working_set,
+                                             num_constraints,
+                                             constraints_working_set);
 }
 
 /*
@@ -80,20 +97,10 @@ bool SqpNlp::get_starting_point(shared_ptr<Vector> primal_point,
                                 shared_ptr<Vector> bound_multipliers,
                                 shared_ptr<Vector> constraint_multipliers)
 {
-  //
-  // TODO: There is a problem with getting bound multipliers in the Ipopt AMPL
-  // interface (somewhat related to the suffix handler).  This might be an Ipopt
-  // bug; need to look into this?
-  const bool bug_fixed = false;
-
-  bool retval;
-
-  retval = sqp_tnlp_->get_starting_point(
+  return sqp_tnlp_->get_correct_starting_point(
       num_variables_, true, primal_point->get_non_const_values(), true,
       bound_multipliers->get_non_const_values(), num_constraints_, true,
       constraint_multipliers->get_non_const_values());
-
-  return retval;
 }
 
 /**

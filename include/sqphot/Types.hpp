@@ -70,6 +70,15 @@ enum QpSolver
   SOLVER_UNDEFINED
 };
 
+enum ActivityStatus
+{
+  ACTIVE_ABOVE = 1,
+  ACTIVE_BELOW = -1,
+  ACTIVE_EQUALITY = -2,
+  INACTIVE = 0,
+  ACTIVE_INVALID = -3
+};
+
 typedef struct
 {
   bool primal_feasibility = false;

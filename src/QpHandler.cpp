@@ -90,7 +90,7 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
   // later
   for (int i = num_nlp_variables_; i < num_qp_variables_; i++) {
     qp_solver_interface_->set_lower_variable_bound(i, 0.);
-    qp_solver_interface_->set_upper_variable_bound(i, INF);
+    qp_solver_interface_->set_upper_variable_bound(i, SqpInf);
   }
 }
 
@@ -99,6 +99,33 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
  */
 QpHandler::~QpHandler()
 {
+}
+
+void QpHandler::set_initial_working_sets(
+    const ActivityStatus* bounds_working_set,
+    const ActivityStatus* constraints_working_set)
+{
+  // For now, we do not handle slack formulation
+  assert(!slack_formulation_);
+
+  // The QP variable consist of the original NLP variables and the penalty
+  // variables.
+  // For now, we will initialize the active set for the NLP variables according
+  // to
+  // what was given, and the penalty variales are marked as active.
+  // Constraints are unaltered.
+  ActivityStatus* qp_bounds_working_set = new ActivityStatus[num_qp_variables_];
+  for (int i = 0; i < num_nlp_variables_; ++i) {
+    qp_bounds_working_set[i] = bounds_working_set[i];
+  }
+  for (int i = num_nlp_variables_; i < num_qp_variables_; ++i) {
+    qp_bounds_working_set[i] = ACTIVE_BELOW;
+  }
+
+  qp_solver_interface_->set_initial_working_sets(qp_bounds_working_set,
+                                                 constraints_working_set);
+
+  delete[] qp_bounds_working_set;
 }
 
 /**
@@ -283,6 +310,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     if (!isOptimal) {
       jnlst_->Printf(J_WARNING, J_MAIN, "WARNING: QP solver KKT error is %e\n",
                      last_kkt_error_);
+      assert("Need to figure out what the problem is" && false);
     }
     if (jnlst_->ProduceOutput(J_MOREVECTOR, J_MAIN)) {
       jnlst_->Printf(J_MOREVECTOR, J_MAIN, "\nQP solver solution:\n");

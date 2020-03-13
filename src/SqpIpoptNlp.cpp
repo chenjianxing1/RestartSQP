@@ -183,9 +183,12 @@ bool SqpIpoptNlp::eval_lagrangian_hessian(
 {
   // For Ipopt, the constraint multipliers are defined with the opposite sign
   // So we need to create a copy of constraint multipliers with reversed sign
-  double* lambda = new double[num_constraints];
-  for (int i = 0; i < num_constraints; ++i) {
-    lambda[i] = -constraint_multipliers[i];
+  double* lambda = nullptr;
+  if (constraint_multipliers) {
+    lambda = new double[num_constraints];
+    for (int i = 0; i < num_constraints; ++i) {
+      lambda[i] = -constraint_multipliers[i];
+    }
   }
 
   bool retval =

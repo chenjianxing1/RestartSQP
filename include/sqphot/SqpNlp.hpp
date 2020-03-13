@@ -124,6 +124,18 @@ public:
                        std::shared_ptr<Vector> c_l,
                        std::shared_ptr<Vector> c_u);
 
+  /** Method indicating whether an initial working set is available.
+   *
+   *  Returns true if that is the case.
+   */
+  bool use_initial_working_set();
+
+  /** Get the initial working sets. */
+  // TODO: Create a new WorkingSet object
+  bool get_initial_working_sets(int num_variables,
+                                ActivityStatus* bounds_working_set,
+                                int num_constraints,
+                                ActivityStatus* constraints_working_set);
   /*
    * @brief Get the starting point from the NLP object.
    * TODO: add options_ to enable user to choose if to use default input or not

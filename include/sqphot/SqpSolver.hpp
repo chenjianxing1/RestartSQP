@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#ifndef SQPALGORITHM_HPP_
-#define SQPALGORITHM_HPP_
+#ifndef SQPSOLVER_HPP_
+#define SQPSOLVER_HPP_
 
 #include "IpOptionsList.hpp"
 #include "sqphot/QpHandler.hpp"
@@ -27,7 +27,7 @@ namespace RestartSqp {
  *To use this method, call @Optimize and input NLP class object.
  *
  */
-class SqpAlgorithm
+class SqpSolver
 {
   ///////////////////////////////////////////////////////////
   //                      PUBLIC METHODS                   //
@@ -36,10 +36,16 @@ public:
   /** @name constructor/destructor*/
   //@{
   /** Default Constructor*/
-  SqpAlgorithm();
+  SqpSolver();
+
+  /** Constructor that can take in preinitialized options and journalist from
+   * Ipopt. */
+  SqpSolver(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options,
+            Ipopt::SmartPtr<Ipopt::OptionsList> options,
+            Ipopt::SmartPtr<Ipopt::Journalist> jnlst);
 
   /** Destructor*/
-  ~SqpAlgorithm();
+  ~SqpSolver();
   //@}
 
   /** Return journalist.  This can be used by caller. */
@@ -55,32 +61,45 @@ public:
     return options_;
   }
 
+  /** Return the list of registered options.  This can be used to add more
+   * options that can be used by the called. */
+  Ipopt::SmartPtr<Ipopt::RegisteredOptions> get_registered_options()
+  {
+    return reg_options_;
+  }
+
   //@}
 
+  /** Set the initial working set. */
+  void
+  set_initial_working_sets(const ActivityStatus* bound_activity_status,
+                           const ActivityStatus* constraint_activity_status);
+
+  /** @name Solution methods. */
+  //@{
   /**
    * @brief This is the main method to optimize the NLP given as the input
+   * for the first time.
+   *
+   * @param sqp_nlp: nlp object defining the NLP to be solved
+   * options_file_name: Name of the file with the options
+   * keep_output_file: If true, no new output file will be opened
+   */
+  void optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
+                    const std::string& options_file_name = "sqp.opt",
+                    bool keep_output_file = false);
+
+  /**
+   * @brief This is the method to reoptimize an NLP.  This method
+   * remembers some algorithmic quantities from the previous optimization,
+   * such as penalty parameter value.  It also retains the options from the
+   * previous solve.  But it does not assume that the structure or data of
+   * the NLP is the same as from the previous call.
    *
    * @param sqp_nlp: nlp object defining the NLP to be solved
    */
-  void optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
-                    const std::string options_file_name = "sqp.opt");
+  void reoptimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
 
-  /**
-   * @brief ReOptimize a problem by hotstarting from the old optimal solution
-   *
-   * TO BE IMPLEMENTED
-   */
-
-  void ReOptimize(std::shared_ptr<SqpNlp> sqp_nlp)
-  {
-  }
-
-  /** @name Set the corresponding option to the user-defined value */
-  //@{
-  template <typename T> bool setOptions(const std::string& name, T value)
-  {
-    return false;
-  };
   //@}
 
   /** @name Getters*/
@@ -115,6 +134,16 @@ public:
     return num_variables_;
   }
 
+  inline std::shared_ptr<const Vector>
+  get_current_constraint_multipliers() const
+  {
+    return current_constraint_multipliers_;
+  }
+
+  inline std::shared_ptr<const Vector> get_current_bound_multipliers() const
+  {
+    return current_bound_multipliers_;
+  }
   //@}
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //
@@ -123,14 +152,23 @@ private:
   /**
    * @brief set the default option values
    */
-  void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
+  void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options,
+                         bool skip_ipopt_options);
 
   /**
-   * @brief Prepare everything before we can start the algorithm loop.
+   * @brief Prepare data structures before we can start the algorithm loop.
    *
-   *  Get the options values, create QP objects, initialize iterates.
+   *  Create QP objects
    */
-  void initialize_for_new_nlp_(const std::string& options_file_name);
+  void initialize_for_new_nlp_();
+
+  /**
+   * @brief Initialize the options
+   *
+   *  Get the options values.
+   */
+  void initialize_options_(const std::string& options_file_name,
+                           bool keep_output_file);
 
   /** Determine starting point and compute all corresponding quanties. */
   void initialize_iterates_();
@@ -329,10 +367,10 @@ private:
   /** @name Hide unused default methods. */
   //@{
   /** Copy Constructor */
-  SqpAlgorithm(const SqpAlgorithm&);
+  SqpSolver(const SqpSolver&);
 
   /** Overloaded Equals Operator */
-  void operator=(const SqpAlgorithm&);
+  void operator=(const SqpSolver&);
   //@}
 
   /** Get the option values from the options object. */
@@ -357,7 +395,13 @@ private:
    *  user of this object and changed.  With a few exceptions, the
    *  option values are retrieved when the Initialize method is
    *  called. */
-  Ipopt::SmartPtr<Ipopt::OptionsList> options_; // TODO: replace options_
+  Ipopt::SmartPtr<Ipopt::OptionsList> options_;
+
+  /** List of registered options.
+   *
+   *  This contains all options with default values, etc.
+   */
+  Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options_;
   //@}
 
   /** Lower bounds for the variables. */

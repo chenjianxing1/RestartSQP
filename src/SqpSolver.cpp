@@ -5,7 +5,7 @@
 * Date:2019-06
 */
 
-#include "sqphot/SqpAlgorithm.hpp"
+#include "sqphot/SqpSolver.hpp"
 #include "sqphot/MessageHandling.hpp"
 #include "sqphot/SQPDebug.hpp"
 
@@ -19,10 +19,21 @@ namespace RestartSqp {
 DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
 DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
 
-/**
- * Default Constructor
- */
-SqpAlgorithm::SqpAlgorithm()
+SqpSolver::SqpSolver(SmartPtr<RegisteredOptions> reg_options,
+                     SmartPtr<OptionsList> options, SmartPtr<Journalist> jnlst)
+ : current_output_file_name_("")
+ , bound_type_(nullptr)
+ , constraint_type_(nullptr)
+ , reg_options_(reg_options)
+ , options_(options)
+ , jnlst_(jnlst)
+{
+  // Set the algorithm specific options
+  bool skip_ipopt_options = true;
+  register_options_(reg_options_, skip_ipopt_options);
+}
+
+SqpSolver::SqpSolver()
  : current_output_file_name_("")
  , bound_type_(nullptr)
  , constraint_type_(nullptr)
@@ -43,21 +54,22 @@ SqpAlgorithm::SqpAlgorithm()
 
   // Get the list of registered options to define the options for the
   // SQP algorithm .*/
-  SmartPtr<RegisteredOptions> reg_options = new RegisteredOptions();
-
-  // Set the algorithm specific options
-  register_options_(reg_options);
+  reg_options_ = new RegisteredOptions();
 
   // Finalize options list by giving it the list of registered options
   // and the journalist (for error message).
   options_->SetJournalist(jnlst_);
-  options_->SetRegisteredOptions(reg_options);
+  options_->SetRegisteredOptions(reg_options_);
+
+  // Set the algorithm specific options
+  bool skip_ipopt_options = false;
+  register_options_(reg_options_, skip_ipopt_options);
 }
 
 /**
  * Destructor
  */
-SqpAlgorithm::~SqpAlgorithm()
+SqpSolver::~SqpSolver()
 {
   free_memory_();
 }
@@ -65,7 +77,7 @@ SqpAlgorithm::~SqpAlgorithm()
 /**
  *  Free any allocated memory.
  */
-void SqpAlgorithm::free_memory_()
+void SqpSolver::free_memory_()
 {
   delete[] constraint_type_;
   constraint_type_ = nullptr;
@@ -73,7 +85,15 @@ void SqpAlgorithm::free_memory_()
   bound_type_ = nullptr;
 }
 
-void SqpAlgorithm::initialize_for_new_nlp_(const string& options_file_name)
+/** Set the initial working set. */
+void SqpSolver::set_initial_working_sets(
+    const ActivityStatus* bound_activity_status,
+    const ActivityStatus* constraint_activity_status)
+{
+}
+
+void SqpSolver::initialize_options_(const string& options_file_name,
+                                    bool keep_output_file)
 {
   // Read options from file
   if (options_file_name != "") {
@@ -88,42 +108,47 @@ void SqpAlgorithm::initialize_for_new_nlp_(const string& options_file_name)
     }
   }
 
-  // Get output file name and file print level
-  string new_output_file_name = "";
-  int int_val;
-  options_->GetIntegerValue("file_print_level", int_val, "");
-  EJournalLevel file_print_level = (EJournalLevel)int_val;
-  if (file_print_level != J_NONE) {
-    options_->GetStringValue("output_file", new_output_file_name, "");
-  }
-
-  // If we already opened this file, there is nothing to do
-  if (new_output_file_name != current_output_file_name_) {
-    // There is currently no way to close a single Journal, so we close
-    // everything now, including stdout.
-    jnlst_->DeleteAllJournals();
-    if (new_output_file_name != "") {
-      // Open a new file journal
-      jnlst_->AddFileJournal("output_file", new_output_file_name,
-                             file_print_level);
+  if (!keep_output_file) {
+    // Get output file name and file print level
+    string new_output_file_name = "";
+    int int_val;
+    options_->GetIntegerValue("file_print_level", int_val, "");
+    EJournalLevel file_print_level = (EJournalLevel)int_val;
+    if (file_print_level != J_NONE) {
+      options_->GetStringValue("output_file", new_output_file_name, "");
     }
-    current_output_file_name_ = new_output_file_name;
-  }
 
-  // Set the print level for stdout
-  options_->GetIntegerValue("print_level", int_val, "");
-  EJournalLevel print_level = (EJournalLevel)int_val;
-  SmartPtr<Journal> stdout_jrnl = jnlst_->GetJournal("console");
-  if (IsValid(stdout_jrnl)) {
-    // Set print_level for stdout
-    stdout_jrnl->SetAllPrintLevels(print_level);
-  } else {
-    jnlst_->AddFileJournal("console", "stdout", print_level);
+    // If we already opened this file, there is nothing to do
+    if (new_output_file_name != current_output_file_name_) {
+      // There is currently no way to close a single Journal, so we close
+      // everything now, including stdout.
+      jnlst_->DeleteAllJournals();
+      if (new_output_file_name != "") {
+        // Open a new file journal
+        jnlst_->AddFileJournal("output_file", new_output_file_name,
+                               file_print_level);
+      }
+      current_output_file_name_ = new_output_file_name;
+    }
+
+    // Set the print level for stdout
+    options_->GetIntegerValue("print_level", int_val, "");
+    EJournalLevel print_level = (EJournalLevel)int_val;
+    SmartPtr<Journal> stdout_jrnl = jnlst_->GetJournal("console");
+    if (IsValid(stdout_jrnl)) {
+      // Set print_level for stdout
+      stdout_jrnl->SetAllPrintLevels(print_level);
+    } else {
+      jnlst_->AddFileJournal("console", "stdout", print_level);
+    }
   }
 
   // Copy all options values into this object
   get_option_values_();
+}
 
+void SqpSolver::initialize_for_new_nlp_()
+{
   // Free any existing objects or memory
   free_memory_();
 
@@ -132,7 +157,7 @@ void SqpAlgorithm::initialize_for_new_nlp_(const string& options_file_name)
   allocate_memory_();
 }
 
-void SqpAlgorithm::print_initial_output_()
+void SqpSolver::print_initial_output_()
 {
   // Print problem statistics
   if (jnlst_->ProduceOutput(J_SUMMARY, J_MAIN)) {
@@ -329,7 +354,7 @@ void SqpAlgorithm::print_initial_output_()
   jnlst_->FlushBuffer();
 }
 
-void SqpAlgorithm::calculate_search_direction_(
+void SqpSolver::calculate_search_direction_(
     shared_ptr<const Vector> qp_constraint_body)
 {
   // Set the data for the QP corresponding to the current iterate
@@ -368,7 +393,7 @@ void SqpAlgorithm::calculate_search_direction_(
   trial_bound_multipliers_->copy_vector(qp_solver_->get_bounds_multipliers());
 }
 
-void SqpAlgorithm::print_iteration_output_()
+void SqpSolver::print_iteration_output_()
 {
   if (solver_statistics_->num_sqp_iterations_ % 10 == 0) {
     jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
@@ -487,22 +512,30 @@ void SqpAlgorithm::print_iteration_output_()
   jnlst_->FlushBuffer();
 }
 
+void SqpSolver::optimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp,
+                             const string& options_file_name,
+                             bool keep_output_file)
+{
+  // Set the options based on the options file.
+  initialize_options_(options_file_name, keep_output_file);
+
+  // Now call the regular algorithm
+  reoptimize_nlp(sqp_tnlp);
+}
+
 /**
  * @brief This is the main function to optimize the NLP given as the input
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void SqpAlgorithm::optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
-                                std::string options_file_name)
+void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
 {
   // Make NLP object directly accessible to all methods
   sqp_nlp_ = make_shared<SqpNlp>(sqp_tnlp);
 
-  // Store the
-
   // Set up everything needed to execute the loop: Read options, allocate
   // memory, create QP solver objects
-  initialize_for_new_nlp_(options_file_name);
+  initialize_for_new_nlp_();
 
   // Set the time at beginning of the algorithm
   cpu_time_at_start_ = get_cpu_time_since_start();
@@ -516,7 +549,9 @@ void SqpAlgorithm::optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
 
   // Check if the starting point is already optimal.  This also computes the KKT
   // error for the current iterate
-  check_optimality_();
+
+  // TODO: We need to solve at least one QP to get a working set to return
+  // check_optimality_();
 
   // Print initial output
   print_initial_output_();
@@ -625,7 +660,7 @@ void SqpAlgorithm::optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
   return_results_();
 }
 
-void SqpAlgorithm::return_results_()
+void SqpSolver::return_results_()
 {
   // Get the activity status from the QP solver if one is available
   const ActivityStatus* bound_activity_status = NULL;
@@ -651,7 +686,7 @@ void SqpAlgorithm::return_results_()
  *  function cannot be solved, it will assign _exitflag the	corresponding
  *  code according to the error type.
  */
-void SqpAlgorithm::check_optimality_()
+void SqpSolver::check_optimality_()
 {
   // FIXME: not sure if it is better to use the new multiplier or the old one
 
@@ -695,7 +730,7 @@ void SqpAlgorithm::check_optimality_()
   }
 }
 
-void SqpAlgorithm::calc_trial_point_and_values_()
+void SqpSolver::calc_trial_point_and_values_()
 {
   // Compute the trial iterate
   trial_iterate_->set_to_sum_of_vectors(1., current_iterate_, 1., trial_step_);
@@ -705,7 +740,7 @@ void SqpAlgorithm::calc_trial_point_and_values_()
   if (!retval) {
     // We indicate that this is not an acceptable trial point by making the
     // objective function huge
-    trial_objective_value_ = INF;
+    trial_objective_value_ = SqpInf;
   }
 
   // Evaluate the constraints at the trial point
@@ -745,7 +780,7 @@ shift_starting_point_(shared_ptr<Vector> x,
   }
 }
 
-void SqpAlgorithm::initialize_iterates_()
+void SqpSolver::initialize_iterates_()
 {
   // Determine the bound values
   sqp_nlp_->get_bounds_info(lower_variable_bounds_, upper_variable_bounds_,
@@ -754,7 +789,7 @@ void SqpAlgorithm::initialize_iterates_()
   // Determine inequality types
   classify_constraints_types_();
 
-  // Determine the starting point
+  // Determine the starting point.
   sqp_nlp_->get_starting_point(current_iterate_, current_bound_multipliers_,
                                current_constraint_multipliers_);
 
@@ -762,6 +797,25 @@ void SqpAlgorithm::initialize_iterates_()
   if (!slack_formulation_) {
     shift_starting_point_(current_iterate_, lower_variable_bounds_,
                           upper_variable_bounds_);
+  }
+
+  // Check if an initial working set is available.  If so, give it to the QP
+  // solver
+  bool use_initial_working_set = sqp_nlp_->use_initial_working_set();
+  if (use_initial_working_set) {
+    ActivityStatus* bounds_working_set = new ActivityStatus[num_variables_];
+    ActivityStatus* constraints_working_set =
+        new ActivityStatus[num_constraints_];
+
+    sqp_nlp_->get_initial_working_sets(num_variables_, bounds_working_set,
+                                       num_constraints_,
+                                       constraints_working_set);
+
+    qp_solver_->set_initial_working_sets(bounds_working_set,
+                                         constraints_working_set);
+
+    delete[] bounds_working_set;
+    delete[] constraints_working_set;
   }
 
   // Compute function and derivative values at the starting point
@@ -837,7 +891,7 @@ void SqpAlgorithm::initialize_iterates_()
  *
  * @param nlp: the nlp reader that read data of the function to be minimized;
  */
-void SqpAlgorithm::allocate_memory_()
+void SqpSolver::allocate_memory_()
 {
   // Determine the problem size
   shared_ptr<const SqpNlpSizeInfo> nlp_sizes = sqp_nlp_->get_problem_sizes();
@@ -901,7 +955,7 @@ respect
                   ||-max(x_k-upper_variable_bounds_),0||_1
 +||-min(x_k-lower_variable_bounds_),0||_1
 */
-double SqpAlgorithm::compute_constraint_violation_(
+double SqpSolver::compute_constraint_violation_(
     shared_ptr<const Vector> variable_values,
     shared_ptr<const Vector> constraint_values)
 {
@@ -932,7 +986,7 @@ double SqpAlgorithm::compute_constraint_violation_(
   return current_infeasibility_;
 }
 
-double SqpAlgorithm::calc_model_infeasibility_(shared_ptr<const Vector> step)
+double SqpSolver::calc_model_infeasibility_(shared_ptr<const Vector> step)
 {
   double infeas = 0.;
   // Compute the value of the linearized constraint body
@@ -982,7 +1036,7 @@ double SqpAlgorithm::calc_model_infeasibility_(shared_ptr<const Vector> step)
  * member QPinfoFlag_
  */
 
-void SqpAlgorithm::setup_qp_(shared_ptr<const Vector> qp_constraint_body)
+void SqpSolver::setup_qp_(shared_ptr<const Vector> qp_constraint_body)
 {
   /** If this is the first QP that needs to be solved, set the initial values,
    * including matrix structures. */
@@ -1050,19 +1104,19 @@ void SqpAlgorithm::setup_qp_(shared_ptr<const Vector> qp_constraint_body)
   last_qp_penalty_parameter_ = current_penalty_parameter_;
 }
 
-double SqpAlgorithm::numerical_error_buffer_()
+double SqpSolver::numerical_error_buffer_()
 {
   // For round-off error, increase the predicted reduction by a tiny
   // amount
   // TODO: Make these options
-  double increase_factor = 1e-12;
+  double increase_factor = 1e-10;
   double increase =
       increase_factor *
       max(1., max(fabs(current_objective_value_), current_infeasibility_));
   return increase;
 }
 
-void SqpAlgorithm::setup_lp_()
+void SqpSolver::setup_lp_()
 {
   // The objectives does not change, it is always the sum of the slack
   // variables, and has been set in the initialization method.
@@ -1075,7 +1129,7 @@ void SqpAlgorithm::setup_lp_()
   lp_solver_->set_jacobian(current_constraint_jacobian_);
 }
 
-void SqpAlgorithm::increase_penalty_parameter_()
+void SqpSolver::increase_penalty_parameter_()
 {
   if (current_penalty_parameter_ >= penalty_parameter_max_value_) {
     jnlst_->Printf(J_ERROR, J_MAIN, "Penalty parameter becomes too large: %e\n",
@@ -1097,7 +1151,7 @@ void SqpAlgorithm::increase_penalty_parameter_()
   calculate_search_direction_(qp_constraint_body);
 }
 
-void SqpAlgorithm::update_predicted_reduction_()
+void SqpSolver::update_predicted_reduction_()
 {
   // Start with the gradient part
   predicted_reduction_ =
@@ -1136,7 +1190,7 @@ void SqpAlgorithm::update_predicted_reduction_()
  * member
  * QPinfoFlag_ will set to be true.
  */
-void SqpAlgorithm::perform_ratio_test_()
+void SqpSolver::perform_ratio_test_()
 {
   if (disable_trust_region_) {
     trial_point_is_accepted_ = true;
@@ -1185,7 +1239,7 @@ void SqpAlgorithm::perform_ratio_test_()
   }
 }
 
-void SqpAlgorithm::accept_trial_point_()
+void SqpSolver::accept_trial_point_()
 {
   assert(trial_point_is_accepted_);
 
@@ -1234,7 +1288,7 @@ void SqpAlgorithm::accept_trial_point_()
  * true;
  */
 
-void SqpAlgorithm::update_trust_region_radius_()
+void SqpSolver::update_trust_region_radius_()
 {
   if (disable_trust_region_) {
     return;
@@ -1298,22 +1352,22 @@ void SqpAlgorithm::update_trust_region_radius_()
 static ConstraintType classify_single_constraint(double lower_bound,
                                                  double upper_bound)
 {
-  if (lower_bound > -INF && upper_bound < INF) {
+  if (lower_bound > -SqpInf && upper_bound < SqpInf) {
     if (upper_bound == lower_bound) {
       return IS_EQUALITY;
     } else {
       return BOUNDED_BELOW_AND_ABOVE;
     }
-  } else if (lower_bound > -INF && upper_bound >= INF) {
+  } else if (lower_bound > -SqpInf && upper_bound >= SqpInf) {
     return BOUNDED_BELOW;
-  } else if (upper_bound < INF && lower_bound <= -INF) {
+  } else if (upper_bound < SqpInf && lower_bound <= -SqpInf) {
     return BOUNDED_ABOVE;
   } else {
     return UNBOUNDED;
   }
 }
 
-void SqpAlgorithm::classify_constraints_types_()
+void SqpSolver::classify_constraints_types_()
 {
   // Determine which of the variables have lower and/or upper bounds
   for (int i = 0; i < num_variables_; i++) {
@@ -1338,7 +1392,7 @@ void SqpAlgorithm::classify_constraints_types_()
  * @brief update the penalty parameter for the algorithm.
  *
  */
-void SqpAlgorithm::update_penalty_parameter_()
+void SqpSolver::update_penalty_parameter_()
 {
   if (disable_trust_region_) {
     return;
@@ -1460,6 +1514,9 @@ void SqpAlgorithm::update_penalty_parameter_()
   double predicted_infeasibility_reduction =
       current_infeasibility_ - trial_model_infeasibility_;
 
+  // Increase this a bit to take care of potential numerical error
+  predicted_infeasibility_reduction += numerical_error_buffer_();
+
   jnlst_->Printf(J_DETAILED, J_MAIN, "  Make sure that predicted reduction >= "
                                      "(%e) * predicted infeasibility "
                                      "reduction:\n",
@@ -1493,31 +1550,37 @@ void SqpAlgorithm::update_penalty_parameter_()
 /**
  * @brief Use the Ipopt Reference Options and set it to default values.
  */
-void SqpAlgorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
+void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
+                                  bool skip_ipopt_options)
 {
   // Options related to output
-  reg_options->SetRegisteringCategory("Output");
-  reg_options->AddBoundedIntegerOption(
-      "print_level", "Output verbosity level.", 0, J_LAST_LEVEL - 1,
-      J_ITERSUMMARY, "Sets the default verbosity level for console output. The "
-                     "larger this value the more detailed is the output.");
+  //
+  // Skip this if Ipopt has already registered these options
+  if (!skip_ipopt_options) {
+    reg_options->SetRegisteringCategory("Output");
+    reg_options->AddBoundedIntegerOption(
+        "print_level", "Output verbosity level.", 0, J_LAST_LEVEL - 1,
+        J_ITERSUMMARY,
+        "Sets the default verbosity level for console output. The "
+        "larger this value the more detailed is the output.");
 
-  reg_options->AddStringOption1(
-      "output_file",
-      "File name of desired output file (leave unset for no file output).",
-      "sqp.opt", "*", "Any acceptable standard file name",
-      "NOTE: This option only works when read from the sqp.opt options file! "
-      "An output file with this name will be written (leave unset for no "
-      "file output).  The verbosity level is by default set to "
-      "\"print_level\", "
-      "but can be overridden with \"file_print_level\".  The file name is "
-      "changed to use only small letters.");
-  reg_options->AddBoundedIntegerOption(
-      "file_print_level", "Verbosity level for output file.", 0,
-      J_LAST_LEVEL - 1, J_ITERSUMMARY,
-      "NOTE: This option only works when read from the sqp.opt options file! "
-      "Determines the verbosity level for the file specified by "
-      "\"output_file\".  By default it is the same as \"print_level\".");
+    reg_options->AddStringOption1(
+        "output_file",
+        "File name of desired output file (leave unset for no file output).",
+        "sqp.opt", "*", "Any acceptable standard file name",
+        "NOTE: This option only works when read from the sqp.opt options file! "
+        "An output file with this name will be written (leave unset for no "
+        "file output).  The verbosity level is by default set to "
+        "\"print_level\", "
+        "but can be overridden with \"file_print_level\".  The file name is "
+        "changed to use only small letters.");
+    reg_options->AddBoundedIntegerOption(
+        "file_print_level", "Verbosity level for output file.", 0,
+        J_LAST_LEVEL - 1, J_ITERSUMMARY,
+        "NOTE: This option only works when read from the sqp.opt options file! "
+        "Determines the verbosity level for the file specified by "
+        "\"output_file\".  By default it is the same as \"print_level\".");
+  }
 
   reg_options->SetRegisteringCategory("Trust-region");
   reg_options->AddBoundedNumberOption(
@@ -1687,7 +1750,7 @@ void SqpAlgorithm::register_options_(SmartPtr<RegisteredOptions> reg_options)
                                0);
 }
 
-void SqpAlgorithm::get_option_values_()
+void SqpSolver::get_option_values_()
 {
   options_->GetIntegerValue("max_num_iterations", max_num_iterations_, "");
   options_->GetNumericValue("cpu_time_limit", cpu_time_limit_, "");
@@ -1744,7 +1807,7 @@ void SqpAlgorithm::get_option_values_()
   qp_solver_choice_ = QpSolver(enum_int);
 }
 
-void SqpAlgorithm::second_order_correction_()
+void SqpSolver::second_order_correction_()
 {
   jnlst_->Printf(J_DETAILED, J_MAIN, "\nTry second-order correction step.\n");
 
@@ -1802,7 +1865,7 @@ void SqpAlgorithm::second_order_correction_()
 
 ////////////////////////////////////////////////////////////////////////////
 
-void SqpAlgorithm::print_final_stats_()
+void SqpSolver::print_final_stats_()
 {
   jnlst_->Printf(J_SUMMARY, J_MAIN, "======================================"
                                     "===================================="

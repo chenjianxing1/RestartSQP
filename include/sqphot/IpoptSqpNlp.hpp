@@ -14,7 +14,10 @@ namespace RestartSqp {
 /**
  * This is part of SQPhotstart
  *
- * This class is an adapter to solve a SqpTNlp with Ipopt.
+ * This class is used in the SqpRestart algorithm.  It is used to
+ * post an SqpTNlp as an IpoptTNLP so that Ipopt can solve it.
+ * At the end, the solution is not given to the SqpTNLP, though,
+ * instead it is stored here.
  */
 class IpoptSqpNlp : public Ipopt::TNLP
 {
@@ -96,6 +99,34 @@ public:
                          const Ipopt::IpoptData* ip_data,
                          Ipopt::IpoptCalculatedQuantities* ip_cq) override;
 
+  /** @name Accessor methods for the Ipopt solution. */
+  //@{
+  const double* x_sol() const
+  {
+    return x_sol_;
+  }
+  const double* z_L_sol() const
+  {
+    return z_L_sol_;
+  }
+  const double* z_U_sol() const
+  {
+    return z_U_sol_;
+  }
+  const double* lambda_sol() const
+  {
+    return lambda_sol_;
+  }
+  const double* g_sol() const
+  {
+    return g_sol_;
+  }
+  double obj_value() const
+  {
+    return obj_value_;
+  }
+  //@}
+
 private:
   /** @name Hide unused default methods. */
   //@{
@@ -111,6 +142,25 @@ private:
 
   /** Ipopt's TNLP object that will be called for all evaluations. */
   std::shared_ptr<SqpTNlp> sqp_tnlp_;
+
+  /** Store the solution. */
+  //@{
+  /** Ipopt status after most recent solve. */
+  Ipopt::SolverReturn ipopt_status_;
+  /** Primal solution. */
+  double* x_sol_;
+  /** Multipliers for lower bounds. */
+  double* z_L_sol_;
+  /** Multipliers for upper bounds. */
+  double* z_U_sol_;
+  /** Multipliers for the constraints.  This is with reversed sign from Ipopt,
+   * so consistent with SqpNLP. */
+  double* lambda_sol_;
+  /** Constraint values at final iterate. */
+  double* g_sol_;
+  /** Objective function at final iterate. */
+  double obj_value_;
+  //@}
 };
 }
 

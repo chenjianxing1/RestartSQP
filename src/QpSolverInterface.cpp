@@ -26,20 +26,44 @@ QpSolverInterface::QpSolverInterface(QPType qp_type, int num_qp_variables,
  , primal_solution_(std::make_shared<Vector>(num_qp_variables))
  , constraint_multipliers_(std::make_shared<Vector>(num_qp_constraints))
  , bound_multipliers_(std::make_shared<Vector>(num_qp_variables))
+ , bounds_working_set_(nullptr)
+ , constraints_working_set_(nullptr)
  , jnlst_(jnlst)
  , file_counter_(1)
 {
   working_set_up_to_date_ = false;
-  bounds_working_set_ = new ActivityStatus[num_qp_variables];
-  constraints_working_set_ = new ActivityStatus[num_qp_constraints];
 }
 
 QpSolverInterface::~QpSolverInterface()
 {
   delete[] bounds_working_set_;
-  bounds_working_set_ = NULL;
+  bounds_working_set_ = nullptr;
   delete[] constraints_working_set_;
-  constraints_working_set_ = NULL;
+  constraints_working_set_ = nullptr;
+}
+
+void QpSolverInterface::set_initial_working_sets(
+    const ActivityStatus* bounds_working_set,
+    const ActivityStatus* constraints_working_set)
+{
+  assert(!bounds_working_set_);
+  assert(!constraints_working_set_);
+
+  // First copy the bounds activity status into array owned by this object
+  bounds_working_set_ = new ActivityStatus[num_qp_variables_];
+
+  // copy the activity status into qpOASES array
+  for (int i = 0; i < num_qp_variables_; ++i) {
+    bounds_working_set_[i] = bounds_working_set[i];
+  }
+
+  // Now copy the constraints activity status into array owned by this object
+  constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
+
+  // copy the activity status into qpOASES array
+  for (int i = 0; i < num_qp_constraints_; ++i) {
+    constraints_working_set_[i] = constraints_working_set[i];
+  }
 }
 
 QpSolverExitStatus QpSolverInterface::optimize(shared_ptr<Statistics> stats)

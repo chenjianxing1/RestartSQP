@@ -1,8 +1,10 @@
 include_directories(${PROJECT_INCLUDE_DIR})
 
 file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/test/sqp_ampl.cpp)
+file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/test/sqp_restart_ampl.cpp)
 
-add_executable(sqp_ampl ${TEST_SOURCES})
+add_executable(sqp_ampl ${PROJECT_SOURCE_DIR}/test/sqp_ampl.cpp)
+add_executable(sqp_restart_ampl ${PROJECT_SOURCE_DIR}/test/sqp_restart_ampl.cpp)
 add_executable(QPsolvers_test ${PROJECT_SOURCE_DIR}/test/QPsolvers_testers.cpp) 
 add_executable(unitTest_SpHbMat ${PROJECT_SOURCE_DIR}/test/unitTest/test_SpHbMat.cpp)
 add_executable(unitTest_SpTripletMat ${PROJECT_SOURCE_DIR}/test/unitTest/test_SpTripletMat.cpp)
@@ -33,6 +35,7 @@ include_directories(${QPOASES_INCLUDE_DIRS})
 include_directories(${QORE_INCLUDE_DIR})
 
 target_link_libraries(sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(sqp_restart_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
 
 target_link_libraries(QPsolvers_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
 target_link_libraries(unitTest_SpHbMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})

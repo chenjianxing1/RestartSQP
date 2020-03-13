@@ -133,16 +133,80 @@ QpSolverExitStatus QpOasesInterface::optimize_impl(shared_ptr<Statistics> stats)
   qpOASES::int_t num_qp_iterations =
       qp_solver_max_num_iterations_; // TODO modify it
 
+  // First handle the case in which this is the first call
   if (!first_qp_solved_) {
-    // This is the first call and we need to use the initial init method
-    qpoases_solver_->init(
-        qpoases_hessian_.get(), linear_objective_coefficients_->get_values(),
-        qpoases_jacobian_.get(), lower_variable_bounds_->get_values(),
-        upper_variable_bounds_->get_values(),
-        lower_constraint_bounds_->get_values(),
-        upper_constraint_bounds_->get_values(), num_qp_iterations);
 
+    // If an active set has been provide, copy it into the qpOASES objects
+    if (bounds_working_set_) {
+      assert(
+          constraints_working_set_ ||
+          "Need to provide both variable and constraint working sets or none");
+
+      // Create qpOASES bounds object to communicate the active set
+      qpOASES::Bounds guessedBounds(num_qp_variables_);
+      qpOASES::Constraints guessedConstraints(num_qp_constraints_);
+
+      for (int i = 0; i < num_qp_variables_; ++i) {
+        switch (bounds_working_set_[i]) {
+          case ACTIVE_ABOVE:
+            guessedBounds.setupBound(i, qpOASES::ST_UPPER);
+            break;
+          case ACTIVE_BELOW:
+            guessedBounds.setupBound(i, qpOASES::ST_LOWER);
+            break;
+          case INACTIVE:
+            guessedBounds.setupBound(i, qpOASES::ST_INACTIVE);
+            break;
+          default:
+            assert(false && "Invalue activity value");
+        }
+      }
+
+      for (int i = 0; i < num_qp_constraints_; ++i) {
+        switch (constraints_working_set_[i]) {
+          case ACTIVE_ABOVE:
+            guessedConstraints.setupConstraint(i, qpOASES::ST_UPPER);
+            break;
+          case ACTIVE_BELOW:
+            guessedConstraints.setupConstraint(i, qpOASES::ST_LOWER);
+            break;
+          case INACTIVE:
+            guessedConstraints.setupConstraint(i, qpOASES::ST_INACTIVE);
+            break;
+          default:
+            assert(false && "Invalue activity value");
+        }
+      }
+
+      // Call the initial version that takes a working set.  Since no initial
+      // starting point is given, qpOASES will initially start from the zero
+      // solution.  We might want to change this later.
+      double* cputime = nullptr;
+      const double* xOpt = nullptr;
+      const double* yOpt = nullptr;
+      qpoases_solver_->init(
+          qpoases_hessian_.get(), linear_objective_coefficients_->get_values(),
+          qpoases_jacobian_.get(), lower_variable_bounds_->get_values(),
+          upper_variable_bounds_->get_values(),
+          lower_constraint_bounds_->get_values(),
+          upper_constraint_bounds_->get_values(), num_qp_iterations, cputime,
+          xOpt, yOpt, &guessedBounds, &guessedConstraints);
+
+    } else {
+      // In this case we call the version that does not use an initial working
+      // set.
+      qpoases_solver_->init(
+          qpoases_hessian_.get(), linear_objective_coefficients_->get_values(),
+          qpoases_jacobian_.get(), lower_variable_bounds_->get_values(),
+          upper_variable_bounds_->get_values(),
+          lower_constraint_bounds_->get_values(),
+          upper_constraint_bounds_->get_values(), num_qp_iterations);
+    }
   } else {
+    // Here we already solved a QP from where we can hotstart
+    assert(!constraints_working_set_ ||
+           "Need to provide both variable and constraint working sets or none");
+
     // We already solved one QP with qpOASES
     if (qp_matrices_changed_) {
       qpoases_solver_->hotstart(
@@ -340,29 +404,43 @@ void QpOasesInterface::retrieve_working_set_()
 {
   assert(solver_status_ == QPEXIT_OPTIMAL);
 
+  // Allocate memory if that hadn't been done earlier
+  if (!bounds_working_set_) {
+    assert(!constraints_working_set_);
+    bounds_working_set_ = new ActivityStatus[num_qp_variables_];
+    constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
+  }
+
+  // Get the working set for the bounds from qpOASES
   assert(num_qp_variables_ == qpoases_solver_->getNV());
   qpOASES::int_t* tmp_W_b = new int[num_qp_variables_];
   qpoases_solver_->getWorkingSetBounds(tmp_W_b);
 
   for (int i = 0; i < num_qp_variables_; i++) {
     switch ((int)tmp_W_b[i]) {
-      case 1:
-        if (lower_variable_bounds_->get_value(i) ==
+      case qpOASES::ST_UPPER:
+#if 0
+      if (lower_variable_bounds_->get_value(i) ==
             upper_variable_bounds_->get_value(i)) {
-          bounds_working_set_[i] = ACTIVE_EQUALITY;
+          bounds_working_set_[i] = ACTIVE_EQUALITY;  // we probably should keep information about the direction
         } else {
           bounds_working_set_[i] = ACTIVE_ABOVE;
         }
+#endif
+        bounds_working_set_[i] = ACTIVE_ABOVE;
         break;
-      case -1:
+      case qpOASES::ST_LOWER:
+#if 0
         if (lower_variable_bounds_->get_value(i) ==
             upper_variable_bounds_->get_value(i)) {
           bounds_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           bounds_working_set_[i] = ACTIVE_BELOW;
         }
+#endif
+        bounds_working_set_[i] = ACTIVE_BELOW;
         break;
-      case 0:
+      case qpOASES::ST_INACTIVE:
         bounds_working_set_[i] = INACTIVE;
         break;
       default:
@@ -371,29 +449,36 @@ void QpOasesInterface::retrieve_working_set_()
   }
   delete[] tmp_W_b;
 
+  // Get the constraint working set from qpOASES
   assert(num_qp_constraints_ == qpoases_solver_->getNC());
   qpOASES::int_t* tmp_W_c = new int[num_qp_constraints_];
   qpoases_solver_->getWorkingSetConstraints(tmp_W_c);
 
   for (int i = 0; i < num_qp_constraints_; i++) {
     switch ((int)tmp_W_c[i]) {
-      case 1:
+      case qpOASES::ST_UPPER:
+#if 0
         if (lower_constraint_bounds_->get_value(i) ==
             upper_constraint_bounds_->get_value(i)) {
           constraints_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           constraints_working_set_[i] = ACTIVE_ABOVE;
         }
+#endif
+        constraints_working_set_[i] = ACTIVE_ABOVE;
         break;
-      case -1:
+      case qpOASES::ST_LOWER:
+#if 0
         if (lower_constraint_bounds_->get_value(i) ==
             upper_constraint_bounds_->get_value(i)) {
           constraints_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           constraints_working_set_[i] = ACTIVE_BELOW;
         }
+#endif
+        constraints_working_set_[i] = ACTIVE_BELOW;
         break;
-      case 0:
+      case qpOASES::ST_INACTIVE:
         constraints_working_set_[i] = INACTIVE;
         break;
       default:

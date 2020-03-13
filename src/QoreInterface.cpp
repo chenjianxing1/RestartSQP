@@ -264,25 +264,37 @@ void QoreInterface::retrieve_working_set_()
   // Allocate memory to store the working set from QORE
   int* working_set = new int[num_qp_variables_ + num_qp_constraints_];
 
+  // Get the vector with the working set information from QORE
   QPGetIntVector(qore_solver_, "workingset", working_set);
+
+  // Allocate memory if that hadn't been done earlier
+  if (!bounds_working_set_) {
+    bounds_working_set_ = new ActivityStatus[num_qp_variables_];
+  }
 
   for (int i = 0; i < num_qp_variables_; i++) {
     switch (working_set[i]) {
       case -1:
+#if 0
         if (lower_variable_bounds_->get_value(i) ==
             upper_variable_bounds_->get_value(i)) {
           bounds_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           bounds_working_set_[i] = ACTIVE_ABOVE;
         }
+#endif
+        bounds_working_set_[i] = ACTIVE_ABOVE;
         break;
       case 1:
-        if (lower_variable_bounds_->get_value(i) ==
+#if 0
+      if (lower_variable_bounds_->get_value(i) ==
             upper_variable_bounds_->get_value(i)) {
           bounds_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           bounds_working_set_[i] = ACTIVE_BELOW;
         }
+#endif
+        bounds_working_set_[i] = ACTIVE_BELOW;
         break;
       case 0:
         bounds_working_set_[i] = INACTIVE;
@@ -292,23 +304,34 @@ void QoreInterface::retrieve_working_set_()
     }
   }
 
+  // Allocate memory if that hadn't been done earlier
+  if (!constraints_working_set_) {
+    constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
+  }
+
   for (int i = 0; i < num_qp_constraints_; i++) {
     switch (working_set[num_qp_variables_ + i]) {
       case -1:
+#if 0
         if (lower_constraint_bounds_->get_value(i) ==
             upper_constraint_bounds_->get_value(i)) {
           constraints_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           constraints_working_set_[i] = ACTIVE_ABOVE;
         }
+#endif
+        constraints_working_set_[i] = ACTIVE_ABOVE;
         break;
       case 1:
+#if 0
         if (lower_constraint_bounds_->get_value(i) ==
             upper_constraint_bounds_->get_value(i)) {
           constraints_working_set_[i] = ACTIVE_EQUALITY;
         } else {
           constraints_working_set_[i] = ACTIVE_BELOW;
         }
+#endif
+        constraints_working_set_[i] = ACTIVE_BELOW;
         break;
       case 0:
         constraints_working_set_[i] = INACTIVE;

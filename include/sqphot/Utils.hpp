@@ -11,7 +11,9 @@
 
 namespace RestartSqp {
 
-const double INF = std::numeric_limits<double>::infinity();
+const double SqpInf = std::numeric_limits<double>::infinity();
+
+const double SqpNaN = std::numeric_limits<double>::quiet_NaN();
 
 // const double m_eps = 1.0e-16;
 // const double sqrt_m_eps = 1.0e-8;

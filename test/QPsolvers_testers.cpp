@@ -10,7 +10,7 @@ extern "C" {
 #include "sqphot/QoreInterface.hpp"
 #include "sqphot/QpOasesInterface.hpp"
 #include "sqphot/SparseHbMatrix.hpp"
-#include "sqphot/SqpAlgorithm.hpp"
+#include "sqphot/SqpSolver.hpp"
 #include "sqphot/Vector.hpp"
 #include <memory>
 
@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
   //  Create a dummy Algorithm object to get options //
   /////////////////////////////////////////////////////
 
-  shared_ptr<SqpAlgorithm> dummy_algorithm = make_shared<SqpAlgorithm>();
+  shared_ptr<SqpSolver> dummy_algorithm = make_shared<SqpSolver>();
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst = dummy_algorithm->get_jnlst();
   Ipopt::SmartPtr<Ipopt::OptionsList> options =
       dummy_algorithm->get_options_list();

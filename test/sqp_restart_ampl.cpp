@@ -4,9 +4,8 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include <sqphot/QpHandler.hpp>
 #include <sqphot/SqpIpoptNlp.hpp>
-#include <sqphot/SqpSolver.hpp>
+#include <sqphot/SqpRestartSolver.hpp>
 #include <sqphot/Utils.hpp>
 #include <stdio.h>
 #include <string.h>
@@ -53,7 +52,7 @@ public:
    * @brief Write a brief summary for each problem being solved,
    */
   void write_in_brief(const std::string& pname, /**<name of the problem*/
-                      SqpSolver& alg)
+                      SqpRestartSolver& alg)
   {
 
     std::size_t found = pname.find_last_of("/\\");
@@ -80,7 +79,7 @@ private:
 int main(int argc, char** args)
 {
   // Create the SQP algorithm object
-  SqpSolver alg;
+  SqpRestartSolver alg;
 
   // Create an Ipopt::AmplTNLP object to handle the AMPL model
   SmartPtr<OptionsList> dummy_options = new OptionsList();
@@ -92,8 +91,9 @@ int main(int argc, char** args)
 
   // Solve the AMPL model
   // alg.initialize(sqp_nlp, args[1]);
-  alg.optimize_nlp(sqp_nlp);
+  alg.initial_solve(sqp_nlp);
 
+  return 0;
   shared_ptr<Table_Writer> writer =
       make_shared<Table_Writer>("result_table.txt");
   writer->write_in_brief(args[1], alg);

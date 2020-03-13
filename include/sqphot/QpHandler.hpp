@@ -255,6 +255,10 @@ public:
     return qp_solver_interface_->get_num_qp_iterations();
   }
 
+  /** Set the initial bounds and constraints working set. */
+  void set_initial_working_sets(const ActivityStatus* bounds_working_set,
+                                const ActivityStatus* constraints_working_set);
+
   /** Return the activity status of the bounds. */
   const ActivityStatus* get_bounds_working_set() const
   {
