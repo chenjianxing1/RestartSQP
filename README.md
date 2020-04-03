@@ -2,7 +2,7 @@
 [![Code Coverage](https://codecov.io/gh/lanl-ansi/SQPhotstart/branch/master/graphs/badge.svg)](https://codecov.io/gh/lanl-ansi/SQPhotstart)
 <p align="center">
 <img src="media/fire.png" width="150">
-<H2 align="center"> SQPhotstart: A Sequential Quadratic Programming Solver </H2>
+<H2 align="center"> RestartSQP: A Sequential Quadratic Programming Solver </H2>
 </p>
 <p align="center"> for Constrained Nonlinear Optimization </p>
 
