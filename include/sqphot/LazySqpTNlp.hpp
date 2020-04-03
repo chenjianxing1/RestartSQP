@@ -15,23 +15,23 @@ namespace RestartSqp {
  *
  * This class is an adapter to solve a SqpTNlp with Ipopt.
  */
-class ShortenedSqpTNlp : public SqpTNlp
+class LazySqpTNlp : public SqpTNlp
 {
 
 public:
   /** @brief Constructor that an instance of Ipopt's TNLP */
-  ShortenedSqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
+  LazySqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
 
   /** Destructor*/
-  ~ShortenedSqpTNlp();
+  ~LazySqpTNlp();
 
   /** Set the list of considered constraints.
    *
    *  This specifies the setset of constraints of the SqpTNlp provided in the
-   * constructor to be considered for the next solve. The indices start from 1
-   * (as for the matrix counting).
+   *  constructor to be considered for the next solve. The indices start from 1
+   *  (as for the matrix counting).
    */
-  void set_considered_constraints(int num_constraints, int* constraint_indices);
+  void set_considered_constraints(int num_constraints, const int* constraint_indices);
 
   /**
    *@brief Get problem size information
@@ -115,21 +115,40 @@ public:
                          double objective_value,
                          std::shared_ptr<const Statistics> stats) override;
 
+  /** Method telling SQP solver that a working set is provided. */
+  bool use_initial_working_set() const
+  {
+    return true;
+  }
+
+  /** Method initializing the working set. */
+  bool get_initial_working_sets(int num_variables,
+                                ActivityStatus* bounds_working_set,
+                                int num_constraints,
+                                ActivityStatus* constraints_working_set);
+
+  /** Add new constraints to the set of considered constraints.  */
+  bool add_new_constraints(int num_new_considered_constraints,
+                           const int* new_considered_constraints_indices);
+
 private:
   /** @name Hide unused default methods. */
   //@{
   /** Default constructor*/
-  ShortenedSqpTNlp();
+  LazySqpTNlp();
 
   /** Copy Constructor */
-  ShortenedSqpTNlp(const ShortenedSqpTNlp&);
+  LazySqpTNlp(const LazySqpTNlp&);
 
   /** Overloaded Equals Operator */
-  void operator=(const ShortenedSqpTNlp&);
+  void operator=(const LazySqpTNlp&);
   //@}
 
   /** Original SqpTNlp of which we solve a version with fewer constraints. */
   std::shared_ptr<SqpTNlp> sqp_tnlp_;
+
+  /** Number of variables. */
+  int num_variables_;
 
   /** Number of constraints for the next solve. */
   int num_constraints_;
@@ -152,6 +171,25 @@ private:
    *  sqp_jac_map[i] is the position of the i-th nonzero of our Jaocian in the
    * full Jacobian. */
   int* sqp_jac_map_;
+
+  /** Final working set for the bounds from the most recent solve. */
+  ActivityStatus* bound_activity_status_;
+
+  /** Final working set for the bounds from the most recent solve. */
+  ActivityStatus* constraint_activity_status_;
+
+  /** Flag indicating whether the NLP has been solved before. */
+  bool has_been_solved_before_;
+
+  /** Values of the optimal primal variables from the most recent solve. */
+  double* previous_optimal_solution_;
+
+  /** Values of the optimal bound multipliers from the most recent solve. */
+  double* previous_optimal_bound_multipliers_;
+
+  /** Values of the optimal constraint multipliers from the most recent solve.
+   *  There are only set of constraints that have been collected. */
+  double* previous_optimal_constraint_multipliers_;
 };
 }
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <sqphot/SqpIpoptNlp.hpp>
-#include <sqphot/SqpRestartSolver.hpp>
+#include <sqphot/LazySqpSolver.hpp>
 #include <sqphot/Utils.hpp>
 #include <stdio.h>
 #include <string.h>
@@ -52,7 +52,7 @@ public:
    * @brief Write a brief summary for each problem being solved,
    */
   void write_in_brief(const std::string& pname, /**<name of the problem*/
-                      SqpRestartSolver& alg)
+                      CrossoverSqpSolver& alg)
   {
 
     std::size_t found = pname.find_last_of("/\\");
@@ -79,7 +79,7 @@ private:
 int main(int argc, char** args)
 {
   // Create the SQP algorithm object
-  SqpRestartSolver alg;
+  LazySqpSolver alg;
 
   // Create an Ipopt::AmplTNLP object to handle the AMPL model
   SmartPtr<OptionsList> dummy_options = new OptionsList();
@@ -89,14 +89,63 @@ int main(int argc, char** args)
   shared_ptr<SqpIpoptNlp> sqp_nlp =
       make_shared<SqpIpoptNlp>(ampl_tnlp, nlp_name);
 
+  // Get the number of constraints
+  int num_variables;
+  int num_constraints;
+  int num_nonzeros_jacobian;
+  int num_nonzeros_hessian;
+  sqp_nlp->get_nlp_info(num_variables, num_constraints,
+                        num_nonzeros_jacobian,
+                        num_nonzeros_hessian,
+                        nlp_name);
+
+  assert(num_constraints>0);
+
+  // Memory for the initially chosen constraints
+  int num_initial_constraints; // num_constraints;
+  int* constraint_indices = new int[num_constraints];
+
+#if 1
+  // First solve the problem correctly
+  CrossoverSqpSolver crossover;
+  crossover.initial_solve(sqp_nlp);
+
+  // Get the activity status for the constraints and
+  const ActivityStatus* constraint_activity_status =
+      crossover.get_constraints_working_set();
+  num_initial_constraints = 0;
+  for (int i=0; i<num_constraints; ++i) {
+    //printf("activity %d = %d\n", i, constraint_activity_status[i]);
+    if (constraint_activity_status[i] != INACTIVE) {
+      constraint_indices[num_initial_constraints] = i+1;
+      //printf("num_initial_constraints = %d\n", num_initial_constraints);
+      num_initial_constraints++;
+    }
+  }
+
+  // Take the last X constraints off
+  num_initial_constraints -= 2;
+  assert(num_initial_constraints >= 0);
+
+#else
+  // Set the initial number of constraints
+  num_initial_constraints = 1; // num_constraints;
+  for (int i=0; i<num_initial_constraints; ++i) {
+    constraint_indices[i] = i+1;
+  }
+#endif
+
   // Solve the AMPL model
   // alg.initialize(sqp_nlp, args[1]);
-  alg.initial_solve(sqp_nlp);
+  alg.optimize_nlp(sqp_nlp, num_initial_constraints, constraint_indices);
 
-  return 0;
+#if 0
   shared_ptr<Table_Writer> writer =
       make_shared<Table_Writer>("result_table.txt");
   writer->write_in_brief(args[1], alg);
+#endif
+
+  delete [] constraint_indices;
 
   return 0;
 }

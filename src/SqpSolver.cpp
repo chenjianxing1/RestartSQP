@@ -1567,7 +1567,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
     reg_options->AddStringOption1(
         "output_file",
         "File name of desired output file (leave unset for no file output).",
-        "sqp.opt", "*", "Any acceptable standard file name",
+        "", "*", "Any acceptable standard file name",
         "NOTE: This option only works when read from the sqp.opt options file! "
         "An output file with this name will be written (leave unset for no "
         "file output).  The verbosity level is by default set to "

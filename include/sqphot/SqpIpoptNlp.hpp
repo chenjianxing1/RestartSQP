@@ -115,6 +115,14 @@ public:
                          double objective_value,
                          std::shared_ptr<const Statistics> stats) override;
 
+  /** No initial working set is available from an Ipopt TNLP */
+  bool use_initial_working_set() const
+  {
+    return false;
+  }
+
+  /**
+
 private:
   /** @name Hide unused default methods. */
   //@{

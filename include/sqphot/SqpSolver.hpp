@@ -135,6 +135,12 @@ public:
   }
 
   inline std::shared_ptr<const Vector>
+  get_current_primal_variables() const
+  {
+    return current_iterate_;
+  }
+
+  inline std::shared_ptr<const Vector>
   get_current_constraint_multipliers() const
   {
     return current_constraint_multipliers_;
@@ -144,6 +150,17 @@ public:
   {
     return current_bound_multipliers_;
   }
+
+  inline const ActivityStatus* get_bounds_working_set() const
+  {
+    return qp_solver_->get_bounds_working_set();
+  }
+
+  inline const ActivityStatus* get_constraints_working_set() const
+  {
+    return qp_solver_->get_constraints_working_set();
+  }
+
   //@}
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //

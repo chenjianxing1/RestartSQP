@@ -340,6 +340,8 @@ void QoreInterface::retrieve_working_set_()
         assert("Invalid working set flag" && false);
     }
   }
+
+  delete[] working_set;
 }
 
 void QoreInterface::set_qp_solver_options_()

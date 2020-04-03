@@ -5,7 +5,8 @@
 * Date:2019-06
 */
 
-#include "sqphot/SqpRestartSolver.hpp"
+#include "sqphot/CrossoverSqpSolver.hpp"
+#include "sqphot/SqpInitSolveTNlp.hpp"
 #include "IpIpoptApplication.hpp"
 
 using namespace std;
@@ -16,7 +17,7 @@ namespace RestartSqp {
 /**
  * Default Constructor
  */
-SqpRestartSolver::SqpRestartSolver()
+CrossoverSqpSolver::CrossoverSqpSolver()
 {
   // First create the Ipopt application.  We will use the options and journalist
   // created in there
@@ -38,11 +39,11 @@ SqpRestartSolver::SqpRestartSolver()
 /**
  * Destructor
  */
-SqpRestartSolver::~SqpRestartSolver()
+CrossoverSqpSolver::~CrossoverSqpSolver()
 {
 }
 
-void SqpRestartSolver::determine_activities_(
+void CrossoverSqpSolver::determine_activities_(
     ActivityStatus* bound_activity_status,
     ActivityStatus* constraint_activity_status, IpoptSqpNlp& ipopt_tnlp)
 {
@@ -204,7 +205,7 @@ void SqpRestartSolver::determine_activities_(
                  num_constraint_upper_bound_active);
 }
 
-void SqpRestartSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
+void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
                                      const string& options_file_name)
 {
   // Get information about the dimensions of the current NLP.
@@ -251,11 +252,13 @@ void SqpRestartSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   determine_activities_(bounds_activity_status, constraints_activity_status,
                         *ipopt_tnlp);
 
+  // Create an SqpTNlp in which we can overwrite the working set and the starting point.
+  shared_ptr<SqpInitSolveTNlp> init_solve_tnlp = make_shared<SqpInitSolveTNlp>(sqp_tnlp);
+
   // Set the initial working set
-  sqp_tnlp->set_initial_working_sets(num_variables_, bounds_activity_status,
+  init_solve_tnlp->set_initial_working_sets(num_variables_, bounds_activity_status,
                                      num_constraints_,
                                      constraints_activity_status);
-
   // Free memory
   delete[] bounds_activity_status;
   delete[] constraints_activity_status;
@@ -277,11 +280,11 @@ void SqpRestartSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   double* initial_bound_multipliers = new double[num_variables_];
   for (int i = 0; i < num_variables_; ++i) {
     initial_bound_multipliers[i] = z_L[i] - z_U[i];
-    max_mult = max(max_mult, abs(initial_bound_multipliers[i]));
+   // max_mult = max(max_mult, abs(initial_bound_multipliers[i]));
   }
 
   // Give that starting point to the SQP TNLP so that the SQP solver can get it.
-  sqp_tnlp->set_overwriting_starting_point(
+  init_solve_tnlp->set_starting_point(
       num_variables_, initial_primal_variables, initial_bound_multipliers,
       num_constraints_, initial_constraint_multipliers);
 
@@ -289,14 +292,14 @@ void SqpRestartSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   // Determine initial penalty parameter
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "\nMax norm of optimal multipliers after Ipopt = %e ",
+                 "\nMax norm of optimal multipliers after Ipopt = %e\n",
                  max_mult);
 
   max_mult = max(max_mult, 10.);
   const double init_penalty_parameter_factor = 2.;
   double initial_penalty_parameter = init_penalty_parameter_factor * max_mult;
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Setting initial penalty parameter to = %e\n",
+                 "  Setting initial penalty parameter to %e\n\n",
                  initial_penalty_parameter);
   SmartPtr<OptionsList> options = ipopt_app_->Options();
 
@@ -306,36 +309,46 @@ void SqpRestartSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   // Now call the SQP solver to get the active-set solution for this problem
   const string options_file_name = "";
   bool keep_output_file = true;
-  sqp_solver_->optimize_nlp(sqp_tnlp, options_file_name, keep_output_file);
+  sqp_solver_->optimize_nlp(init_solve_tnlp, options_file_name, keep_output_file);
+
+  // Check if the optimization was conclude successfully
+  exit_flag_ = sqp_solver_->get_exit_flag();
+  if (exit_flag_ != OPTIMAL) {
+    // make sure all allocated memory is deleted
+    return;
+  }
 
   // Compute the max-norm of the multipliers to find a good value for the
   // penalty parameter to be used later
   shared_ptr<const Vector> current_constraint_multipliers =
       sqp_solver_->get_current_constraint_multipliers();
-  shared_ptr<const Vector> current_bound_multipliers =
-      sqp_solver_->get_current_bound_multipliers();
-
-  max_mult = max(current_constraint_multipliers->calc_inf_norm(),
-                 current_bound_multipliers->calc_inf_norm());
+  // shared_ptr<const Vector> current_bound_multipliers =
+  //    sqp_solver_->get_current_bound_multipliers();
+  //
+  // max_mult = max(current_constraint_multipliers->calc_inf_norm(),
+  //                current_bound_multipliers->calc_inf_norm());
+  max_mult = current_constraint_multipliers->calc_inf_norm();
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "\nMax norm of optimal multipliers after SQP solve = %e ",
+                 "\nMax norm of optimal multipliers after SQP solve = %e\n",
                  max_mult);
 
   max_mult = max(max_mult, 10.);
   initial_penalty_parameter = init_penalty_parameter_factor * max_mult;
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Setting initial penalty parameter to = %e\n",
+                 "  Setting initial penalty parameter to %e\n",
                  initial_penalty_parameter);
 
   options->SetNumericValue("penalty_parameter_init_value",
                            initial_penalty_parameter);
 }
 
-void SqpRestartSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
+void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
 {
+  // Call the sqp_solver object to solve the new problem
+  sqp_solver_->reoptimize_nlp(sqp_tnlp);
 }
 
-void SqpRestartSolver::register_options_(
+void CrossoverSqpSolver::register_options_(
     SmartPtr<RegisteredOptions> reg_options)
 {
 }

@@ -263,4 +263,5 @@ void SqpIpoptNlp::finalize_solution(
   delete[] z_U;
   delete[] lambda;
 }
+
 }

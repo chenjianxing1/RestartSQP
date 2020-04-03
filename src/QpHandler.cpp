@@ -302,15 +302,15 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
 
   // Check if the QP solver really returned an optimal solution.
   if (qp_solver_exit_status == QPEXIT_OPTIMAL) {
-    double qp_error_tol = 1e-8;
+    double qp_error_tol = 1e-6;
     KktError qp_kkt_error = qp_solver_interface_->calc_kkt_error(J_DETAILED);
     last_kkt_error_ = qp_kkt_error.worst_violation;
 
     bool isOptimal = (last_kkt_error_ < qp_error_tol);
     if (!isOptimal) {
-      jnlst_->Printf(J_WARNING, J_MAIN, "WARNING: QP solver KKT error is %e\n",
+      jnlst_->Printf(J_ERROR, J_MAIN, "WARNING: QP solver KKT error is %e\n",
                      last_kkt_error_);
-      assert("Need to figure out what the problem is" && false);
+      assert("Need to figure why KKT error is so large" && false);
     }
     if (jnlst_->ProduceOutput(J_MOREVECTOR, J_MAIN)) {
       jnlst_->Printf(J_MOREVECTOR, J_MAIN, "\nQP solver solution:\n");

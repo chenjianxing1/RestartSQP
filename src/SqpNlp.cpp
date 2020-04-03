@@ -97,7 +97,7 @@ bool SqpNlp::get_starting_point(shared_ptr<Vector> primal_point,
                                 shared_ptr<Vector> bound_multipliers,
                                 shared_ptr<Vector> constraint_multipliers)
 {
-  return sqp_tnlp_->get_correct_starting_point(
+  return sqp_tnlp_->get_starting_point(
       num_variables_, true, primal_point->get_non_const_values(), true,
       bound_multipliers->get_non_const_values(), num_constraints_, true,
       constraint_multipliers->get_non_const_values());

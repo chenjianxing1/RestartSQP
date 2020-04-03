@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#ifndef SQPRESTARTSOLVER_HPP_
-#define SQPRESTARTSOLVER_HPP_
+#ifndef CROSSOVERSQPSOLVER_HPP_
+#define CROSSOVERSQPSOLVER_HPP_
 
 #include "IpIpoptApplication.hpp"
 #include "sqphot/IpoptSqpNlp.hpp"
@@ -26,7 +26,7 @@ namespace RestartSqp {
  *To use this method, call @Optimize and input NLP class object.
  *
  */
-class SqpRestartSolver
+class CrossoverSqpSolver
 {
   ///////////////////////////////////////////////////////////
   //                      PUBLIC METHODS                   //
@@ -35,10 +35,10 @@ public:
   /** @name constructor/destructor*/
   //@{
   /** Default Constructor*/
-  SqpRestartSolver();
+  CrossoverSqpSolver();
 
   /** Destructor*/
-  ~SqpRestartSolver();
+  ~CrossoverSqpSolver();
   //@}
 
   /** Return journalist.  This can be used by caller. */
@@ -107,6 +107,33 @@ public:
     return sqp_solver_->get_num_var();
   }
 
+  inline std::shared_ptr<const Vector>
+  get_current_primal_variables() const
+  {
+    return sqp_solver_->get_current_primal_variables();
+  }
+
+  inline std::shared_ptr<const Vector>
+  get_current_constraint_multipliers() const
+  {
+    return sqp_solver_->get_current_constraint_multipliers();
+  }
+
+  inline std::shared_ptr<const Vector> get_current_bound_multipliers() const
+  {
+    return sqp_solver_->get_current_bound_multipliers();
+  }
+
+  inline const ActivityStatus* get_bounds_working_set() const
+  {
+    return sqp_solver_->get_bounds_working_set();
+  }
+
+  inline const ActivityStatus* get_constraints_working_set() const
+  {
+    return sqp_solver_->get_constraints_working_set();
+  }
+
   //@}
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //
@@ -130,10 +157,10 @@ private:
   /** @name Hide unused default methods. */
   //@{
   /** Copy Constructor */
-  SqpRestartSolver(const SqpRestartSolver&);
+  CrossoverSqpSolver(const CrossoverSqpSolver&);
 
   /** Overloaded Equals Operator */
-  void operator=(const SqpRestartSolver&);
+  void operator=(const CrossoverSqpSolver&);
   //@}
 
   /** SQP solver for the active-set solves. */
