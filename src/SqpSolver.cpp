@@ -1593,12 +1593,12 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "smaller than trust_region_ratio_accept_tol.");
   reg_options->AddBoundedNumberOption(
       "trust_region_ratio_accept_tol",
-      "trust-region parameter for the ratio test.", 0., true, 1., true, 1.0e-8,
+      "trust-region parameter for the ratio test.", 0., true, 1., true, 1e-8,
       "The trial point will be accepted if ratio >= "
       "trust_region_ratio_accept_tol. ");
   reg_options->AddBoundedNumberOption(
       "trust_region_ratio_increase_tol",
-      "trust-region parameter for the ratio test.", 0., true, 1., true, 0.2,
+      "trust-region parameter for the ratio test.", 0., true, 1., true, 1e-8,
       "If ratio >= trust_region_ratio_increase_tol and the search direction "
       "hits the  "
       "trust-region boundary, the trust-region radius will "
@@ -1718,15 +1718,15 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   reg_options->AddIntegerOption("qp_solver_max_num_iterations",
                                 "maximum number of iteration for the "
                                 "QP solver in solving each QP",
-                                1000);
+                                100000);
   reg_options->AddIntegerOption("lp_solver_max_num_iterations",
                                 "maximum number of iteration for the "
                                 "LP solver in solving each LP",
-                                1000);
+                                100000);
   reg_options->AddIntegerOption("qp_solver_print_level",
                                 "print level for QP solver", 0);
   reg_options->AddStringOption4(
-      "qp_solver_choice", "QP solver used for step computation.", "qore",
+      "qp_solver_choice", "QP solver used for step computation.", "qpoases",
       "qpoases", "", "qore", "", "gurobi", "", "cplex", "");
 
   //    reg_options->AddStringOption("QPsolverChoice",

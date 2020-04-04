@@ -246,7 +246,7 @@ bool LazySqpTNlp::eval_constraint_values(int num_variables,
 
   bool retval;
   retval = sqp_tnlp_->eval_constraint_values(
-      num_variables, primal_variables, new_primal_variables, num_constraints,
+      num_variables, primal_variables, new_primal_variables, num_orig_constraints_,
       orig_constraint_values);
 
   if (retval) {
