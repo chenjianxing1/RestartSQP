@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(SQPHOTSTART CXX)
+project(RestartSQP CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 set(MACOSX_RPATH 1) 
+
 # Debug mode
 option(Debug "Turn on debug mode" OFF)
 
@@ -113,6 +114,7 @@ if (Ipopt)
 	add_definitions(-DUSE_IPOPT)
 	find_package(IPOPT REQUIRED)
 	include_directories(${IPOPT_INCLUDE_DIRS}/..)
+	include_directories(${IPOPT_INCLUDE_DIRS})
 	set(LIBS ${LIBS} ${IPOPT_LDFLAGS})
 endif()
 
@@ -121,9 +123,8 @@ endif()
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
 
 # Build options
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/Release)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 

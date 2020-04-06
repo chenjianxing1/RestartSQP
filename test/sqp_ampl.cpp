@@ -4,10 +4,10 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include <sqphot/QpHandler.hpp>
-#include <sqphot/SqpIpoptNlp.hpp>
-#include <sqphot/SqpSolver.hpp>
-#include <sqphot/Utils.hpp>
+#include <RestartSQP/QpHandler.hpp>
+#include <RestartSQP/SqpIpoptNlp.hpp>
+#include <RestartSQP/SqpSolver.hpp>
+#include <RestartSQP/Utils.hpp>
 #include <stdio.h>
 #include <string.h>
 #include <string>

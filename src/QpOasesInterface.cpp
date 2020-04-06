@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#include "sqphot/QpOasesInterface.hpp"
-#include "sqphot/MessageHandling.hpp"
+#include "RestartSQP/QpOasesInterface.hpp"
+#include "RestartSQP/MessageHandling.hpp"
 
 using namespace std;
 using namespace Ipopt;
@@ -488,4 +488,4 @@ void QpOasesInterface::retrieve_working_set_()
   delete[] tmp_W_c;
 }
 
-} // SQPHOTSTART
+} // RestartSQPSTART

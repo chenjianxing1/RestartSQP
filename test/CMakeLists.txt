@@ -15,15 +15,15 @@ add_executable(lazy_sqp_ampl ${PROJECT_SOURCE_DIR}/test/lazy_sqp_ampl.cpp)
 
 set(IPOPT_ROOT_DIR $ENV{IPOPT_ROOT_DIR})
 
-find_library(AMPLINTERFACE_LIBRARY 
-        ipoptamplinterface
-        HINTS ${IPOPT_ROOT_DIR}/lib
-)
+#find_library(AMPLINTERFACE_LIBRARY 
+#        ipoptamplinterface
+#        HINTS ${IPOPT_ROOT_DIR}/lib
+#)
 
-find_library(ASL_LIBRARY 
-        coinasl
-        HINTS ${IPOPT_ROOT_DIR}/lib
-)
+#find_library(ASL_LIBRARY 
+#        coinasl
+#        HINTS ${IPOPT_ROOT_DIR}/lib
+#)
 
 #string(REPLACE ";" " " MY_LD_FLAGS "${IPOPT_LDFLAGS}")
 #message(${LD_FLAGS})
@@ -38,12 +38,12 @@ include_directories(${PROJECT_SOURCE_DIR}/test/hs071_lazy)
 include_directories(${QPOASES_INCLUDE_DIRS})
 include_directories(${QORE_INCLUDE_DIR})
 
-target_link_libraries(sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(lazy_sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(hs071_lazy sqphotstart ${LIBS})
+target_link_libraries(sqp_ampl RestartSQPstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(lazy_sqp_ampl RestartSQPstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(hs071_lazy RestartSQPstart ${LIBS})
 
-target_link_libraries(QPsolvers_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
-target_link_libraries(unitTest_SpHbMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(unitTest_SpTripletMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(QPsolvers_test RestartSQPstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
+target_link_libraries(unitTest_SpHbMat RestartSQPstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(unitTest_SpTripletMat RestartSQPstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
 
 

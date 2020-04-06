@@ -5,8 +5,8 @@
 * Date:2019-06
 */
 
-#include "sqphot/CrossoverSqpSolver.hpp"
-#include "sqphot/SqpInitSolveTNlp.hpp"
+#include "RestartSQP/CrossoverSqpSolver.hpp"
+#include "RestartSQP/SqpInitSolveTNlp.hpp"
 #include "IpIpoptApplication.hpp"
 
 using namespace std;
@@ -307,7 +307,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
                            initial_penalty_parameter);
 
   // Now call the SQP solver to get the active-set solution for this problem
-  const string options_file_name = "";
+//  const string options_file_name = "";
   bool keep_output_file = true;
   sqp_solver_->optimize_nlp(init_solve_tnlp, options_file_name, keep_output_file);
 
@@ -353,4 +353,4 @@ void CrossoverSqpSolver::register_options_(
 {
 }
 
-} // END_NAMESPACE_SQPHOTSTART
+} // END_NAMESPACE_RestartSQPSTART

@@ -34,6 +34,8 @@ MESSAGE( STATUS "Looking for AMD: " )
 ####################################################################################################
 #### SEARCH PACKAGE COMPONENTS
 ####################################################################################################
+SET(SUITESPARSE_DIR "$ENV{SUITESPARSE_ROOT_DIR}")
+
 SET( AMD_DIR ${SUITESPARSE_DIR}/AMD CACHE PATH "Path to an AMD installation" )
 
 #FIND_PACKAGE( UFCONFIG )

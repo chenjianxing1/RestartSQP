@@ -5,9 +5,9 @@
 * Date:2019-06
 */
 
-#include "sqphot/SqpSolver.hpp"
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/SQPDebug.hpp"
+#include "RestartSQP/SqpSolver.hpp"
+#include "RestartSQP/MessageHandling.hpp"
+#include "RestartSQP/SQPDebug.hpp"
 
 #include <fstream>
 
@@ -2009,4 +2009,4 @@ void SqpSolver::print_final_stats_()
   jnlst_->Printf(J_SUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
 }
 
-} // END_NAMESPACE_SQPHOTSTART
+} // END_NAMESPACE_RestartSQPSTART

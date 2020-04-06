@@ -4,7 +4,7 @@
  * Date:    2019-08-15
  */
 
-#include "sqphot/QoreInterface.hpp"
+#include "RestartSQP/QoreInterface.hpp"
 
 using namespace std;
 using namespace Ipopt;

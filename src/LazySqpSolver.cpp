@@ -5,9 +5,9 @@
 * Date:2019-06
 */
 
-#include "sqphot/LazySqpSolver.hpp"
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/SQPDebug.hpp"
+#include "RestartSQP/LazySqpSolver.hpp"
+#include "RestartSQP/MessageHandling.hpp"
+#include "RestartSQP/SQPDebug.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -263,4 +263,4 @@ int LazySqpSolver::update_considered_constraints_()
   return num_constraints_added;
 }
 
-} // END_NAMESPACE_SQPHOTSTART
+} // END_NAMESPACE_RestartSQPSTART

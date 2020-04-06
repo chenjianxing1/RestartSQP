@@ -27,6 +27,7 @@ find_library(QORE_LIBRARY
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
 	HINTS ${QORE_ROOT_DIR}/build/lib
+	HINTS ${QORE_ROOT_DIR}/build/lib/Release
 )
 #find_library(QORE_LIBRARY2 
 #	libblas.dylib

@@ -4,7 +4,7 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#include "sqphot/QpSolverInterface.hpp"
+#include "RestartSQP/QpSolverInterface.hpp"
 
 using namespace std;
 using namespace Ipopt;
@@ -362,4 +362,4 @@ void QpSolverInterface::write_qp_data_to_file(const string& filename)
   fclose(file);
 }
 
-} // SQPHOTSTART
+} // RestartSQPSTART

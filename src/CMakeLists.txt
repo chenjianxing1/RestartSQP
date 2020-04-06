@@ -1,6 +1,6 @@
 include_directories(${PROJECT_INCLUDE_DIR})
 
-file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/sqphot/*.hpp)
+file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/RestartSQP/*.hpp)
 file(GLOB SOURCES *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
 if (NOT Gurobi)
@@ -12,21 +12,21 @@ if (NOT Cplex)
 endif()
 
 
-add_library(sqphotstart STATIC ${SOURCES} ${HEADERS})
+add_library(RestartSQP STATIC ${SOURCES} ${HEADERS})
 
 if(ADD_EIGEN)
- add_dependencies(sqphotstart eigen)
+ add_dependencies(RestartSQP eigen)
 endif(ADD_EIGEN)
 
 if(ADD_QPOASES)
- add_dependencies(sqphotstart QPOASES)
+ add_dependencies(RestartSQP QPOASES)
 endif(ADD_QPOASES)
 
-target_link_libraries(sqphotstart ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${QPOASES_LIBRARIES} ${QORE_LIBRARIES}) # ${IPOPT_LDFLAGS})
+target_link_libraries(RestartSQP ${CPLEX_LIBRARIES} ${GUROBI_LIBRARIES} ${QPOASES_LIBRARIES} ${QORE_LIBRARIES}) # ${IPOPT_LDFLAGS})
 #set(CMAKE_EXE_LINKER_FLAGS "${IPOPT_LDFLAGS}")
 
 if(Cov)
-  set_target_properties(sqphotstart
+  set_target_properties(RestartSQP
   PROPERTIES
     COMPILE_FLAGS "-ftest-coverage -fprofile-arcs"
     LINK_FLAGS    "-lgcov --coverage -fprofile-arcs"
@@ -39,5 +39,5 @@ SET(CMAKE_INSTALL_RPATH "${PROJ_LIB_DIR}")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 
-file(GLOB SQPHOTSTART_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB RestartSQP_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 

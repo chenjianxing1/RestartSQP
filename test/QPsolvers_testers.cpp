@@ -6,12 +6,12 @@ extern "C" {
 #include <qpsolver.h>
 }
 
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/QoreInterface.hpp"
-#include "sqphot/QpOasesInterface.hpp"
-#include "sqphot/SparseHbMatrix.hpp"
-#include "sqphot/SqpSolver.hpp"
-#include "sqphot/Vector.hpp"
+#include "RestartSQP/MessageHandling.hpp"
+#include "RestartSQP/QoreInterface.hpp"
+#include "RestartSQP/QpOasesInterface.hpp"
+#include "RestartSQP/SparseHbMatrix.hpp"
+#include "RestartSQP/SqpSolver.hpp"
+#include "RestartSQP/Vector.hpp"
 #include <memory>
 
 using namespace RestartSqp;

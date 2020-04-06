@@ -4,11 +4,11 @@
  * Authors: Xinyi Luo
  * Date:2019-07
  */
-#include "sqphot/QpHandler.hpp"
+#include "RestartSQP/QpHandler.hpp"
 #include "IpOptionsList.hpp"
-#include "sqphot/QoreInterface.hpp"
-#include "sqphot/QpOasesInterface.hpp"
-#include "sqphot/SQPDebug.hpp"
+#include "RestartSQP/QoreInterface.hpp"
+#include "RestartSQP/QpOasesInterface.hpp"
+#include "RestartSQP/SQPDebug.hpp"
 
 using namespace std;
 using namespace Ipopt;
@@ -479,4 +479,4 @@ void QpHandler::get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
   }
 }
 #endif
-} // namespace SQPhotstart
+} // namespace RestartSQPstart

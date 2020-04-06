@@ -5,8 +5,8 @@
 * Date:2019-07
 */
 
-#include "sqphot/LazySqpTNlp.hpp"
-#include "sqphot/Utils.hpp"
+#include "RestartSQP/LazySqpTNlp.hpp"
+#include "RestartSQP/Utils.hpp"
 #include <cassert>
 
 using namespace std;

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "sqphot/SparseHbMatrix.hpp"
+#include "RestartSQP/SparseHbMatrix.hpp"
 
 using namespace std;
 

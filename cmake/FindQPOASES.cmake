@@ -17,6 +17,9 @@ find_path(QPOASES_INCLUDE_DIR
 find_library(QPOASES_LIBRARY 
   qpOASES
   HINTS ${QPOASES_ROOT_DIR}/build/libs
+  HINTS ${QPOASES_ROOT_DIR}/bin
+  HINTS ${QPOASES_ROOT_DIR}/lib
+  HINTS ${QPOASES_ROOT_DIR}/lib/Release
 )
 
 include(FindPackageHandleStandardArgs)

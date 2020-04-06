@@ -4,9 +4,9 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include "sqphot/SqpIpoptNlp.hpp"
-#include "sqphot/LazySqpSolver.hpp"
-#include "sqphot/Utils.hpp"
+#include "RestartSQP/SqpIpoptNlp.hpp"
+#include "RestartSQP/LazySqpSolver.hpp"
+#include "RestartSQP/Utils.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <string>
