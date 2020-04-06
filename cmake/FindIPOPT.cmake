@@ -2,7 +2,7 @@ find_package(PkgConfig REQUIRED)
 
 # The following does not work, it should automatically set PKG_CONFIG_PATH but it doesn't, so user has to set it manually for now.
 SET(PKG_CONFIG_USE_CMAKE_PREFIX_PATH 1)
-SET(CMAKE_PREFIX_PATH $ENV{IPOPTDIR}/lib/pkgconfig)
+SET(CMAKE_PREFIX_PATH $ENV{IPOPT_ROOT_DIR}/lib/pkgconfig)
 message("CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
 message("*** RIGHT NOW, WE NEED TO SET THE ENVIRONMENT VARIABLE PGK_SEARCH_PATH TO THIS VALUE:")
 message("Type: export PKG_CONFIG_PATH=${CMAKE_PREFIX_PATH}:$PKG_CONFIG_PATH")
