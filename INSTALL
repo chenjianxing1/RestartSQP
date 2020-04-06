@@ -1,0 +1,7 @@
+install Ipopt
+
+install QPSolvers project
+
+set environment variables
+IPOPT_ROOT_DOR : base dir of the Ipopt installation, i.e., where the 'lib' subdirectory is
+PKG_CONFIG_PATH=${IPOPT_ROOT_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH
