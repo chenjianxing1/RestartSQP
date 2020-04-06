@@ -13,16 +13,16 @@ add_executable(sqp_ampl ${PROJECT_SOURCE_DIR}/test/sqp_ampl.cpp)
 add_executable(lazy_sqp_ampl ${PROJECT_SOURCE_DIR}/test/lazy_sqp_ampl.cpp)
 
 
-set(IPOPTDIR $ENV{IPOPTDIR})
+set(IPOPT_ROOT_DIR $ENV{IPOPT_ROOT_DIR})
 
 find_library(AMPLINTERFACE_LIBRARY 
         ipoptamplinterface
-        HINTS ${IPOPTDIR}/lib
+        HINTS ${IPOPT_ROOT_DIR}/lib
 )
 
 find_library(ASL_LIBRARY 
         coinasl
-        HINTS ${IPOPTDIR}/lib
+        HINTS ${IPOPT_ROOT_DIR}/lib
 )
 
 #string(REPLACE ";" " " MY_LD_FLAGS "${IPOPT_LDFLAGS}")

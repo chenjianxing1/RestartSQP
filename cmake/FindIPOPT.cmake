@@ -7,7 +7,7 @@ message("CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
 message("*** RIGHT NOW, WE NEED TO SET THE ENVIRONMENT VARIABLE PGK_SEARCH_PATH TO THIS VALUE:")
 message("Type: export PKG_CONFIG_PATH=${CMAKE_PREFIX_PATH}:$PKG_CONFIG_PATH")
 pkg_check_modules(IPOPT REQUIRED ipopt)
-message("*** Make sure your environment variable LD_LIBRARY_PATH includes $IPOPTDIR/lib")
+message("*** Make sure your environment variable LD_LIBRARY_PATH includes $IPOPT_ROOT_DIR/lib")
 
 mark_as_advanced(IPOPT_LDFLAGS IPOPT_INCLUDE_DIR)
 
