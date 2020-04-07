@@ -42,13 +42,12 @@ MESSAGE( STATUS "Looking for UMFPACK: " )
 #  ../../QPSolvers_github/QORE-master
 #  )
 #add your own suitesparse directory here
-SET(SUITESPARSE_DIR /home/andreasw/Research/Xinyi/QPSolvers_github/QORE-master/suitesparse)
+SET(SUITESPARSE_DIR /home/andreasw/Research/Xinyi/QPSolvers_github/QORE-master/suitesparse CACHE PATH "Path to a SuiteSparse installation.")
 
 message(STATUS "SUITESPARSE_DIR=" ${SUITESPARSE_DIR})
 
 SET(UMFPACK_DIR ${SUITESPARSE_DIR}/UMFPACK)
 
-MARK_AS_ADVANCED(SUITESPARSE_DIR)
 MESSAGE( STATUS "UMFPACK_DIR = " ${UMFPACK_DIR} )
 
 #FIND_PACKAGE( SuiteSparse_config )
