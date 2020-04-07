@@ -1,32 +1,33 @@
-set(QORE_ROOT_DIR "$ENV{QORE_ROOT_DIR}" CACHE PATH "QORE root directory.")
-message("Looking for QORE in ${QORE_ROOT_DIR}")
+set(QORE_SRC_DIR "$ENV{QORE_SRC_DIR}" CACHE PATH "QORE source directory.")
+set(QORE_BIN_DIR "$ENV{QORE_BIN_DIR}" CACHE PATH "QORE binary directory.")
+message("Looking for QORE in ${QORE_SRC_DIR} and ${QORE_BIN_DIR}")
 
 
 find_path(QORE_INCLUDE_DIR2
 	NAMES qpsolver.h 
 	HINTS /usr/local/include
-	HINTS ${QORE_ROOT_DIR}/QPSOLVER/include
+	HINTS ${QORE_SRC_DIR}/QPSOLVER/include
 	)
 MESSAGE(STATUS "QORE_INCLUDE_DIR2 = ${QORE_INCLUDE_DIR2}") 
 find_path(QPPRESOLVER_INCLUDE_DIR
 	NAMES qpPresolver.h 
 	HINTS /usr/local/include
-	HINTS ${QORE_ROOT_DIR}/qpPresolver/include
+	HINTS ${QORE_SRC_DIR}/qpPresolver/include
 )
 
 find_path(QORE_INCLUDE_DIR3
 	NAMES qp_types.h 
 	HINTS /usr/local/include
-	HINTS ${QORE_ROOT_DIR}
+	HINTS ${QORE_SRC_DIR}
 )
- set(QORE_INCLUDE_DIR ${QORE_INCLUDE_DIR3} ${QORE_INCLUDE_DIR2} ${QPPRESOLVER_INCLUDE_DIR})
+set(QORE_INCLUDE_DIR ${QORE_INCLUDE_DIR3} ${QORE_INCLUDE_DIR2} ${QPPRESOLVER_INCLUDE_DIR})
 
 if(APPLE)
 find_library(QORE_LIBRARY 
 	libqore.dylib
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
-	HINTS ${QORE_ROOT_DIR}/build/lib
+	HINTS ${QORE_BIN_DIR}/lib
 )
 #find_library(QORE_LIBRARY2 
 #	libblas.dylib
@@ -44,10 +45,10 @@ find_library(QORE_LIBRARY
 
 elseif(UNIX)
 find_library(QORE_LIBRARY 
-	libqore.a
+	libqore
 	HINTS /usr/local/lib
 	HINTS third_party/QORE/lib
-	HINTS ${QORE_ROOT_DIR}/build//lib
+	HINTS ${QORE_BIN_DIR}/lib
 )
 #find_library(QORE_LIBRARY2 
 #	libblas.so
