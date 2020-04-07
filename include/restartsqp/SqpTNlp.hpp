@@ -7,8 +7,8 @@
 #ifndef SQPHOTSTART_SQPTNLP_HPP
 #define SQPHOTSTART_SQPTNLP_HPP
 
-#include "sqphot/Statistics.hpp"
-#include "sqphot/Types.hpp"
+#include "restartsqp/Statistics.hpp"
+#include "restartsqp/Types.hpp"
 #include <memory>
 #include <cassert>
 

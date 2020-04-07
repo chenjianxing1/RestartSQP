@@ -13,7 +13,7 @@
 #include <memory>
 
 #include "IpJournalist.hpp"
-#include "sqphot/Types.hpp"
+#include "restartsqp/Types.hpp"
 
 namespace RestartSqp {
 

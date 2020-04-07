@@ -5,7 +5,7 @@
 * Date:2019-05
 */
 
-#include "sqphot/Utils.hpp"
+#include "restartsqp/Utils.hpp"
 #include <chrono>
 #include <cmath>
 #include <iostream>

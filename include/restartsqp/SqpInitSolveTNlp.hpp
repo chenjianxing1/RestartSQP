@@ -7,7 +7,7 @@
 #ifndef SQPHOTSTART_SQPINITSOLVETNLP_HPP
 #define SQPHOTSTART_SQPINITSOLVETNLP_HPP
 
-#include "sqphot/SqpTNlp.hpp"
+#include "restartsqp/SqpTNlp.hpp"
 
 namespace RestartSqp {
 

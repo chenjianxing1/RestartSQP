@@ -1,5 +1,5 @@
-#include "sqphot/SparseTripletMatrix.hpp"
-#include "sqphot/SparseHbMatrix.hpp"
+#include "restartsqp/SparseTripletMatrix.hpp"
+#include "restartsqp/SparseHbMatrix.hpp"
 #include <iostream>
 
 using namespace std;

@@ -8,8 +8,8 @@
 #define CROSSOVERSQPSOLVER_HPP_
 
 #include "IpIpoptApplication.hpp"
-#include "sqphot/IpoptSqpNlp.hpp"
-#include "sqphot/SqpSolver.hpp"
+#include "restartsqp/IpoptSqpNlp.hpp"
+#include "restartsqp/SqpSolver.hpp"
 
 namespace RestartSqp {
 /**

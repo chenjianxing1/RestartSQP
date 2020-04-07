@@ -5,8 +5,8 @@
 * Date:2019-06
 */
 
-#include "sqphot/CrossoverSqpSolver.hpp"
-#include "sqphot/SqpInitSolveTNlp.hpp"
+#include "restartsqp/CrossoverSqpSolver.hpp"
+#include "restartsqp/SqpInitSolveTNlp.hpp"
 #include "IpIpoptApplication.hpp"
 
 using namespace std;

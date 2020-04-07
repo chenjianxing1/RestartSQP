@@ -7,7 +7,7 @@
 #ifndef SQPHOTSTART_SHORTENEDSQPTNLP_HPP
 #define SQPHOTSTART_SHORTENEDSQPTNLP_HPP
 
-#include "sqphot/SqpTNlp.hpp"
+#include "restartsqp/SqpTNlp.hpp"
 
 namespace RestartSqp {
 /**

@@ -1,5 +1,5 @@
-#include "sqphot/SparseTripletMatrix.hpp"
-#include "sqphot/Vector.hpp"
+#include "restartsqp/SparseTripletMatrix.hpp"
+#include "restartsqp/Vector.hpp"
 #include "unit_test_utils.hpp"
 #include <algorithm>
 #include <iterator>

@@ -7,7 +7,7 @@
 #ifndef _SQPHOTSTART_GUROBI_INTERFACE_
 #define _SQPHOTSTART_GUROBI_INTERFACE_
 
-#include "sqphot/QPsolverInterface.hpp"
+#include "restartsqp/QPsolverInterface.hpp"
 
 #ifdef USE_GUROBI
 #include <gurobi_c++.h>

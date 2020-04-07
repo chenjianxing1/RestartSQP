@@ -9,7 +9,7 @@
 #ifndef SQPHOTSTART_SPHBMAT_HPP_
 #define SQPHOTSTART_SPHBMAT_HPP_
 
-#include "sqphot/SparseTripletMatrix.hpp"
+#include "restartsqp/SparseTripletMatrix.hpp"
 
 namespace RestartSqp {
 

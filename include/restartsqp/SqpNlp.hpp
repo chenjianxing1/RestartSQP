@@ -7,9 +7,9 @@
 #ifndef SQPHOTSTART_SQPNLP_HPP
 #define SQPHOTSTART_SQPNLP_HPP
 
-#include "sqphot/SparseTripletMatrix.hpp"
-#include "sqphot/SqpTNlp.hpp"
-#include "sqphot/Vector.hpp"
+#include "restartsqp/SparseTripletMatrix.hpp"
+#include "restartsqp/SqpTNlp.hpp"
+#include "restartsqp/Vector.hpp"
 #include <memory>
 
 namespace RestartSqp {

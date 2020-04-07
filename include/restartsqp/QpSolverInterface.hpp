@@ -6,11 +6,11 @@
 #ifndef SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 #define SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 
-#include "sqphot/SQPDebug.hpp"
-#include "sqphot/SparseHbMatrix.hpp"
-#include "sqphot/SqpTNlp.hpp"
-#include "sqphot/Statistics.hpp"
-#include "sqphot/Vector.hpp"
+#include "restartsqp/SQPDebug.hpp"
+#include "restartsqp/SparseHbMatrix.hpp"
+#include "restartsqp/SqpTNlp.hpp"
+#include "restartsqp/Statistics.hpp"
+#include "restartsqp/Vector.hpp"
 #include <memory>
 
 namespace RestartSqp {

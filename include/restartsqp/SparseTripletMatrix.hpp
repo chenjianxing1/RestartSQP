@@ -8,8 +8,8 @@
 #ifndef SQPHOTSTART_SPTRIPLETMAT_HPP_
 #define SQPHOTSTART_SPTRIPLETMAT_HPP_
 
-#include "sqphot/Utils.hpp"
-#include "sqphot/Vector.hpp"
+#include "restartsqp/Utils.hpp"
+#include "restartsqp/Vector.hpp"
 
 namespace RestartSqp {
 
