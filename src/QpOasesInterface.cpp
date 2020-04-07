@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#include "sqphot/QpOasesInterface.hpp"
-#include "sqphot/MessageHandling.hpp"
+#include "restartsqp/QpOasesInterface.hpp"
+#include "restartsqp/MessageHandling.hpp"
 
 using namespace std;
 using namespace Ipopt;

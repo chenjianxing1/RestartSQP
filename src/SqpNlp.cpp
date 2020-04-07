@@ -4,7 +4,7 @@
 * Authors: Xinyi Luo
 * Date:2019-07
 */
-#include "sqphot/SqpNlp.hpp"
+#include "restartsqp/SqpNlp.hpp"
 
 using namespace std;
 

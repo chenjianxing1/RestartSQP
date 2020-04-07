@@ -11,7 +11,7 @@
 #include <ilcplex/ilocplex.h>
 #endif
 
-#include "sqphot/QPsolverInterface.hpp"
+#include "restartsqp/QPsolverInterface.hpp"
 
 namespace RestartSqp {
 DECLARE_STD_EXCEPTION(CPLEX_SOLVER_FAILS);

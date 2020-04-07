@@ -4,8 +4,8 @@
 #include <stdlib.h> /* srand, rand */
 #include <time.h>
 
-#include "sqphot/SparseHbMatrix.hpp"
-#include "sqphot/Vector.hpp"
+#include "restartsqp/SparseHbMatrix.hpp"
+#include "restartsqp/Vector.hpp"
 #include "unit_test_utils.hpp"
 
 using namespace RestartSqp;

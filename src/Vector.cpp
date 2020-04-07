@@ -5,7 +5,7 @@
  * Date:2019-07
  */
 
-#include "sqphot/Vector.hpp"
+#include "restartsqp/Vector.hpp"
 #include <string>
 
 using namespace Ipopt;

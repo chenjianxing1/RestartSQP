@@ -8,7 +8,7 @@
 #define SQPHOTSTART_IpoptSqpNlp_HPP
 
 #include "IpTNLP.hpp"
-#include "sqphot/SqpTNlp.hpp"
+#include "restartsqp/SqpTNlp.hpp"
 
 namespace RestartSqp {
 /**

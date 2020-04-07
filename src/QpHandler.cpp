@@ -4,11 +4,11 @@
  * Authors: Xinyi Luo
  * Date:2019-07
  */
-#include "sqphot/QpHandler.hpp"
+#include "restartsqp/QpHandler.hpp"
 #include "IpOptionsList.hpp"
-#include "sqphot/QoreInterface.hpp"
-#include "sqphot/QpOasesInterface.hpp"
-#include "sqphot/SQPDebug.hpp"
+#include "restartsqp/QoreInterface.hpp"
+#include "restartsqp/QpOasesInterface.hpp"
+#include "restartsqp/SQPDebug.hpp"
 
 using namespace std;
 using namespace Ipopt;

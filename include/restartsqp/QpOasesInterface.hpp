@@ -10,7 +10,7 @@
 
 #include "IpOptionsList.hpp"
 #include "qpOASES.hpp"
-#include "sqphot/QpSolverInterface.hpp"
+#include "restartsqp/QpSolverInterface.hpp"
 
 namespace RestartSqp {
 

@@ -1,21 +1,21 @@
 #ifndef SQPHOTSTART_QPHANDLER_HPP_
 #define SQPHOTSTART_QPHANDLER_HPP_
 
-#include "sqphot/SqpNlp.hpp"
-#include "sqphot/Statistics.hpp"
-#include "sqphot/Utils.hpp"
+#include "restartsqp/SqpNlp.hpp"
+#include "restartsqp/Statistics.hpp"
+#include "restartsqp/Utils.hpp"
 
-#include "sqphot/QpSolverInterface.hpp"
+#include "restartsqp/QpSolverInterface.hpp"
 
 // TODO: We should get ride of this
-#include "sqphot/SQPDebug.hpp"
+#include "restartsqp/SQPDebug.hpp"
 
 #include "IpOptionsList.hpp"
 
 #ifdef DEBUG
 #ifdef COMPARE_QP_SOLVER
-#include "sqphot/QoreInterface.hpp"
-#include "sqphot/QpOasesInterface.hpp"
+#include "restartsqp/QoreInterface.hpp"
+#include "restartsqp/QpOasesInterface.hpp"
 #endif
 #endif
 

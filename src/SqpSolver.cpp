@@ -5,9 +5,9 @@
 * Date:2019-06
 */
 
-#include "sqphot/SqpSolver.hpp"
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/SQPDebug.hpp"
+#include "restartsqp/SqpSolver.hpp"
+#include "restartsqp/MessageHandling.hpp"
+#include "restartsqp/SQPDebug.hpp"
 
 #include <fstream>
 

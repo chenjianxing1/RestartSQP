@@ -8,9 +8,9 @@
 #define SQPSOLVER_HPP_
 
 #include "IpOptionsList.hpp"
-#include "sqphot/QpHandler.hpp"
-#include "sqphot/SQPDebug.hpp"
-#include "sqphot/Statistics.hpp"
+#include "restartsqp/QpHandler.hpp"
+#include "restartsqp/SQPDebug.hpp"
+#include "restartsqp/Statistics.hpp"
 
 namespace RestartSqp {
 /**

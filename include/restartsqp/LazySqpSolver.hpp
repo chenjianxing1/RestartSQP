@@ -7,8 +7,8 @@
 #ifndef LAZYSQPSOLVER_HPP_
 #define LAZYSQPSOLVER_HPP_
 
-#include "sqphot/CrossoverSqpSolver.hpp"
-#include "sqphot/LazySqpTNlp.hpp"
+#include "restartsqp/CrossoverSqpSolver.hpp"
+#include "restartsqp/LazySqpTNlp.hpp"
 
 namespace RestartSqp {
 /**

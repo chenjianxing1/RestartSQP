@@ -12,8 +12,8 @@ extern "C" {
 }
 
 #include "IpOptionsList.hpp"
-#include "sqphot/MessageHandling.hpp"
-#include "sqphot/QpSolverInterface.hpp"
+#include "restartsqp/MessageHandling.hpp"
+#include "restartsqp/QpSolverInterface.hpp"
 
 DECLARE_STD_EXCEPTION(INVALID_RETURN_TYPE);
 

@@ -4,7 +4,7 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
-#include "sqphot/QpSolverInterface.hpp"
+#include "restartsqp/QpSolverInterface.hpp"
 
 using namespace std;
 using namespace Ipopt;
