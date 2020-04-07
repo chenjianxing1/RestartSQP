@@ -4,7 +4,7 @@
 * Authors: Xinyi Luo
 * Date:2019-07
 */
-#include "restartsqp/SqpIpoptNlp.hpp"
+#include "restartsqp/SqpIpoptTNlp.hpp"
 #include <cassert>
 
 using namespace std;

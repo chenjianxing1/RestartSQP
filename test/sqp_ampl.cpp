@@ -5,7 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <restartsqp/QpHandler.hpp>
-#include <restartsqp/SqpIpoptNlp.hpp>
+#include <restartsqp/SqpIpoptTNlp.hpp>
 #include <restartsqp/SqpSolver.hpp>
 #include <restartsqp/Utils.hpp>
 #include <stdio.h>

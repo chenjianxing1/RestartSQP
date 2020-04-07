@@ -1,7 +1,7 @@
 // Testing lazy constraints
 
 #include "restartsqp/LazySqpSolver.hpp"
-#include "restartsqp/SqpIpoptNlp.hpp"
+#include "restartsqp/SqpIpoptTNlp.hpp"
 #include "hs071_nlp.hpp"
 
 using namespace Ipopt;
