@@ -65,7 +65,7 @@ public:
    * with active-set method.
    */
   void initial_solve(std::shared_ptr<SqpTNlp> sqp_tnlp,
-                     const std::__cxx11::string& options_file_name = "sqp.opt");
+                     const std::string& options_file_name = "sqp.opt");
 
   /**
    * ReOptimize a problem by warm-starting from the old optimal solution and

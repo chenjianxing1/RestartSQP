@@ -307,9 +307,9 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
                            initial_penalty_parameter);
 
   // Now call the SQP solver to get the active-set solution for this problem
-  const string options_file_name = "";
+  const string local_options_file_name = "";  //CK: this is a duplicate of the function argument, which clang++ rejects
   bool keep_output_file = true;
-  sqp_solver_->optimize_nlp(init_solve_tnlp, options_file_name, keep_output_file);
+  sqp_solver_->optimize_nlp(init_solve_tnlp, local_options_file_name, keep_output_file);
 
   // Check if the optimization was conclude successfully
   exit_flag_ = sqp_solver_->get_exit_flag();
