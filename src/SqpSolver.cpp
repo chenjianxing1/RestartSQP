@@ -789,6 +789,9 @@ void SqpSolver::initialize_iterates_()
   // Determine inequality types
   classify_constraints_types_();
 
+  // Check if there are any degrees of freedom
+  assert(num_variables_ > num_equality_constraints_); // TODO: Make proper error
+
   // Determine the starting point.
   sqp_nlp_->get_starting_point(current_iterate_, current_bound_multipliers_,
                                current_constraint_multipliers_);

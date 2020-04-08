@@ -200,7 +200,7 @@ int LazySqpSolver::update_considered_constraints_()
     // If there is a constraint violation, we add the new violation to the list.
     // We need to correct the counting so that it starts from 1.
     if (violation > constraint_violation_tol) {
-      const_viol this_entry(i+1, violation);
+      const_viol this_entry(i, violation);
       constraint_violations.push_back(this_entry);
     }
   }

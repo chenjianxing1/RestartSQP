@@ -228,16 +228,16 @@ void SparseHbMatrix::add_triplet_to_element_list_(
 
   int counter = ele_list.size();
   for (int i = 0; i < num_entries_triplet; i++) {
-    ele_list.emplace_back(trip_row_indices[i] - 1, trip_column_indices[i] - 1,
+    ele_list.emplace_back(trip_row_indices[i], trip_column_indices[i],
                           counter, 0.);
     counter++;
     if (is_symmetric_) {
       if (trip_row_indices[i] != trip_column_indices[i]) {
-        ele_list.emplace_back(trip_column_indices[i] - 1,
-                              trip_row_indices[i] - 1, counter, 0.);
+        ele_list.emplace_back(trip_column_indices[i],
+                              trip_row_indices[i], counter, 0.);
         counter++;
       } else {
-        diagonal_is_set[trip_row_indices[i] - 1] = true;
+        diagonal_is_set[trip_row_indices[i]] = true;
       }
     }
   }
@@ -437,7 +437,7 @@ void SparseHbMatrix::set_values(
     for (int i = 0; i < num_trip_entries; i++) {
       values_[triplet_order_[j]] = trip_values[i];
       j++;
-      if (is_symmetric_ && (trip_col_indices[i] != trip_row_indices[i])) {
+      if (trip_col_indices[i] != trip_row_indices[i]) {
         values_[triplet_order_[j]] = trip_values[i];
         j++;
       }
@@ -507,8 +507,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
           int col_idx = column_indices_[j];
           if (row_idx <= col_idx) {
             // this is an element in the lower triangular part
-            trip_row_indices[i_ele] = row_idx + 1;
-            trip_col_indices[i_ele] = col_idx + 1;
+            trip_row_indices[i_ele] = row_idx;
+            trip_col_indices[i_ele] = col_idx;
             trip_values[i_ele] = values_[j];
             i_ele++;
           }
@@ -523,8 +523,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
           int row_idx = row_indices_[j];
           if (row_idx <= col_idx) {
             // this is an element in the lower triangular part
-            trip_row_indices[i_ele] = row_idx + 1;
-            trip_col_indices[i_ele] = col_idx + 1;
+            trip_row_indices[i_ele] = row_idx;
+            trip_col_indices[i_ele] = col_idx;
             trip_values[i_ele] = values_[j];
             i_ele++;
           }
@@ -549,8 +549,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
         int j_end = row_indices_[row_idx + 1];
         for (int j = j_start; j < j_end; ++j) {
           int col_idx = column_indices_[j];
-          trip_row_indices[i_ele] = row_idx + 1;
-          trip_col_indices[i_ele] = col_idx + 1;
+          trip_row_indices[i_ele] = row_idx;
+          trip_col_indices[i_ele] = col_idx;
           trip_values[i_ele] = values_[j];
           i_ele++;
         }
@@ -562,8 +562,8 @@ shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
         int j_end = column_indices_[col_idx + 1];
         for (int j = j_start; j < j_end; ++j) {
           int row_idx = row_indices_[j];
-          trip_row_indices[i_ele] = row_idx + 1;
-          trip_col_indices[i_ele] = col_idx + 1;
+          trip_row_indices[i_ele] = row_idx;
+          trip_col_indices[i_ele] = col_idx;
           trip_values[i_ele] = values_[j];
           i_ele++;
         }

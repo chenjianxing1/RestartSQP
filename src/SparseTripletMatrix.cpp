@@ -68,7 +68,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
         for (int j = i; j < num_columns; j++) {
           if (data[i * num_columns + j] != 0.) {
             nonzero_entries.push_back(make_tuple(
-                i + 1, j + 1, data[i * num_columns + j], num_entries_));
+                i, j, data[i * num_columns + j], num_entries_));
             num_entries_++;
           }
         }
@@ -78,7 +78,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
         for (int j = 0; j < num_columns; j++) {
           if (data[i * num_columns + j] != 0.) {
             nonzero_entries.push_back(make_tuple(
-                i + 1, j + 1, data[i * num_columns + j], num_entries_));
+                i, j, data[i * num_columns + j], num_entries_));
             num_entries_++;
           }
         }
@@ -103,7 +103,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
         for (int j = i; j < num_columns; j++) {
           if (data[j * num_rows + i] != 0.) {
             nonzero_entries.push_back(
-                make_tuple(i + 1, j + 1, data[j * num_rows + i], num_entries_));
+                make_tuple(i, j, data[j * num_rows + i], num_entries_));
             num_entries_++;
           }
         }
@@ -113,7 +113,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
         for (int j = 0; j < num_columns; j++) {
           if (data[j * num_rows + i] != 0.) {
             nonzero_entries.push_back(
-                make_tuple(i + 1, j + 1, data[j * num_rows + i], num_entries_));
+                make_tuple(i, j, data[j * num_rows + i], num_entries_));
             num_entries_++;
           }
         }
@@ -158,8 +158,8 @@ SparseTripletMatrix::SparseTripletMatrix(
       int end = hb_row_indices[row + 1];
       for (int i = start; i < end; ++i) {
         int col = hb_column_indices[i];
-        row_indices_[i] = row + 1;
-        column_indices_[i] = col + 1;
+        row_indices_[i] = row;
+        column_indices_[i] = col;
         values_[i] = hb_values[i];
       }
     }
@@ -169,8 +169,8 @@ SparseTripletMatrix::SparseTripletMatrix(
       int end = hb_column_indices[col + 1];
       for (int i = start; i < end; ++i) {
         int row = hb_row_indices[i];
-        row_indices_[i] = row + 1;
-        column_indices_[i] = col + 1;
+        row_indices_[i] = row;
+        column_indices_[i] = col;
         values_[i] = hb_values[i];
       }
     }
@@ -196,13 +196,13 @@ void SparseTripletMatrix::print(const string& matrix_name,
                   matrix_name.c_str(), num_entries_);
     for (int i = 0; i < num_entries_; ++i) {
       jnlst->Printf(level, category, "%d %d %23.16e\n", row_indices_[i],
-                    column_indices_[i], values_[i]);
+                    column_indices_[i]+1, values_[i]+1);
     }
   } else {
     printf("Matrix %s with %d nonzero elements:\n", matrix_name.c_str(),
            num_entries_);
     for (int i = 0; i < num_entries_; ++i) {
-      printf("%d %d %23.16e\n", row_indices_[i], column_indices_[i],
+      printf("%d %d %23.16e\n", row_indices_[i]+1, column_indices_[i]+1,
              values_[i]);
     }
   }
@@ -221,11 +221,9 @@ void SparseTripletMatrix::print_dense(const char* name,
   auto dense_matrix = new double[num_rows_ * num_columns_];
 
   for (int i = 0; i < num_entries_; i++) {
-    dense_matrix[num_columns_ * (row_indices_[i] - 1) + column_indices_[i] -
-                 1] = values_[i];
+    dense_matrix[num_columns_ * row_indices_[i] + column_indices_[i]] = values_[i];
     if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-      dense_matrix[num_columns_ * (column_indices_[i] - 1) + row_indices_[i] -
-                   1] = values_[i];
+      dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] = values_[i];
   }
   if (!IsNull(jnlst)) {
     //    if (name != nullptr) {
@@ -290,23 +288,23 @@ void SparseTripletMatrix::multiply(shared_ptr<const Vector> p,
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i] - 1,
-            values_[i] * p->get_values()[column_indices_[i] - 1]);
+            row_indices_[i],
+            values_[i] * p->get_values()[column_indices_[i]]);
         if (row_indices_[i] != column_indices_[i]) {
           result->add_number_to_element(
-              column_indices_[i] - 1,
-              values_[i] * p->get_values()[row_indices_[i] - 1]);
+              column_indices_[i],
+              values_[i] * p->get_values()[row_indices_[i]]);
         }
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i] - 1,
-            -values_[i] * p->get_values()[column_indices_[i] - 1]);
+            row_indices_[i],
+            -values_[i] * p->get_values()[column_indices_[i]]);
         if (row_indices_[i] != column_indices_[i]) {
           result->add_number_to_element(
-              column_indices_[i] - 1,
-              -values_[i] * p->get_values()[row_indices_[i] - 1]);
+              column_indices_[i],
+              -values_[i] * p->get_values()[row_indices_[i]]);
         }
       }
     }
@@ -314,14 +312,14 @@ void SparseTripletMatrix::multiply(shared_ptr<const Vector> p,
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i] - 1,
-            values_[i] * p->get_values()[column_indices_[i] - 1]);
+            row_indices_[i],
+            values_[i] * p->get_values()[column_indices_[i]]);
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i] - 1,
-            -values_[i] * p->get_values()[column_indices_[i] - 1]);
+            row_indices_[i],
+            -values_[i] * p->get_values()[column_indices_[i]]);
       }
     }
   }
@@ -359,15 +357,15 @@ void SparseTripletMatrix::multiply_transpose(shared_ptr<const Vector> p,
   } else {
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
-        result->add_number_to_element(column_indices_[i] - 1,
+        result->add_number_to_element(column_indices_[i],
                                       values_[i] *
-                                          p->get_values()[row_indices_[i] - 1]);
+                                          p->get_values()[row_indices_[i]]);
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
-        result->add_number_to_element(column_indices_[i] - 1,
+        result->add_number_to_element(column_indices_[i],
                                       -values_[i] *
-                                          p->get_values()[row_indices_[i] - 1]);
+                                          p->get_values()[row_indices_[i]]);
       }
     }
   }
@@ -381,19 +379,17 @@ void SparseTripletMatrix::get_dense_matrix(double* dense_matrix,
   }
   if (row_oriented) {
     for (int i = 0; i < num_entries_; i++) {
-      dense_matrix[num_columns_ * (row_indices_[i] - 1) +
-                   (column_indices_[i] - 1)] = values_[i];
+      dense_matrix[num_columns_ * row_indices_[i] +
+                   column_indices_[i]] = values_[i];
       if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-        dense_matrix[num_columns_ * (column_indices_[i] - 1) + row_indices_[i] -
-                     1] = values_[i];
+        dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] = values_[i];
     }
   } else {
     for (int i = 0; i < num_entries_; i++) {
-      dense_matrix[num_rows_ * (column_indices_[i] - 1) + row_indices_[i] - 1] =
+      dense_matrix[num_rows_ * column_indices_[i] + row_indices_[i]] =
           values_[i];
       if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-        dense_matrix[num_rows_ * (row_indices_[i] - 1) + column_indices_[i] -
-                     1] = values_[i];
+        dense_matrix[num_rows_ * row_indices_[i] + column_indices_[i]] = values_[i];
     }
   }
 }

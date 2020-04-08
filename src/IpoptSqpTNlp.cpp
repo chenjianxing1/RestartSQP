@@ -41,7 +41,7 @@ bool IpoptSqpNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
   bool retval;
   retval = sqp_tnlp_->get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, nlp_name);
 
-  index_style = TNLP::FORTRAN_STYLE;
+  index_style = TNLP::C_STYLE;
 
   return retval;
 }

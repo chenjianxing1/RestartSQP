@@ -19,14 +19,14 @@ int main(int argv, char* argc[])
       make_shared<SqpIpoptNlp>(ipopt_nlp, nlp_name);
 
   // Create an array with the indices of the constraints that should be considered
-  // in the beginning.  Constraints are counted starting from 1.
+  // in the beginning.  Constraints are counted starting from 0.
 
   // In this case, the hs071 has two constraints.  The first one
   // is an inequality constraints, and the second one is an equality constraint.
   // Here, we pose the problem first without the inequality constraint
   int num_initial_constraints = 1;
   int* constraint_indices = new int[num_initial_constraints]; // allocating size 1 just for demonstration
-  constraint_indices[0] = 2;  // include second constraint
+  constraint_indices[0] = 1;  // include second constraint
 
   // Now get an SQP solver object that can do the lazy constraint generation
   LazySqpSolver lazy_sqp_solver;

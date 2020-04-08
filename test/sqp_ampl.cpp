@@ -35,7 +35,7 @@ public:
       fprintf(file, "%10s   %10s    %10s    %10s    %10s    %10s    ", "name",
               "nVar", "nConstr", "iter", "QP_iter", "exitflag");
 
-      fprintf(file, "%23s    %23s    %23s    %23s    %23s\n", "objective",
+      fprintf(file, "%10s   %10s    %10s    %10s    %10s\n", "objective",
               "primal_violation", "dual_violation", "stationarity_violation",
               "compl_violation");
 

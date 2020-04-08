@@ -92,9 +92,11 @@ private:
 /**
  *@brief This is a derived class of Matrix.
  * It strored matrix in Harwell-Boeing format which is required by qpOASES and
- *QORE.
+ * QORE.
  * It contains method to transform matrix format from Triplet form to
  * Harwell-Boeing format and then stored to its class members
+ *
+ * Index counting starts at 0.
  */
 
 class SparseHbMatrix : public Matrix

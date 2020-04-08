@@ -28,12 +28,10 @@ bool SqpIpoptNlp::get_nlp_info(int& num_variables, int& num_constraints,
                                int& num_nonzeros_jacobian,
                                int& num_nonzeros_hessian, std::string& nlp_name)
 {
-  TNLP::IndexStyleEnum index_style;
   bool retval;
   retval = ipopt_tnlp_->get_nlp_info(num_variables, num_constraints,
                                      num_nonzeros_jacobian,
-                                     num_nonzeros_hessian, index_style);
-  assert(index_style == TNLP::FORTRAN_STYLE);
+                                     num_nonzeros_hessian, index_style_);
   nlp_name = nlp_name_;
 
   return retval;
@@ -165,9 +163,19 @@ bool SqpIpoptNlp::eval_constraint_jacobian(
     bool new_primal_variables, int num_constraints, int num_nonzeros_jacobian,
     int* row_indices, int* column_indices, double* nonzero_values)
 {
-  return ipopt_tnlp_->eval_jac_g(
+  bool retval = ipopt_tnlp_->eval_jac_g(
       num_variables, primal_variables, new_primal_variables, num_constraints,
       num_nonzeros_jacobian, row_indices, column_indices, nonzero_values);
+
+  // Adjust numbering if necessary;
+  if (retval && row_indices && index_style_ == TNLP::FORTRAN_STYLE) {
+    for (int i=0; i<num_nonzeros_jacobian; ++i) {
+      row_indices[i]-=1;
+      column_indices[i]-=1;
+    }
+  }
+
+  return retval;
 }
 
 /**
@@ -198,6 +206,14 @@ bool SqpIpoptNlp::eval_lagrangian_hessian(
                           row_indices, column_indices, nonzero_values);
 
   delete[] lambda;
+
+  // Adjust numbering if necessary;
+  if (retval && row_indices && index_style_ == TNLP::FORTRAN_STYLE) {
+    for (int i=0; i<num_nonzeros_hessian; ++i) {
+      row_indices[i]-=1;
+      column_indices[i]-=1;
+    }
+  }
 
   return retval;
 }
