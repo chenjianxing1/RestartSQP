@@ -8,7 +8,7 @@ find_path(QORE_INCLUDE_DIR2
 	HINTS /usr/local/include
 	HINTS ${QORE_SRC_DIR}/QPSOLVER/include
 	)
-MESSAGE(STATUS "QORE_INCLUDE_DIR2 = ${QORE_INCLUDE_DIR2}") 
+
 find_path(QPPRESOLVER_INCLUDE_DIR
 	NAMES qpPresolver.h 
 	HINTS /usr/local/include
@@ -20,50 +20,26 @@ find_path(QORE_INCLUDE_DIR3
 	HINTS /usr/local/include
 	HINTS ${QORE_SRC_DIR}
 )
+
 set(QORE_INCLUDE_DIR ${QORE_INCLUDE_DIR3} ${QORE_INCLUDE_DIR2} ${QPPRESOLVER_INCLUDE_DIR})
 
 if(APPLE)
-find_library(QORE_LIBRARY 
-	libqore.dylib
-	HINTS /usr/local/lib
-	HINTS third_party/QORE/lib
-	HINTS ${QORE_BIN_DIR}/lib
-)
-#find_library(QORE_LIBRARY2 
-#	libblas.dylib
-#	HINTS /usr/local/lib
-#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-#	HINTS ${QORE_ROOT_DIR}/lib
-#)
 
-#find_library(QORE_LIBRARY3 
-#	liblapack.dylib
-#	HINTS /usr/local/lib
-#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-#	HINTS ${QORE_ROOT_DIR}/lib
-#)
+	find_library(QORE_LIBRARY 
+		libqore.dylib
+		HINTS /usr/local/lib
+		HINTS third_party/QORE/lib
+		HINTS ${QORE_BIN_DIR}/lib
+	)
 
 elseif(UNIX)
-find_library(QORE_LIBRARY 
-	libqore
-	HINTS /usr/local/lib
-	HINTS third_party/QORE/lib
-	HINTS ${QORE_BIN_DIR}/lib
-)
-#find_library(QORE_LIBRARY2 
-#	libblas.so
-#	HINTS /usr/local/lib
-#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-#	HINTS ${QORE_ROOT_DIR}/lib
-#)
 
-#find_library(QORE_LIBRARY3 
-#	liblapack.so
-#	HINTS /usr/local/lib
-#	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
-#	HINTS ${QORE_ROOT_DIR}/lib
-#)
-
+	find_library(QORE_LIBRARY 
+		libqore
+		HINTS /usr/local/lib
+		HINTS third_party/QORE/lib
+		HINTS ${QORE_BIN_DIR}/lib
+	)
 
 endif()
 

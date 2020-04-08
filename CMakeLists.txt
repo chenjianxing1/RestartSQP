@@ -112,7 +112,8 @@ if (Ipopt)
 	message(STATUS "Enable IPOPT")
 	add_definitions(-DUSE_IPOPT)
 	find_package(IPOPT REQUIRED)
-	include_directories(${IPOPT_INCLUDE_DIRS}/..)
+  include_directories(${IPOPT_INCLUDE_DIRS}/..)
+  include_directories(${IPOPT_INCLUDE_DIRS})          # CK added this
 	set(LIBS ${LIBS} ${IPOPT_LDFLAGS})
 endif()
 

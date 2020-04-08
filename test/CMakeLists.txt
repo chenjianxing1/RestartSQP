@@ -13,7 +13,7 @@ add_executable(sqp_ampl ${PROJECT_SOURCE_DIR}/test/sqp_ampl.cpp)
 add_executable(lazy_sqp_ampl ${PROJECT_SOURCE_DIR}/test/lazy_sqp_ampl.cpp)
 
 
-set(IPOPT_ROOT_DIR $ENV{IPOPT_ROOT_DIR})
+#set(IPOPT_ROOT_DIR $ENV{IPOPT_ROOT_DIR})
 
 find_library(AMPLINTERFACE_LIBRARY 
         ipoptamplinterface
@@ -38,12 +38,13 @@ include_directories(${PROJECT_SOURCE_DIR}/test/hs071_lazy)
 include_directories(${QPOASES_INCLUDE_DIRS})
 include_directories(${QORE_INCLUDE_DIR})
 
-target_link_libraries(sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(lazy_sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(hs071_lazy sqphotstart ${LIBS})
+message( ${IPOPT_LIBRARIES}) 
+target_link_libraries(sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(lazy_sqp_ampl sqphotstart  ${AMPLINTERFACE_LIBRARY} ${QORE_LIBRARIES} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} )
+target_link_libraries(hs071_lazy sqphotstart ${IPOPT_LIBRARIES} ${LIBS})
 
-target_link_libraries(QPsolvers_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
-target_link_libraries(unitTest_SpHbMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(unitTest_SpTripletMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(QPsolvers_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
+target_link_libraries(unitTest_SpHbMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(unitTest_SpTripletMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
 
 
