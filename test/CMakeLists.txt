@@ -39,12 +39,12 @@ include_directories(${QPOASES_INCLUDE_DIRS})
 include_directories(${QORE_INCLUDE_DIR})
 
 message( ${IPOPT_LIBRARIES}) 
-target_link_libraries(sqp_ampl sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(lazy_sqp_ampl sqphotstart  ${AMPLINTERFACE_LIBRARY} ${QORE_LIBRARIES} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} )
-target_link_libraries(hs071_lazy sqphotstart ${IPOPT_LIBRARIES} ${LIBS})
+target_link_libraries(sqp_ampl restartsqp ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(lazy_sqp_ampl restartsqp  ${AMPLINTERFACE_LIBRARY} ${QORE_LIBRARIES} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} )
+target_link_libraries(hs071_lazy restartsqp ${IPOPT_LIBRARIES} ${LIBS})
 
-target_link_libraries(QPsolvers_test sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
-target_link_libraries(unitTest_SpHbMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
-target_link_libraries(unitTest_SpTripletMat sqphotstart ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(QPsolvers_test restartsqp ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS} ${QORE_LIBRARIES} ${QORE_LIBRARIES})
+target_link_libraries(unitTest_SpHbMat restartsqp ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
+target_link_libraries(unitTest_SpTripletMat restartsqp ${AMPLINTERFACE_LIBRARY} ${IPOPT_LIBRARIES} ${ASL_LIBRARY} ${LIBS})
 
 
