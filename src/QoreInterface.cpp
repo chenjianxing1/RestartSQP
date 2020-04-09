@@ -126,7 +126,7 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     }
     int rv = QPSetData(qore_solver_, num_qp_variables_, num_qp_constraints_,
                        A_row_indices, A_col_indices, A_values, H_row_indices,
-                       H_col_indices, H_values);
+                       H_col_indices, H_values, 0 /* QORE pflags */);
     assert(rv == QPSOLVER_OK);
   }
 
@@ -166,10 +166,14 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
 
   // Call the solver
   // TODO: Do we need to provide a starting point?
-  int qore_retval =
-      QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                 linear_objective_coefficients_->get_values(), qore_x, qore_y);
-
+  int qore_retval = 0;
+  if (first_qp_solved_) {
+      qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
+                               linear_objective_coefficients_->get_values(), 0 /* x */, 0  /* y */, 0 /* ws */, QPSOLVER_COLD);
+  } else {
+      qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
+                               linear_objective_coefficients_->get_values(), 0 /* x */, 0  /* y */, 0 /* ws */, QPSOLVER_WARM);
+  }
   // Get the solver status
   QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_();
   solver_status_ = qp_solver_exit_status;
@@ -184,7 +188,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     // Retrieve the primal solution.  QORE's primal solution includes something
     // related to the constraints and is long.  We need to extract the first
     // part.
-    int rv = QPGetDblVector(qore_solver_, "primalsol", qore_primal_solution_);
+    int size = num_qp_variables_ + num_qp_constraints_;
+    int rv = QPGetDbl(qore_solver_, QPSOLVER_DBL_PRIMALSOL, qore_primal_solution_, &size);
     assert(rv == QPSOLVER_OK);
 
     // Get the values for the variables
@@ -192,7 +197,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
 
     // Retrieve the dual solution.  They come in a single array and we need to
     // take them apart
-    rv = QPGetDblVector(qore_solver_, "dualsol", qore_dual_solution_);
+    size = num_qp_variables_ + num_qp_constraints_;
+    rv = QPGetDbl(qore_solver_, QPSOLVER_DBL_DUALSOL, qore_dual_solution_, &size);
     assert(rv == QPSOLVER_OK);
 
     // Get the values for the bound multipliers
@@ -204,7 +210,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
 
     // Determine the number of QP solver iterations
     int itercount;
-    rv = QPGetInt(qore_solver_, "itercount", &itercount);
+    size = 1;
+    rv = QPGetInt(qore_solver_, QPSOLVER_INT_ITERCOUNT, &itercount, &size);
     assert(rv == QPSOLVER_OK);
     qp_solver_iterations_ = itercount;
   } else {
@@ -230,7 +237,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   // Update solver statistics
   if (stats != nullptr) {
     int num_qp_iterations;
-    QPGetInt(qore_solver_, "itercount", &num_qp_iterations);
+    int size = 1;
+    QPGetInt(qore_solver_, QPSOLVER_INT_ITERCOUNT, &num_qp_iterations, &size);
     stats->increase_qp_iteration_counter(num_qp_iterations);
   }
 
@@ -239,8 +247,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
 
 QpSolverExitStatus QoreInterface::get_qore_exit_status_()
 {
-  int qore_status;
-  QPGetInt(qore_solver_, "status", &qore_status);
+  int qore_status, size = 1;
+  QPGetInt(qore_solver_, QPSOLVER_INT_STATUS, &qore_status, &size);
   switch (qore_status) {
     case QPSOLVER_ITER_LIMIT:
       return QPEXIT_ITERLIMIT;
@@ -262,10 +270,11 @@ void QoreInterface::retrieve_working_set_()
   assert(solver_status_ == QPEXIT_OPTIMAL);
 
   // Allocate memory to store the working set from QORE
-  int* working_set = new int[num_qp_variables_ + num_qp_constraints_];
+  int size = num_qp_variables_ + num_qp_constraints_;
+  int* working_set = new int[size];
 
   // Get the vector with the working set information from QORE
-  QPGetIntVector(qore_solver_, "workingset", working_set);
+  QPGetInt(qore_solver_, QPSOLVER_INT_WORKINGSET, working_set, &size);
 
   // Allocate memory if that hadn't been done earlier
   if (!bounds_working_set_) {
@@ -346,12 +355,12 @@ void QoreInterface::retrieve_working_set_()
 
 void QoreInterface::set_qp_solver_options_()
 {
-
   if (qp_solver_print_level_ == 0) {
     // does not print anything
-    QPSetInt(qore_solver_, "prtfreq", -1);
+    int value = -1;
+    QPSetInt(qore_solver_,QPSOLVER_INT_PRTFREQ, &value, 1);
   }
-  QPSetInt(qore_solver_, "maxiter", qp_solver_max_num_iterations_);
+  QPSetInt(qore_solver_, QPSOLVER_INT_MAXITER, &qp_solver_max_num_iterations_, 1);
 }
 
 void QoreInterface::set_constraint_jacobian(
