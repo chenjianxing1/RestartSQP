@@ -128,32 +128,6 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     int rv = QPSetData(qore_solver_, num_qp_variables_, num_qp_constraints_,
                        A_row_indices, A_col_indices, A_values, H_row_indices,
                        H_col_indices, H_values, pflags);
-    assert(rv == QPSOLVER_OK);
-  }
-
-  // Pointers specifying the QORE starting point (NULL if none)
-  double* qore_x;
-  double* qore_y;
-
-  if (first_qp_solved_) {
-    // If this is not the first QP, we need to tell the solver whether the
-    // matrices have changed.
-    double strange_factor;
-    if (qp_matrices_changed_) {
-      strange_factor = 1.;
-    } else {
-      strange_factor = -1.;
-    }
-    int rv = QPAdjust(qore_solver_, strange_factor);
-    assert(rv == QPSOLVER_OK);
-
-    // Give QORE the starting point from the most recent solve
-    qore_x = qore_primal_solution_;
-    qore_y = qore_dual_solution_;
-  } else {
-    // In this case, we do not have a starting point yet
-    qore_x = NULL;
-    qore_y = NULL;
   }
 
   // Create arrays that include both variable and constraint bounds
