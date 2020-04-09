@@ -41,22 +41,31 @@ ELSE ()
 			HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
 			HINTS ${IPOPT_ROOT_DIR}/lib
 		)
+
 		find_library(IPOPT_LIBRARY3 
 			libipoptamplinterface.dylib
 			HINTS /usr/local/lib
 			HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
 			HINTS ${IPOPT_ROOT_DIR}/lib
 		)
-		find_library(LAPACK_LIB 
-		        liblapack.dylib
-		        HINTS /usr/local/lib
-		        HINTS ${IPOPT_ROOT_DIR}/lib
+
+		find_library(IPOPT_LIBRARY4 
+			libcoinhsl.dylib
+			HINTS /usr/local/lib
+			HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+			HINTS ${IPOPT_ROOT_DIR}/lib
 		)
-		find_library(BLAS_LIB 
-		        libblas.dylib
-		        HINTS /usr/local/lib
-		        HINTS ${IPOPT_ROOT_DIR}/lib
-		)
+
+		# find_library(LAPACK_LIB 
+		#         liblapack.dylib
+		#         HINTS /usr/local/lib
+		#         HINTS ${IPOPT_ROOT_DIR}/lib
+		# )
+		# find_library(BLAS_LIB 
+		#         libblas.dylib
+		#         HINTS /usr/local/lib
+		#         HINTS ${IPOPT_ROOT_DIR}/lib
+		# )
 
 	ELSEIF( UNIX )
 
@@ -100,7 +109,7 @@ ELSE ()
 		message("—- Found Ipopt under ${IPOPT_INCLUDE_DIR}")
 		message(${LAPACK_LIB} ${BLAS_LIB})
 	    set(IPOPT_INCLUDE_DIRS ${IPOPT_INCLUDE_DIR})
-	    set(IPOPT_LIBRARIES ${IPOPT_LIBRARY} ${IPOPT_LIBRARY2} ${IPOPT_LIBRARY3} ${LAPACK_LIB} ${BLAS_LIB})
+	    set(IPOPT_LIBRARIES ${IPOPT_LIBRARY} ${IPOPT_LIBRARY2} ${IPOPT_LIBRARY3} ${IPOPT_LIBRARY4} ) # ${LAPACK_LIB} ${BLAS_LIB})
 	    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	        set(IPOPT_LIBRARIES "${IPOPT_LIBRARIES};m;pthread")
 	    endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")

@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 
 project(RESTARTSQP CXX)
 
+# CK: This avoids the use of __cxx11 and __1 inline namespaces with STL data types
+IF (APPLE)
+  ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
+ENDIF()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 set(MACOSX_RPATH 1) 
 # Debug mode
