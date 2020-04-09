@@ -124,9 +124,10 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
       H_col_indices = hessian_->get_column_indices();
       H_values = hessian_->get_values();
     }
+    qp_int pflags = 0;
     int rv = QPSetData(qore_solver_, num_qp_variables_, num_qp_constraints_,
                        A_row_indices, A_col_indices, A_values, H_row_indices,
-                       H_col_indices, H_values, 0 /* QORE pflags */);
+                       H_col_indices, H_values, pflags);
     assert(rv == QPSOLVER_OK);
   }
 
@@ -167,12 +168,15 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   // Call the solver
   // TODO: Do we need to provide a starting point?
   int qore_retval = 0;
+  const double* qp_x = NULL;
+  const double* qp_y = NULL;
+  const qp_int* qp_ws = NULL;
   if (first_qp_solved_) {
       qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                               linear_objective_coefficients_->get_values(), 0 /* x */, 0  /* y */, 0 /* ws */, QPSOLVER_COLD);
+                               linear_objective_coefficients_->get_values(), qp_x, qp_y, qp_ws, QPSOLVER_COLD);
   } else {
       qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                               linear_objective_coefficients_->get_values(), 0 /* x */, 0  /* y */, 0 /* ws */, QPSOLVER_WARM);
+                               linear_objective_coefficients_->get_values(), qp_x, qp_y, qp_ws, QPSOLVER_WARM);
   }
   // Get the solver status
   QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_();
