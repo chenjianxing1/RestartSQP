@@ -139,6 +139,9 @@ private:
   /** Ipopt's TNLP object that will be called for all evaluations. */
   Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp_;
 
+  /** Numbering style for the matrices from the Ipopt TNLP. */
+  Ipopt::TNLP::IndexStyleEnum index_style_;
+
   /** Name of the NLP that is solved. */
   std::string nlp_name_;
 };

@@ -39,7 +39,7 @@ bool HS071_NLP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
   nnz_h_lag = 10;
 
   // use the C style indexing (0-based)
-  index_style = TNLP::FORTRAN_STYLE;
+  index_style = TNLP::C_STYLE;
 
   return true;
 }
@@ -144,22 +144,22 @@ bool HS071_NLP::eval_jac_g(Index n, const Number* x, bool new_x,
     // return the structure of the jacobian
 
     // this particular jacobian is dense
-    iRow[0] = 1;
-    jCol[0] = 1;
-    iRow[1] = 1;
-    jCol[1] = 2;
-    iRow[2] = 1;
-    jCol[2] = 3;
-    iRow[3] = 1;
-    jCol[3] = 4;
-    iRow[4] = 2;
-    jCol[4] = 1;
-    iRow[5] = 2;
-    jCol[5] = 2;
-    iRow[6] = 2;
-    jCol[6] = 3;
-    iRow[7] = 2;
-    jCol[7] = 4;
+    iRow[0] = 0;
+    jCol[0] = 0;
+    iRow[1] = 0;
+    jCol[1] = 1;
+    iRow[2] = 0;
+    jCol[2] = 2;
+    iRow[3] = 0;
+    jCol[3] = 3;
+    iRow[4] = 1;
+    jCol[4] = 0;
+    iRow[5] = 1;
+    jCol[5] = 1;
+    iRow[6] = 1;
+    jCol[6] = 2;
+    iRow[7] = 1;
+    jCol[7] = 3;
   }
   else {
     // return the values of the jacobian of the constraints
@@ -192,8 +192,8 @@ bool HS071_NLP::eval_h(Index n, const Number* x, bool new_x,
     Index idx=0;
     for (Index row = 0; row < 4; row++) {
       for (Index col = 0; col <= row; col++) {
-        iRow[idx] = row+1;
-        jCol[idx] = col+1;
+        iRow[idx] = row;
+        jCol[idx] = col;
         idx++;
       }
     }

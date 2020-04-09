@@ -28,8 +28,7 @@ public:
   /** Set the list of considered constraints.
    *
    *  This specifies the setset of constraints of the SqpTNlp provided in the
-   *  constructor to be considered for the next solve. The indices start from 1
-   *  (as for the matrix counting).
+   *  constructor to be considered for the next solve. The indices start from 0.
    */
   void set_considered_constraints(int num_constraints, const int* constraint_indices);
 

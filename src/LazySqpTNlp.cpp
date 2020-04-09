@@ -51,7 +51,7 @@ void LazySqpTNlp::set_considered_constraints(int num_constraints,
 
   constraint_indices_ = new int[num_constraints_];
   for (int i = 0; i < num_constraints_; ++i) {
-    constraint_indices_[i] = constraint_indices[i] - 1;
+    constraint_indices_[i] = constraint_indices[i];
   }
 }
 
@@ -95,7 +95,7 @@ bool LazySqpTNlp::get_nlp_info(int& num_variables, int& num_constraints,
   // Now count the number of nonzeros in the shortened Jacobian
   num_nonzeros_jacobian = 0;
   for (int i = 0; i < num_orig_nonzeros_jacobian_; ++i) {
-    num_nonzeros_jacobian += constraint_chosen[row_indices[i] - 1];
+    num_nonzeros_jacobian += constraint_chosen[row_indices[i]];
   }
 
   num_nonzeros_jacobian_ = num_nonzeros_jacobian;
@@ -322,9 +322,9 @@ bool LazySqpTNlp::eval_constraint_jacobian(
       int nnz = 0;
       for (int i = 0; i < num_orig_nonzeros_jacobian_; ++i) {
         int row = orig_row_indices[i];
-        if (inv_constraint_indices[row - 1] >= 0) {
+        if (inv_constraint_indices[row] >= 0) {
           sqp_jac_map_[nnz] = i;
-          row_indices[nnz] = inv_constraint_indices[row - 1] + 1;
+          row_indices[nnz] = inv_constraint_indices[row];
           column_indices[nnz] = orig_col_indices[i];
           nnz++;
         }
@@ -542,7 +542,7 @@ bool LazySqpTNlp::add_new_constraints(
   // add the new indices at the end, correcting the offer
   for (int i = 0; i < num_new_considered_constraints; ++i) {
     constraint_indices_[num_constraints_ + i] =
-        new_considered_constraints_indices[i] - 1;
+        new_considered_constraints_indices[i];
   }
 
   // Also mark the added constraints as inactive

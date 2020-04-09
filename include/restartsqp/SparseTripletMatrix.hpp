@@ -55,6 +55,8 @@ class SparseHbMatrix;
  *  data in triplet, in class member @values_. It contains the methods
  *  that can copy a Matrix, allocate data to the class member, and
  *  perform a matrix vector multiplication.
+ *
+ *  Index counting starts are 0.
  */
 
 class SparseTripletMatrix : public Matrix
@@ -174,11 +176,6 @@ public:
     return values_;
   }
 
-  inline const int* get_order() const
-  {
-    return order_;
-  }
-
   inline int* get_nonconst_row_indices()
   {
     return row_indices_;
@@ -192,47 +189,6 @@ public:
   inline double* get_nonconst_values()
   {
     return values_;
-  }
-
-  inline int* get_nonconst_order()
-  {
-    return order_;
-  }
-
-  inline int get_row_index_at_entry(int i) const
-  {
-    return row_indices_[i];
-  }
-
-  inline int get_column_index_at_entry(int i) const
-  {
-    return column_indices_[i];
-  }
-
-  inline double get_value_at_entry(int i) const
-  {
-    return values_[i];
-  }
-
-  inline int get_order_at_entry(int i) const
-  {
-    return order_[i];
-  }
-  //@}
-
-  inline void set_value_at_entry(int location, double value_to_assign)
-  {
-    values_[location] = value_to_assign;
-  }
-
-  inline void set_row_index_at_entry(int i, int value)
-  {
-    row_indices_[i] = value;
-  }
-
-  inline void set_column_index_at_entry(int i, int value)
-  {
-    column_indices_[i] = value;
   }
 
   ///////////////////////////////////////////////////////////

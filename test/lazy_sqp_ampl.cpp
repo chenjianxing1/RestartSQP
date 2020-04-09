@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include "restartsqp/SqpIpoptNlp.hpp"
+#include "restartsqp/SqpIpoptTNlp.hpp"
 #include "restartsqp/LazySqpSolver.hpp"
 #include "restartsqp/Utils.hpp"
 #include <stdio.h>
