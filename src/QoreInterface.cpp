@@ -168,15 +168,12 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   // Call the solver
   // TODO: Do we need to provide a starting point?
   int qore_retval = 0;
-  const double* qp_x = NULL;
-  const double* qp_y = NULL;
-  const qp_int* qp_ws = NULL;
   if (first_qp_solved_) {
       qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                               linear_objective_coefficients_->get_values(), qp_x, qp_y, qp_ws, QPSOLVER_COLD);
+                               linear_objective_coefficients_->get_values(), NULL, NULL, NULL, QPSOLVER_WARM);
   } else {
       qore_retval = QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
-                               linear_objective_coefficients_->get_values(), qp_x, qp_y, qp_ws, QPSOLVER_WARM);
+                               linear_objective_coefficients_->get_values(), NULL, NULL, NULL, QPSOLVER_COLD);
   }
   // Get the solver status
   QpSolverExitStatus qp_solver_exit_status = get_qore_exit_status_();

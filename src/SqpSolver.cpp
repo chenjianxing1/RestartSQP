@@ -243,6 +243,11 @@ void SqpSolver::print_initial_output_()
                    num_cons_both);
   }
 
+  static const char *s_qp_solver_name[2] = { "qpOASES", "QORE"};
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "QP solver ..............................: %10s\n\n",
+                   s_qp_solver_name[qp_solver_choice_]);
+
   // Print header of summary output table and the first line for the initial
   // iterate
   jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "======================================"
