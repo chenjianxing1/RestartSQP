@@ -310,7 +310,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     if (!isOptimal) {
       jnlst_->Printf(J_ERROR, J_MAIN, "WARNING: QP solver KKT error is %e\n",
                      last_kkt_error_);
-      assert("Need to figure why KKT error is so large" && false);
+      //assert("Need to figure why KKT error is so large" && false);
     }
     if (jnlst_->ProduceOutput(J_MOREVECTOR, J_MAIN)) {
       jnlst_->Printf(J_MOREVECTOR, J_MAIN, "\nQP solver solution:\n");

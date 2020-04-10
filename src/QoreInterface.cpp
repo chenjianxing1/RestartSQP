@@ -330,11 +330,14 @@ void QoreInterface::retrieve_working_set_()
 
 void QoreInterface::set_qp_solver_options_()
 {
+  int value;
   if (qp_solver_print_level_ == 0) {
     // does not print anything
-    int value = -1;
+    value = -1;
     QPSetInt(qore_solver_,QPSOLVER_INT_PRTFREQ, &value, 1);
   }
+  value = 1;
+  QPSetInt(qore_solver_,QPSOLVER_INT_LOGLEVEL, &value, 1);
   QPSetInt(qore_solver_, QPSOLVER_INT_MAXITER, &qp_solver_max_num_iterations_, 1);
 }
 
