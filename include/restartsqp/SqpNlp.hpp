@@ -188,6 +188,7 @@ public:
    */
   bool eval_hessian(std::shared_ptr<const Vector> x,
                     std::shared_ptr<const Vector> lambda,
+                    double objective_scaling_factor,
                     std::shared_ptr<SparseTripletMatrix> Hessian);
 
   /**

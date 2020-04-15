@@ -104,11 +104,15 @@ public:
     return exit_flag_;
   }
 
+  /** This is the internal KKT error, using the internal scaling. */
   inline KktError get_kkt_error() const
   {
     return current_kkt_error_;
   }
 
+  /** After successful termination, this is the optimal objective function value.
+   *  This is the value consistent with the original problem formulation, independent
+   *  of any internal scaling. */
   inline double get_final_objective() const
   {
     return current_objective_value_;
@@ -129,18 +133,25 @@ public:
     return num_variables_;
   }
 
-  inline std::shared_ptr<const Vector>
-  get_current_primal_variables() const
+  /** After successful termination, these are the optimal primal variables. */
+  inline std::shared_ptr<const Vector> get_current_primal_variables() const
   {
     return current_iterate_;
   }
 
+  /** After successful termination, these are the optimal constraint
+   *  multipliers.
+   *  They are scaled consistent with the original problem formulation,
+   *  independent of any internal scaling. */
   inline std::shared_ptr<const Vector>
   get_current_constraint_multipliers() const
   {
     return current_constraint_multipliers_;
   }
 
+  /** After successful termination, these are the optimal bound multipliers.
+   *  They are scaled consistent with the original problem formulation,
+   *  independent of any internal scaling. */
   inline std::shared_ptr<const Vector> get_current_bound_multipliers() const
   {
     return current_bound_multipliers_;
@@ -372,6 +383,38 @@ private:
   void return_results_();
   //@}
 
+  /** @name Wrappers for function evaluations that take care of scaling. */
+  //@{
+  /** Objective function. */
+  bool eval_f_(std::shared_ptr<const Vector> x, double& obj_value);
+
+  /** Constraints values. */
+  bool eval_constraints_(std::shared_ptr<const Vector> x,
+                         std::shared_ptr<Vector> constraints);
+
+  /** Objective gradient. */
+  bool eval_gradient_(std::shared_ptr<const Vector> x,
+                      std::shared_ptr<Vector> gradient);
+
+  /** Get the matrix structure of the Jacobian */
+  bool get_jacobian_structure_(std::shared_ptr<const Vector> x,
+                               std::shared_ptr<SparseTripletMatrix> Jacobian);
+
+  /** Evaluate Jacobian at point x */
+  bool eval_jacobian_(std::shared_ptr<const Vector> x,
+                      std::shared_ptr<SparseTripletMatrix> Jacobian);
+
+  /** Get the structure of the Hessian */
+  bool get_hessian_structure_(std::shared_ptr<const Vector> x,
+                              std::shared_ptr<const Vector> lambda,
+                              std::shared_ptr<SparseTripletMatrix> Hessian);
+
+  /** Evaluate Hessian of Lagragian function at  (x, lambda) */
+  bool eval_hessian_(std::shared_ptr<const Vector> x,
+                     std::shared_ptr<const Vector> lambda,
+                     std::shared_ptr<SparseTripletMatrix> Hessian);
+  //@}
+
   ///////////////////////////////////////////////////////////
   //              PRIVATE CLASS MEMBERS                    //
   ///////////////////////////////////////////////////////////
@@ -449,9 +492,19 @@ private:
 
   /** Primal current iterate. */
   std::shared_ptr<Vector> current_iterate_;
-  /** Current estimate of the constraint multipliers. */
+  /** Current estimate of the constraint multipliers.
+   *
+   *  During the SQP algorithm, these are the internal scaled values.  Once
+   *  the algorithm terminated, these are the unscaled values, consistent with
+   *  the original problem formulation.
+   */
   std::shared_ptr<Vector> current_constraint_multipliers_;
-  /** Current estimate of the bound multipliers. */
+  /** Current estimate of the bound multipliers.
+  *
+  *  During the SQP algorithm, these are the internal scaled values.  Once
+  *  the algorithm terminated, these are the unscaled values, consistent with
+  *  the original problem formulation.
+  */
   std::shared_ptr<Vector> current_bound_multipliers_;
 
   /** Gradient of the objective function at the current iterate. */
@@ -568,6 +621,9 @@ private:
 
   /** Flag indicating whether we do a second-order correction. */
   bool perform_second_order_correction_step_;
+
+  /** Objective scaling factor. */
+  double objective_scaling_factor_;
 
   /** Tolerance for active set identification. */ // TODO: This should be
                                                   // separate for constraints,

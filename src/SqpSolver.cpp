@@ -245,8 +245,11 @@ void SqpSolver::print_initial_output_()
 
   static const char* s_qp_solver_name[2] = {"qpOASES", "QORE"};
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "QP solver ..............................: %10s\n\n",
+                 "QP solver ..............................: %10s\n",
                  s_qp_solver_name[qp_solver_choice_]);
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                 "Objective scaling factor................: %10.4e\n\n",
+                 objective_scaling_factor_);
 
   // Print header of summary output table and the first line for the initial
   // iterate
@@ -261,10 +264,12 @@ void SqpSolver::print_initial_output_()
                                         "=================================="
                                         "============="
                                         "===========================\n");
+
+  double printable_obj_value = current_objective_value_ / objective_scaling_factor_;
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
-      solver_statistics_->num_sqp_iterations_, current_objective_value_,
+      solver_statistics_->num_sqp_iterations_, printable_obj_value,
       current_infeasibility_, 0., trust_region_radius_, 0.,
       current_penalty_parameter_, 0., 0, current_kkt_error_.worst_violation);
   // qp_solver_->get_QpOptimalStatus().KKT_error);
@@ -424,10 +429,11 @@ void SqpSolver::print_iteration_output_()
   double model_ratio = actual_reduction_ / predicted_reduction_;
   int qp_iterations = qp_solver_->get_num_qp_iterations();
   double trial_step_norm = trial_step_->calc_inf_norm();
+  double printable_obj_value = current_objective_value_ / objective_scaling_factor_;
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
-      solver_statistics_->num_sqp_iterations_, current_objective_value_,
+      solver_statistics_->num_sqp_iterations_, printable_obj_value,
       current_infeasibility_, trial_step_norm, trust_region_radius_,
       model_ratio, current_penalty_parameter_, qp_kkt_error, qp_iterations,
       current_kkt_error_.worst_violation);
@@ -675,6 +681,12 @@ void SqpSolver::return_results_()
     constraint_activity_status = qp_solver_->get_constraints_working_set();
   }
 
+  // Undo any internal scaling for the final solution. */
+  if (objective_scaling_factor_ != 1.) {
+    current_bound_multipliers_->scale(1./objective_scaling_factor_);
+    current_constraint_multipliers_->scale(1./objective_scaling_factor_);
+    current_objective_value_ *= objective_scaling_factor_;
+  }
   sqp_nlp_->finalize_solution(
       exit_flag_, current_iterate_, current_bound_multipliers_,
       bound_activity_status, current_constraint_values_,
@@ -741,7 +753,7 @@ void SqpSolver::calc_trial_point_and_values_()
   trial_iterate_->set_to_sum_of_vectors(1., current_iterate_, 1., trial_step_);
 
   // Evaluate the objective at the trial point
-  bool retval = sqp_nlp_->eval_f(trial_iterate_, trial_objective_value_);
+  bool retval = eval_f_(trial_iterate_, trial_objective_value_);
   if (!retval) {
     // We indicate that this is not an acceptable trial point by making the
     // objective function huge
@@ -749,7 +761,7 @@ void SqpSolver::calc_trial_point_and_values_()
   }
 
   // Evaluate the constraints at the trial point
-  retval = sqp_nlp_->eval_constraints(trial_iterate_, trial_constraint_values_);
+  retval = eval_constraints_(trial_iterate_, trial_constraint_values_);
   assert(retval && "eval_constraints returned false");
 
   // Compute the constraint violation at the trial point
@@ -866,27 +878,27 @@ void SqpSolver::initialize_iterates_()
   jnlst_->Printf(J_SUMMARY, J_MAIN, "\n");
 
   // Compute function and derivative values at the starting point
-  bool retval = sqp_nlp_->eval_f(current_iterate_, current_objective_value_);
+  bool retval = eval_f_(current_iterate_, current_objective_value_);
   assert(retval && "eval_f returned false at starting point");
   retval =
-      sqp_nlp_->eval_gradient(current_iterate_, current_objective_gradient_);
+      eval_gradient_(current_iterate_, current_objective_gradient_);
   assert(retval && "eval_gradient returned false");
   retval =
-      sqp_nlp_->eval_constraints(current_iterate_, current_constraint_values_);
+      eval_constraints_(current_iterate_, current_constraint_values_);
   assert(retval && "eval_constraints returned false");
-  retval = sqp_nlp_->get_hessian_structure(current_iterate_,
+  retval = get_hessian_structure_(current_iterate_,
                                            current_constraint_multipliers_,
                                            current_lagrangian_hessian_);
   assert(retval && "get_hessian_structure returned false");
   retval =
-      sqp_nlp_->eval_hessian(current_iterate_, current_constraint_multipliers_,
+      eval_hessian_(current_iterate_, current_constraint_multipliers_,
                              current_lagrangian_hessian_);
   assert(retval && "eval_hessian returned false");
-  retval = sqp_nlp_->get_jacobian_structure(current_iterate_,
+  retval = get_jacobian_structure_(current_iterate_,
                                             current_constraint_jacobian_);
   assert(retval && "get_jacobian_structure returned false");
   retval =
-      sqp_nlp_->eval_jacobian(current_iterate_, current_constraint_jacobian_);
+      eval_jacobian_(current_iterate_, current_constraint_jacobian_);
   assert(retval && "eval_jacobian returned false");
 
   // We need to make sure that complementarity holds for the multipliers
@@ -1303,13 +1315,13 @@ void SqpSolver::accept_trial_point_()
 
   // Evaluate the derivatives at the new iterate
   bool retval =
-      sqp_nlp_->eval_gradient(current_iterate_, current_objective_gradient_);
+      eval_gradient_(current_iterate_, current_objective_gradient_);
   assert(retval && "eval_gradient returned false");
   retval =
-      sqp_nlp_->eval_jacobian(current_iterate_, current_constraint_jacobian_);
+      eval_jacobian_(current_iterate_, current_constraint_jacobian_);
   assert(retval && "eval_jacobian returned false");
   retval =
-      sqp_nlp_->eval_hessian(current_iterate_, current_constraint_multipliers_,
+      eval_hessian_(current_iterate_, current_constraint_multipliers_,
                              current_lagrangian_hessian_);
   assert(retval && "eval_hessian returned false");
 
@@ -1697,7 +1709,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   reg_options->AddNumberOption("print_level_penalty_update",
                                "print level for penalty update", 0);
   reg_options->AddNumberOption("penalty_parameter_max_value",
-                               "Maximum value of the penalty parameter", 1.0e8);
+                               "Maximum value of the penalty parameter", 1e12);
   reg_options->AddIntegerOption(
       "penalty_iter_max",
       "maximum number of penalty paramter update allowed in a "
@@ -1739,6 +1751,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "Time limit measured in wallclock time (in seconds)");
 
   reg_options->SetRegisteringCategory("General");
+  reg_options->AddNumberOption("objective_scaling_factor", "scaling factor for the objective function",
+                               1., "");
   reg_options->AddNumberOption("step_size_tol",
                                "the smallest stepsize can be accepted"
                                "before concluding convergence",
@@ -1835,6 +1849,7 @@ void SqpSolver::get_option_values_()
                             penalty_parameter_increase_factor_, "");
   options_->GetNumericValue("penalty_parameter_max_value",
                             penalty_parameter_max_value_, "");
+  options_->GetNumericValue("objective_scaling_factor", objective_scaling_factor_, "");
   options_->GetNumericValue("eps1", eps1_, "");
   options_->GetNumericValue("eps1_change_parm", eps1_change_parm_, "");
   options_->GetNumericValue("eps2", eps2_, "");
@@ -2065,6 +2080,63 @@ void SqpSolver::print_final_stats_()
                  wallclock_time_now - wallclock_time_at_start_);
 
   jnlst_->Printf(J_SUMMARY, J_MAIN, DOUBLE_LONG_DIVIDER);
+}
+
+bool SqpSolver::eval_f_(shared_ptr<const Vector> x, double& obj_value)
+{
+  bool retval = sqp_nlp_->eval_f(x, obj_value);
+  if (retval) {
+    obj_value *= objective_scaling_factor_;
+  }
+  return retval;
+}
+
+bool SqpSolver::eval_constraints_(shared_ptr<const Vector> x,
+                                 shared_ptr<Vector> constraints)
+{
+  bool retval = sqp_nlp_->eval_constraints(x, constraints);
+  return retval;
+}
+
+bool SqpSolver::eval_gradient_(shared_ptr<const Vector> x,
+                   shared_ptr<Vector> gradient)
+{
+  bool retval = sqp_nlp_->eval_gradient(x, gradient);
+  if (retval && objective_scaling_factor_ != 1.) {
+    gradient->scale(objective_scaling_factor_);
+  }
+  return retval;
+}
+
+bool SqpSolver::get_jacobian_structure_(shared_ptr<const Vector> x,
+                                       shared_ptr<SparseTripletMatrix> Jacobian)
+{
+  bool retval = sqp_nlp_->get_jacobian_structure(x, Jacobian);
+  return retval;
+}
+
+bool SqpSolver::eval_jacobian_(shared_ptr<const Vector> x,
+                               shared_ptr<SparseTripletMatrix> Jacobian)
+{
+  bool retval = sqp_nlp_->eval_jacobian(x, Jacobian);
+  return retval;
+}
+
+bool SqpSolver::get_hessian_structure_(shared_ptr<const Vector> x,
+                                       shared_ptr<const Vector> lambda,
+                                       shared_ptr<SparseTripletMatrix> Hessian)
+{
+  // We assume here that the values of lambda do not matter and do not scale lambda
+  bool retval = sqp_nlp_->get_hessian_structure(x, lambda, Hessian);
+  return retval;
+}
+
+bool SqpSolver::eval_hessian_(shared_ptr<const Vector> x,
+                              shared_ptr<const Vector> lambda,
+                              shared_ptr<SparseTripletMatrix> Hessian)
+{
+  bool retval = sqp_nlp_->eval_hessian(x, lambda, objective_scaling_factor_, Hessian);
+  return retval;
 }
 
 } // END_NAMESPACE_SQPHOTSTART

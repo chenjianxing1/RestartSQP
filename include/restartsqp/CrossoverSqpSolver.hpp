@@ -142,6 +142,9 @@ private:
   /** Register additional options for the restart solver. */
   void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
 
+  /** Compute a scaling factor for the objective function for all the SQP solves. */
+  double determine_obj_scaling_factor_(IpoptSqpNlp& ipopt_tnlp);
+
   /** Determine the set of active variable bounds and constraints.
    *
    *  This is the cross-over method.  This version is based on the ratio of the
@@ -189,6 +192,18 @@ private:
 
   /** Solver statistics from most recent solve. */
   std::shared_ptr<Statistics> solver_statistics_;
+
+  /** Objective scaling factor for the SQP solves. */
+  double objective_scaling_factor_;
+
+  /** @name Algorithmic options. */
+  //@{
+  /** Maximum norm of the initial multipliers for the first SQP solve.
+   *
+   *  This value determines the objective scaling factor.
+   */
+  double max_initial_multipliers_;
+  //@}
 
 }; // END_OF_ALG_CLASS
 

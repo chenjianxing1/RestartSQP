@@ -180,10 +180,11 @@ bool SqpNlp::get_hessian_structure(shared_ptr<const Vector> x,
  */
 bool SqpNlp::eval_hessian(shared_ptr<const Vector> x,
                           shared_ptr<const Vector> lambda,
+                          double objective_scaling_factor,
                           shared_ptr<SparseTripletMatrix> Hessian)
 {
   return sqp_tnlp_->eval_lagrangian_hessian(
-      num_variables_, x->get_values(), true, 1, num_constraints_,
+      num_variables_, x->get_values(), true, objective_scaling_factor, num_constraints_,
       lambda->get_values(), true, num_nonzeros_hessian_, NULL, NULL,
       Hessian->get_nonconst_values());
 }

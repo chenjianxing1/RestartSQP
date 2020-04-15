@@ -6,8 +6,8 @@
 */
 
 #include "restartsqp/CrossoverSqpSolver.hpp"
-#include "restartsqp/SqpInitSolveTNlp.hpp"
 #include "IpIpoptApplication.hpp"
+#include "restartsqp/SqpInitSolveTNlp.hpp"
 
 using namespace std;
 using namespace Ipopt;
@@ -41,6 +41,52 @@ CrossoverSqpSolver::CrossoverSqpSolver()
  */
 CrossoverSqpSolver::~CrossoverSqpSolver()
 {
+}
+
+double
+CrossoverSqpSolver::determine_obj_scaling_factor_(IpoptSqpNlp& ipopt_tnlp)
+{
+  // For now we base the scaling factor on the multiplier values and make sure
+  // that they are not too large.  This way we also make sure that the initial
+  // value for the penalty parameter is not too large.
+
+  // Get the arrays with the optimal multipliers from the Ipopt solve
+  const double* z_L_sol = ipopt_tnlp.z_L_sol();
+  const double* z_U_sol = ipopt_tnlp.z_U_sol();
+  const double* lambda_sol = ipopt_tnlp.lambda_sol();
+
+  // Now compute the max-norms
+  double max_norm_bound_mults = 0.;
+  for (int i = 0; i < num_variables_; ++i) {
+    max_norm_bound_mults = max(max_norm_bound_mults, fabs(z_L_sol[i]));
+    max_norm_bound_mults = max(max_norm_bound_mults, fabs(z_U_sol[i]));
+  }
+  double max_norm_constraint_mults = 0.;
+  for (int i = 0; i < num_constraints_; ++i) {
+    max_norm_constraint_mults =
+        max(max_norm_constraint_mults, fabs(lambda_sol[i]));
+  }
+
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "\nMax-norm of the multipliers from the Ipopt solution:\n");
+  jnlst_->Printf(J_DETAILED, J_MAIN, "  Bound multipliers.........: %e:\n",
+                 max_norm_bound_mults);
+  jnlst_->Printf(J_DETAILED, J_MAIN, "  Constraint multipliers....: %e:\n",
+                 max_norm_constraint_mults);
+
+  // Determine the scaling factor so that the max norm of the multipliers is at
+  // most max_initial_multipliers_
+  double scaling_factor = 1.;
+  if (max_norm_bound_mults > 0.) {
+    scaling_factor =
+        min(scaling_factor, max_initial_multipliers_ / max_norm_bound_mults);
+  }
+  if (max_norm_constraint_mults > 0.) {
+    scaling_factor = min(scaling_factor,
+                         max_initial_multipliers_ / max_norm_constraint_mults);
+  }
+
+  return scaling_factor;
 }
 
 void CrossoverSqpSolver::determine_activities_(
@@ -206,8 +252,11 @@ void CrossoverSqpSolver::determine_activities_(
 }
 
 void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
-                                     const string& options_file_name)
+                                       const string& options_file_name)
 {
+  // TODO: Read the option
+  max_initial_multipliers_ = 100.;
+
   // Get information about the dimensions of the current NLP.
   num_variables_;
   num_constraints_;
@@ -245,6 +294,32 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
       assert(false && "Still need to implement what to do when Ipopt fails.");
   }
 
+  // Determine a scaling factor for the objective in subsequent solves
+  objective_scaling_factor_ = 1.;
+  //objective_scaling_factor_ = determine_obj_scaling_factor_(*ipopt_tnlp);
+
+  jnlst_->Printf(J_SUMMARY, J_MAIN, "Setting SQP solve options:\n");
+
+  SmartPtr<OptionsList> options = ipopt_app_->Options();
+  options->SetNumericValue("objective_scaling_factor",
+                           objective_scaling_factor_);
+  // To check if the value could be set (i.e., it was not set in the options
+  // file)
+  // we get it again
+  double actual_value;
+  options->GetNumericValue("objective_scaling_factor", actual_value, "");
+
+  if (actual_value != objective_scaling_factor_) {
+    jnlst_->Printf(J_SUMMARY, J_MAIN, "  Objective function scaling factor "
+                                      "given in option file.  Leaving at %e\n",
+                   actual_value);
+    objective_scaling_factor_ = actual_value;
+  } else {
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "  Objective function scaling factor....: %e\n",
+                   objective_scaling_factor_);
+  }
+
   // Try to find out what the active sets are
   ActivityStatus* bounds_activity_status = new ActivityStatus[num_variables_];
   ActivityStatus* constraints_activity_status =
@@ -252,13 +327,15 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   determine_activities_(bounds_activity_status, constraints_activity_status,
                         *ipopt_tnlp);
 
-  // Create an SqpTNlp in which we can overwrite the working set and the starting point.
-  shared_ptr<SqpInitSolveTNlp> init_solve_tnlp = make_shared<SqpInitSolveTNlp>(sqp_tnlp);
+  // Create an SqpTNlp in which we can overwrite the working set and the
+  // starting point.
+  shared_ptr<SqpInitSolveTNlp> init_solve_tnlp =
+      make_shared<SqpInitSolveTNlp>(sqp_tnlp);
 
   // Set the initial working set
-  init_solve_tnlp->set_initial_working_sets(num_variables_, bounds_activity_status,
-                                     num_constraints_,
-                                     constraints_activity_status);
+  init_solve_tnlp->set_initial_working_sets(
+      num_variables_, bounds_activity_status, num_constraints_,
+      constraints_activity_status);
   // Free memory
   delete[] bounds_activity_status;
   delete[] constraints_activity_status;
@@ -271,16 +348,17 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   // Compute the max norm of the multipliers so that we can set the penalty
   // parameter large enough
+  // TODO This was already computed for the objective scaling factor computation
   double max_mult = 0.; // Make based on some option
   for (int i = 0; i < num_constraints_; ++i) {
-    max_mult = max(max_mult, abs(initial_constraint_multipliers[i]));
+    max_mult = max(max_mult, fabs(initial_constraint_multipliers[i]));
   }
 
   // We need to combine the Ipopt bound multipliers into one
   double* initial_bound_multipliers = new double[num_variables_];
   for (int i = 0; i < num_variables_; ++i) {
     initial_bound_multipliers[i] = z_L[i] - z_U[i];
-   // max_mult = max(max_mult, abs(initial_bound_multipliers[i]));
+    // max_mult = max(max_mult, fabs(initial_bound_multipliers[i]));
   }
 
   // Give that starting point to the SQP TNLP so that the SQP solver can get it.
@@ -290,26 +368,28 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   delete[] initial_bound_multipliers;
 
-  // Determine initial penalty parameter
-  jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "\nMax norm of optimal multipliers after Ipopt = %e\n",
-                 max_mult);
+  // Adjust multiplier based on the scaling factor
+  max_mult *= objective_scaling_factor_;
 
-  max_mult = max(max_mult, 10.);
+  // Determine the initial penalty parameter
+  max_mult = max(max_mult, 5.);
   const double init_penalty_parameter_factor = 2.;
   double initial_penalty_parameter = init_penalty_parameter_factor * max_mult;
+
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "  Setting initial penalty parameter to %e\n\n",
+                 "  Initial penalty parameter............: %e\n\n",
                  initial_penalty_parameter);
-  SmartPtr<OptionsList> options = ipopt_app_->Options();
 
   options->SetNumericValue("penalty_parameter_init_value",
                            initial_penalty_parameter);
 
   // Now call the SQP solver to get the active-set solution for this problem
-  const string local_options_file_name = "";  //CK: this is a duplicate of the function argument, which clang++ rejects
+  const string local_options_file_name = ""; // CK: this is a duplicate of the
+                                             // function argument, which clang++
+                                             // rejects
   bool keep_output_file = true;
-  sqp_solver_->optimize_nlp(init_solve_tnlp, local_options_file_name, keep_output_file);
+  sqp_solver_->optimize_nlp(init_solve_tnlp, local_options_file_name,
+                            keep_output_file);
 
   // Check if the optimization was conclude successfully
   exit_flag_ = sqp_solver_->get_exit_flag();
@@ -318,6 +398,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
     return;
   }
 
+#if 0
   // Compute the max-norm of the multipliers to find a good value for the
   // penalty parameter to be used later
   shared_ptr<const Vector> current_constraint_multipliers =
@@ -340,6 +421,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   options->SetNumericValue("penalty_parameter_init_value",
                            initial_penalty_parameter);
+#endif
 }
 
 void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
