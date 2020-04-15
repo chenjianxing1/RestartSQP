@@ -117,6 +117,9 @@ private:
   int qp_solver_print_level_;
   // Maximum number of LP iterations per LP solve
   int lp_solver_max_num_iterations_;
+  // Flag indicating whether the primal variables should be initialized
+  // to zero after the first iteration
+  bool qore_init_primal_variables_;
   //@}
 };
 }

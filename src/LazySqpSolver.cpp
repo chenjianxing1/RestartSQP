@@ -32,8 +32,7 @@ LazySqpSolver::LazySqpSolver()
 
   // Get the options TOOO
   num_max_lazy_nlp_solves_ = 3;
-  max_add_lazy_constraints_ = 1;
-
+  max_add_lazy_constraints_ = 10;
 }
 
 /**
@@ -93,11 +92,10 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
     return;
   }
 
-  if (!retval)
-    // Initialize the set of constraints included in the lazy NLP with those
-    // given
-    // by the caller
-    delete[] considered_constraints_indices_;
+  // Initialize the set of constraints included in the lazy NLP with those
+  // given
+  // by the caller
+  delete[] considered_constraints_indices_;
   considered_constraints_indices_ = nullptr;
   considered_constraints_indices_ = new int[num_orig_constraints_];
   num_considered_constraints_ = num_initial_constraints;
@@ -111,7 +109,7 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
 
   // Solve the first NLP with the initial set of constraints
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "\n===== LaztNlpSolver: Solve the initial NLP\n\n");
+                 "\n===== LazyNlpSolver: Solve the initial NLP\n\n");
   crossover_sqp_solver_->initial_solve(lazy_sqp_tnlp_, options_file_name);
 
   // Check the exit flag
@@ -152,8 +150,9 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
       exit_flag_ = ERROR_IN_LAZY_NLP_UPDATE;
       return;
     } else if (num_added_constraints == 0) {
-      jnlst_->Printf(J_SUMMARY, J_MAIN,
-                     "No lazy constraints added, terminating lazy NLP solver loop.\n");
+      jnlst_->Printf(
+          J_SUMMARY, J_MAIN,
+          "No lazy constraints added, terminating lazy NLP solver loop.\n");
       break;
     }
 
@@ -190,11 +189,12 @@ int LazySqpSolver::update_considered_constraints_()
   list<const_viol> constraint_violations;
   for (int i = 0; i < num_orig_constraints_; ++i) {
     // Compute constraint violation
-    double violation = max(0., orig_constraint_lower_bounds_[i] -
-                                   orig_constraint_values[i]);
+    double violation =
+        max(0., orig_constraint_lower_bounds_[i] - orig_constraint_values[i]);
     violation = max(violation, orig_constraint_values[i] -
                                    orig_constraint_upper_bounds_[i]);
-    //printf("i=%d lower=%e body=%e upper=%e\n", i, orig_constraint_lower_bounds_[i],
+    // printf("i=%d lower=%e body=%e upper=%e\n", i,
+    // orig_constraint_lower_bounds_[i],
     //       orig_constraint_values[i], orig_constraint_upper_bounds_[i]);
 
     // If there is a constraint violation, we add the new violation to the list.
@@ -221,8 +221,8 @@ int LazySqpSolver::update_considered_constraints_()
     constraint_violations.sort(compare_const_viol);
 
     // Reserve memory for the top constraints
-    num_constraints_added = min(num_violated_constraints,
-                                max_add_lazy_constraints_);
+    num_constraints_added =
+        min(num_violated_constraints, max_add_lazy_constraints_);
     int* constraints_to_add = new int[num_constraints_added];
 
     int counter = 0;
@@ -245,7 +245,7 @@ int LazySqpSolver::update_considered_constraints_()
 
     jnlst_->Printf(J_SUMMARY, J_MAIN, "\n%d constraints added:",
                    num_constraints_added);
-    for (int i=0; i<num_constraints_added; ++i) {
+    for (int i = 0; i < num_constraints_added; ++i) {
       jnlst_->Printf(J_SUMMARY, J_MAIN, " %d", constraints_to_add[i]);
     }
     jnlst_->Printf(J_SUMMARY, J_MAIN, "\n\n");

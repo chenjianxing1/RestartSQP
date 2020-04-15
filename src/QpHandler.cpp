@@ -112,7 +112,8 @@ void QpHandler::set_initial_working_sets(
   // variables.
   // For now, we will initialize the active set for the NLP variables according
   // to
-  // what was given, and the penalty variales are marked as active.
+  // what was given, and the penalty variables are marked as active.
+  // TODO QP: Should the penalty variables always be active?
   // Constraints are unaltered.
   ActivityStatus* qp_bounds_working_set = new ActivityStatus[num_qp_variables_];
   for (int i = 0; i < num_nlp_variables_; ++i) {

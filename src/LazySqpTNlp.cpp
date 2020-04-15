@@ -246,8 +246,8 @@ bool LazySqpTNlp::eval_constraint_values(int num_variables,
 
   bool retval;
   retval = sqp_tnlp_->eval_constraint_values(
-      num_variables, primal_variables, new_primal_variables, num_orig_constraints_,
-      orig_constraint_values);
+      num_variables, primal_variables, new_primal_variables,
+      num_orig_constraints_, orig_constraint_values);
 
   if (retval) {
     for (int i = 0; i < num_constraints_; ++i) {
@@ -475,23 +475,23 @@ void LazySqpTNlp::finalize_solution(
     previous_optimal_bound_multipliers_ = new double[num_variables_];
     previous_optimal_constraint_multipliers_ =
         new double[num_orig_constraints_];
+  }
 
-    // Initialize all constraint multipliers to 0.  When a new constraints is
-    // added, this
-    // will be the initial value.
-    for (int i = 0; i < num_orig_constraints_; ++i) {
-      previous_optimal_constraint_multipliers_[i] = 0.;
-    }
+  // Initialize all constraint multipliers to 0.  When a new constraints is
+  // added, this
+  // will be the initial value.
+  for (int i = 0; i < num_orig_constraints_; ++i) {
+    previous_optimal_constraint_multipliers_[i] = 0.;
+  }
 
-    // Copy the primal and dual solutions
-    for (int i = 0; i < num_variables_; ++i) {
-      previous_optimal_solution_[i] = primal_solution[i];
-      previous_optimal_bound_multipliers_[i] = bound_multipliers[i];
-    }
-    for (int i = 0; i < num_constraints; ++i) {
-      previous_optimal_constraint_multipliers_[constraint_indices_[i]] =
-          constraint_multipliers[i];
-    }
+  // Copy the primal and dual solutions
+  for (int i = 0; i < num_variables_; ++i) {
+    previous_optimal_solution_[i] = primal_solution[i];
+    previous_optimal_bound_multipliers_[i] = bound_multipliers[i];
+  }
+  for (int i = 0; i < num_constraints; ++i) {
+    previous_optimal_constraint_multipliers_[constraint_indices_[i]] =
+        constraint_multipliers[i];
   }
 
   // Copy the optimal solution to

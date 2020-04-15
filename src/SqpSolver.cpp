@@ -85,13 +85,6 @@ void SqpSolver::free_memory_()
   bound_type_ = nullptr;
 }
 
-/** Set the initial working set. */
-void SqpSolver::set_initial_working_sets(
-    const ActivityStatus* bound_activity_status,
-    const ActivityStatus* constraint_activity_status)
-{
-}
-
 void SqpSolver::initialize_options_(const string& options_file_name,
                                     bool keep_output_file)
 {
@@ -155,6 +148,13 @@ void SqpSolver::initialize_for_new_nlp_()
   // Allocate all objects and memory needed in the loop.  This also creates the
   // QP and LP solver objects.
   allocate_memory_();
+
+  // Determine the bound values
+  sqp_nlp_->get_bounds_info(lower_variable_bounds_, upper_variable_bounds_,
+                            lower_constraint_bounds_, upper_constraint_bounds_);
+
+  // Determine inequality types
+  classify_constraints_types_();
 }
 
 void SqpSolver::print_initial_output_()
@@ -243,10 +243,10 @@ void SqpSolver::print_initial_output_()
                    num_cons_both);
   }
 
-  static const char *s_qp_solver_name[2] = { "qpOASES", "QORE"};
+  static const char* s_qp_solver_name[2] = {"qpOASES", "QORE"};
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                   "QP solver ..............................: %10s\n\n",
-                   s_qp_solver_name[qp_solver_choice_]);
+                 "QP solver ..............................: %10s\n\n",
+                 s_qp_solver_name[qp_solver_choice_]);
 
   // Print header of summary output table and the first line for the initial
   // iterate
@@ -552,14 +552,14 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
   // Initialize exit flag to UNKOWN to indicate that loop is not finished
   exit_flag_ = UNKNOWN_EXIT_STATUS;
 
+  // Print initial output
+  print_initial_output_();
+
   // Check if the starting point is already optimal.  This also computes the KKT
   // error for the current iterate
 
   // TODO: We need to solve at least one QP to get a working set to return
   // check_optimality_();
-
-  // Print initial output
-  print_initial_output_();
 
   // Main loop.  We catch exceptions to figure out final error code.
   try {
@@ -787,13 +787,6 @@ shift_starting_point_(shared_ptr<Vector> x,
 
 void SqpSolver::initialize_iterates_()
 {
-  // Determine the bound values
-  sqp_nlp_->get_bounds_info(lower_variable_bounds_, upper_variable_bounds_,
-                            lower_constraint_bounds_, upper_constraint_bounds_);
-
-  // Determine inequality types
-  classify_constraints_types_();
-
   // Check if there are any degrees of freedom
   assert(num_variables_ > num_equality_constraints_); // TODO: Make proper error
 
@@ -811,6 +804,8 @@ void SqpSolver::initialize_iterates_()
   // solver
   bool use_initial_working_set = sqp_nlp_->use_initial_working_set();
   if (use_initial_working_set) {
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "\nUser provided an initial working set:\n");
     ActivityStatus* bounds_working_set = new ActivityStatus[num_variables_];
     ActivityStatus* constraints_working_set =
         new ActivityStatus[num_constraints_];
@@ -822,9 +817,53 @@ void SqpSolver::initialize_iterates_()
     qp_solver_->set_initial_working_sets(bounds_working_set,
                                          constraints_working_set);
 
+    // If desired, print the statistics of user-provided working set
+    if (jnlst_->ProduceOutput(J_SUMMARY, J_MAIN)) {
+      // Count the number of active bounds
+      int num_active_lower = 0;
+      int num_active_upper = 0;
+      for (int i = 0; i < num_variables_; ++i) {
+        if (bounds_working_set[i] == ACTIVE_BELOW) {
+          num_active_lower++;
+        } else if (bounds_working_set[i] == ACTIVE_ABOVE) {
+          num_active_upper++;
+        }
+      }
+      jnlst_->Printf(J_SUMMARY, J_MAIN,
+                     "  Number of variables active at lower bound......: %d\n",
+                     num_active_lower);
+      jnlst_->Printf(J_SUMMARY, J_MAIN,
+                     "  Number of variables active at upper bound......: %d\n",
+                     num_active_upper);
+
+      // Count the number of active inequality constraints
+      num_active_lower = 0;
+      num_active_upper = 0;
+      for (int i = 0; i < num_constraints_; ++i) {
+        if (constraint_type_[i] == IS_EQUALITY) {
+          continue;
+        }
+        if (constraints_working_set[i] == ACTIVE_BELOW) {
+          num_active_lower++;
+        } else if (constraints_working_set[i] == ACTIVE_ABOVE) {
+          num_active_upper++;
+        }
+      }
+      jnlst_->Printf(J_SUMMARY, J_MAIN,
+                     "  Number of inequalities active at lower bound...: %d\n",
+                     num_active_lower);
+      jnlst_->Printf(J_SUMMARY, J_MAIN,
+                     "  Number of inequalities active at upper bound...: %d\n",
+                     num_active_upper);
+    }
+
     delete[] bounds_working_set;
     delete[] constraints_working_set;
+  } else {
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "\nUser did not provide an initial working set.\n");
   }
+  jnlst_->Printf(J_SUMMARY, J_MAIN, "\n");
 
   // Compute function and derivative values at the starting point
   bool retval = sqp_nlp_->eval_f(current_iterate_, current_objective_value_);
@@ -1748,6 +1787,13 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   // Algorithm",
   //		    "qpOASES");
 
+  reg_options->AddStringOption2(
+      "qore_init_primal_variables", "Specifies whether QORE should initialize "
+                                    "the primal soluiton (the step and the "
+                                    "penatly variables) to zero.",
+      "no", "no", "reuse the internal solution from the most recent solve.",
+      "yes", "initialize the values to zero.");
+
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);
   reg_options->AddNumberOption("iter_malower_variable_bounds_p",
@@ -1944,6 +1990,10 @@ void SqpSolver::print_final_stats_()
     const ActivityStatus* constraint_activity_status;
     constraint_activity_status = qp_solver_->get_constraints_working_set();
     for (int i = 0; i < num_constraints_; ++i) {
+      if (constraint_type_[i] == IS_EQUALITY) {
+        continue;
+      }
+
       if (constraint_activity_status[i] == ACTIVE_ABOVE) {
         num_active_upper_inequalities++;
       } else if (constraint_activity_status[i] == ACTIVE_BELOW) {

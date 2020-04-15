@@ -70,11 +70,6 @@ public:
 
   //@}
 
-  /** Set the initial working set. */
-  void
-  set_initial_working_sets(const ActivityStatus* bound_activity_status,
-                           const ActivityStatus* constraint_activity_status);
-
   /** @name Solution methods. */
   //@{
   /**
