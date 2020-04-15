@@ -172,10 +172,10 @@ void CrossoverSqpSolver::determine_activities_(
   }
   jnlst_->Printf(J_MOREDETAILED, J_MAIN, "\n");
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of active lower variable bounds....: %d\n",
+                 "\nNumber of active lower variable bounds..........: %d\n",
                  num_variable_lower_bounds_active);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of active upper variable bounds....: %d\n",
+                 "Number of active upper variable bounds..........: %d\n",
                  num_variable_upper_bounds_active);
 
   // Determine activity status for the constraints based on slacks and
@@ -185,8 +185,10 @@ void CrossoverSqpSolver::determine_activities_(
                  "\nDetermine active constraints with tolderance %e:\n",
                  constraint_active_tol);
 
-  int num_constraint_lower_bound_active = 0;
-  int num_constraint_upper_bound_active = 0;
+  int num_equality_lower_bound_active = 0;
+  int num_equality_upper_bound_active = 0;
+  int num_inequality_lower_bound_active = 0;
+  int num_inequality_upper_bound_active = 0;
   for (int i = 0; i < num_constraints_; ++i) {
     // Check if this is a fixed constraint
     if (constraint_lower_bounds[i] == constraint_upper_bounds[i]) {
@@ -197,11 +199,11 @@ void CrossoverSqpSolver::determine_activities_(
       if (lambda_sol[i] > active_mult_tol) {
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume lower side is active");
         constraint_activity_status[i] = ACTIVE_BELOW;
-        num_constraint_lower_bound_active++;
+        num_equality_lower_bound_active++;
       } else if (lambda_sol[i] < -active_mult_tol) {
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume upper side is active");
         constraint_activity_status[i] = ACTIVE_ABOVE;
-        num_constraint_upper_bound_active++;
+        num_equality_upper_bound_active++;
       } else {
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume inactive");
         constraint_activity_status[i] = INACTIVE;
@@ -230,11 +232,11 @@ void CrossoverSqpSolver::determine_activities_(
     } else if (ratio_lower < ratio_upper) {
       constraint_activity_status[i] = ACTIVE_BELOW;
       jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Lower active\n");
-      num_constraint_lower_bound_active++;
+      num_inequality_lower_bound_active++;
     } else {
       constraint_activity_status[i] = ACTIVE_ABOVE;
       jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Upper active\n");
-      num_constraint_upper_bound_active++;
+      num_inequality_upper_bound_active++;
     }
   }
   delete[] variable_lower_bounds;
@@ -244,11 +246,17 @@ void CrossoverSqpSolver::determine_activities_(
 
   jnlst_->Printf(J_MOREDETAILED, J_MAIN, "\n");
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of active lower constraints........: %d\n",
-                 num_constraint_lower_bound_active);
+                 "Number of equality constraints lower-active.....: %d\n",
+                 num_equality_lower_bound_active);
   jnlst_->Printf(J_SUMMARY, J_MAIN,
-                 "Number of active upper constraints........: %d\n\n",
-                 num_constraint_upper_bound_active);
+                 "Number of equality constraints upper-active.....: %d\n",
+                 num_equality_upper_bound_active);
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                 "Number of active lower inequality constraints...: %d\n",
+                 num_inequality_lower_bound_active);
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                 "Number of active upper inequality constraints...: %d\n\n",
+                 num_inequality_upper_bound_active);
 }
 
 void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
