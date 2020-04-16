@@ -31,7 +31,7 @@ LazySqpSolver::LazySqpSolver()
   jnlst_ = crossover_sqp_solver_->get_jnlst();
 
   // Get the options TOOO
-  num_max_lazy_nlp_solves_ = 3;
+  num_max_lazy_nlp_solves_ = 20;
   max_add_lazy_constraints_ = 10;
 }
 

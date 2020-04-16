@@ -57,7 +57,10 @@ void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
   // Create the new qore_solver object
   int rv = QPNew(&qore_solver_, num_qp_variables_, num_qp_constraints_,
                  num_nnz_jacobian, num_nnz_hessian);
-  assert(rv == QPSOLVER_OK);
+  if (rv != QPSOLVER_OK) {
+    jnlst_->Printf(J_ERROR, J_MAIN, "QORE QPNew fails and returns rv = %d\n", rv);
+    THROW_EXCEPTION(SQP_EXCEPTION_QP_SOLVER_FAILS, "QORE fails in initialization");
+  }
 
   // Set the options in the QORE object
   set_qp_solver_options_();

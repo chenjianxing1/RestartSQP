@@ -44,7 +44,7 @@ CrossoverSqpSolver::~CrossoverSqpSolver()
 }
 
 double
-CrossoverSqpSolver::determine_obj_scaling_factor_(IpoptSqpNlp& ipopt_tnlp)
+CrossoverSqpSolver::determine_obj_scaling_factor_(IpoptSqpTNlp& ipopt_tnlp)
 {
   // For now we base the scaling factor on the multiplier values and make sure
   // that they are not too large.  This way we also make sure that the initial
@@ -91,7 +91,7 @@ CrossoverSqpSolver::determine_obj_scaling_factor_(IpoptSqpNlp& ipopt_tnlp)
 
 void CrossoverSqpSolver::determine_activities_(
     ActivityStatus* bound_activity_status,
-    ActivityStatus* constraint_activity_status, IpoptSqpNlp& ipopt_tnlp)
+    ActivityStatus* constraint_activity_status, IpoptSqpTNlp& ipopt_tnlp)
 {
   // Get the bounds
   double* variable_lower_bounds = new double[num_variables_];
@@ -277,7 +277,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   assert(retval);
 
   // Create an Ipopt NLP for solve the SqpTNlp first
-  SmartPtr<IpoptSqpNlp> ipopt_tnlp = new IpoptSqpNlp(sqp_tnlp);
+  SmartPtr<IpoptSqpTNlp> ipopt_tnlp = new IpoptSqpTNlp(sqp_tnlp);
 
   // Initialize the Ipopt application (process options?)
   ApplicationReturnStatus status =

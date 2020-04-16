@@ -19,15 +19,15 @@ namespace RestartSqp {
  * At the end, the solution is not given to the SqpTNLP, though,
  * instead it is stored here.
  */
-class IpoptSqpNlp : public Ipopt::TNLP
+class IpoptSqpTNlp : public Ipopt::TNLP
 {
 
 public:
   /** @brief Constructor that an instance of Ipopt's TNLP */
-  IpoptSqpNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
+  IpoptSqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
 
   /** Destructor*/
-  ~IpoptSqpNlp();
+  ~IpoptSqpTNlp();
 
   /**
    *@brief Get problem size information
@@ -131,13 +131,13 @@ private:
   /** @name Hide unused default methods. */
   //@{
   /** Default constructor*/
-  IpoptSqpNlp();
+  IpoptSqpTNlp();
 
   /** Copy Constructor */
-  IpoptSqpNlp(const IpoptSqpNlp&);
+  IpoptSqpTNlp(const IpoptSqpTNlp&);
 
   /** Overloaded Equals Operator */
-  void operator=(const IpoptSqpNlp&);
+  void operator=(const IpoptSqpTNlp&);
   //@}
 
   /** Ipopt's TNLP object that will be called for all evaluations. */

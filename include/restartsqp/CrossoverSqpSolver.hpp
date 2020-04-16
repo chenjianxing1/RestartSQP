@@ -143,7 +143,7 @@ private:
   void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
 
   /** Compute a scaling factor for the objective function for all the SQP solves. */
-  double determine_obj_scaling_factor_(IpoptSqpNlp& ipopt_tnlp);
+  double determine_obj_scaling_factor_(IpoptSqpTNlp& ipopt_tnlp);
 
   /** Determine the set of active variable bounds and constraints.
    *
@@ -151,7 +151,7 @@ private:
    * Ipopt slacks and multipliers. */
   void determine_activities_(ActivityStatus* bound_activity_status,
                              ActivityStatus* constraint_activity_status,
-                             IpoptSqpNlp& ipopt_tnlp);
+                             IpoptSqpTNlp& ipopt_tnlp);
 
   ///////////////////////////////////////////////////////////
   //              PRIVATE CLASS MEMBERS                    //

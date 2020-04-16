@@ -4,8 +4,8 @@
  * Authors: Xinyi Luo
  * Date:2019-06
  */
-#ifndef SQPHOTSTART_SHORTENEDSQPTNLP_HPP
-#define SQPHOTSTART_SHORTENEDSQPTNLP_HPP
+#ifndef SQPHOTSTART_LAZYSQPTNLP_HPP
+#define SQPHOTSTART_LAZYSQPTNLP_HPP
 
 #include "restartsqp/SqpTNlp.hpp"
 

@@ -13,7 +13,7 @@ using namespace Ipopt;
 namespace RestartSqp {
 
 /** Default constructor*/
-IpoptSqpNlp::IpoptSqpNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
+IpoptSqpTNlp::IpoptSqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
  : sqp_tnlp_(sqp_tnlp)
  , x_sol_(nullptr)
  , z_L_sol_(nullptr)
@@ -24,7 +24,7 @@ IpoptSqpNlp::IpoptSqpNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
 }
 
 /** Default constructor*/
-IpoptSqpNlp::~IpoptSqpNlp()
+IpoptSqpTNlp::~IpoptSqpTNlp()
 {
   delete[] x_sol_;
   delete[] z_L_sol_;
@@ -33,7 +33,7 @@ IpoptSqpNlp::~IpoptSqpNlp()
   delete[] g_sol_;
 }
 
-bool IpoptSqpNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
+bool IpoptSqpTNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
                                Index& nnz_h_lag,
                                TNLP::IndexStyleEnum& index_style)
 {
@@ -49,7 +49,7 @@ bool IpoptSqpNlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
 /**
  *@brief get the bounds information from the NLP object
  */
-bool IpoptSqpNlp::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m,
+bool IpoptSqpTNlp::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m,
                                   Number* g_l, Number* g_u)
 {
   bool retval;
@@ -60,7 +60,7 @@ bool IpoptSqpNlp::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m,
 /*
  * @brief Get the starting point from the NLP object.
  */
-bool IpoptSqpNlp::get_starting_point(Index n, bool init_x, Number* x,
+bool IpoptSqpTNlp::get_starting_point(Index n, bool init_x, Number* x,
                                      bool init_z, Number* z_L, Number* z_U,
                                      Index m, bool init_lambda, Number* lambda)
 {
@@ -102,7 +102,7 @@ bool IpoptSqpNlp::get_starting_point(Index n, bool init_x, Number* x,
 /**
  *@brief Evaluate the objective value
  */
-bool IpoptSqpNlp::eval_f(Index n, const Number* x, bool new_x,
+bool IpoptSqpTNlp::eval_f(Index n, const Number* x, bool new_x,
                          Number& obj_value)
 {
   return sqp_tnlp_->eval_objective_value(n, x, new_x, obj_value);
@@ -112,7 +112,7 @@ bool IpoptSqpNlp::eval_f(Index n, const Number* x, bool new_x,
  * @brief Evaluate the constraints at point x
  *
  */
-bool IpoptSqpNlp::eval_g(Index n, const Number* x, bool new_x, Index m,
+bool IpoptSqpTNlp::eval_g(Index n, const Number* x, bool new_x, Index m,
                          Number* g)
 {
   return sqp_tnlp_->eval_constraint_values(n, x, new_x, m, g);
@@ -121,7 +121,7 @@ bool IpoptSqpNlp::eval_g(Index n, const Number* x, bool new_x, Index m,
 /**
  *@brief Evaluate gradient at point x
  */
-bool IpoptSqpNlp::eval_grad_f(Index n, const Number* x, bool new_x,
+bool IpoptSqpTNlp::eval_grad_f(Index n, const Number* x, bool new_x,
                               Number* grad_f)
 {
   return sqp_tnlp_->eval_objective_gradient(n, x, new_x, grad_f);
@@ -132,7 +132,7 @@ bool IpoptSqpNlp::eval_grad_f(Index n, const Number* x, bool new_x,
  * Always call this before the first time using @Eval_Jacobian
  */
 
-bool IpoptSqpNlp::eval_jac_g(Index n, const Number* x, bool new_x, Index m,
+bool IpoptSqpTNlp::eval_jac_g(Index n, const Number* x, bool new_x, Index m,
                              Index nele_jac, Index* iRow, Index* jCol,
                              Number* values)
 {
@@ -145,7 +145,7 @@ bool IpoptSqpNlp::eval_jac_g(Index n, const Number* x, bool new_x, Index m,
  * @brief Get the structure of the Hessian
  * Always call this before the first time using @Eval_Hessian
  */
-bool IpoptSqpNlp::eval_h(Index n, const Number* x, bool new_x,
+bool IpoptSqpTNlp::eval_h(Index n, const Number* x, bool new_x,
                          Number obj_factor, Index m, const Number* lambda,
                          bool new_lambda, Index nele_hess, Index* iRow,
                          Index* jCol, Number* values)
@@ -170,7 +170,7 @@ bool IpoptSqpNlp::eval_h(Index n, const Number* x, bool new_x,
   return retval;
 }
 
-void IpoptSqpNlp::finalize_solution(SolverReturn ipopt_status, Index n,
+void IpoptSqpTNlp::finalize_solution(SolverReturn ipopt_status, Index n,
                                     const Number* x, const Number* z_L,
                                     const Number* z_U, Index m, const Number* g,
                                     const Number* lambda, Number obj_value,
