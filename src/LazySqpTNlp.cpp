@@ -6,6 +6,7 @@
 */
 
 #include "restartsqp/LazySqpTNlp.hpp"
+#include "restartsqp/SqpIpoptTNlp.hpp"
 #include "restartsqp/Utils.hpp"
 #include <cassert>
 
@@ -13,7 +14,6 @@ using namespace std;
 
 namespace RestartSqp {
 
-/** Default constructor*/
 LazySqpTNlp::LazySqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
  : sqp_tnlp_(sqp_tnlp)
  , num_constraints_(-1)
@@ -27,6 +27,20 @@ LazySqpTNlp::LazySqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
  , previous_optimal_constraint_multipliers_(nullptr)
 {
 }
+
+LazySqpTNlp::LazySqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp)
+  : sqp_tnlp_(make_shared<SqpIpoptTNlp>(ipopt_tnlp))
+  , num_constraints_(-1)
+  , constraint_indices_(nullptr)
+  , sqp_jac_map_(nullptr)
+  , bound_activity_status_(nullptr)
+  , constraint_activity_status_(nullptr)
+  , has_been_solved_before_(false)
+  , previous_optimal_solution_(nullptr)
+  , previous_optimal_bound_multipliers_(nullptr)
+  , previous_optimal_constraint_multipliers_(nullptr)
+ {
+ }
 
 /** Default constructor*/
 LazySqpTNlp::~LazySqpTNlp()
@@ -197,12 +211,10 @@ bool LazySqpTNlp::get_starting_point(
     if (init_primal_variables) {
       for (int i = 0; i < num_variables_; ++i) {
         primal_variables[i] = previous_optimal_solution_[i];
-        bound_multipliers[i] = previous_optimal_bound_multipliers_[i];
       }
     }
     if (init_bound_multipliers) {
       for (int i = 0; i < num_variables_; ++i) {
-        primal_variables[i] = previous_optimal_solution_[i];
         bound_multipliers[i] = previous_optimal_bound_multipliers_[i];
       }
     }

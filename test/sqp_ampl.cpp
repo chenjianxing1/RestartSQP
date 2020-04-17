@@ -87,8 +87,8 @@ int main(int argc, char** args)
   SmartPtr<TNLP> ampl_tnlp =
       new AmplTNLP(ConstPtr(alg.get_jnlst()), dummy_options, args);
   string nlp_name(args[1]);
-  shared_ptr<SqpIpoptNlp> sqp_nlp =
-      make_shared<SqpIpoptNlp>(ampl_tnlp, nlp_name);
+  shared_ptr<SqpIpoptTNlp> sqp_nlp =
+      make_shared<SqpIpoptTNlp>(ampl_tnlp, nlp_name);
 
   // Solve the AMPL model
   // alg.initialize(sqp_nlp, args[1]);

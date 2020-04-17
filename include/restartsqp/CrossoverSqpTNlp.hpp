@@ -4,34 +4,31 @@
  * Authors: Xinyi Luo
  * Date:2019-06
  */
-#ifndef SQPHOTSTART_SQPIPOPTNLP_HPP
-#define SQPHOTSTART_SQPIPOPTNLP_HPP
+#ifndef SQPHOTSTART_CROSSOVERSQPTNLP_HPP
+#define SQPHOTSTART_CROSSOVERSQPTNLP_HPP
 
-#include "IpTNLP.hpp"
 #include "restartsqp/SqpTNlp.hpp"
+#include "IpTNLP.hpp"
 
 namespace RestartSqp {
 /**
  * This is part of SQPhotstart
  *
- * This class enables user to read data from NLP class object with more friendly
- * names and the use of Matrix and Vector objects for data.
- *
- * IMPORTANT: The Lagrangian function here is defined as L(x,l) = f(x) - sum_i
- * l_ic_j(c)
- *
- *            THIS IS DIFFERENT FROM IPOPT's DEFINITION!!
+ * This is a wrapper of an SqpTNlp for the Crossover solver.  It
+ * stores the intermediate solutions and working sets.
  */
-class SqpIpoptTNlp : public SqpTNlp
+class CrossoverSqpTNlp : public SqpTNlp
 {
 
 public:
+  /** @brief Constructor that an instance of RestartSQP's TNLP */
+  CrossoverSqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
+
   /** @brief Constructor that an instance of Ipopt's TNLP */
-  SqpIpoptTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp,
-              const std::string& nlp_name = "Ipopt NLP");
+  CrossoverSqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp);
 
   /** Destructor*/
-  ~SqpIpoptTNlp();
+  ~CrossoverSqpTNlp();
 
   /**
    *@brief Get problem size information
@@ -100,7 +97,7 @@ public:
       bool new_primal_variables, double objective_scaling_factor,
       int num_constraints, const double* constraint_multipliers,
       bool new_constraint_multipliers, int num_nonzeros_hessian,
-      int* row_indices, int* column_indices, double* nonzero_values) override;
+      int* row_indices, int* column_indices, double* nonzero_valuess) override;
 
   /**
    * @brief Return the results of the optimization run to the user.
@@ -115,36 +112,59 @@ public:
                          double objective_value,
                          std::shared_ptr<const Statistics> stats) override;
 
-  /** No initial working set is available from an Ipopt TNLP */
+  /** Method telling SQP solver that a working set is provided. */
   bool use_initial_working_set() const
   {
-    return false;
+    return true;
   }
 
-  /**
+  /** Method initializing the working set. */
+  bool get_initial_working_sets(int num_variables,
+                                ActivityStatus* bounds_working_set,
+                                int num_constraints,
+                                ActivityStatus* constraints_working_set);
 
 private:
   /** @name Hide unused default methods. */
   //@{
   /** Default constructor*/
-  SqpIpoptTNlp();
+  CrossoverSqpTNlp();
 
   /** Copy Constructor */
-  SqpIpoptTNlp(const SqpIpoptTNlp&);
+  CrossoverSqpTNlp(const CrossoverSqpTNlp&);
 
   /** Overloaded Equals Operator */
-  void operator=(const SqpIpoptTNlp&);
+  void operator=(const CrossoverSqpTNlp&);
   //@}
 
-  /** Ipopt's TNLP object that will be called for all evaluations. */
-  Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp_;
+  /** Original SqpTNlp of which we solve a version with fewer constraints. */
+  std::shared_ptr<SqpTNlp> sqp_tnlp_;
 
-  /** Numbering style for the matrices from the Ipopt TNLP. */
-  Ipopt::TNLP::IndexStyleEnum index_style_;
+  /** Number of variables. */
+  int num_variables_;
 
-  /** Name of the NLP that is solved. */
-  std::string nlp_name_;
+  /** Number of constraints for the next solve. */
+  int num_constraints_;
+
+  /** Final working set for the bounds from the most recent solve. */
+  ActivityStatus* bound_activity_status_;
+
+  /** Final working set for the bounds from the most recent solve. */
+  ActivityStatus* constraint_activity_status_;
+
+  /** Flag indicating whether the NLP has been solved before. */
+  bool has_been_solved_before_;
+
+  /** Values of the optimal primal variables from the most recent solve. */
+  double* previous_optimal_solution_;
+
+  /** Values of the optimal bound multipliers from the most recent solve. */
+  double* previous_optimal_bound_multipliers_;
+
+  /** Values of the optimal constraint multipliers from the most recent solve.
+   *  There are only set of constraints that have been collected. */
+  double* previous_optimal_constraint_multipliers_;
 };
 }
 
-#endif // SQPHOTSTART_SqpIpoptNlp_HPP
+#endif // SQPHOTSTART_ShortenedSqpTNlp_HPP

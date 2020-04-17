@@ -8,6 +8,7 @@
 #define SQPHOTSTART_LAZYSQPTNLP_HPP
 
 #include "restartsqp/SqpTNlp.hpp"
+#include "IpTNLP.hpp"
 
 namespace RestartSqp {
 /**
@@ -19,8 +20,11 @@ class LazySqpTNlp : public SqpTNlp
 {
 
 public:
-  /** @brief Constructor that an instance of Ipopt's TNLP */
+  /** @brief Constructor that an instance of RestartSQP's TNLP */
   LazySqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp);
+
+  /** @brief Constructor that an instance of Ipopt's TNLP */
+  LazySqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp);
 
   /** Destructor*/
   ~LazySqpTNlp();

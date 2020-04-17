@@ -430,6 +430,10 @@ void QoreInterface::set_qp_solver_options_()
     value = -1;
     QPSetInt(qore_solver_, QPSOLVER_INT_PRTFREQ, &value, 1);
   }
+  else {
+    value = 0;
+    QPSetInt(qore_solver_, QPSOLVER_INT_PRTFREQ, &value, 1);
+  }
   value = qp_solver_print_level_;
   QPSetInt(qore_solver_, QPSOLVER_INT_LOGLEVEL, &value, 1);
   QPSetInt(qore_solver_, QPSOLVER_INT_MAXITER, &qp_solver_max_num_iterations_,

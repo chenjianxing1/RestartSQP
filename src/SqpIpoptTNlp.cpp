@@ -13,18 +13,18 @@ using namespace Ipopt;
 namespace RestartSqp {
 
 /** Default constructor*/
-SqpIpoptNlp::SqpIpoptNlp(SmartPtr<TNLP> ipopt_tnlp, const string& nlp_name)
+SqpIpoptTNlp::SqpIpoptTNlp(SmartPtr<TNLP> ipopt_tnlp, const string& nlp_name)
  : ipopt_tnlp_(ipopt_tnlp)
  , nlp_name_(nlp_name)
 {
 }
 
 /** Default constructor*/
-SqpIpoptNlp::~SqpIpoptNlp()
+SqpIpoptTNlp::~SqpIpoptTNlp()
 {
 }
 
-bool SqpIpoptNlp::get_nlp_info(int& num_variables, int& num_constraints,
+bool SqpIpoptTNlp::get_nlp_info(int& num_variables, int& num_constraints,
                                int& num_nonzeros_jacobian,
                                int& num_nonzeros_hessian, std::string& nlp_name)
 {
@@ -40,7 +40,7 @@ bool SqpIpoptNlp::get_nlp_info(int& num_variables, int& num_constraints,
 /**
  *@brief get the bounds information from the NLP object
  */
-bool SqpIpoptNlp::get_bounds_info(int num_variabes,
+bool SqpIpoptTNlp::get_bounds_info(int num_variabes,
                                   double* variable_lower_bounds,
                                   double* variable_upper_bounds,
                                   int num_constraints,
@@ -57,7 +57,7 @@ bool SqpIpoptNlp::get_bounds_info(int num_variabes,
 /*
  * @brief Get the starting point from the NLP object.
  */
-bool SqpIpoptNlp::get_starting_point(
+bool SqpIpoptTNlp::get_starting_point(
     int num_variables, bool init_primal_variables, double* primal_variables,
     bool init_bound_multipliers, double* bound_multipliers, int num_constraints,
     bool init_constraint_multipliers, double* constraint_multipliers)
@@ -117,7 +117,7 @@ bool SqpIpoptNlp::get_starting_point(
 /**
  *@brief Evaluate the objective value
  */
-bool SqpIpoptNlp::eval_objective_value(int num_variables,
+bool SqpIpoptTNlp::eval_objective_value(int num_variables,
                                        const double* primal_variables,
                                        bool new_primal_variables,
                                        double& objective_value)
@@ -129,7 +129,7 @@ bool SqpIpoptNlp::eval_objective_value(int num_variables,
 /**
  *@brief Evaluate gradient at point x
  */
-bool SqpIpoptNlp::eval_objective_gradient(int num_variables,
+bool SqpIpoptTNlp::eval_objective_gradient(int num_variables,
                                           const double* primal_variables,
                                           bool new_primal_variables,
                                           double* objective_gradient)
@@ -142,7 +142,7 @@ bool SqpIpoptNlp::eval_objective_gradient(int num_variables,
  * @brief Evaluate the constraints at point x
  *
  */
-bool SqpIpoptNlp::eval_constraint_values(int num_variables,
+bool SqpIpoptTNlp::eval_constraint_values(int num_variables,
                                          const double* primal_variables,
                                          bool new_primal_variables,
                                          int num_constraints,
@@ -158,7 +158,7 @@ bool SqpIpoptNlp::eval_constraint_values(int num_variables,
  * Always call this before the first time using @Eval_Jacobian
  */
 
-bool SqpIpoptNlp::eval_constraint_jacobian(
+bool SqpIpoptTNlp::eval_constraint_jacobian(
     int num_variables, const double* primal_variables,
     bool new_primal_variables, int num_constraints, int num_nonzeros_jacobian,
     int* row_indices, int* column_indices, double* nonzero_values)
@@ -182,7 +182,7 @@ bool SqpIpoptNlp::eval_constraint_jacobian(
  * @brief Get the structure of the Hessian
  * Always call this before the first time using @Eval_Hessian
  */
-bool SqpIpoptNlp::eval_lagrangian_hessian(
+bool SqpIpoptTNlp::eval_lagrangian_hessian(
     int num_variables, const double* primal_variables,
     bool new_primal_variables, double objective_scaling_factor,
     int num_constraints, const double* constraint_multipliers,
@@ -218,7 +218,7 @@ bool SqpIpoptNlp::eval_lagrangian_hessian(
   return retval;
 }
 
-void SqpIpoptNlp::finalize_solution(
+void SqpIpoptTNlp::finalize_solution(
     SqpSolverExitStatus status, int num_variables,
     const double* primal_solution, const double* bound_multipliers,
     const ActivityStatus* bound_activity_status, int num_constraints,

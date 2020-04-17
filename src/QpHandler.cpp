@@ -337,7 +337,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
                         "QP solver runs out of iterations.");
       case QPEXIT_INTERNAL_ERROR:
         THROW_EXCEPTION(SQP_EXCEPTION_INTERNAL_ERROR,
-                        "QP solver encoutered some interial error.");
+                        "QP solver encoutered some internal error.");
       default:
         THROW_EXCEPTION(
             SQP_EXCEPTION_UNKNOWN,

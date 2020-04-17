@@ -15,8 +15,8 @@ int main(int argv, char* argc[])
 
   // Create a wrapper that makes the Ipopt TNLP look like an SqpNlp
   string nlp_name = "ProblemName";
-  shared_ptr<SqpIpoptNlp> sqp_nlp =
-      make_shared<SqpIpoptNlp>(ipopt_nlp, nlp_name);
+  shared_ptr<SqpIpoptTNlp> sqp_nlp =
+      make_shared<SqpIpoptTNlp>(ipopt_nlp, nlp_name);
 
   // Create an array with the indices of the constraints that should be considered
   // in the beginning.  Constraints are counted starting from 0.

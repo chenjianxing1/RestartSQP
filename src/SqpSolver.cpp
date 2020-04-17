@@ -1205,6 +1205,9 @@ void SqpSolver::increase_penalty_parameter_()
   // Increase counter for penalty parameter trials
   solver_statistics_->try_new_penalty_parameter();
 
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN,"  Solving QP for penalty %e\n",
+                 current_penalty_parameter_);
+
   // Solve the QP for the new penalty parameter
   shared_ptr<const Vector> qp_constraint_body = current_constraint_values_;
   calculate_search_direction_(qp_constraint_body);
@@ -1477,6 +1480,8 @@ void SqpSolver::update_penalty_parameter_()
                                        "(%e), so we need to determine best "
                                        "possible improvement of feasibility.\n",
                    penalty_update_tol_);
+    jnlst_->Printf(J_ITERSUMMARY, J_MAIN,"  Solving LP for penalty %e\n",
+                   current_penalty_parameter_);
 
     // Solve the LP that minimizes the linearized constraint vilation within the
     // trust region
@@ -1484,7 +1489,7 @@ void SqpSolver::update_penalty_parameter_()
     QpSolverExitStatus exit_status = lp_solver_->solve(solver_statistics_);
     if (exit_status != QPEXIT_OPTIMAL) {
       const string& nlp_name = sqp_nlp_->get_nlp_name();
-      qp_solver_->write_qp_data(nlp_name + "qpdata.log");
+      lp_solver_->write_qp_data(nlp_name + "qpdata.log");
       assert(false && "Still need to decide how to handle QP solver error.");
       // exit_flag_ = qp_solver_->get_status();
       // break;
@@ -1734,14 +1739,16 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                   " the optimality test",
       "yes", "will automatically generate the tolerance "
              "level for the optimality test");
+
+  const double default_tol = 1e-6;
   reg_options->AddNumberOption("active_set_tol", "",
                                1.0e-5); // TODO: make lower bounded options
-  reg_options->AddNumberOption("opt_tol", "", 1.0e-8);
-  reg_options->AddNumberOption("opt_tol_complementarity", "", 1.0e-8);
-  reg_options->AddNumberOption("opt_tol_dual_feasibility", " ", 1.0e-8);
-  reg_options->AddNumberOption("opt_tol_primal_feasibility", " ", 1.0e-8);
-  reg_options->AddNumberOption("opt_tol_stationarity_feasibility", "", 1e-8);
-  reg_options->AddNumberOption("opt_second_tol", " ", 1.0e-8);
+  reg_options->AddNumberOption("opt_tol", "", default_tol);
+  reg_options->AddNumberOption("opt_tol_complementarity", "", default_tol);
+  reg_options->AddNumberOption("opt_tol_dual_feasibility", " ", default_tol);
+  reg_options->AddNumberOption("opt_tol_primal_feasibility", " ", default_tol);
+  reg_options->AddNumberOption("opt_tol_stationarity_feasibility", "", default_tol);
+  reg_options->AddNumberOption("opt_second_tol", " ", default_tol);
 
   reg_options->AddLowerBoundedNumberOption(
       "cpu_time_limit", "CPU time limit", 0., true, 1e10,
