@@ -120,6 +120,8 @@ private:
   // Flag indicating whether the primal variables should be initialized
   // to zero after the first iteration
   bool qore_init_primal_variables_;
+  // Regularization factor for the QP Hessian
+  double qore_hessian_regularization_;
   //@}
 };
 }

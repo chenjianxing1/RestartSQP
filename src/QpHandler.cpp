@@ -71,11 +71,11 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
 
   // Determine which solver should be used
   int enum_int;
-  options->GetEnumValue("qp_solver_choice", enum_int, "");
-  qp_solver_choice_ = QpSolver(enum_int);
+  options->GetEnumValue("qp_solver", enum_int, "");
+  qp_solver_ = QpSolver(enum_int);
 
   // Create solver objects
-  switch (qp_solver_choice_) {
+  switch (qp_solver_) {
     case QPOASES:
       qp_solver_interface_ = make_shared<QpOasesInterface>(
           num_qp_variables_, num_qp_constraints_, qptype, options, jnlst);

@@ -32,7 +32,7 @@ LazySqpSolver::LazySqpSolver()
 
   // Get the options TOOO
   num_max_lazy_nlp_solves_ = 20;
-  max_add_lazy_constraints_ = 10;
+  max_add_lazy_constraints_ = 50;
 }
 
 /**

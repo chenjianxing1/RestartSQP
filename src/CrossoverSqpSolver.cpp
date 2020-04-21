@@ -391,6 +391,10 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   options->SetNumericValue("penalty_parameter_init_value",
                            initial_penalty_parameter);
 
+  // Make sure the trust region is not active in the first iteration by initializing
+  // it to a large value
+  options->SetNumericValue("trust_region_init_value", 1e9);
+
   // Now call the SQP solver to get the active-set solution for this problem
   const string local_options_file_name = ""; // CK: this is a duplicate of the
                                              // function argument, which clang++

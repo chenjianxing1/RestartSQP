@@ -274,6 +274,10 @@ void SqpSolver::print_initial_output_()
       current_penalty_parameter_, 0., 0, current_kkt_error_.worst_violation);
   // qp_solver_->get_QpOptimalStatus().KKT_error);
 
+  double current_penalty_function_value =
+      current_objective_value_ +
+      current_penalty_parameter_ * current_infeasibility_;
+
   // Print some information about constant problem data
   if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
     jnlst_->Printf(J_VECTOR, J_MAIN, "\n");
@@ -437,6 +441,10 @@ void SqpSolver::print_iteration_output_()
       current_infeasibility_, trial_step_norm, trust_region_radius_,
       model_ratio, current_penalty_parameter_, qp_kkt_error, qp_iterations,
       current_kkt_error_.worst_violation);
+
+  double current_penalty_function_value =
+      current_objective_value_ +
+      current_penalty_parameter_ * current_infeasibility_;
 
   // If desired, we print more information
   if (jnlst_->ProduceOutput(J_DETAILED, J_MAIN)) {
@@ -1266,14 +1274,14 @@ void SqpSolver::perform_ratio_test_()
   // update_penalty_parameter_ or second_order_correction_ method
 
   // Compute the actual reduction in the merit function
-  double current_penalty_value =
+  double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
-  double trial_penalty_value =
+  double trial_penalty_function_value =
       trial_objective_value_ +
       current_penalty_parameter_ * trial_infeasibility_;
 
-  actual_reduction_ = current_penalty_value - trial_penalty_value;
+  actual_reduction_ = current_penalty_function_value - trial_penalty_function_value;
 
   // For round-off error, increase the actual reduction by a tiny
   // amount
@@ -1793,9 +1801,10 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                 100000);
   reg_options->AddIntegerOption("qp_solver_print_level",
                                 "print level for QP solver", 0);
-  reg_options->AddStringOption4(
-      "qp_solver_choice", "QP solver used for step computation.", "qpoases",
-      "qpoases", "", "qore", "", "gurobi", "", "cplex", "");
+  reg_options->AddStringOption2(
+      "qp_solver", "QP solver used for step computation.", "qore",
+      "qpoases", "", "qore", "");
+
 
   //    reg_options->AddStringOption("QPsolverChoice",
   //		    "The choice of QP solver which will be used in the
@@ -1814,6 +1823,11 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                     "penatly variables) to zero.",
       "no", "no", "reuse the internal solution from the most recent solve.",
       "yes", "initialize the values to zero.");
+  reg_options->AddLowerBoundedNumberOption(
+      "qore_hessian_regularization", "Regularization parameter for the QP",
+        0., false, 0.,
+      "Number that is added to the diagonal of the QP Hessian");
+
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);
@@ -1879,7 +1893,7 @@ void SqpSolver::get_option_values_()
 
   /** QP solver usde for ??? */
   int enum_int;
-  options_->GetEnumValue("qp_solver_choice", enum_int, "");
+  options_->GetEnumValue("qp_solver", enum_int, "");
   qp_solver_choice_ = QpSolver(enum_int);
 }
 

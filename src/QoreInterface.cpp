@@ -76,6 +76,8 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
                            lp_solver_max_num_iterations_, "");
   options->GetBoolValue("qore_init_primal_variables", qore_init_primal_variables_,
                            "");
+  options->GetNumericValue("qore_hessian_regularization",
+                           qore_hessian_regularization_, "");
 }
 
 /**
@@ -478,6 +480,10 @@ void QoreInterface::set_objective_hessian(
 
   // Set the values in our matrix
   hessian_->set_values(triplet_matrix);
+
+  // To regularize and make the QP easier to solve in case the Hessian is singular, add a multiple of the identity
+  double factor = qore_hessian_regularization_;
+  hessian_->add_multiple_of_identity(factor);
 }
 
 } // SQP_HOTSTART

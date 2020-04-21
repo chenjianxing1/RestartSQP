@@ -181,6 +181,11 @@ public:
    */
   void set_values(std::shared_ptr<const SparseTripletMatrix> triplet_matrix);
 
+  /** Add a multiple of the identity to the matrix, i.e., add factor to each
+   *  diagonal element.
+   */
+  void add_multiple_of_identity(double factor);
+
   void get_dense_matrix(double* dense_matrix, bool row_oriented = true) const;
 
   /**

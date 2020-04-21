@@ -434,7 +434,7 @@ private:
   int num_qp_constraints_;
 
   /** Indicates which solver is used to solve the QPs. */
-  QpSolver qp_solver_choice_;
+  QpSolver qp_solver_;
 
   /** Store the value for the penalty parameter used most recently */
   double last_penalty_parameter_;

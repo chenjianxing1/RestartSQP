@@ -453,7 +453,32 @@ void SparseHbMatrix::set_values(
   }
 }
 
-//@}
+void SparseHbMatrix::add_multiple_of_identity(double factor)
+{
+  assert(is_symmetric_);
+
+  const int* i_short;
+  const int* i_long;
+
+  if (is_compressed_row_format_) {
+    i_short = row_indices_;
+    i_long = column_indices_;
+  }
+  else {
+    i_short = column_indices_;
+    i_long = row_indices_;
+  }
+
+  // Loop over the rows (or columns) and add factor to each diagonal element
+  for (int i = 0; i<num_columns_; ++i) {
+    for (int j=i_short[i]; j<i_short[i+1]; ++j) {
+      int k = i_long[j];
+      if (k==i) {
+        values_[j]+=factor;
+      }
+    }
+  }
+}
 
 shared_ptr<SparseTripletMatrix> SparseHbMatrix::convert_to_triplet() const
 {
