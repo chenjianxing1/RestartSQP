@@ -26,7 +26,7 @@
 ###################################################################################################
 
 # INCLUDE( DefaultSearchPaths )
-# INCLUDE( FindPackageHandleStandardArgs )
+INCLUDE( FindPackageHandleStandardArgs )
 
 MESSAGE( STATUS "Looking for AMD: " )
 
