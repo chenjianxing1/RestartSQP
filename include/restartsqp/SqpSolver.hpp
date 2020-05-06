@@ -7,9 +7,9 @@
 #ifndef SQPSOLVER_HPP_
 #define SQPSOLVER_HPP_
 
+#include "restartsqp/Types.hpp"
 #include "IpOptionsList.hpp"
 #include "restartsqp/QpHandler.hpp"
-#include "restartsqp/SQPDebug.hpp"
 #include "restartsqp/Statistics.hpp"
 
 namespace RestartSqp {
@@ -110,8 +110,10 @@ public:
     return current_kkt_error_;
   }
 
-  /** After successful termination, this is the optimal objective function value.
-   *  This is the value consistent with the original problem formulation, independent
+  /** After successful termination, this is the optimal objective function
+   * value.
+   *  This is the value consistent with the original problem formulation,
+   * independent
    *  of any internal scaling. */
   inline double get_final_objective() const
   {
@@ -347,6 +349,15 @@ private:
    * corresponding violation of the linearized constraints. */
   void increase_penalty_parameter_();
 
+  /** Store a backup of the relevant values from the current iteration (after QP solve and computation of predicted reduction).  This is used for the watchdog technique. */
+  void store_watchdog_backups_();
+
+  /** Restore a backup of the relevant values from the current iteration (after QP solve and computation of predicted reduction).  This is used for the watchdog technique. */
+  void restore_watchdog_backups_();
+
+  /** Delete backup vectors and matrices stored by store_watchdog_backups_(); */
+  void delete_watchdog_backups_();
+
   /**
    * @brief alloocate memory for class members.
    * This function initializes all the shared pointer which will be used in the
@@ -553,6 +564,9 @@ private:
   /** Flag indicating whether the trial point is accepted by ratio test. */
   bool trial_point_is_accepted_;
 
+  /** Flag indicating in which phase the watchdog strategy is. */
+  char watchdog_status_;
+
   /** Object that collects the solver statistics (iteration counts, etc) */
   std::shared_ptr<Statistics> solver_statistics_;
 
@@ -574,7 +588,29 @@ private:
   /** wallclock_ time at the beginning of the optimization run. */
   double wallclock_time_at_start_;
 
-  /** Option values */
+  /** @name Watchbog backup. */
+  //@{
+  std::shared_ptr<Vector> backup_current_iterate_;
+  std::shared_ptr<Vector> backup_current_constraint_multipliers_;
+  std::shared_ptr<Vector> backup_current_bound_multipliers_;
+
+  double backup_current_objective_value_;
+  std::shared_ptr<Vector> backup_current_objective_gradient_;
+  std::shared_ptr<Vector> backup_current_constraint_values_;
+  std::shared_ptr<SparseTripletMatrix> backup_current_constraint_jacobian_;
+  std::shared_ptr<SparseTripletMatrix> backup_current_lagrangian_hessian_;
+
+  double backup_current_infeasibility_;
+  double backup_predicted_reduction_;
+
+  std::shared_ptr<Vector> backup_trial_step_;
+  std::shared_ptr<Vector> backup_trial_constraint_multipliers_;
+  std::shared_ptr<Vector> backup_trial_bound_multipliers_;
+  double backup_trial_model_infeasibility_;
+
+  //@}
+
+  /** @namd Algorithmic option values */
   //@{
   /** Maximum number of iterations. */
   int max_num_iterations_;

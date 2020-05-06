@@ -112,6 +112,7 @@ public:
       }
     }
 
+  return true;
   }
 
   /** Return objective function value from original SqpTNlp. */

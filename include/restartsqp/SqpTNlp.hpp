@@ -140,6 +140,7 @@ public:
                                 ActivityStatus* constraints_working_set)
   {
     assert("get_initial_working_sets not implemented, but use_initial_working_set returned true.");
+    return false;
   }
 
 private:

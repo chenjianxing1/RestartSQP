@@ -194,7 +194,7 @@ public:
   /**
    * @brief Return the results of the optimization run to the user.
    */
-  bool finalize_solution(SqpSolverExitStatus status,
+  void finalize_solution(SqpSolverExitStatus status,
                          std::shared_ptr<const Vector> primal_solution,
                          std::shared_ptr<const Vector> bound_multipliers,
                          const ActivityStatus* bound_activity_status,

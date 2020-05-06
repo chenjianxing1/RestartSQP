@@ -7,9 +7,6 @@
 
 #include "restartsqp/QpSolverInterface.hpp"
 
-// TODO: We should get ride of this
-#include "restartsqp/SQPDebug.hpp"
-
 #include "IpOptionsList.hpp"
 
 #ifdef DEBUG

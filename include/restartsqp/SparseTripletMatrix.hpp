@@ -76,6 +76,9 @@ public:
   SparseTripletMatrix(const double* data, int num_rows, int num_columns,
                       bool row_oriented);
 
+  /** Copy Constructor.  Creates deep copy. */
+  SparseTripletMatrix(const SparseTripletMatrix& rhs);
+
   /** Constructor from a sparse Harwell Boeing matrix. */
   SparseTripletMatrix(std::shared_ptr<const SparseHbMatrix> sp_hb_matrix);
 
@@ -131,11 +134,6 @@ public:
   bool is_symmetric() const
   {
     return is_symmetric_;
-  }
-
-  inline bool is_initialized() const
-  {
-    return is_initialized_;
   }
 
   /**
@@ -198,9 +196,6 @@ private:
   /** Default constructor*/
   SparseTripletMatrix();
 
-  /** Copy Constructor */
-  SparseTripletMatrix(const SparseTripletMatrix&);
-
   /** Overloaded Equals Operator */
   void operator=(const SparseTripletMatrix&);
 
@@ -212,7 +207,6 @@ private:
   ///////////////////////////////////////////////////////////
 
 private:
-  bool is_initialized_;
   bool is_allocated_;
   bool is_symmetric_;   /**< is the matrix symmetric, if yes, the non-diagonal
                                  *data will only be stored for once*/
@@ -222,7 +216,6 @@ private:
   int num_rows_;        /**< the number of rows of a matrix */
   int* column_indices_; /**< the column number of a matrix entry */
   int* row_indices_;    /**< the row number of a matrix entry */
-  int* order_; /**< the corresponding original position of a matrix entry */
 };
 }
 

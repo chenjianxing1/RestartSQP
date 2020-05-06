@@ -7,6 +7,25 @@
 #ifndef SQPHOTSTART_TYPES_HPP
 #define SQPHOTSTART_TYPES_HPP
 
+// This is necessary for AW's current version of QtCreator (otherwise the error parser does not understand ostream correctly
+#define CLANG_INTERPRET_ERROR 1
+#if CLANG_INTERPRET_ERROR
+
+#include <string>
+#undef __cplusplus
+#define __cplusplus 199711L
+#endif
+
+#include <ostream>
+
+#if CLANG_INTERPRET_ERROR
+#undef __cplusplus
+#define __cplusplus 201103L
+#endif
+
+//#undef __cplusplus
+//#define __cplusplus 199711L
+
 #include "IpException.hpp"
 
 /** Declaration of all non-built in types (except for classes) */

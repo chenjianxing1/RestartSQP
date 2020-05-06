@@ -7,7 +7,6 @@
 
 #include "restartsqp/LazySqpSolver.hpp"
 #include "restartsqp/MessageHandling.hpp"
-#include "restartsqp/SQPDebug.hpp"
 
 #include <algorithm>
 #include <fstream>

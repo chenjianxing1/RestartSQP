@@ -440,6 +440,12 @@ void QoreInterface::set_qp_solver_options_()
   QPSetInt(qore_solver_, QPSOLVER_INT_LOGLEVEL, &value, 1);
   QPSetInt(qore_solver_, QPSOLVER_INT_MAXITER, &qp_solver_max_num_iterations_,
            1);
+
+#if 0
+  // TRIAL MAKE OPTIONS
+  double cvtol = 1e20;
+  QPSetDbl(qore_solver_, QPSOLVER_DBL_CVTOL, &cvtol, 1);
+#endif
 }
 
 void QoreInterface::set_constraint_jacobian(

@@ -8,7 +8,6 @@
 #include "IpOptionsList.hpp"
 #include "restartsqp/QoreInterface.hpp"
 #include "restartsqp/QpOasesInterface.hpp"
-#include "restartsqp/SQPDebug.hpp"
 
 using namespace std;
 using namespace Ipopt;

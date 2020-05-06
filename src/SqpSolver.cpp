@@ -7,7 +7,6 @@
 
 #include "restartsqp/SqpSolver.hpp"
 #include "restartsqp/MessageHandling.hpp"
-#include "restartsqp/SQPDebug.hpp"
 
 #include <fstream>
 
@@ -18,6 +17,15 @@ namespace RestartSqp {
 
 DECLARE_STD_EXCEPTION(NEW_POINTS_WITH_INCREASE_OBJ_ACCEPTED);
 DECLARE_STD_EXCEPTION(SMALL_TRUST_REGION);
+
+enum WatchdogStatus
+{
+  WATCHDOG_INACTIVE = 0,
+  WATCHDOG_READY = 1,
+  WATCHDOG_IN_TRIAL_ITERATE = 2,
+  WATCHDOG_UNSUCCESSFUL = 3,
+  WATCHDOG_SLEEPING = 4
+};
 
 SqpSolver::SqpSolver(SmartPtr<RegisteredOptions> reg_options,
                      SmartPtr<OptionsList> options, SmartPtr<Journalist> jnlst)
@@ -265,7 +273,8 @@ void SqpSolver::print_initial_output_()
                                         "============="
                                         "===========================\n");
 
-  double printable_obj_value = current_objective_value_ / objective_scaling_factor_;
+  double printable_obj_value =
+      current_objective_value_ / objective_scaling_factor_;
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
@@ -277,6 +286,7 @@ void SqpSolver::print_initial_output_()
   double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "current_penalty_function_value: %23.16e\n", current_penalty_function_value);
 
   // Print some information about constant problem data
   if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
@@ -433,7 +443,8 @@ void SqpSolver::print_iteration_output_()
   double model_ratio = actual_reduction_ / predicted_reduction_;
   int qp_iterations = qp_solver_->get_num_qp_iterations();
   double trial_step_norm = trial_step_->calc_inf_norm();
-  double printable_obj_value = current_objective_value_ / objective_scaling_factor_;
+  double printable_obj_value =
+      current_objective_value_ / objective_scaling_factor_;
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
       "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
@@ -445,6 +456,7 @@ void SqpSolver::print_iteration_output_()
   double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "current_penalty_function_value: %23.16e\n", current_penalty_function_value);
 
   // If desired, we print more information
   if (jnlst_->ProduceOutput(J_DETAILED, J_MAIN)) {
@@ -580,27 +592,76 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
     while (solver_statistics_->num_sqp_iterations_ < max_num_iterations_ &&
            exit_flag_ == UNKNOWN_EXIT_STATUS) {
 
-      // Solve the QP to get the trial step
-      current_constraint_values_->print("cur c before main QP", jnlst_,
-                                        J_DETAILED, J_MAIN);
-      shared_ptr<const Vector> qp_constraint_body = current_constraint_values_;
-      calculate_search_direction_(qp_constraint_body);
+      if (watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
+        // Solve the QP to get the trial step
+        current_constraint_values_->print("cur c before main QP", jnlst_,
+                                          J_DETAILED, J_MAIN);
+        shared_ptr<const Vector> qp_constraint_body =
+            current_constraint_values_;
+        calculate_search_direction_(qp_constraint_body);
+        // Need to restore the previous iterate's values to resume iteration
+        // from there
+      } else {
+        restore_watchdog_backups_();
+        // This also restores the old predicted reduction so we do not need to compute it again later
+      }
 
       // Update the penalty parameter if necessary.  In this process, a new
-      // trial
-      // step might be computed.
-      update_penalty_parameter_();
+      // trial step might be computed.
+      //
+      // If the watchdog is ready, we keep the current parameter unless the
+      // watch dog eventually rejects it.
+      if (watchdog_status_ != WATCHDOG_READY &&
+          watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE) {
+        update_penalty_parameter_();
+      }
+      else if (watchdog_status_ == WATCHDOG_READY) {
+        // As part of the penalty parameter update, the predicted reduction is computed, so we need to do this here explicitly
+        update_predicted_reduction_();
+      }
 
       // Calculate the trial point and evaluate the functions at that point.
+      // TODO: only need to recompute if the penalty parameter has changed?
       calc_trial_point_and_values_();
 
       // Check if the current iterate is acceptable
       perform_ratio_test_();
 
+      // If the watchdog procedure is used, handle the different cases
+      if (watchdog_status_ == WATCHDOG_READY &&
+          watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
+        if (!trial_point_is_accepted_) {
+          if (watchdog_status_ == WATCHDOG_READY) {
+            // Activate the watchdog
+            watchdog_status_ = WATCHDOG_IN_TRIAL_ITERATE;
+            // This stores the current iterates, search direction etc as backup
+            store_watchdog_backups_();
+            // We now temporarily accept the trial iterate
+            trial_point_is_accepted_ = true;
+          } else {
+            assert(watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE);
+            watchdog_status_ = WATCHDOG_UNSUCCESSFUL;
+            // We now will restore the old values instead of solving the
+            // previous QP again
+          }
+        } else {
+          // In this case the trial point was accepted and we reset the watchdog
+          // flag
+          watchdog_status_ = WATCHDOG_READY;
+          // and delete the backup
+          delete_watchdog_backups_();
+        }
+      } else if (watchdog_status_ == WATCHDOG_UNSUCCESSFUL) {
+        // We can now clear the flag and continue with a regular iteration
+        watchdog_status_ = WATCHDOG_SLEEPING;
+      }
+
+#if 0 // TODO : Need to integrate the second order correction with the watchdog
       // If requested by the options, do the second order correction step.
       if (!trial_point_is_accepted_ && perform_second_order_correction_step_) {
         second_order_correction_();
       }
+#endif
 
       // Accept the new iterate
       if (trial_point_is_accepted_) {
@@ -608,8 +669,10 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
       }
 
       // Update the radius and the QP bounds if the radius has been changed
-      solver_statistics_->increase_sqp_iteration_counter();
-      /* output some information to the console*/
+      // Unless we just restored the previous iterate for the watchdog
+      if (watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
+        solver_statistics_->increase_sqp_iteration_counter();
+      }
 
       // Compute the NLP KKT error and set exit_flag_ to indicate whether we
       // should stop..
@@ -624,7 +687,10 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
       }
 
       // Update the trust region radius
-      update_trust_region_radius_();
+      if (watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE &&
+          watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
+        update_trust_region_radius_();
+      }
     }
   } catch (SQP_EXCEPTION_PENALTY_TOO_LARGE& exc) {
     exc.ReportException(*jnlst_, J_ERROR);
@@ -691,8 +757,8 @@ void SqpSolver::return_results_()
 
   // Undo any internal scaling for the final solution. */
   if (objective_scaling_factor_ != 1.) {
-    current_bound_multipliers_->scale(1./objective_scaling_factor_);
-    current_constraint_multipliers_->scale(1./objective_scaling_factor_);
+    current_bound_multipliers_->scale(1. / objective_scaling_factor_);
+    current_constraint_multipliers_->scale(1. / objective_scaling_factor_);
     current_objective_value_ *= objective_scaling_factor_;
   }
   sqp_nlp_->finalize_solution(
@@ -888,25 +954,21 @@ void SqpSolver::initialize_iterates_()
   // Compute function and derivative values at the starting point
   bool retval = eval_f_(current_iterate_, current_objective_value_);
   assert(retval && "eval_f returned false at starting point");
-  retval =
-      eval_gradient_(current_iterate_, current_objective_gradient_);
+  retval = eval_gradient_(current_iterate_, current_objective_gradient_);
   assert(retval && "eval_gradient returned false");
-  retval =
-      eval_constraints_(current_iterate_, current_constraint_values_);
+  retval = eval_constraints_(current_iterate_, current_constraint_values_);
   assert(retval && "eval_constraints returned false");
-  retval = get_hessian_structure_(current_iterate_,
-                                           current_constraint_multipliers_,
-                                           current_lagrangian_hessian_);
-  assert(retval && "get_hessian_structure returned false");
   retval =
-      eval_hessian_(current_iterate_, current_constraint_multipliers_,
+      get_hessian_structure_(current_iterate_, current_constraint_multipliers_,
                              current_lagrangian_hessian_);
+  assert(retval && "get_hessian_structure returned false");
+  retval = eval_hessian_(current_iterate_, current_constraint_multipliers_,
+                         current_lagrangian_hessian_);
   assert(retval && "eval_hessian returned false");
-  retval = get_jacobian_structure_(current_iterate_,
-                                            current_constraint_jacobian_);
-  assert(retval && "get_jacobian_structure returned false");
   retval =
-      eval_jacobian_(current_iterate_, current_constraint_jacobian_);
+      get_jacobian_structure_(current_iterate_, current_constraint_jacobian_);
+  assert(retval && "get_jacobian_structure returned false");
+  retval = eval_jacobian_(current_iterate_, current_constraint_jacobian_);
   assert(retval && "eval_jacobian returned false");
 
   // We need to make sure that complementarity holds for the multipliers
@@ -947,6 +1009,10 @@ void SqpSolver::initialize_iterates_()
   // Set flag that makes sure that the QP solver will be initialized at the
   // first call
   qp_solver_initialized_ = false;
+
+  // Initialize the flag that tracks the status of the watchdog procedure
+  //watchdog_status_ = WATCHDOG_READY;
+  watchdog_status_ = WATCHDOG_INACTIVE;;
 }
 
 /**
@@ -1038,6 +1104,8 @@ double SqpSolver::compute_constraint_violation_(
                                  upper_constraint_bounds_->get_value(i));
   }
 
+  // TODO: I don't think we need to compute the following in the non-slack
+  // formulation
   if (variable_values != nullptr) {
     for (int i = 0; i < current_iterate_->get_dim(); i++) {
       if (variable_values->get_value(i) < lower_variable_bounds_->get_value(i))
@@ -1213,7 +1281,7 @@ void SqpSolver::increase_penalty_parameter_()
   // Increase counter for penalty parameter trials
   solver_statistics_->try_new_penalty_parameter();
 
-  jnlst_->Printf(J_ITERSUMMARY, J_MAIN,"  Solving QP for penalty %e\n",
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "  Solving QP for penalty %e\n",
                  current_penalty_parameter_);
 
   // Solve the QP for the new penalty parameter
@@ -1270,18 +1338,31 @@ void SqpSolver::perform_ratio_test_()
     return;
   }
 
-  // The predicted reduction has already been computed in the
-  // update_penalty_parameter_ or second_order_correction_ method
+  // The predicted reduction has already been computed for regular iterations.
+  // If we are in the trial watchdog iteration, we need to use the one from the
+  // original iteration in which the watchdog was triggered
+  if (watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
+    predicted_reduction_ = backup_predicted_reduction_;
+  }
 
   // Compute the actual reduction in the merit function
   double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
+  // If we are in the trial watchdog iteration, we need to use the original value
+  // for the current penatly value
+  if (watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
+    current_penalty_function_value =
+          backup_current_objective_value_ +
+          current_penalty_parameter_ * backup_current_infeasibility_;
+  }
+
   double trial_penalty_function_value =
       trial_objective_value_ +
       current_penalty_parameter_ * trial_infeasibility_;
 
-  actual_reduction_ = current_penalty_function_value - trial_penalty_function_value;
+  actual_reduction_ =
+      current_penalty_function_value - trial_penalty_function_value;
 
   // For round-off error, increase the actual reduction by a tiny
   // amount
@@ -1325,15 +1406,12 @@ void SqpSolver::accept_trial_point_()
   current_bound_multipliers_->copy_vector(trial_bound_multipliers_);
 
   // Evaluate the derivatives at the new iterate
-  bool retval =
-      eval_gradient_(current_iterate_, current_objective_gradient_);
+  bool retval = eval_gradient_(current_iterate_, current_objective_gradient_);
   assert(retval && "eval_gradient returned false");
-  retval =
-      eval_jacobian_(current_iterate_, current_constraint_jacobian_);
+  retval = eval_jacobian_(current_iterate_, current_constraint_jacobian_);
   assert(retval && "eval_jacobian returned false");
-  retval =
-      eval_hessian_(current_iterate_, current_constraint_multipliers_,
-                             current_lagrangian_hessian_);
+  retval = eval_hessian_(current_iterate_, current_constraint_multipliers_,
+                         current_lagrangian_hessian_);
   assert(retval && "eval_hessian returned false");
 
   // Tell QP solver that all data has changed
@@ -1488,7 +1566,7 @@ void SqpSolver::update_penalty_parameter_()
                                        "(%e), so we need to determine best "
                                        "possible improvement of feasibility.\n",
                    penalty_update_tol_);
-    jnlst_->Printf(J_ITERSUMMARY, J_MAIN,"  Solving LP for penalty %e\n",
+    jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "  Solving LP for penalty %e\n",
                    current_penalty_parameter_);
 
     // Solve the LP that minimizes the linearized constraint vilation within the
@@ -1755,7 +1833,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   reg_options->AddNumberOption("opt_tol_complementarity", "", default_tol);
   reg_options->AddNumberOption("opt_tol_dual_feasibility", " ", default_tol);
   reg_options->AddNumberOption("opt_tol_primal_feasibility", " ", default_tol);
-  reg_options->AddNumberOption("opt_tol_stationarity_feasibility", "", default_tol);
+  reg_options->AddNumberOption("opt_tol_stationarity_feasibility", "",
+                               default_tol);
   reg_options->AddNumberOption("opt_second_tol", " ", default_tol);
 
   reg_options->AddLowerBoundedNumberOption(
@@ -1766,8 +1845,9 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "Time limit measured in wallclock time (in seconds)");
 
   reg_options->SetRegisteringCategory("General");
-  reg_options->AddNumberOption("objective_scaling_factor", "scaling factor for the objective function",
-                               1., "");
+  reg_options->AddNumberOption("objective_scaling_factor",
+                               "scaling factor for the objective function", 1.,
+                               "");
   reg_options->AddNumberOption("step_size_tol",
                                "the smallest stepsize can be accepted"
                                "before concluding convergence",
@@ -1801,10 +1881,9 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                 100000);
   reg_options->AddIntegerOption("qp_solver_print_level",
                                 "print level for QP solver", 0);
-  reg_options->AddStringOption2(
-      "qp_solver", "QP solver used for step computation.", "qore",
-      "qpoases", "", "qore", "");
-
+  reg_options->AddStringOption2("qp_solver",
+                                "QP solver used for step computation.", "qore",
+                                "qpoases", "", "qore", "");
 
   //    reg_options->AddStringOption("QPsolverChoice",
   //		    "The choice of QP solver which will be used in the
@@ -1824,10 +1903,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "no", "no", "reuse the internal solution from the most recent solve.",
       "yes", "initialize the values to zero.");
   reg_options->AddLowerBoundedNumberOption(
-      "qore_hessian_regularization", "Regularization parameter for the QP",
-        0., false, 0.,
-      "Number that is added to the diagonal of the QP Hessian");
-
+      "qore_hessian_regularization", "Regularization parameter for the QP", 0.,
+      false, 0., "Number that is added to the diagonal of the QP Hessian");
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);
@@ -1870,7 +1947,8 @@ void SqpSolver::get_option_values_()
                             penalty_parameter_increase_factor_, "");
   options_->GetNumericValue("penalty_parameter_max_value",
                             penalty_parameter_max_value_, "");
-  options_->GetNumericValue("objective_scaling_factor", objective_scaling_factor_, "");
+  options_->GetNumericValue("objective_scaling_factor",
+                            objective_scaling_factor_, "");
   options_->GetNumericValue("eps1", eps1_, "");
   options_->GetNumericValue("eps1_change_parm", eps1_change_parm_, "");
   options_->GetNumericValue("eps2", eps2_, "");
@@ -2113,14 +2191,14 @@ bool SqpSolver::eval_f_(shared_ptr<const Vector> x, double& obj_value)
 }
 
 bool SqpSolver::eval_constraints_(shared_ptr<const Vector> x,
-                                 shared_ptr<Vector> constraints)
+                                  shared_ptr<Vector> constraints)
 {
   bool retval = sqp_nlp_->eval_constraints(x, constraints);
   return retval;
 }
 
 bool SqpSolver::eval_gradient_(shared_ptr<const Vector> x,
-                   shared_ptr<Vector> gradient)
+                               shared_ptr<Vector> gradient)
 {
   bool retval = sqp_nlp_->eval_gradient(x, gradient);
   if (retval && objective_scaling_factor_ != 1.) {
@@ -2129,8 +2207,8 @@ bool SqpSolver::eval_gradient_(shared_ptr<const Vector> x,
   return retval;
 }
 
-bool SqpSolver::get_jacobian_structure_(shared_ptr<const Vector> x,
-                                       shared_ptr<SparseTripletMatrix> Jacobian)
+bool SqpSolver::get_jacobian_structure_(
+    shared_ptr<const Vector> x, shared_ptr<SparseTripletMatrix> Jacobian)
 {
   bool retval = sqp_nlp_->get_jacobian_structure(x, Jacobian);
   return retval;
@@ -2147,7 +2225,8 @@ bool SqpSolver::get_hessian_structure_(shared_ptr<const Vector> x,
                                        shared_ptr<const Vector> lambda,
                                        shared_ptr<SparseTripletMatrix> Hessian)
 {
-  // We assume here that the values of lambda do not matter and do not scale lambda
+  // We assume here that the values of lambda do not matter and do not scale
+  // lambda
   bool retval = sqp_nlp_->get_hessian_structure(x, lambda, Hessian);
   return retval;
 }
@@ -2156,8 +2235,66 @@ bool SqpSolver::eval_hessian_(shared_ptr<const Vector> x,
                               shared_ptr<const Vector> lambda,
                               shared_ptr<SparseTripletMatrix> Hessian)
 {
-  bool retval = sqp_nlp_->eval_hessian(x, lambda, objective_scaling_factor_, Hessian);
+  bool retval =
+      sqp_nlp_->eval_hessian(x, lambda, objective_scaling_factor_, Hessian);
   return retval;
 }
 
+void SqpSolver::store_watchdog_backups_()
+{
+  backup_current_iterate_ = make_shared<Vector>(*current_iterate_);
+  backup_current_constraint_multipliers_ = make_shared<Vector>(*current_constraint_multipliers_);
+  backup_current_bound_multipliers_ = make_shared<Vector>(*current_bound_multipliers_);
+
+  backup_current_objective_value_ = current_objective_value_;
+  backup_current_objective_gradient_ = make_shared<Vector>(*current_objective_gradient_);
+  backup_current_constraint_values_ = make_shared<Vector>(*current_constraint_values_);
+  backup_current_constraint_jacobian_ = make_shared<SparseTripletMatrix>(*current_constraint_jacobian_);
+  backup_current_lagrangian_hessian_ = make_shared<SparseTripletMatrix>(*current_lagrangian_hessian_);
+
+  backup_current_infeasibility_ = current_infeasibility_;
+  backup_predicted_reduction_ = predicted_reduction_;
+
+  backup_trial_step_ = make_shared<Vector>(*trial_step_);
+  backup_trial_constraint_multipliers_ = make_shared<Vector>(*trial_constraint_multipliers_);
+  backup_trial_bound_multipliers_ = make_shared<Vector>(*trial_bound_multipliers_);
+  backup_trial_model_infeasibility_ = trial_model_infeasibility_;
+}
+
+void SqpSolver::delete_watchdog_backups_()
+{
+  backup_current_iterate_ .reset();
+  backup_current_constraint_multipliers_.reset();
+  backup_current_bound_multipliers_.reset();
+
+  backup_current_objective_gradient_.reset();
+  backup_current_constraint_values_.reset();
+  backup_current_constraint_jacobian_.reset();
+  backup_current_lagrangian_hessian_.reset();
+
+  backup_trial_step_.reset();
+  backup_trial_constraint_multipliers_.reset();
+  backup_trial_bound_multipliers_.reset();
+}
+
+void SqpSolver::restore_watchdog_backups_()
+{
+  current_iterate_ = backup_current_iterate_;
+  current_constraint_multipliers_ = backup_current_constraint_multipliers_;
+  current_bound_multipliers_ = backup_current_bound_multipliers_;
+
+  current_objective_value_ = backup_current_objective_value_;
+  current_objective_gradient_ = backup_current_objective_gradient_;
+  current_constraint_values_ = backup_current_constraint_values_;
+  current_constraint_jacobian_ = backup_current_constraint_jacobian_;
+  current_lagrangian_hessian_ = backup_current_lagrangian_hessian_;
+
+  current_infeasibility_ = backup_current_infeasibility_;
+  predicted_reduction_ = backup_predicted_reduction_;
+
+  trial_step_ = backup_trial_step_;
+  trial_constraint_multipliers_ = backup_trial_constraint_multipliers_;
+  trial_bound_multipliers_ = backup_trial_bound_multipliers_;
+  trial_model_infeasibility_ = backup_trial_model_infeasibility_;
+}
 } // END_NAMESPACE_SQPHOTSTART

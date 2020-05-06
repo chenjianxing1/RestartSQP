@@ -6,7 +6,6 @@
 #ifndef SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 #define SQPHOTSTART_QPSOLVER_INTERFACE_HPP
 
-#include "restartsqp/SQPDebug.hpp"
 #include "restartsqp/SparseHbMatrix.hpp"
 #include "restartsqp/SqpTNlp.hpp"
 #include "restartsqp/Statistics.hpp"

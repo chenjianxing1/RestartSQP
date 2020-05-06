@@ -189,7 +189,7 @@ bool SqpNlp::eval_hessian(shared_ptr<const Vector> x,
       Hessian->get_nonconst_values());
 }
 
-bool SqpNlp::finalize_solution(SqpSolverExitStatus status,
+void SqpNlp::finalize_solution(SqpSolverExitStatus status,
                                shared_ptr<const Vector> primal_solution,
                                shared_ptr<const Vector> bound_multipliers,
                                const ActivityStatus* bound_activity_status,
