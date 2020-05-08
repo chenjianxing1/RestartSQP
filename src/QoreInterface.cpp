@@ -155,14 +155,22 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
                        H_col_indices, H_values, pflags);
   }
 
+  // Determine the number of constraints for QORE.  The first are for the varialbe bounds and the remaining for the consrtaints.
+  int num_qore_constraints = num_qp_variables_ + num_qp_constraints_;
   // Create arrays that include both variable and constraint bounds
-  Vector qore_lb(num_qp_variables_ + num_qp_variables_);
+  Vector qore_lb(num_qore_constraints);
   qore_lb.copy_into_subvector(lower_variable_bounds_, 0);
   qore_lb.copy_into_subvector(lower_constraint_bounds_, num_qp_variables_);
 
-  Vector qore_ub(num_qp_variables_ + num_qp_variables_);
+  Vector qore_ub(num_qore_constraints);
   qore_ub.copy_into_subvector(upper_variable_bounds_, 0);
   qore_ub.copy_into_subvector(upper_constraint_bounds_, num_qp_variables_);
+  if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
+    jnlst_->Printf(J_VECTOR, J_MAIN, "QP bounds:\n");
+    for (int i=0; i<num_qore_constraints; i++) {
+      jnlst_->Printf(J_VECTOR, J_MAIN, "lb_qore[%4d] = %23.16e ub_qore[%4d] = %23.16e\n", i, qore_lb.get_value(i), i, qore_ub.get_value(i));
+    }
+  }
 
   // Call the solver
   // TODO: Do we need to provide a starting point?
@@ -184,6 +192,7 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     const double* y_qore = NULL;
     // We ask QORE to use the working set from the last iteration
     const qp_int* ws_qore = NULL;
+    linear_objective_coefficients_->print("linear_objective_coefficients", jnlst_, J_VECTOR, J_MAIN);
     qore_retval =
         QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
                    linear_objective_coefficients_->get_values(), x_qore, y_qore,
@@ -261,6 +270,12 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     int rv = QPGetDbl(qore_solver_, QPSOLVER_DBL_PRIMALSOL,
                       qore_primal_solution_, &size);
     assert(rv == QPSOLVER_OK);
+    if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
+      jnlst_->Printf(J_VECTOR, J_MAIN, "QP solution:\n");
+      for (int i=0; i<size; i++) {
+        jnlst_->Printf(J_VECTOR, J_MAIN, "x_qore[%4d] = %23.16e\n", i, qore_primal_solution_[i]);
+      }
+    }
 
     // Get the values for the variables
     primal_solution_->copy_values(qore_primal_solution_);

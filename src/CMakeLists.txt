@@ -1,6 +1,7 @@
-file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/restartsqp/*.hpp)
+file(GLOB HEADERS *.hpp ${PROJECT_INCLUDE_DIR}/restartsqp/*.hpp )
 file(GLOB SOURCES *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
+message(STATUS "HEADERS in src ${HEADERS}")
 add_library(restartsqp STATIC ${SOURCES} ${HEADERS})
 #add_library(restartsqp SHARED ${SOURCES} ${HEADERS})
 

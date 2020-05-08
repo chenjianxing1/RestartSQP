@@ -566,6 +566,8 @@ private:
 
   /** Flag indicating in which phase the watchdog strategy is. */
   char watchdog_status_;
+  /** Counts the number of iterations after the most recent rejected watchdog trial step. */
+  int watchdog_sleep_iterations_;
 
   /** Object that collects the solver statistics (iteration counts, etc) */
   std::shared_ptr<Statistics> solver_statistics_;
@@ -620,7 +622,7 @@ private:
   double wallclock_time_limit_;
 
   /** Initial trust region radius. */
-  double trust_region_init_value_;
+  double trust_region_init_size_;
   /** Maximal trust region radius. */
   double trust_region_max_value_;
   /** Minimum trust region radius. */
@@ -637,6 +639,8 @@ private:
   double trust_region_increase_factor_;
   /** Flag indicating whether every trial step should be accepted. */
   bool disable_trust_region_;
+  /** Specifies the minimum number of successful iterations between trials of the watchdog.  A negative number indicates that the watchdog is switched off. */
+  int watchdog_min_wait_iterations_;
 
   /** Initial penalty parameter value. */
   double penalty_parameter_init_value_;
@@ -680,7 +684,7 @@ private:
   /** CPU time limit for one optimization run. */
   double max_cputime_;
 
-  /** QP solver usde for ??? */
+  /** QP solver used for computing steps. */
   QpSolver qp_solver_choice_;
   //@}
 

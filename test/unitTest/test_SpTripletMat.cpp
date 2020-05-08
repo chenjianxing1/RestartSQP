@@ -89,6 +89,7 @@ bool TEST_DENSE_SPARSE_MATRIX_CONVERSION(int rowNum, int colNum,
     }
     printf("\n---------------------------------------------------------\n");
   }
+  return true;
 }
 
 bool TEST_SPARSE_MATRIX_VECTOR_MULTIPLICATION(int rowNum, int colNum,
@@ -178,6 +179,7 @@ bool TEST_TRANSPOSED_MATRIX_VECTOR_MULTIPLICATION(
 
 bool TEST_TRIPLET_HB_MATIRX_CONVERSION()
 {
+  return true;
 }
 
 int main(int argc, char* argv[])

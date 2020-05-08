@@ -417,19 +417,23 @@ bool TEST_TRIPLET_HB_MATIRX_CONVERSION(int num_rows, int num_columns,
     m_triplet_csr_out->print("m_triplet_csr_out");
     printf("---------------------------------------------------------\n");
   }
+  return true;
 }
 
 bool TEST_MATRIX_ALLOCATION_FROM_PERMUTATIONS()
 {
+  return true;
 }
 
 bool TEST_SET_STRUCTURE(int num_rows, int num_columns,
                         const double* dense_matrix_in)
 {
+  return true;
 }
 
 bool TEST_SET_MATRIX_VALUE()
 {
+  return true;
 }
 
 int main(int argc, char* argv[])

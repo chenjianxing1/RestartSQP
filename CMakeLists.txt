@@ -36,6 +36,9 @@ if(Qore)
   message("-- Found QORE: ${QORE_INCLUDE_DIRS}")
   include_directories(${QORE_INCLUDE_DIRS})
   set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${QORE_LIBRARIES})
+  foreach (dir ${QORE_INCLUDE_DIRS})
+    set(HEADER_FILES ${HEADER_FILES} ${dir}/*.h)
+  endforeach(dir)
   MESSAGE(STATUS "QORE_LIBRARIES = ${QORE_LIBRARIES}")
 endif(Qore)
 
@@ -48,6 +51,7 @@ if (qpOASES)
   message("-- Found QPOASES: ${QPOASES_INCLUDE_DIR}")
   include_directories(${QPOASES_INCLUDE_DIR} ${QPOASES_INCLUDE_DIR}/qpOASES)
   set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${QPOASES_LIBRARY})
+  set(HEADER_FILES ${HEADER_FILES} ${QPOASES_INCLUDE_DIR}/*.h* ${QPOASES_INCLUDE_DIR}/qpOASES/*.h*)
 endif ()
 
 #########################################################################
@@ -55,6 +59,9 @@ endif ()
 message(STATUS "Enable IPOPT")
 find_package(IPOPT REQUIRED)
 include_directories(${IPOPT_INCLUDE_DIRS})
+foreach (dir ${IPOPT_INCLUDE_DIRS})
+  set(HEADER_FILES ${HEADER_FILES} ${dir}/*.h*)
+endforeach(dir)
 set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${IPOPT_LIBRARIES})
 
 #########################################################################
@@ -62,12 +69,18 @@ set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${IPOPT_LIBRARIES})
 find_package(LAPACK REQUIRED)
 find_package(BLAS REQUIRED)
 
-set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+set(DEPENDENCY_LIBS ${DEPENDENCY_LIBS} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} -lstdc++)
 
 #########################################################################
 ## Set include directories
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_INCLUDE_DIR})
+
+## Get the list of all header files from dependencies
+file(GLOB DEPEND_HEADERS ${HEADER_FILES})
+
+message(STATUS "DEPEND_HEADERS ${DEPEND_HEADERS}")
+
 
 
 
@@ -90,7 +103,6 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'\$ORIGIN/lib'"
 if(LINUX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
-
 
 add_subdirectory(src)
 add_subdirectory(test)
