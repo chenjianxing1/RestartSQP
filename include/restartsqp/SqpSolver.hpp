@@ -550,6 +550,9 @@ private:
   /** Current value of the penalty parameter. */
   double current_penalty_parameter_;
 
+  /** Info string printed at the end of iteration output. */
+  std::string info_string_;
+
   /** Object to solve LPs. */
   std::shared_ptr<QpHandler> lp_solver_;
   /** Object to solve step computation QPs. */
@@ -604,6 +607,8 @@ private:
 
   double backup_current_infeasibility_;
   double backup_predicted_reduction_;
+  double backup_current_penalty_parameter_;
+  double backup_trust_region_radius_;
 
   std::shared_ptr<Vector> backup_trial_step_;
   std::shared_ptr<Vector> backup_trial_constraint_multipliers_;

@@ -23,8 +23,7 @@ enum WatchdogStatus
   WATCHDOG_INACTIVE = 0,
   WATCHDOG_READY = 1,
   WATCHDOG_IN_TRIAL_ITERATE = 2,
-  WATCHDOG_UNSUCCESSFUL = 3,
-  WATCHDOG_SLEEPING = 4
+  WATCHDOG_SLEEPING = 3
 };
 
 SqpSolver::SqpSolver(SmartPtr<RegisteredOptions> reg_options,
@@ -376,6 +375,9 @@ void SqpSolver::print_initial_output_()
 
   // Flush the buffer so that we see output even when the optimization is slow.
   jnlst_->FlushBuffer();
+
+  // Clear the info string for the first iteration
+  info_string_.clear();
 }
 
 void SqpSolver::calculate_search_direction_(
@@ -448,11 +450,11 @@ void SqpSolver::print_iteration_output_()
       current_objective_value_ / objective_scaling_factor_;
   jnlst_->Printf(
       J_ITERSUMMARY, J_MAIN,
-      "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e\n",
+      "%6i %23.16e %10.3e %9.3e %9.3e %10.3e %9.3e %9.3e %5d %9.3e %s\n",
       solver_statistics_->num_sqp_iterations_, printable_obj_value,
       current_infeasibility_, trial_step_norm, trust_region_radius_,
       model_ratio, current_penalty_parameter_, qp_kkt_error, qp_iterations,
-      current_kkt_error_.worst_violation);
+      current_kkt_error_.worst_violation, info_string_.c_str());
 
   double current_penalty_function_value =
       current_objective_value_ +
@@ -542,6 +544,9 @@ void SqpSolver::print_iteration_output_()
 
   // Flush the buffer so that we see output even when the optimization is slow.
   jnlst_->FlushBuffer();
+
+  // Clear info string for next iteration.
+  info_string_.clear();
 }
 
 void SqpSolver::optimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp,
@@ -594,44 +599,27 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
            exit_flag_ == UNKNOWN_EXIT_STATUS) {
 
       // Wake up watchdog if it is time
+      watchdog_sleep_iterations_++;
       if (watchdog_status_ == WATCHDOG_SLEEPING &&
           watchdog_sleep_iterations_ >= watchdog_min_wait_iterations_) {
         watchdog_status_ = WATCHDOG_READY;
       }
 
-      if (watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
-        // In this case, we did not restore a previous iterate
-        // Solve the QP to get the trial step
-        current_constraint_values_->print("cur c before main QP", jnlst_,
-                                          J_VECTOR, J_MAIN);
-        shared_ptr<const Vector> qp_constraint_body =
-            current_constraint_values_;
-        calculate_search_direction_(qp_constraint_body);
-        // Need to restore the previous iterate's values to resume iteration
-        // from there
-      } else {
-        // We restore the previous iterate, including the step that was originally computed.
-        // This also restores the old predicted reduction so we do not need to compute it again later
-        restore_watchdog_backups_();
-      }
+      // Solve the QP to get the trial step
+      current_constraint_values_->print("cur c before main QP", jnlst_,
+                                        J_VECTOR, J_MAIN);
+      shared_ptr<const Vector> qp_constraint_body =
+          current_constraint_values_;
+      calculate_search_direction_(qp_constraint_body);
 
       // Update the penalty parameter if necessary.  In this process, a new
       // trial step might be computed.
-      //
-      // If the watchdog is ready, we keep the current parameter unless the
-      // watch dog eventually rejects it.
-      if (watchdog_status_ != WATCHDOG_READY &&
-          watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE) {
+      // We do not update the penalty parameter if we are in a watchdog trial step
+      if (watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE) {
         update_penalty_parameter_();
-      }
-      //else if (watchdog_status_ == WATCHDOG_READY) {
-      else {
-        // As part of the penalty parameter update, the predicted reduction is computed, so we need to do this here explicitly
-        update_predicted_reduction_();
       }
 
       // Calculate the trial point and evaluate the functions at that point.
-      // TODO: only need to recompute if the penalty parameter has changed?
       calc_trial_point_and_values_();
 
       // Check if the current iterate is acceptable
@@ -645,6 +633,7 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
             // Activate the watchdog
             jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Activating watchdog.\n\n");
             watchdog_status_ = WATCHDOG_IN_TRIAL_ITERATE;
+            info_string_ += "ws";
             // This stores the current iterates, search direction etc as backup
             store_watchdog_backups_();
             // We now temporarily accept the trial iterate
@@ -652,23 +641,23 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
           } else {
             assert(watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE);
             jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Watchdog iterate not accepted, restore original iterate.\n\n");
-            watchdog_status_ = WATCHDOG_UNSUCCESSFUL;
-            // We now will restore the old values instead of solving the
-            // previous QP again
+            info_string_ += "wr";
+            // Restore values corresponding to iterate from which watchdog started.
+            restore_watchdog_backups_();
+            // Put watchdog to sleep
+            watchdog_status_ = WATCHDOG_SLEEPING;
+            // Reset the counter for consecutive itertions in which the watchdog has been sleeping.  We set it to -1 since it will be increased at the end of this loop by one
+            watchdog_sleep_iterations_ = 0;
           }
         } else if (watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
           // In this case the trial point was accepted and we reset the watchdog
           // flag
           jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Watchdog iterate accepted.\n\n");
           watchdog_status_ = WATCHDOG_READY;
+          info_string_ += "wa";
           // and delete the backup
           delete_watchdog_backups_();
         }
-      } else if (watchdog_status_ == WATCHDOG_UNSUCCESSFUL) {
-        // In this case, we had restored the old iterate in the previous iterations, and we turn the watchdog off.  It will be woken up after a some iterations.
-        watchdog_status_ = WATCHDOG_SLEEPING;
-        // Reset the counter for consecutive itertions in which the watchdog has been sleeping.  We set it to -1 since it will be increased at the end of this loop by one
-        watchdog_sleep_iterations_ = -1;
       }
 
 #if 0 // TODO : Need to integrate the second order correction with the watchdog
@@ -681,14 +670,10 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
       // Accept the new iterate
       if (trial_point_is_accepted_) {
         accept_trial_point_();
-        watchdog_sleep_iterations_++;
       }
 
       // Update the radius and the QP bounds if the radius has been changed
-      // Unless we just restored the previous iterate for the watchdog
-      if (watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
-        solver_statistics_->increase_sqp_iteration_counter();
-      }
+      solver_statistics_->increase_sqp_iteration_counter();
 
       // Compute the NLP KKT error and set exit_flag_ to indicate whether we
       // should stop..
@@ -702,11 +687,12 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
         break;
       }
 
-      // Update the trust region radius
-      if (watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE &&
-          watchdog_status_ != WATCHDOG_UNSUCCESSFUL) {
-        update_trust_region_radius_();
-      }
+      // Update the trust region radius.  Even if we are in a trial watchdog
+      // step, the trust region radius will be reduced since the predicted reduction
+      // is negative.
+      // TODO: Should we just leave TR radius in a trial step?  A short experiment
+      //       seemed to indicate that this was inferior
+      update_trust_region_radius_();
     }
   } catch (SQP_EXCEPTION_PENALTY_TOO_LARGE& exc) {
     exc.ReportException(*jnlst_, J_ERROR);
@@ -1027,7 +1013,7 @@ void SqpSolver::initialize_iterates_()
   qp_solver_initialized_ = false;
 
   // Initialize the flag that tracks the status of the watchdog procedure
-  if (watchdog_min_wait_iterations_ < 0) {
+  if (watchdog_min_wait_iterations_ == 0) {
     watchdog_status_ = WATCHDOG_INACTIVE;
     watchdog_sleep_iterations_ = watchdog_min_wait_iterations_;
   }
@@ -1539,6 +1525,7 @@ void SqpSolver::update_trust_region_radius_()
 static ConstraintType classify_single_constraint(double lower_bound,
                                                  double upper_bound)
 {
+  assert(lower_bound <= upper_bound);
   if (lower_bound > -SqpInf && upper_bound < SqpInf) {
     if (upper_bound == lower_bound) {
       return IS_EQUALITY;
@@ -1820,10 +1807,10 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "disable_trust_region", "Indicates whether trust region should be used.",
       "no", "no", "do usual trust region method", "yes",
       "every trial step will be accepted");
-  reg_options->AddIntegerOption(
+  reg_options->AddLowerBoundedIntegerOption(
       "watchdog_min_wait_iterations", "Minimum number of watchdog wait iterations.",
-      10,
-      "Specifies the number of iterations the watchdog should sleep after a rejected trial step.  A negative number swtiches the watchdog technique off.");
+      0, 10,
+      "Specifies the number of iterations the watchdog should sleep after a rejected trial step.  0 switches the watchdog technique off.");
 
   reg_options->SetRegisteringCategory("Penalty Update");
   reg_options->AddLowerBoundedNumberOption(
@@ -2300,6 +2287,8 @@ void SqpSolver::store_watchdog_backups_()
 
   backup_current_infeasibility_ = current_infeasibility_;
   backup_predicted_reduction_ = predicted_reduction_;
+  backup_current_penalty_parameter_ = current_penalty_parameter_;
+  backup_trust_region_radius_ = trust_region_radius_;
 
   backup_trial_step_ = make_shared<Vector>(*trial_step_);
   backup_trial_constraint_multipliers_ = make_shared<Vector>(*trial_constraint_multipliers_);
@@ -2337,6 +2326,8 @@ void SqpSolver::restore_watchdog_backups_()
 
   current_infeasibility_ = backup_current_infeasibility_;
   predicted_reduction_ = backup_predicted_reduction_;
+  current_penalty_parameter_ = backup_current_penalty_parameter_;
+  trust_region_radius_ = backup_trust_region_radius_;
 
   trial_step_ = backup_trial_step_;
   trial_constraint_multipliers_ = backup_trial_constraint_multipliers_;
