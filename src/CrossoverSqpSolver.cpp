@@ -115,7 +115,7 @@ void CrossoverSqpSolver::determine_activities_(
   const double active_mult_tol = 1e-8;
 
   jnlst_->Printf(J_DETAILED, J_MAIN,
-                 "\nDetermine active variable bounds with tolderance %e:\n",
+                 "\nDetermine active variable bounds with tolerance %e:\n",
                  active_bound_tol);
 
   int num_variable_lower_bounds_active = 0;
@@ -125,7 +125,7 @@ void CrossoverSqpSolver::determine_activities_(
     if (variable_lower_bounds[i] == variable_upper_bounds[i]) {
       double bound_mult = z_L_sol[i] - z_U_sol[i];
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     " Variable %5d: FIXED: z_L = %e z_U = %e ", z_L_sol[i],
+                     " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e ", z_L_sol[i],
                      z_U_sol[i]);
       // Choose activity based on the sign of the multipliers
       if (bound_mult > active_mult_tol) {
@@ -152,9 +152,9 @@ void CrossoverSqpSolver::determine_activities_(
     double ratio_lower = slack_lower / mult_lower;
     double ratio_upper = slack_upper / mult_upper;
     jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                   " Variable %5d: LOWER: slack/mult = %e/%e=%e", i,
+                   " Variable %5d: LOWER: slack/mult = %15.8e/%15.8e=%15.8e", i,
                    slack_lower, mult_lower, ratio_lower);
-    jnlst_->Printf(J_MOREDETAILED, J_MAIN, "  UPPER: slack/mult = %e/%e=%e: ",
+    jnlst_->Printf(J_MOREDETAILED, J_MAIN, " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ",
                    i, slack_upper, mult_upper, ratio_upper);
 
     if (ratio_lower > active_bound_tol && ratio_upper > active_bound_tol) {
@@ -182,7 +182,7 @@ void CrossoverSqpSolver::determine_activities_(
   // multipliers
   double constraint_active_tol = 1e-4; // TODO, find more reliable tolerances
   jnlst_->Printf(J_DETAILED, J_MAIN,
-                 "\nDetermine active constraints with tolderance %e:\n",
+                 "\nDetermine active constraints with tolerance %15.8e:\n",
                  constraint_active_tol);
 
   int num_equality_lower_bound_active = 0;
@@ -193,19 +193,19 @@ void CrossoverSqpSolver::determine_activities_(
     // Check if this is a fixed constraint
     if (constraint_lower_bounds[i] == constraint_upper_bounds[i]) {
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     " Constraint %5d: Equality: lambda = %e ", i,
+                     " Constraint %5d: Equality: lambda = %15.8e ", i,
                      lambda_sol[i]);
       // constraint_activity_status[i] = ACTIVE_EQUALITY;
       if (lambda_sol[i] > active_mult_tol) {
-        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume lower side is active");
+        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume lower side is active\n");
         constraint_activity_status[i] = ACTIVE_BELOW;
         num_equality_lower_bound_active++;
       } else if (lambda_sol[i] < -active_mult_tol) {
-        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume upper side is active");
+        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume upper side is active\n");
         constraint_activity_status[i] = ACTIVE_ABOVE;
         num_equality_upper_bound_active++;
       } else {
-        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume inactive");
+        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume inactive\n");
         constraint_activity_status[i] = INACTIVE;
       }
       continue;
@@ -220,9 +220,9 @@ void CrossoverSqpSolver::determine_activities_(
     double ratio_lower = slack_lower / mult_lower;
     double ratio_upper = slack_upper / mult_upper;
     jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                   " constraint %5d: LOWER: slack/mult = %e/%e=%e", i,
+                   " constraint %5d: LOWER: slack/mult = %15.8e/%15.8e=%15.8e", i,
                    slack_lower, mult_lower, ratio_lower);
-    jnlst_->Printf(J_MOREDETAILED, J_MAIN, "  UPPER: slack/mult = %e/%e=%e: ",
+    jnlst_->Printf(J_MOREDETAILED, J_MAIN, " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ",
                    i, slack_upper, mult_upper, ratio_upper);
 
     if (ratio_lower > constraint_active_tol &&
@@ -393,7 +393,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   // Make sure the trust region is not active in the first iteration by initializing
   // it to a large value
-  options->SetNumericValue("trust_region_init_value", 1e9);
+  options->SetNumericValue("trust_region_init_size", 1e9);
 
   // Now call the SQP solver to get the active-set solution for this problem
   const string local_options_file_name = ""; // CK: this is a duplicate of the
@@ -439,7 +439,8 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
 {
   // Call the sqp_solver object to solve the new problem
-  sqp_solver_->reoptimize_nlp(sqp_tnlp);
+  // sqp_solver_->reoptimize_nlp(sqp_tnlp);
+  sqp_solver_->optimize_nlp(sqp_tnlp);
 }
 
 void CrossoverSqpSolver::register_options_(

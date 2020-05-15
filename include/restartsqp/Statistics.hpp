@@ -9,6 +9,8 @@
 
 namespace RestartSqp {
 
+// TODO: Proper getter methods
+
 class Statistics
 {
 public:
@@ -32,6 +34,7 @@ public:
     num_penalty_parameter_rejected_ = 0;
     num_penalty_parameter_increased_ = 0;
     num_second_order_corrections_ = 0;
+    final_penalty_parameter_ = 0.;
   }
 
   /* Increase the SQP iteration counter by one. */
@@ -73,6 +76,12 @@ public:
     num_second_order_corrections_++;
   }
 
+  /* Set the value of the penalty parameter. */
+  inline void set_final_penalty_parameter(double val)
+  {
+    final_penalty_parameter_ = val;
+  }
+
   /* Member Variables */
 public:
   /** Number of QP iterations. */
@@ -92,6 +101,9 @@ public:
 
   /** Number of second order correction steps. */
   int num_second_order_corrections_;
+
+  /** Final value of the penalty parameter. */
+  double final_penalty_parameter_;
 };
 
 } // END_NAMESPACE_SQPHOTSTART

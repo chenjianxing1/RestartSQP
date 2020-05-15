@@ -249,7 +249,7 @@ public:
 
 
   /** Return true since a working set should have been set. */
-  bool use_initial_working_set() const
+  bool use_initial_working_set() override
   {
     return true;
   }

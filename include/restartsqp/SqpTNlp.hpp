@@ -131,7 +131,7 @@ public:
   /** This method is used to determine if an initial working set is available.
    * If it returns true, the SQP algorithm will ask for the intiial working set.
    */
-  virtual bool use_initial_working_set() const = 0;
+  virtual bool use_initial_working_set() = 0;
 
   /** Set the initial working set. */
   virtual bool get_initial_working_sets(int num_variables,

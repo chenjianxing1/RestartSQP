@@ -113,7 +113,7 @@ public:
                          std::shared_ptr<const Statistics> stats) override;
 
   /** Method telling SQP solver that a working set is provided. */
-  bool use_initial_working_set() const
+  bool use_initial_working_set()
   {
     return true;
   }

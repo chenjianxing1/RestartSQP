@@ -105,4 +105,5 @@ if(LINUX)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(interfaces/AmplInterface)
 add_subdirectory(test)

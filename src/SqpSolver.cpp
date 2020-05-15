@@ -763,6 +763,10 @@ void SqpSolver::return_results_()
     current_constraint_multipliers_->scale(1. / objective_scaling_factor_);
     current_objective_value_ *= objective_scaling_factor_;
   }
+
+  // Set the final value of the penalty parameter, unscaled
+  solver_statistics_->set_final_penalty_parameter(current_penalty_parameter_/objective_scaling_factor_);
+
   sqp_nlp_->finalize_solution(
       exit_flag_, current_iterate_, current_bound_multipliers_,
       bound_activity_status, current_constraint_values_,
