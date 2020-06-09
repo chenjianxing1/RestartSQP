@@ -91,6 +91,7 @@ int main(
   printf("use_initial_working_set = %d\n", use_initial_working_set);
 
   if (!use_initial_working_set) {
+    printf("Calling crossover solver for initial solve.\n");
     sqp_solver.initial_solve(sqp_ampl_tnlp);
   }
   else {
@@ -102,6 +103,7 @@ int main(
     options->SetNumericValue("penalty_parameter_init_value",
                              initial_penalty_parameter);
 
+    printf("Calling crossover solver for resolve.\n");
     sqp_solver.next_solve(sqp_ampl_tnlp);
   }
 

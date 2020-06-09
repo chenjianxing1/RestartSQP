@@ -70,6 +70,15 @@ private:
   /** Method for computing the working set from the most recent solve. */
   void retrieve_working_set_() override;
 
+  /** Method for getting the working set from the most recent solve, generic version. */
+  void working_set_to_sqp_(ActivityStatus* bound_ws, ActivityStatus* constr_ws);
+
+  /** Copy the current working set from QORE into a backup in this object.  This is for debugging output. */
+  void backup_working_set_();
+
+  /** Output change in working set done by QORE. */
+  void print_working_set_differences_();
+
   /** Extract the options from the Ipopt options list. */
   void get_option_values_(Ipopt::SmartPtr<const Ipopt::OptionsList> options);
 
@@ -108,6 +117,12 @@ private:
 
   /** Most recent dual solution of QORE. */
   double* qore_dual_solution_;
+
+  /** Backup of variable working set before QORE solve for debug output. */
+  ActivityStatus* backup_bounds_working_set_;
+  /** Backup of constraints working set before QORE solve for debug output. */
+  ActivityStatus* backup_constraints_working_set_;
+
 
   /** @name Algorithmic options */
   //@{

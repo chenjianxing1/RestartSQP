@@ -112,7 +112,7 @@ void CrossoverSqpSolver::determine_activities_(
 
   // Determine activity status for the variables based on slacks and multipliers
   const double active_bound_tol = 1e-4; // TODO, find more reliable tolerances
-  const double active_mult_tol = 1e-8;
+  const double active_mult_tol = 1e-4;
 
   jnlst_->Printf(J_DETAILED, J_MAIN,
                  "\nDetermine active variable bounds with tolerance %e:\n",
@@ -180,7 +180,7 @@ void CrossoverSqpSolver::determine_activities_(
 
   // Determine activity status for the constraints based on slacks and
   // multipliers
-  double constraint_active_tol = 1e-4; // TODO, find more reliable tolerances
+  double constraint_active_tol = 1e-6; // TODO, find more reliable tolerances
   jnlst_->Printf(J_DETAILED, J_MAIN,
                  "\nDetermine active constraints with tolerance %15.8e:\n",
                  constraint_active_tol);
@@ -190,23 +190,21 @@ void CrossoverSqpSolver::determine_activities_(
   int num_inequality_lower_bound_active = 0;
   int num_inequality_upper_bound_active = 0;
   for (int i = 0; i < num_constraints_; ++i) {
-    // Check if this is a fixed constraint
+    // Check if this is an equality constraint
     if (constraint_lower_bounds[i] == constraint_upper_bounds[i]) {
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
                      " Constraint %5d: Equality: lambda = %15.8e ", i,
                      lambda_sol[i]);
-      // constraint_activity_status[i] = ACTIVE_EQUALITY;
-      if (lambda_sol[i] > active_mult_tol) {
+      // We set all equality constraints as active for now and choose the
+      // working set activity based on the multiplier sign.
+      if (lambda_sol[i] > 0) {
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume lower side is active\n");
         constraint_activity_status[i] = ACTIVE_BELOW;
         num_equality_lower_bound_active++;
-      } else if (lambda_sol[i] < -active_mult_tol) {
+      } else {
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume upper side is active\n");
         constraint_activity_status[i] = ACTIVE_ABOVE;
         num_equality_upper_bound_active++;
-      } else {
-        jnlst_->Printf(J_MOREDETAILED, J_MAIN, "Assume inactive\n");
-        constraint_activity_status[i] = INACTIVE;
       }
       continue;
     }

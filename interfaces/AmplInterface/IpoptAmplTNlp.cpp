@@ -222,6 +222,10 @@ void IpoptAmplTNlp::finalize_solution(SqpSolverExitStatus status, int num_variab
     message = "Penalty parameter becomes too large.";
     solve_result_num = 503;
   }
+  else if (status == INVALID_INITIAL_WORKING_SET) {
+    message = "Crossover produced invalid initial working set.";
+    solve_result_num = 504;
+  }
   /*
   else if( status == DIVERGING_ITERATES )
   {
@@ -253,7 +257,6 @@ void IpoptAmplTNlp::finalize_solution(SqpSolverExitStatus status, int num_variab
 bool IpoptAmplTNlp::use_initial_working_set()
 {
   const double* penalty_parameter = suffix_handler_->GetNumberSuffixValues("penalty_parameter", AmplSuffixHandler::Objective_Source);
-  printf("act = %x\n", penalty_parameter);
   if (penalty_parameter != nullptr) {
     return true;
   }

@@ -399,10 +399,10 @@ void SqpSolver::calculate_search_direction_(
 
   // Check if the QP found a bad local minimizer
   double qp_obj = qp_solver_->get_qp_objective();
-  if (qp_obj >= current_penalty_parameter_ * current_infeasibility_) {
+  if (qp_obj > current_penalty_parameter_ * current_infeasibility_) {
     jnlst_->Printf(
-        J_WARNING, J_MAIN, "WARNING: QP objective is %e too large!\n",
-        qp_obj - current_penalty_parameter_ * current_infeasibility_);
+        J_WARNING, J_MAIN, "WARNING: QP objective is %e, which is %e too large!\n",
+        qp_obj, qp_obj - current_penalty_parameter_ * current_infeasibility_);
   }
 
   // Here, the trial_step_ vector has the length num_variables_, but the primal
@@ -709,6 +709,9 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
   } catch (SQP_EXCEPTION_MAXITER& exc) {
     exc.ReportException(*jnlst_, J_ERROR);
     exit_flag_ = QPERROR_EXCEED_MAX_ITER;
+  } catch (SQP_INVALID_WORKING_SET& exc) {
+    exc.ReportException(*jnlst_, J_ERROR);
+    exit_flag_ = INVALID_INITIAL_WORKING_SET;
   } catch (SQP_EXCEPTION_INTERNAL_ERROR& exc) {
     exc.ReportException(*jnlst_, J_ERROR);
     exit_flag_ = QPERROR_INTERNAL_ERROR;
@@ -909,44 +912,56 @@ void SqpSolver::initialize_iterates_()
     qp_solver_->set_initial_working_sets(bounds_working_set,
                                          constraints_working_set);
 
+    // Let's count the number of active bounce to make sure there are not too many
+    int num_active_lower_var = 0;
+    int num_active_upper_var = 0;
+    for (int i = 0; i < num_variables_; ++i) {
+      if (bounds_working_set[i] == ACTIVE_BELOW) {
+        num_active_lower_var++;
+      } else if (bounds_working_set[i] == ACTIVE_ABOVE) {
+        num_active_upper_var++;
+      }
+    }
+    // Count the number of active inequality constraints
+    int num_active_lower_con = 0;
+    int num_active_upper_con = 0;
+    int num_equality = 0;
+    for (int i = 0; i < num_constraints_; ++i) {
+      if (constraint_type_[i] == IS_EQUALITY) {
+        if (constraints_working_set[i] != INACTIVE) {
+          num_equality++;
+        }
+      } else if (constraints_working_set[i] == ACTIVE_BELOW) {
+        num_active_lower_con++;
+      } else if (constraints_working_set[i] == ACTIVE_ABOVE) {
+        num_active_upper_con++;
+      }
+    }
+
+    int num_total_active = num_active_lower_var + num_active_upper_var + num_active_lower_con + num_active_upper_con + num_equality;
+    printf("num_total_active = %d num_var = %d\n", num_total_active, num_variables_);
+    if (num_total_active > num_variables_) {
+      THROW_EXCEPTION(SQP_INVALID_WORKING_SET,
+                      "Too many constraints are active.");
+    }
+
     // If desired, print the statistics of user-provided working set
     if (jnlst_->ProduceOutput(J_SUMMARY, J_MAIN)) {
-      // Count the number of active bounds
-      int num_active_lower = 0;
-      int num_active_upper = 0;
-      for (int i = 0; i < num_variables_; ++i) {
-        if (bounds_working_set[i] == ACTIVE_BELOW) {
-          num_active_lower++;
-        } else if (bounds_working_set[i] == ACTIVE_ABOVE) {
-          num_active_upper++;
-        }
-      }
       jnlst_->Printf(J_SUMMARY, J_MAIN,
                      "  Number of variables active at lower bound......: %d\n",
-                     num_active_lower);
+                     num_active_lower_var);
       jnlst_->Printf(J_SUMMARY, J_MAIN,
                      "  Number of variables active at upper bound......: %d\n",
-                     num_active_upper);
-
-      // Count the number of active inequality constraints
-      num_active_lower = 0;
-      num_active_upper = 0;
-      for (int i = 0; i < num_constraints_; ++i) {
-        if (constraint_type_[i] == IS_EQUALITY) {
-          continue;
-        }
-        if (constraints_working_set[i] == ACTIVE_BELOW) {
-          num_active_lower++;
-        } else if (constraints_working_set[i] == ACTIVE_ABOVE) {
-          num_active_upper++;
-        }
-      }
+                     num_active_upper_var);
       jnlst_->Printf(J_SUMMARY, J_MAIN,
                      "  Number of inequalities active at lower bound...: %d\n",
-                     num_active_lower);
+                     num_active_lower_con);
       jnlst_->Printf(J_SUMMARY, J_MAIN,
                      "  Number of inequalities active at upper bound...: %d\n",
-                     num_active_upper);
+                     num_active_upper_con);
+      jnlst_->Printf(J_SUMMARY, J_MAIN,
+                     "  Number of active equalities ...................: %d\n",
+                     num_equality);
     }
 
     delete[] bounds_working_set;
