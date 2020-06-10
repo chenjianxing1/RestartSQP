@@ -1954,6 +1954,10 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   reg_options->AddLowerBoundedNumberOption(
       "qore_hessian_regularization", "Regularization parameter for the QP", 0.,
       false, 0., "Number that is added to the diagonal of the QP Hessian");
+  reg_options->AddStringOption2(
+      "qore_dump_file", "Indicates whether QORE should write a dump file.",
+      "no", "no", "Do not write dump file.",
+      "yes", "Write dump files (for QP and LP separately).");
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);

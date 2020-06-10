@@ -137,6 +137,10 @@ private:
   bool qore_init_primal_variables_;
   // Regularization factor for the QP Hessian
   double qore_hessian_regularization_;
+  // Flag indicating whether QORE should write some dump files that store
+  // all QORE call so that the calls can be reproduce separately
+  // for debugging.
+  bool qore_dump_file_;
   //@}
 };
 }

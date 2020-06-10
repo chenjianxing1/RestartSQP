@@ -64,9 +64,7 @@ void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
     THROW_EXCEPTION(SQP_EXCEPTION_QP_SOLVER_FAILS, "QORE fails in initialization");
   }
 
-#if 0
-  bool write_qore_dump_file_ = true;
-  if (write_qore_dump_file_) {
+  if (qore_dump_file_) {
     if (qp_type_ == QP_TYPE_LP) {
       QPOpenDumpFile(qore_solver_, "qore_dumpfile_lp.csv");
     }
@@ -74,7 +72,6 @@ void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
       QPOpenDumpFile(qore_solver_, "qore_dumpfile_qp.csv");
     }
   }
-#endif
 
   // Set the options in the QORE object
   set_qp_solver_options_();
@@ -92,6 +89,7 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
                            "");
   options->GetNumericValue("qore_hessian_regularization",
                            qore_hessian_regularization_, "");
+  options->GetBoolValue("qore_dump_file", qore_dump_file_, "");
 }
 
 /**
