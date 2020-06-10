@@ -10,6 +10,12 @@
 
 #include <fstream>
 
+/* TODOs:
+ *
+ * - check return values of sqp_tnlp calls
+ * - decide whether to take out slack formulation (not maintained right now)
+ */
+
 using namespace std;
 using namespace Ipopt;
 
@@ -24,6 +30,13 @@ enum WatchdogStatus
   WATCHDOG_READY = 1,
   WATCHDOG_IN_TRIAL_ITERATE = 2,
   WATCHDOG_SLEEPING = 3
+};
+
+enum StartingMode
+{
+  SM_PRIMAL_ONLY = 0,
+  SM_PRIMAL_DUAL = 1,
+  SM_WARM_START = 2
 };
 
 SqpSolver::SqpSolver(SmartPtr<RegisteredOptions> reg_options,
@@ -390,7 +403,7 @@ void SqpSolver::calculate_search_direction_(
   QpSolverExitStatus exit_status = qp_solver_->solve(solver_statistics_);
   if (exit_status != QPEXIT_OPTIMAL) {
     const string& nlp_name = sqp_nlp_->get_nlp_name();
-    qp_solver_->write_qp_data(nlp_name + "qpdata.log");
+    //qp_solver_->write_qp_data(nlp_name + "qpdata.log");
 
     assert(false && "Still need to decide how to handle QP solver error.");
     // exit_flag_ = qp_solver_->get_status();
@@ -553,8 +566,21 @@ void SqpSolver::optimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp,
                              const string& options_file_name,
                              bool keep_output_file)
 {
+  // Initialize exit flag to UNKOWN to indicate that loop is not finished
+  exit_flag_ = UNKNOWN_EXIT_STATUS;
+
+  // Make NLP object directly accessible to all methods
+  sqp_nlp_ = make_shared<SqpNlp>(sqp_tnlp);
+
   // Set the options based on the options file.
   initialize_options_(options_file_name, keep_output_file);
+
+  // Set up everything needed to execute the loop: Read options, allocate
+  // memory, create QP solver objects
+  initialize_for_new_nlp_();
+
+  // Initialize the iterates
+  initialize_iterates_();
 
   // Now call the regular algorithm
   reoptimize_nlp(sqp_tnlp);
@@ -567,22 +593,31 @@ void SqpSolver::optimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp,
  */
 void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
 {
-  // Make NLP object directly accessible to all methods
+  // Initialize exit flag to UNKOWN to indicate that loop is not finished
+  exit_flag_ = UNKNOWN_EXIT_STATUS;
+
+  // Make NLP object directly accessible to all methods (does not anything new
+  // if this is called from optimize_nlp()
   sqp_nlp_ = make_shared<SqpNlp>(sqp_tnlp);
 
-  // Set up everything needed to execute the loop: Read options, allocate
-  // memory, create QP solver objects
-  initialize_for_new_nlp_();
+  // Create objects that holds the solver statistics
+  solver_statistics_ = make_shared<Statistics>();
 
   // Set the time at beginning of the algorithm
   cpu_time_at_start_ = get_cpu_time_since_start();
   wallclock_time_at_start_ = get_wallclock_time_since_start();
 
-  // Initializes the iterate and all related quantities
-  initialize_iterates_();
+  // When we get here, the iterates have already been set, either in optimize_nlp
+  // or from a previous solve.  All memory has been allocated, except for the
+  // matrices (since the number of nonzeros might have changed) and the QP solver
+  // objects.
+  //
+  // Initializes the QP and LP solvers
+  initialize_qp_solvers_();
 
-  // Initialize exit flag to UNKOWN to indicate that loop is not finished
-  exit_flag_ = UNKNOWN_EXIT_STATUS;
+  // Initialize NLP function evaluations, bounds, and quantities computed from
+  // NLP function values.
+  compute_initial_values_();
 
   // Print initial output
   print_initial_output_();
@@ -883,22 +918,43 @@ shift_starting_point_(shared_ptr<Vector> x,
 void SqpSolver::initialize_iterates_()
 {
   // Check if there are any degrees of freedom
-  assert(num_variables_ > num_equality_constraints_); // TODO: Make proper error
+  if (num_variables_ < num_equality_constraints_) {
+    jnlst_->Printf(J_ERROR, J_MAIN, "ERROR: More equality constraints than variables.\n");
+    THROW_EXCEPTION(SQP_NLP, "Too many equality constraints");
+  }
 
-  // Determine the starting point.
-  sqp_nlp_->get_starting_point(current_iterate_, current_bound_multipliers_,
-                               current_constraint_multipliers_);
+  // Get the primal dual starting point depending on the selected starting mode
+  if (starting_mode_ == SM_PRIMAL_ONLY) {
+    // Get only the primal starting point
+    sqp_nlp_->get_starting_point(current_iterate_, nullptr, nullptr);
 
-  // shift starting point to satisfy the bound constraint
-  if (!slack_formulation_) {
-    shift_starting_point_(current_iterate_, lower_variable_bounds_,
-                          upper_variable_bounds_);
+    // Set the multipliers to zero
+    current_bound_multipliers_->set_to_zero();
+    current_constraint_multipliers_->set_to_zero();
+  }
+  else {
+    // Get the primal-dual starting point
+    sqp_nlp_->get_starting_point(current_iterate_, current_bound_multipliers_,
+                                 current_constraint_multipliers_);
   }
 
   // Check if an initial working set is available.  If so, give it to the QP
   // solver
-  bool use_initial_working_set = sqp_nlp_->use_initial_working_set();
+  bool use_initial_working_set;
+  if (starting_mode_ == SM_WARM_START) {
+    use_initial_working_set = true;
+  }
+  else {
+    use_initial_working_set = false;
+  }
+
   if (use_initial_working_set) {
+    // Make sure that the NLP can actually provide a starting point.
+    if (!sqp_nlp_->use_initial_working_set()) {
+      jnlst_->Printf(J_ERROR, J_MAIN, "ERROR: Warm start is chosen, but NLP does not provide initial working set.\n");
+      THROW_EXCEPTION(SQP_INVALID_STARING_POINT, "Warm start is chosen, but NLP does not provide initial working set");
+    }
+
     jnlst_->Printf(J_SUMMARY, J_MAIN,
                    "\nUser provided an initial working set:\n");
     ActivityStatus* bounds_working_set = new ActivityStatus[num_variables_];
@@ -972,6 +1028,27 @@ void SqpSolver::initialize_iterates_()
   }
   jnlst_->Printf(J_SUMMARY, J_MAIN, "\n");
 
+  // Initalize algorithmic quantities
+  trust_region_radius_ = trust_region_init_size_;
+  current_penalty_parameter_ = penalty_parameter_init_value_;
+
+  if (disable_trust_region_) {
+    trust_region_radius_ = 1e3;
+  }
+}
+
+void SqpSolver::compute_initial_values_()
+{
+  // Determine the bound values
+  sqp_nlp_->get_bounds_info(lower_variable_bounds_, upper_variable_bounds_,
+                            lower_constraint_bounds_, upper_constraint_bounds_);
+
+  // shift starting point to satisfy the bound constraint
+  if (!slack_formulation_) {
+    shift_starting_point_(current_iterate_, lower_variable_bounds_,
+                          upper_variable_bounds_);
+  }
+
   // Compute function and derivative values at the starting point
   bool retval = eval_f_(current_iterate_, current_objective_value_);
   assert(retval && "eval_f returned false at starting point");
@@ -991,6 +1068,19 @@ void SqpSolver::initialize_iterates_()
   assert(retval && "get_jacobian_structure returned false");
   retval = eval_jacobian_(current_iterate_, current_constraint_jacobian_);
   assert(retval && "eval_jacobian returned false");
+
+  current_infeasibility_ = compute_constraint_violation_(
+      current_iterate_, current_constraint_values_);
+
+  // Initialize the flag that tracks the status of the watchdog procedure
+  if (watchdog_min_wait_iterations_ == 0) {
+    watchdog_status_ = WATCHDOG_INACTIVE;
+    watchdog_sleep_iterations_ = watchdog_min_wait_iterations_;
+  }
+  else {
+    watchdog_status_ = WATCHDOG_READY;
+    watchdog_sleep_iterations_ = 0;
+  }
 
   // We need to make sure that complementarity holds for the multipliers
   for (int i = 0; i < num_variables_; ++i) {
@@ -1016,30 +1106,45 @@ void SqpSolver::initialize_iterates_()
     }
   }
 
-  // Initalize algorithmic quantities
-  trust_region_radius_ = trust_region_init_size_;
-  current_penalty_parameter_ = penalty_parameter_init_value_;
+}
+void SqpSolver::initialize_qp_solvers_()
+{
+  // Determine the problem size
+  shared_ptr<const SqpNlpSizeInfo> nlp_sizes = sqp_nlp_->get_problem_sizes();
+  int num_variables = nlp_sizes->get_num_variables();
+  int num_constraints = nlp_sizes->get_num_constraints();
 
-  if (disable_trust_region_) {
-    trust_region_radius_ = 1e3;
+  if (num_variables != num_variables_ ||
+      num_constraints != num_constraints_) {
+    jnlst_->Printf(J_ERROR, J_MAIN, "Error: Size of NLP has changed between restart calls.\n");
+    THROW_EXCEPTION(SQP_INVALID_STARING_POINT, "Size of NLP has changed between restart calls");
   }
 
-  current_infeasibility_ = compute_constraint_violation_(
-      current_iterate_, current_constraint_values_);
+  // Create (new) matrix objects
+  current_constraint_jacobian_ =
+      make_shared<SparseTripletMatrix>(nlp_sizes->get_num_nonzeros_jacobian(),
+                                       num_constraints_, num_variables_, false);
+  current_lagrangian_hessian_ =
+      make_shared<SparseTripletMatrix>(nlp_sizes->get_num_nonzeros_hessian(),
+                                       num_variables_, num_variables_, true);
+
+  // Create the (new) QP solver objects.  This also reads the option values
+  qp_solver_ =
+      make_shared<QpHandler>(nlp_sizes, QP_TYPE_QP, slack_formulation_,
+                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
+  lp_solver_ =
+      make_shared<QpHandler>(nlp_sizes, QP_TYPE_LP, slack_formulation_,
+                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
+
+  // For the LP, the objective will never change.  We set the NLP gradient to
+  // zero, and sjust sum up all slack variables by setting the penalty parameter
+  // to 1.
+  lp_solver_->set_linear_qp_objective_coefficients_to_zero();
+  lp_solver_->update_penalty_parameter(1.);
 
   // Set flag that makes sure that the QP solver will be initialized at the
   // first call
   qp_solver_initialized_ = false;
-
-  // Initialize the flag that tracks the status of the watchdog procedure
-  if (watchdog_min_wait_iterations_ == 0) {
-    watchdog_status_ = WATCHDOG_INACTIVE;
-    watchdog_sleep_iterations_ = watchdog_min_wait_iterations_;
-  }
-  else {
-    watchdog_status_ = WATCHDOG_READY;
-    watchdog_sleep_iterations_ = 0;
-  }
 }
 
 /**
@@ -1082,29 +1187,6 @@ void SqpSolver::allocate_memory_()
   current_constraint_values_ = make_shared<Vector>(num_constraints_);
   trial_constraint_values_ = make_shared<Vector>(num_constraints_);
   current_objective_gradient_ = make_shared<Vector>(num_variables_);
-  current_constraint_jacobian_ =
-      make_shared<SparseTripletMatrix>(nlp_sizes->get_num_nonzeros_jacobian(),
-                                       num_constraints_, num_variables_, false);
-  current_lagrangian_hessian_ =
-      make_shared<SparseTripletMatrix>(nlp_sizes->get_num_nonzeros_hessian(),
-                                       num_variables_, num_variables_, true);
-
-  // Create objects that holds the solver statistics
-  solver_statistics_ = make_shared<Statistics>();
-
-  // Create the QP solver objects.  This also reads the option values
-  qp_solver_ =
-      make_shared<QpHandler>(nlp_sizes, QP_TYPE_QP, slack_formulation_,
-                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
-  lp_solver_ =
-      make_shared<QpHandler>(nlp_sizes, QP_TYPE_LP, slack_formulation_,
-                             sqp_nlp_->get_nlp_name(), jnlst_, options_);
-
-  // For the LP, the objective will never change.  We set the NLP gradient to
-  // zero, and sjust sum up all slack variables by setting the penalty parameter
-  // to 1.
-  lp_solver_->set_linear_qp_objective_coefficients_to_zero();
-  lp_solver_->update_penalty_parameter(1.);
 }
 
 /**
@@ -1620,7 +1702,7 @@ void SqpSolver::update_penalty_parameter_()
     QpSolverExitStatus exit_status = lp_solver_->solve(solver_statistics_);
     if (exit_status != QPEXIT_OPTIMAL) {
       const string& nlp_name = sqp_nlp_->get_nlp_name();
-      lp_solver_->write_qp_data(nlp_name + "qpdata.log");
+      //lp_solver_->write_qp_data(nlp_name + "qpdata.log");
       assert(false && "Still need to decide how to handle QP solver error.");
       // exit_flag_ = qp_solver_->get_status();
       // break;
@@ -1776,6 +1858,14 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
         "Determines the verbosity level for the file specified by "
         "\"output_file\".  By default it is the same as \"print_level\".");
   }
+
+  reg_options->SetRegisteringCategory("Starting Point");
+  reg_options->AddStringOption3(
+      "starting_mode", "Specifies how much starting information is available.",
+      "primal-dual",
+      "primal", "only primal point is provided",
+      "primal-dual", "primal and dual variables are provided.",
+      "warm-start", "primal-dual starting point and intial working set is provided.");
 
   reg_options->SetRegisteringCategory("Trust-region");
   reg_options->AddBoundedNumberOption(
@@ -1971,6 +2061,21 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
 
 void SqpSolver::get_option_values_()
 {
+  string sval;
+  options_->GetStringValue("starting_mode", sval, "");
+  if (sval == "primal") {
+    starting_mode_ = SM_PRIMAL_ONLY;
+  }
+  else if (sval == "primal-dual") {
+    starting_mode_ = SM_PRIMAL_DUAL;
+  }
+  else if (sval == "warm-start") {
+    starting_mode_ = SM_WARM_START;
+  }
+  else {
+    assert(false && "Invalid string value for starting_mode option");
+  }
+
   options_->GetIntegerValue("max_num_iterations", max_num_iterations_, "");
   options_->GetNumericValue("cpu_time_limit", cpu_time_limit_, "");
   options_->GetNumericValue("wallclock_time_limit", wallclock_time_limit_, "");

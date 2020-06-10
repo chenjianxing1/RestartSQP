@@ -323,7 +323,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     }
   } else {
     last_kkt_error_ = 1e20;
-    write_qp_data(problem_name_ + "qpdata.log");
+    //write_qp_data(problem_name_ + "qpdata.log");
     switch (qp_solver_exit_status) {
       case QPEXIT_INFEASIBLE:
         THROW_EXCEPTION(SQP_EXCEPTION_INFEASIBLE,

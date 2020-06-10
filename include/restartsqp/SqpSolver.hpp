@@ -198,6 +198,12 @@ private:
   /** Determine starting point and compute all corresponding quanties. */
   void initialize_iterates_();
 
+  /** Initializes the QP solvers and the matrix objects. */
+  void initialize_qp_solvers_();
+
+  /** Computes the NLP functions and related quantities. */
+  void compute_initial_values_();
+
   /** Print initial output
    *
    *  This prints the problem dimensions and initial header line.
@@ -619,6 +625,7 @@ private:
 
   /** @namd Algorithmic option values */
   //@{
+  char starting_mode_;
   /** Maximum number of iterations. */
   int max_num_iterations_;
   /** Maximum cpu time for one solve (in seconds). */

@@ -357,7 +357,7 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     }
     jnlst_->Printf(J_ERROR, J_MAIN, "qore error (%d): %s\n",
                    (int)qp_solver_exit_status, qore_error_message.c_str());
-    write_qp_data_to_file("qore_failure_qp.txt");
+    //write_qp_data_to_file("qore_failure_qp.txt");
   }
 
   // Update solver statistics

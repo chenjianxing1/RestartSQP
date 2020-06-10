@@ -97,7 +97,7 @@ public:
       bool new_primal_variables, double objective_scaling_factor,
       int num_constraints, const double* constraint_multipliers,
       bool new_constraint_multipliers, int num_nonzeros_hessian,
-      int* row_indices, int* column_indices, double* nonzero_valuess) override;
+      int* row_indices, int* column_indices, double* nonzero_values) override;
 
   /**
    * @brief Return the results of the optimization run to the user.
@@ -113,10 +113,7 @@ public:
                          std::shared_ptr<const Statistics> stats) override;
 
   /** Method telling SQP solver that a working set is provided. */
-  bool use_initial_working_set()
-  {
-    return true;
-  }
+  bool use_initial_working_set();
 
   /** Method initializing the working set. */
   bool get_initial_working_sets(int num_variables,
