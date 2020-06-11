@@ -393,6 +393,10 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   // it to a large value
   options->SetNumericValue("trust_region_init_size", 1e9);
 
+  // Also tell the SQP solver that the starting_mode option should be overwritte
+  // to be a warm start, independent of any options.
+  sqp_solver_->force_warm_start();
+
   // Now call the SQP solver to get the active-set solution for this problem
   const string local_options_file_name = ""; // CK: this is a duplicate of the
                                              // function argument, which clang++
@@ -436,6 +440,7 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
 void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
 {
+  sqp_solver_->force_warm_start();
   // Call the sqp_solver object to solve the new problem
   // sqp_solver_->reoptimize_nlp(sqp_tnlp);
   sqp_solver_->optimize_nlp(sqp_tnlp);

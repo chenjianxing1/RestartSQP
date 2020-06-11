@@ -169,6 +169,14 @@ public:
     return qp_solver_->get_constraints_working_set();
   }
 
+  /* Calling this method will force the use of a warm start, no matter
+   * what the options are.  This is used when the SQP algorithm is called
+   * for the cross over after the active set is guessed from Ipopt solution. */
+  inline void force_warm_start()
+  {
+    force_warm_start_ = true;
+  }
+
   //@}
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //
@@ -594,6 +602,11 @@ private:
   /** Constraint values at trial point. */
   std::shared_ptr<Vector> trial_constraint_values_;
 
+  /** Initial working set for the bounds. */
+  ActivityStatus* init_bound_activities_;
+  /** Initial working set for the constraints. */
+  ActivityStatus* init_constraint_activities_;
+
   /** CPU time at the beginning of the optimization run. */
   double cpu_time_at_start_;
   /** wallclock_ time at the beginning of the optimization run. */
@@ -625,7 +638,10 @@ private:
 
   /** @namd Algorithmic option values */
   //@{
+  /** Indicates starting mode, such as warm-start */
   char starting_mode_;
+  /** If set, we will do a warm-start independent of options. */
+  bool force_warm_start_;
   /** Maximum number of iterations. */
   int max_num_iterations_;
   /** Maximum cpu time for one solve (in seconds). */

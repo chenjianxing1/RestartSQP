@@ -14,6 +14,7 @@
  *
  * - check return values of sqp_tnlp calls
  * - decide whether to take out slack formulation (not maintained right now)
+ * - do not introduce slack variables in QP that are not needed
  */
 
 using namespace std;
@@ -47,6 +48,9 @@ SqpSolver::SqpSolver(SmartPtr<RegisteredOptions> reg_options,
  , reg_options_(reg_options)
  , options_(options)
  , jnlst_(jnlst)
+ , force_warm_start_(false)
+ , init_bound_activities_(nullptr)
+ , init_constraint_activities_(nullptr)
 {
   // Set the algorithm specific options
   bool skip_ipopt_options = true;
@@ -103,6 +107,10 @@ void SqpSolver::free_memory_()
   constraint_type_ = nullptr;
   delete[] bound_type_;
   bound_type_ = nullptr;
+  delete[] init_bound_activities_;
+  init_bound_activities_ = nullptr;
+  delete[] init_constraint_activities_;
+  init_constraint_activities_ = nullptr;
 }
 
 void SqpSolver::initialize_options_(const string& options_file_name,
@@ -923,8 +931,16 @@ void SqpSolver::initialize_iterates_()
     THROW_EXCEPTION(SQP_NLP, "Too many equality constraints");
   }
 
+  // Check if options was overwritten
+  char mode = starting_mode_;
+  if (force_warm_start_) {
+    mode = SM_WARM_START;
+    // Reset the overwrite flag
+    force_warm_start_ = false;
+  }
+
   // Get the primal dual starting point depending on the selected starting mode
-  if (starting_mode_ == SM_PRIMAL_ONLY) {
+  if (mode == SM_PRIMAL_ONLY) {
     // Get only the primal starting point
     sqp_nlp_->get_starting_point(current_iterate_, nullptr, nullptr);
 
@@ -941,7 +957,7 @@ void SqpSolver::initialize_iterates_()
   // Check if an initial working set is available.  If so, give it to the QP
   // solver
   bool use_initial_working_set;
-  if (starting_mode_ == SM_WARM_START) {
+  if (mode == SM_WARM_START) {
     use_initial_working_set = true;
   }
   else {
@@ -957,24 +973,23 @@ void SqpSolver::initialize_iterates_()
 
     jnlst_->Printf(J_SUMMARY, J_MAIN,
                    "\nUser provided an initial working set:\n");
-    ActivityStatus* bounds_working_set = new ActivityStatus[num_variables_];
-    ActivityStatus* constraints_working_set =
+    // Store the working set in this object so that it can be given to the
+    // QP solver when that one is initialized
+    init_bound_activities_ = new ActivityStatus[num_variables_];
+    init_constraint_activities_ =
         new ActivityStatus[num_constraints_];
 
-    sqp_nlp_->get_initial_working_sets(num_variables_, bounds_working_set,
+    sqp_nlp_->get_initial_working_sets(num_variables_, init_bound_activities_,
                                        num_constraints_,
-                                       constraints_working_set);
-
-    qp_solver_->set_initial_working_sets(bounds_working_set,
-                                         constraints_working_set);
+                                       init_constraint_activities_);
 
     // Let's count the number of active bounce to make sure there are not too many
     int num_active_lower_var = 0;
     int num_active_upper_var = 0;
     for (int i = 0; i < num_variables_; ++i) {
-      if (bounds_working_set[i] == ACTIVE_BELOW) {
+      if (init_bound_activities_[i] == ACTIVE_BELOW) {
         num_active_lower_var++;
-      } else if (bounds_working_set[i] == ACTIVE_ABOVE) {
+      } else if (init_bound_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_var++;
       }
     }
@@ -984,12 +999,12 @@ void SqpSolver::initialize_iterates_()
     int num_equality = 0;
     for (int i = 0; i < num_constraints_; ++i) {
       if (constraint_type_[i] == IS_EQUALITY) {
-        if (constraints_working_set[i] != INACTIVE) {
+        if (init_constraint_activities_[i] != INACTIVE) {
           num_equality++;
         }
-      } else if (constraints_working_set[i] == ACTIVE_BELOW) {
+      } else if (init_constraint_activities_[i] == ACTIVE_BELOW) {
         num_active_lower_con++;
-      } else if (constraints_working_set[i] == ACTIVE_ABOVE) {
+      } else if (init_constraint_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_con++;
       }
     }
@@ -1020,8 +1035,6 @@ void SqpSolver::initialize_iterates_()
                      num_equality);
     }
 
-    delete[] bounds_working_set;
-    delete[] constraints_working_set;
   } else {
     jnlst_->Printf(J_SUMMARY, J_MAIN,
                    "\nUser did not provide an initial working set.\n");
@@ -1145,6 +1158,20 @@ void SqpSolver::initialize_qp_solvers_()
   // Set flag that makes sure that the QP solver will be initialized at the
   // first call
   qp_solver_initialized_ = false;
+
+  // If a initial working set was given, provide it now to the QP solver
+  if (init_bound_activities_) {
+    assert(init_constraint_activities_);
+
+    qp_solver_->set_initial_working_sets(init_bound_activities_,
+                                         init_constraint_activities_);
+
+    // Delete the initial working set so that it won't be used again later
+    delete[] init_bound_activities_;
+    init_bound_activities_ = nullptr;
+    delete[] init_constraint_activities_;
+    init_constraint_activities_ = nullptr;
+  }
 }
 
 /**
