@@ -18,11 +18,14 @@ SparseHbMatrix::SparseHbMatrix(int num_rows, int num_columns,
  , num_rows_(num_rows)
  , num_columns_(num_columns)
  , num_entries_(-1)
- , column_indices_(NULL)
- , row_indices_(NULL)
- , values_(NULL)
+ , column_indices_(nullptr)
+ , row_indices_(nullptr)
+ , values_(nullptr)
  , num_triplet_entries_(-1)
- , triplet_order_(NULL)
+ , triplet_order_(nullptr)
+ , num_fixed_entries_(0)
+ , fixed_entries_positions_(nullptr)
+ , fixed_entries_values_(nullptr)
 {
 }
 
@@ -43,11 +46,14 @@ SparseHbMatrix::SparseHbMatrix(int num_entries, int num_rows, int num_columns,
  , num_rows_(num_rows)
  , num_columns_(num_columns)
  , num_entries_(num_entries)
- , column_indices_(NULL)
- , row_indices_(NULL)
- , values_(NULL)
+ , column_indices_(nullptr)
+ , row_indices_(nullptr)
+ , values_(nullptr)
  , num_triplet_entries_(-1)
- , triplet_order_(NULL)
+ , triplet_order_(nullptr)
+ , num_fixed_entries_(0)
+ , fixed_entries_positions_(nullptr)
+ , fixed_entries_values_(nullptr)
 {
   allocate_memory_();
 }
@@ -69,7 +75,7 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
                                             bool is_compressed_row_format)
 {
   assert(!is_initialized_);
-  assert(row_indices_ == NULL);
+  assert(row_indices_ == nullptr);
   assert(num_rows_ == num_rows);
   assert(num_columns_ == num_columns);
   assert(is_compressed_row_format_ == is_compressed_row_format);
@@ -154,13 +160,17 @@ void SparseHbMatrix::copy_from_dense_matrix(const double* data, int num_rows,
 SparseHbMatrix::~SparseHbMatrix()
 {
   delete[] column_indices_;
-  column_indices_ = NULL;
+  column_indices_ = nullptr;
   delete[] row_indices_;
-  row_indices_ = NULL;
+  row_indices_ = nullptr;
   delete[] values_;
-  values_ = NULL;
+  values_ = nullptr;
   delete[] triplet_order_;
-  triplet_order_ = NULL;
+  triplet_order_ = nullptr;
+  delete[] fixed_entries_positions_;
+  fixed_entries_positions_ = nullptr;
+  delete[] fixed_entries_values_;
+  fixed_entries_values_ = nullptr;
 }
 
 //@}
@@ -260,6 +270,12 @@ void SparseHbMatrix::set_structure_from_list_(
   // Here we also need to allocated memory for the permutation vector
   triplet_order_ = new int[num_triplet_entries_];
 
+  // Create memory for a temporary storage of the fixed entries.
+  // We will copy this later into smaller arrays
+  int* temp_fixed_positions_ = new int[num_entries_];
+  double* temp_fixed_values_ = new double[num_entries_];
+  assert(num_fixed_entries_ == 0); // We should not have anything in there yet
+
   if (is_compressed_row_format_) {
     // Sort the triplet elements according to the compressed row format
     sort(elements_list.begin(), elements_list.end(),
@@ -280,7 +296,9 @@ void SparseHbMatrix::set_structure_from_list_(
       } else {
         // This entry comes from an identity matrix
         double identity_factor = pos_triplet = get<3>(elements_list[i]);
-        values_[i] = identity_factor;
+        temp_fixed_positions_[num_fixed_entries_] = i;
+        temp_fixed_values_[num_fixed_entries_] = identity_factor;
+        num_fixed_entries_++;
       }
       while (current_row != row_idx) {
         row_indices_[++current_row] = i;
@@ -310,7 +328,9 @@ void SparseHbMatrix::set_structure_from_list_(
       } else {
         // This entry comes from an identity matrix
         double identity_factor = pos_triplet = get<3>(elements_list[i]);
-        values_[i] = identity_factor;
+        temp_fixed_positions_[num_fixed_entries_] = i;
+        temp_fixed_values_[num_fixed_entries_] = identity_factor;
+        num_fixed_entries_++;
       }
       while (current_column != col_idx) {
         current_column++;
@@ -322,6 +342,18 @@ void SparseHbMatrix::set_structure_from_list_(
       column_indices_[i] = num_entries_;
     }
   }
+
+  // Now allocate the correct amount of memory for the fixed entries
+  if (num_fixed_entries_ > 0) {
+    fixed_entries_positions_ = new int[num_fixed_entries_];
+    fixed_entries_values_ = new double[num_fixed_entries_];
+    for (int i=0; i<num_fixed_entries_; ++i) {
+      fixed_entries_positions_[i] = temp_fixed_positions_[i];
+      fixed_entries_values_[i] = temp_fixed_values_[i];
+    }
+  }
+  delete[] temp_fixed_positions_;
+  delete[] temp_fixed_values_;
 }
 
 /**
@@ -432,13 +464,25 @@ void SparseHbMatrix::set_values(
   const int* trip_col_indices = triplet_matrix->get_column_indices();
   const double* trip_values = triplet_matrix->get_values();
 
+  // We do not want to make the assumption that there is only one entry
+  // in the triplet structure for one matrix element.  So, we initialize
+  // the entries all to zero and then add the values
+  for (int i=0; i < num_entries_; ++i) {
+    values_[i] = 0.;
+  }
+
+  // Set the values for the fixed entries
+  for (int i=0; i<num_fixed_entries_; ++i) {
+    values_[fixed_entries_positions_[i]] = fixed_entries_values_[i];
+  }
+
   if (is_symmetric_) {
     int j = 0;
     for (int i = 0; i < num_trip_entries; i++) {
-      values_[triplet_order_[j]] = trip_values[i];
+      values_[triplet_order_[j]] += trip_values[i];
       j++;
       if (trip_col_indices[i] != trip_row_indices[i]) {
-        values_[triplet_order_[j]] = trip_values[i];
+        values_[triplet_order_[j]] += trip_values[i];
         j++;
       }
     }
@@ -448,7 +492,7 @@ void SparseHbMatrix::set_values(
     assert(num_trip_entries == num_triplet_entries_);
 
     for (int i = 0; i < num_trip_entries; i++) {
-      values_[triplet_order_[i]] = trip_values[i];
+      values_[triplet_order_[i]] += trip_values[i];
     }
   }
 }
@@ -474,7 +518,7 @@ void SparseHbMatrix::add_multiple_of_identity(double factor)
     for (int j=i_short[i]; j<i_short[i+1]; ++j) {
       int k = i_long[j];
       if (k==i) {
-        values_[j]+=factor;
+        values_[j] += factor;
       }
     }
   }

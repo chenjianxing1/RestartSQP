@@ -61,6 +61,9 @@ SqpSolver::SqpSolver()
  : current_output_file_name_("")
  , bound_type_(nullptr)
  , constraint_type_(nullptr)
+ , force_warm_start_(false)
+ , init_bound_activities_(nullptr)
+ , init_constraint_activities_(nullptr)
 {
   // Some of the following code was taking from the Ipopt code.
 

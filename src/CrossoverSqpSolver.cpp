@@ -125,8 +125,11 @@ void CrossoverSqpSolver::determine_activities_(
     if (variable_lower_bounds[i] == variable_upper_bounds[i]) {
       double bound_mult = z_L_sol[i] - z_U_sol[i];
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e ", z_L_sol[i],
+                     " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e\n", i, z_L_sol[i],
                      z_U_sol[i]);
+      // choose any activity, should not matter
+      bound_activity_status[i] = ACTIVE_ABOVE;
+#if 0
       // Choose activity based on the sign of the multipliers
       if (bound_mult > active_mult_tol) {
         bound_activity_status[i] = ACTIVE_BELOW;
@@ -140,6 +143,7 @@ void CrossoverSqpSolver::determine_activities_(
         bound_activity_status[i] = INACTIVE;
         jnlst_->Printf(J_MOREDETAILED, J_MAIN, " Inactive\n");
       }
+#endif
       continue;
     }
 
@@ -180,7 +184,7 @@ void CrossoverSqpSolver::determine_activities_(
 
   // Determine activity status for the constraints based on slacks and
   // multipliers
-  double constraint_active_tol = 1e-6; // TODO, find more reliable tolerances
+  double constraint_active_tol = 1e-10; // TODO, find more reliable tolerances
   jnlst_->Printf(J_DETAILED, J_MAIN,
                  "\nDetermine active constraints with tolerance %15.8e:\n",
                  constraint_active_tol);
@@ -440,10 +444,14 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
 void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
 {
+  // use the warm start no matter what options are set, since multipliers
+  // and activities have been computed in previous iteration
   sqp_solver_->force_warm_start();
   // Call the sqp_solver object to solve the new problem
   // sqp_solver_->reoptimize_nlp(sqp_tnlp);
-  sqp_solver_->optimize_nlp(sqp_tnlp);
+  string options_file_name = ""; // we already read the file once
+  bool keep_output_file = true;  // to not overwrite the output file created so far
+  sqp_solver_->optimize_nlp(sqp_tnlp, options_file_name, keep_output_file);
 }
 
 void CrossoverSqpSolver::register_options_(

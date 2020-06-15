@@ -182,6 +182,16 @@ public:
   //                      PRIVATE METHODS                  //
   ///////////////////////////////////////////////////////////
 private:
+  /** @name Hide unused default methods. */
+  //@{
+  /** Copy Constructor */
+  SqpSolver(const SqpSolver&);
+
+  /** Overloaded Equals Operator */
+  void operator=(const SqpSolver&);
+  //@}
+
+
   /**
    * @brief set the default option values
    */
@@ -440,22 +450,13 @@ private:
                      std::shared_ptr<SparseTripletMatrix> Hessian);
   //@}
 
+  /** Get the option values from the options object. */
+  void get_option_values_();
+
   ///////////////////////////////////////////////////////////
   //              PRIVATE CLASS MEMBERS                    //
   ///////////////////////////////////////////////////////////
 private:
-  /** @name Hide unused default methods. */
-  //@{
-  /** Copy Constructor */
-  SqpSolver(const SqpSolver&);
-
-  /** Overloaded Equals Operator */
-  void operator=(const SqpSolver&);
-  //@}
-
-  /** Get the option values from the options object. */
-  void get_option_values_();
-
   /** SqpNlp object that evaluates all NLP information. */
   std::shared_ptr<SqpNlp> sqp_nlp_;
 

@@ -264,6 +264,15 @@ void CrossoverSqpTNlp::finalize_solution(
   }
 }
 
+bool CrossoverSqpTNlp::use_initial_working_set()
+{
+  if (bound_activity_status_) {
+    assert(constraint_activity_status_);
+    return true;
+  }
+  return false;
+}
+
 bool CrossoverSqpTNlp::get_initial_working_sets(
     int num_variables, ActivityStatus* bounds_working_set, int num_constraints,
     ActivityStatus* constraints_working_set)

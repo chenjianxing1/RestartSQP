@@ -389,6 +389,15 @@ private:
    * order[i]-th element in this matrix. */
   int* triplet_order_;
 
+  /** Number of fixed entries (e.g., from identify matrices). */
+  int num_fixed_entries_;
+
+  /** Position of fixed entries (e.g., from identity matrices. */
+  int* fixed_entries_positions_;
+
+  /** Values of the fixed entries. */
+  double* fixed_entries_values_;
+
   /**
    * @brief setup the structure of the sparse matrix for QPsolvrs
    * This method should be only called for once
