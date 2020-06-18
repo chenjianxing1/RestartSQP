@@ -123,7 +123,6 @@ void CrossoverSqpSolver::determine_activities_(
   for (int i = 0; i < num_variables_; ++i) {
     // Check if this is a fixed variable
     if (variable_lower_bounds[i] == variable_upper_bounds[i]) {
-      double bound_mult = z_L_sol[i] - z_U_sol[i];
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
                      " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e\n", i, z_L_sol[i],
                      z_U_sol[i]);
@@ -261,7 +260,7 @@ void CrossoverSqpSolver::determine_activities_(
                  num_inequality_upper_bound_active);
 }
 
-void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
+void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
                                        const string& options_file_name)
 {
   // TODO: Read the option
@@ -410,8 +409,8 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
                             keep_output_file);
 
   // Check if the optimization was conclude successfully
-  exit_flag_ = sqp_solver_->get_exit_flag();
-  if (exit_flag_ != OPTIMAL) {
+  SqpSolverExitStatus exit_flag = sqp_solver_->get_exit_flag();
+  if (exit_flag != OPTIMAL) {
     // make sure all allocated memory is deleted
     return;
   }
@@ -442,16 +441,15 @@ void CrossoverSqpSolver::initial_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 #endif
 }
 
-void CrossoverSqpSolver::next_solve(shared_ptr<SqpTNlp> sqp_tnlp)
+void CrossoverSqpSolver::resolve(shared_ptr<SqpTNlp> sqp_tnlp)
 {
-  // use the warm start no matter what options are set, since multipliers
-  // and activities have been computed in previous iteration
-  sqp_solver_->force_warm_start();
-  // Call the sqp_solver object to solve the new problem
-  // sqp_solver_->reoptimize_nlp(sqp_tnlp);
-  string options_file_name = ""; // we already read the file once
-  bool keep_output_file = true;  // to not overwrite the output file created so far
-  sqp_solver_->optimize_nlp(sqp_tnlp, options_file_name, keep_output_file);
+  sqp_solver_->reoptimize_nlp(sqp_tnlp);
+}
+
+void CrossoverSqpSolver::solve(shared_ptr<SqpTNlp> sqp_tnlp,
+                               const string& options_file_name)
+{
+  sqp_solver_->optimize_nlp(sqp_tnlp, options_file_name);
 }
 
 void CrossoverSqpSolver::register_options_(

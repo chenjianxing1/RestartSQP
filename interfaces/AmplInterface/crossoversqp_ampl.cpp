@@ -92,7 +92,7 @@ int main(
 
   if (!use_initial_working_set) {
     printf("Calling crossover solver for initial solve.\n");
-    sqp_solver.initial_solve(sqp_ampl_tnlp);
+    sqp_solver.crossover_solve(sqp_ampl_tnlp);
   }
   else {
     // Get the last penalty parameter
@@ -104,7 +104,7 @@ int main(
                              initial_penalty_parameter);
 
     printf("Calling crossover solver for resolve.\n");
-    sqp_solver.next_solve(sqp_ampl_tnlp);
+    sqp_solver.solve(sqp_ampl_tnlp);
   }
 
 #if 0

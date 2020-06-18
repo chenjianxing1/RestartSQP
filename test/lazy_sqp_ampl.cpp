@@ -108,7 +108,7 @@ int main(int argc, char** args)
 #if 1
   // First solve the problem correctly
   CrossoverSqpSolver crossover;
-  crossover.initial_solve(sqp_nlp);
+  crossover.crossover_solve(sqp_nlp);
 
   // Get the activity status for the constraints and
   const ActivityStatus* constraint_activity_status =

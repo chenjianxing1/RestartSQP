@@ -97,10 +97,22 @@ bool SqpNlp::get_starting_point(shared_ptr<Vector> primal_point,
                                 shared_ptr<Vector> bound_multipliers,
                                 shared_ptr<Vector> constraint_multipliers)
 {
+  double* bound_mult_values = nullptr;
+  double* constr_mult_values = nullptr;
+  bool init_bound_multipliers = false;
+  bool init_constraint_multipliers = false;
+  if (bound_multipliers) {
+    bound_mult_values = bound_multipliers->get_non_const_values();
+    init_bound_multipliers = true;
+  }
+  if (constraint_multipliers) {
+    constr_mult_values = constraint_multipliers->get_non_const_values();
+    init_constraint_multipliers = true;
+  }
   return sqp_tnlp_->get_starting_point(
-      num_variables_, true, primal_point->get_non_const_values(), true,
-      bound_multipliers->get_non_const_values(), num_constraints_, true,
-      constraint_multipliers->get_non_const_values());
+      num_variables_, true, primal_point->get_non_const_values(), init_bound_multipliers,
+      bound_mult_values, num_constraints_, init_constraint_multipliers,
+      constr_mult_values);
 }
 
 /**

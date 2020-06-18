@@ -5,6 +5,8 @@
 * Date:2019-06
 */
 
+#ifndef SQP_RETURNCODES_H
+#define SQP_RETURNCODES_H
 // Include file for the return codes (for C and C++)
 enum SqpSolverExitStatus
 {
@@ -33,3 +35,4 @@ enum SqpSolverExitStatus
   QPERROR_UNKNOWN = -30,
   UNKNOWN_EXIT_STATUS = -99 // unknown error
 };
+#endif

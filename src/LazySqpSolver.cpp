@@ -109,7 +109,7 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
   // Solve the first NLP with the initial set of constraints
   jnlst_->Printf(J_SUMMARY, J_MAIN,
                  "\n===== LazyNlpSolver: Solve the initial NLP\n\n");
-  crossover_sqp_solver_->initial_solve(lazy_sqp_tnlp_, options_file_name);
+  crossover_sqp_solver_->crossover_solve(lazy_sqp_tnlp_, options_file_name);
 
   // Check the exit flag
   exit_flag_ = crossover_sqp_solver_->get_exit_flag();
@@ -156,7 +156,7 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
     }
 
     // Solve the augmented NLP
-    crossover_sqp_solver_->next_solve(lazy_sqp_tnlp_);
+    crossover_sqp_solver_->solve(lazy_sqp_tnlp_);
   }
 }
 

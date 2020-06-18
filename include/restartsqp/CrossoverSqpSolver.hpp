@@ -64,22 +64,30 @@ public:
    * Solve a new NLP, first with interior point method, then after cross-over
    * with active-set method.
    */
-  void initial_solve(std::shared_ptr<SqpTNlp> sqp_tnlp,
-                     const std::string& options_file_name = "sqp.opt");
+  void crossover_solve(std::shared_ptr<SqpTNlp> sqp_tnlp,
+                       const std::string& options_file_name = "sqp.opt");
 
   /**
-   * ReOptimize a problem by warm-starting from the old optimal solution and
-   * given active set.
+   * Solve a new NLP with the active set method.
+   */
+  void solve(std::shared_ptr<SqpTNlp> sqp_tnlp,
+            const std::string& options_file_name = "sqp.opt");
+
+  /**
+   * ReOptimize a problem with the active set method, using the previous
+   * internal state (such as penalty parameter).  The sqp_tnlp must have the
+   * same dimensions as for the most recent solve or resolve.
+   *
    *
    */
-  void next_solve(std::shared_ptr<SqpTNlp> sqp_tnlp);
+  void resolve(std::shared_ptr<SqpTNlp> sqp_tnlp);
   //@}
 
   /** @name Getters*/
   //@{
   inline SqpSolverExitStatus get_exit_flag() const
   {
-    return exit_flag_;
+    return sqp_solver_->get_exit_flag();
   }
 
   inline KktError get_kkt_error() const
@@ -174,9 +182,6 @@ private:
 
   /** Journal through which all output is directed. */
   Ipopt::SmartPtr<Ipopt::Journalist> jnlst_;
-
-  /** Exit flag.  If set to UNKNOWN the algorithm loop should still progress. */
-  SqpSolverExitStatus exit_flag_;
 
   /** Number of variables in the current NLP. */
   int num_variables_;

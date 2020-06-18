@@ -132,6 +132,12 @@ void SqpSolver::initialize_options_(const string& options_file_name,
     }
   }
 
+  // If not file has been opened yet, reset keep_output_file name to
+  // false since there is no output file to keep
+  if (current_output_file_name_ == "") {
+    keep_output_file = false;
+  }
+
   if (!keep_output_file) {
     // Get output file name and file print level
     string new_output_file_name = "";

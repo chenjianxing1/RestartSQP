@@ -82,7 +82,7 @@ public:
    */
   void optimize_nlp(std::shared_ptr<SqpTNlp> sqp_tnlp,
                     const std::string& options_file_name = "sqp.opt",
-                    bool keep_output_file = false);
+                    bool keep_output_file = true);
 
   /**
    * @brief This is the method to reoptimize an NLP.  This method
