@@ -112,7 +112,8 @@ private:
   void operator=(const LazySqpSolver&);
 
   /** Update the list of considered constraints. It returns the number of added
-   *  constraints.  If zero, nothing was added.  A negative number indicates and error. */
+   *  constraints.  If zero, nothing was added.  A negative number indicates and
+   * error. */
   int update_considered_constraints_();
 
   ///////////////////////////////////////////////////////////
@@ -165,6 +166,6 @@ private:
 
 }; // END_OF_ALG_CLASS
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp
 
 #endif

@@ -136,5 +136,5 @@ private:
   int lp_solver_max_num_iterations_;
   //@}
 };
-}
+} // namespace RestartSqp
 #endif

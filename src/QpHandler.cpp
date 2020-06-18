@@ -39,9 +39,9 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
     identity_matrix_positions_.add_matrix(1, num_nlp_variables_ + 1,
                                           num_nlp_constraints_, 1.);
     // negative slacks for constraints
-    identity_matrix_positions_.add_matrix(1, num_nlp_variables_ +
-                                                 num_nlp_constraints_ + 1,
-                                          num_nlp_constraints_, -1.);
+    identity_matrix_positions_.add_matrix(
+        1, num_nlp_variables_ + num_nlp_constraints_ + 1, num_nlp_constraints_,
+        -1.);
   } else {
     num_qp_variables_ = 3 * num_nlp_variables_ + 2 * num_nlp_constraints_;
     num_qp_constraints_ = num_nlp_variables_ + num_nlp_constraints_;
@@ -50,9 +50,9 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
     identity_matrix_positions_.add_matrix(1, num_nlp_variables_ + 1,
                                           num_nlp_constraints_, 1.);
     // negative slacks for constraints
-    identity_matrix_positions_.add_matrix(1, num_nlp_variables_ +
-                                                 num_nlp_constraints_ + 1,
-                                          num_nlp_constraints_, -1.);
+    identity_matrix_positions_.add_matrix(
+        1, num_nlp_variables_ + num_nlp_constraints_ + 1, num_nlp_constraints_,
+        -1.);
     // original variables
     identity_matrix_positions_.add_matrix(num_nlp_constraints_ + 1, 1,
                                           num_nlp_variables_, 1.);
@@ -96,9 +96,7 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
 /**
  *Default destructor
  */
-QpHandler::~QpHandler()
-{
-}
+QpHandler::~QpHandler() {}
 
 void QpHandler::set_initial_working_sets(
     const ActivityStatus* bounds_working_set,
@@ -310,7 +308,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     if (!isOptimal) {
       jnlst_->Printf(J_ERROR, J_MAIN, "WARNING: QP solver KKT error is %e\n",
                      last_kkt_error_);
-      //assert("Need to figure why KKT error is so large" && false);
+      // assert("Need to figure why KKT error is so large" && false);
     }
     if (jnlst_->ProduceOutput(J_MOREVECTOR, J_MAIN)) {
       jnlst_->Printf(J_MOREVECTOR, J_MAIN, "\nQP solver solution:\n");
@@ -323,7 +321,7 @@ QpSolverExitStatus QpHandler::solve(shared_ptr<Statistics> stats)
     }
   } else {
     last_kkt_error_ = 1e20;
-    //write_qp_data(problem_name_ + "qpdata.log");
+    // write_qp_data(problem_name_ + "qpdata.log");
     switch (qp_solver_exit_status) {
       case QPEXIT_INFEASIBLE:
         THROW_EXCEPTION(SQP_EXCEPTION_INFEASIBLE,
@@ -357,8 +355,8 @@ shared_ptr<const Vector> QpHandler::get_bounds_multipliers() const
 }
 
 /**
-* @brief Get the multipliers corresponding to the constraints
-*/
+ * @brief Get the multipliers corresponding to the constraints
+ */
 std::shared_ptr<const Vector> QpHandler::get_constraint_multipliers() const
 {
   shared_ptr<const Vector> retval = make_shared<Vector>(
@@ -479,4 +477,4 @@ void QpHandler::get_active_set(ActivityStatus* A_c, ActivityStatus* A_b,
   }
 }
 #endif
-} // namespace SQPhotstart
+} // namespace RestartSqp

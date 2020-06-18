@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-06
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 
 #ifndef SQP_RETURNCODES_H
 #define SQP_RETURNCODES_H

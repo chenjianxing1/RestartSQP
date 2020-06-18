@@ -370,5 +370,5 @@ private:
   void operator=(const QpSolverInterface&);
 };
 
-} // SQPHOTSTART
+} // namespace RestartSqp
 #endif

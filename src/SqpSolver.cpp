@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-06
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 
 #include "restartsqp/SqpSolver.hpp"
 #include "restartsqp/MessageHandling.hpp"
@@ -290,17 +290,19 @@ void SqpSolver::print_initial_output_()
 
   // Print header of summary output table and the first line for the initial
   // iterate
-  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "======================================"
-                                        "======================================"
-                                        "================================\n");
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
+                 "======================================"
+                 "======================================"
+                 "================================\n");
   jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
                  "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                  "objective", "||c_k||", "||p_k||", "Delta", "ratio", "pen par",
                  "QP_KKT", "QP it", "NLP_KKT");
-  jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "=================================="
-                                        "=================================="
-                                        "============="
-                                        "===========================\n");
+  jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
+                 "=================================="
+                 "=================================="
+                 "============="
+                 "===========================\n");
 
   double printable_obj_value =
       current_objective_value_ / objective_scaling_factor_;
@@ -315,7 +317,9 @@ void SqpSolver::print_initial_output_()
   double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
-  jnlst_->Printf(J_DETAILED, J_MAIN, "current_penalty_function_value: %23.16e\n", current_penalty_function_value);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "current_penalty_function_value: %23.16e\n",
+                 current_penalty_function_value);
 
   // Print some information about constant problem data
   if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
@@ -420,7 +424,7 @@ void SqpSolver::calculate_search_direction_(
   QpSolverExitStatus exit_status = qp_solver_->solve(solver_statistics_);
   if (exit_status != QPEXIT_OPTIMAL) {
     const string& nlp_name = sqp_nlp_->get_nlp_name();
-    //qp_solver_->write_qp_data(nlp_name + "qpdata.log");
+    // qp_solver_->write_qp_data(nlp_name + "qpdata.log");
 
     assert(false && "Still need to decide how to handle QP solver error.");
     // exit_flag_ = qp_solver_->get_status();
@@ -431,8 +435,9 @@ void SqpSolver::calculate_search_direction_(
   double qp_obj = qp_solver_->get_qp_objective();
   if (qp_obj > current_penalty_parameter_ * current_infeasibility_) {
     jnlst_->Printf(
-        J_WARNING, J_MAIN, "WARNING: QP objective is %e, which is %e too large!\n",
-        qp_obj, qp_obj - current_penalty_parameter_ * current_infeasibility_);
+        J_WARNING, J_MAIN,
+        "WARNING: QP objective is %e, which is %e too large!\n", qp_obj,
+        qp_obj - current_penalty_parameter_ * current_infeasibility_);
   }
 
   // Here, the trial_step_ vector has the length num_variables_, but the primal
@@ -457,19 +462,21 @@ void SqpSolver::print_iteration_output_()
                    "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                    "objective", "||c_k||", "||p_k||", "Delta", "ratio",
                    "pen par", "QP_KKT", "QP it", "NLP_KKT");
-    jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "=================================="
-                                          "=================================="
-                                          "============="
-                                          "===========================\n");
+    jnlst_->Printf(J_ITERSUMMARY, J_MAIN,
+                   "=================================="
+                   "=================================="
+                   "============="
+                   "===========================\n");
   } else {
     jnlst_->Printf(J_DETAILED, J_MAIN,
                    "%6s %23s %9s %9s %8s %9s   %9s %9s  %5s %9s\n", "iter",
                    "objective", "||c_k||", "||p_k||", "Delta", "ratio",
                    "pen par", "QP_KKT", "QP it", "NLP_KKT");
-    jnlst_->Printf(J_DETAILED, J_MAIN, "=================================="
-                                       "=================================="
-                                       "============="
-                                       "===========================\n");
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "=================================="
+                   "=================================="
+                   "============="
+                   "===========================\n");
   }
 
   double qp_kkt_error = qp_solver_->get_qp_kkt_error();
@@ -489,7 +496,9 @@ void SqpSolver::print_iteration_output_()
   double current_penalty_function_value =
       current_objective_value_ +
       current_penalty_parameter_ * current_infeasibility_;
-  jnlst_->Printf(J_DETAILED, J_MAIN, "current_penalty_function_value: %23.16e\n", current_penalty_function_value);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "current_penalty_function_value: %23.16e\n",
+                 current_penalty_function_value);
 
   // If desired, we print more information
   if (jnlst_->ProduceOutput(J_DETAILED, J_MAIN)) {
@@ -624,10 +633,10 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
   cpu_time_at_start_ = get_cpu_time_since_start();
   wallclock_time_at_start_ = get_wallclock_time_since_start();
 
-  // When we get here, the iterates have already been set, either in optimize_nlp
-  // or from a previous solve.  All memory has been allocated, except for the
-  // matrices (since the number of nonzeros might have changed) and the QP solver
-  // objects.
+  // When we get here, the iterates have already been set, either in
+  // optimize_nlp or from a previous solve.  All memory has been allocated,
+  // except for the matrices (since the number of nonzeros might have changed)
+  // and the QP solver objects.
   //
   // Initializes the QP and LP solvers
   initialize_qp_solvers_();
@@ -660,13 +669,13 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
       // Solve the QP to get the trial step
       current_constraint_values_->print("cur c before main QP", jnlst_,
                                         J_VECTOR, J_MAIN);
-      shared_ptr<const Vector> qp_constraint_body =
-          current_constraint_values_;
+      shared_ptr<const Vector> qp_constraint_body = current_constraint_values_;
       calculate_search_direction_(qp_constraint_body);
 
       // Update the penalty parameter if necessary.  In this process, a new
       // trial step might be computed.
-      // We do not update the penalty parameter if we are in a watchdog trial step
+      // We do not update the penalty parameter if we are in a watchdog trial
+      // step
       if (watchdog_status_ != WATCHDOG_IN_TRIAL_ITERATE) {
         update_penalty_parameter_();
       }
@@ -683,7 +692,8 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
         if (!trial_point_is_accepted_) {
           if (watchdog_status_ == WATCHDOG_READY) {
             // Activate the watchdog
-            jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Activating watchdog.\n\n");
+            jnlst_->Printf(J_DETAILED, J_MAIN,
+                           "WATCHDOG: Activating watchdog.\n\n");
             watchdog_status_ = WATCHDOG_IN_TRIAL_ITERATE;
             info_string_ += "ws";
             // This stores the current iterates, search direction etc as backup
@@ -692,19 +702,25 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
             trial_point_is_accepted_ = true;
           } else {
             assert(watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE);
-            jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Watchdog iterate not accepted, restore original iterate.\n\n");
+            jnlst_->Printf(J_DETAILED, J_MAIN,
+                           "WATCHDOG: Watchdog iterate not accepted, restore "
+                           "original iterate.\n\n");
             info_string_ += "wr";
-            // Restore values corresponding to iterate from which watchdog started.
+            // Restore values corresponding to iterate from which watchdog
+            // started.
             restore_watchdog_backups_();
             // Put watchdog to sleep
             watchdog_status_ = WATCHDOG_SLEEPING;
-            // Reset the counter for consecutive itertions in which the watchdog has been sleeping.  We set it to -1 since it will be increased at the end of this loop by one
+            // Reset the counter for consecutive itertions in which the watchdog
+            // has been sleeping.  We set it to -1 since it will be increased at
+            // the end of this loop by one
             watchdog_sleep_iterations_ = 0;
           }
         } else if (watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
           // In this case the trial point was accepted and we reset the watchdog
           // flag
-          jnlst_->Printf(J_DETAILED, J_MAIN, "WATCHDOG: Watchdog iterate accepted.\n\n");
+          jnlst_->Printf(J_DETAILED, J_MAIN,
+                         "WATCHDOG: Watchdog iterate accepted.\n\n");
           watchdog_status_ = WATCHDOG_READY;
           info_string_ += "wa";
           // and delete the backup
@@ -740,9 +756,10 @@ void SqpSolver::reoptimize_nlp(shared_ptr<SqpTNlp> sqp_tnlp)
       }
 
       // Update the trust region radius.  Even if we are in a trial watchdog
-      // step, the trust region radius will be reduced since the predicted reduction
-      // is negative.
-      // TODO: Should we just leave TR radius in a trial step?  A short experiment
+      // step, the trust region radius will be reduced since the predicted
+      // reduction is negative.
+      // TODO: Should we just leave TR radius in a trial step?  A short
+      // experiment
       //       seemed to indicate that this was inferior
       update_trust_region_radius_();
     }
@@ -820,7 +837,8 @@ void SqpSolver::return_results_()
   }
 
   // Set the final value of the penalty parameter, unscaled
-  solver_statistics_->set_final_penalty_parameter(current_penalty_parameter_/objective_scaling_factor_);
+  solver_statistics_->set_final_penalty_parameter(current_penalty_parameter_ /
+                                                  objective_scaling_factor_);
 
   sqp_nlp_->finalize_solution(
       exit_flag_, current_iterate_, current_bound_multipliers_,
@@ -936,7 +954,8 @@ void SqpSolver::initialize_iterates_()
 {
   // Check if there are any degrees of freedom
   if (num_variables_ < num_equality_constraints_) {
-    jnlst_->Printf(J_ERROR, J_MAIN, "ERROR: More equality constraints than variables.\n");
+    jnlst_->Printf(J_ERROR, J_MAIN,
+                   "ERROR: More equality constraints than variables.\n");
     THROW_EXCEPTION(SQP_NLP, "Too many equality constraints");
   }
 
@@ -956,8 +975,7 @@ void SqpSolver::initialize_iterates_()
     // Set the multipliers to zero
     current_bound_multipliers_->set_to_zero();
     current_constraint_multipliers_->set_to_zero();
-  }
-  else {
+  } else {
     // Get the primal-dual starting point
     sqp_nlp_->get_starting_point(current_iterate_, current_bound_multipliers_,
                                  current_constraint_multipliers_);
@@ -968,16 +986,19 @@ void SqpSolver::initialize_iterates_()
   bool use_initial_working_set;
   if (mode == SM_WARM_START) {
     use_initial_working_set = true;
-  }
-  else {
+  } else {
     use_initial_working_set = false;
   }
 
   if (use_initial_working_set) {
     // Make sure that the NLP can actually provide a starting point.
     if (!sqp_nlp_->use_initial_working_set()) {
-      jnlst_->Printf(J_ERROR, J_MAIN, "ERROR: Warm start is chosen, but NLP does not provide initial working set.\n");
-      THROW_EXCEPTION(SQP_INVALID_STARING_POINT, "Warm start is chosen, but NLP does not provide initial working set");
+      jnlst_->Printf(J_ERROR, J_MAIN,
+                     "ERROR: Warm start is chosen, but NLP does not provide "
+                     "initial working set.\n");
+      THROW_EXCEPTION(
+          SQP_INVALID_STARING_POINT,
+          "Warm start is chosen, but NLP does not provide initial working set");
     }
 
     jnlst_->Printf(J_SUMMARY, J_MAIN,
@@ -985,14 +1006,14 @@ void SqpSolver::initialize_iterates_()
     // Store the working set in this object so that it can be given to the
     // QP solver when that one is initialized
     init_bound_activities_ = new ActivityStatus[num_variables_];
-    init_constraint_activities_ =
-        new ActivityStatus[num_constraints_];
+    init_constraint_activities_ = new ActivityStatus[num_constraints_];
 
     sqp_nlp_->get_initial_working_sets(num_variables_, init_bound_activities_,
                                        num_constraints_,
                                        init_constraint_activities_);
 
-    // Let's count the number of active bounce to make sure there are not too many
+    // Let's count the number of active bounce to make sure there are not too
+    // many
     int num_active_lower_var = 0;
     int num_active_upper_var = 0;
     for (int i = 0; i < num_variables_; ++i) {
@@ -1018,8 +1039,11 @@ void SqpSolver::initialize_iterates_()
       }
     }
 
-    int num_total_active = num_active_lower_var + num_active_upper_var + num_active_lower_con + num_active_upper_con + num_equality;
-    printf("num_total_active = %d num_var = %d\n", num_total_active, num_variables_);
+    int num_total_active = num_active_lower_var + num_active_upper_var +
+                           num_active_lower_con + num_active_upper_con +
+                           num_equality;
+    printf("num_total_active = %d num_var = %d\n", num_total_active,
+           num_variables_);
     if (num_total_active > num_variables_) {
       THROW_EXCEPTION(SQP_INVALID_WORKING_SET,
                       "Too many constraints are active.");
@@ -1098,8 +1122,7 @@ void SqpSolver::compute_initial_values_()
   if (watchdog_min_wait_iterations_ == 0) {
     watchdog_status_ = WATCHDOG_INACTIVE;
     watchdog_sleep_iterations_ = watchdog_min_wait_iterations_;
-  }
-  else {
+  } else {
     watchdog_status_ = WATCHDOG_READY;
     watchdog_sleep_iterations_ = 0;
   }
@@ -1127,7 +1150,6 @@ void SqpSolver::compute_initial_values_()
           i, max(0., current_constraint_multipliers_->get_value(i)));
     }
   }
-
 }
 void SqpSolver::initialize_qp_solvers_()
 {
@@ -1136,10 +1158,11 @@ void SqpSolver::initialize_qp_solvers_()
   int num_variables = nlp_sizes->get_num_variables();
   int num_constraints = nlp_sizes->get_num_constraints();
 
-  if (num_variables != num_variables_ ||
-      num_constraints != num_constraints_) {
-    jnlst_->Printf(J_ERROR, J_MAIN, "Error: Size of NLP has changed between restart calls.\n");
-    THROW_EXCEPTION(SQP_INVALID_STARING_POINT, "Size of NLP has changed between restart calls");
+  if (num_variables != num_variables_ || num_constraints != num_constraints_) {
+    jnlst_->Printf(J_ERROR, J_MAIN,
+                   "Error: Size of NLP has changed between restart calls.\n");
+    THROW_EXCEPTION(SQP_INVALID_STARING_POINT,
+                    "Size of NLP has changed between restart calls");
   }
 
   // Create (new) matrix objects
@@ -1451,7 +1474,8 @@ void SqpSolver::update_predicted_reduction_()
   // Finally add the infeasibility part
   predicted_reduction_ += current_penalty_parameter_ *
                           (current_infeasibility_ - trial_model_infeasibility_);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "Computing predicted reduction: %23.16e\n", predicted_reduction_);
+  jnlst_->Printf(J_DETAILED, J_MAIN, "Computing predicted reduction: %23.16e\n",
+                 predicted_reduction_);
 
   predicted_reduction_ += numerical_error_buffer_();
 }
@@ -1485,13 +1509,27 @@ void SqpSolver::perform_ratio_test_()
       trial_objective_value_ +
       current_penalty_parameter_ * trial_infeasibility_;
 
-  jnlst_->Printf(J_DETAILED, J_MAIN, "\nIn ratio test: current penalty function value..: %23.16e\n", current_penalty_function_value);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               trial penalty function value....: %23.16e\n", trial_penalty_function_value);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               current objective value.........: %23.16e\n", current_objective_value_);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               trial objective value...........: %23.16e\n", trial_objective_value_);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               current infeasibility...........: %23.16e\n", current_infeasibility_);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               trial infeasibility.............: %23.16e\n", trial_infeasibility_);
-  jnlst_->Printf(J_DETAILED, J_MAIN, "               current penalty parameter.......: %23.16e\n\n", current_penalty_parameter_);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "\nIn ratio test: current penalty function value..: %23.16e\n",
+                 current_penalty_function_value);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               trial penalty function value....: %23.16e\n",
+                 trial_penalty_function_value);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               current objective value.........: %23.16e\n",
+                 current_objective_value_);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               trial objective value...........: %23.16e\n",
+                 trial_objective_value_);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               current infeasibility...........: %23.16e\n",
+                 current_infeasibility_);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               trial infeasibility.............: %23.16e\n",
+                 trial_infeasibility_);
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "               current penalty parameter.......: %23.16e\n\n",
+                 current_penalty_parameter_);
 
   if (disable_trust_region_) {
     trial_point_is_accepted_ = true;
@@ -1508,19 +1546,35 @@ void SqpSolver::perform_ratio_test_()
     predicted_reduction_ = backup_predicted_reduction_;
   }
 
-  // If we are in the trial watchdog iteration, we need to use the original value
-  // for the current penatly value
+  // If we are in the trial watchdog iteration, we need to use the original
+  // value for the current penatly value
   if (watchdog_status_ == WATCHDOG_IN_TRIAL_ITERATE) {
     current_penalty_function_value =
-          backup_current_objective_value_ +
-          current_penalty_parameter_ * backup_current_infeasibility_;
-    jnlst_->Printf(J_DETAILED, J_MAIN, "\nIn watchdog  : current penalty function value..: %23.16e\n", current_penalty_function_value);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               trial penalty function value....: %23.16e\n", trial_penalty_function_value);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               backup objective value..........: %23.16e\n", backup_current_objective_value_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               trial objective value...........: %23.16e\n", trial_objective_value_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               backup infeasibility............: %23.16e\n", backup_current_infeasibility_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               trial infeasibility.............: %23.16e\n", trial_infeasibility_);
-    jnlst_->Printf(J_DETAILED, J_MAIN, "               current penalty parameter.......: %23.16e\n\n", current_penalty_parameter_);
+        backup_current_objective_value_ +
+        current_penalty_parameter_ * backup_current_infeasibility_;
+    jnlst_->Printf(
+        J_DETAILED, J_MAIN,
+        "\nIn watchdog  : current penalty function value..: %23.16e\n",
+        current_penalty_function_value);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "               trial penalty function value....: %23.16e\n",
+                   trial_penalty_function_value);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "               backup objective value..........: %23.16e\n",
+                   backup_current_objective_value_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "               trial objective value...........: %23.16e\n",
+                   trial_objective_value_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "               backup infeasibility............: %23.16e\n",
+                   backup_current_infeasibility_);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "               trial infeasibility.............: %23.16e\n",
+                   trial_infeasibility_);
+    jnlst_->Printf(
+        J_DETAILED, J_MAIN,
+        "               current penalty parameter.......: %23.16e\n\n",
+        current_penalty_parameter_);
   }
 
   actual_reduction_ =
@@ -1720,14 +1774,16 @@ void SqpSolver::update_penalty_parameter_()
   // If there is no violation of the linear constraints, we do not need to
   // compare with feasibility progress from LP
   if (trial_model_infeasibility_ <= penalty_update_tol_) {
-    jnlst_->Printf(J_DETAILED, J_MAIN, "    This is below the tolerance (%e), "
-                                       "so no solution of the feasibility LP "
-                                       "necessary.\n",
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "    This is below the tolerance (%e), "
+                   "so no solution of the feasibility LP "
+                   "necessary.\n",
                    penalty_update_tol_);
   } else {
-    jnlst_->Printf(J_DETAILED, J_MAIN, "     This is larger than the tolerance "
-                                       "(%e), so we need to determine best "
-                                       "possible improvement of feasibility.\n",
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "     This is larger than the tolerance "
+                   "(%e), so we need to determine best "
+                   "possible improvement of feasibility.\n",
                    penalty_update_tol_);
     jnlst_->Printf(J_ITERSUMMARY, J_MAIN, "  Solving LP for penalty %e\n",
                    current_penalty_parameter_);
@@ -1738,7 +1794,7 @@ void SqpSolver::update_penalty_parameter_()
     QpSolverExitStatus exit_status = lp_solver_->solve(solver_statistics_);
     if (exit_status != QPEXIT_OPTIMAL) {
       const string& nlp_name = sqp_nlp_->get_nlp_name();
-      //lp_solver_->write_qp_data(nlp_name + "qpdata.log");
+      // lp_solver_->write_qp_data(nlp_name + "qpdata.log");
       assert(false && "Still need to decide how to handle QP solver error.");
       // exit_flag_ = qp_solver_->get_status();
       // break;
@@ -1809,8 +1865,9 @@ void SqpSolver::update_penalty_parameter_()
         candidate_infeasibility_reduction =
             current_infeasibility_ - trial_model_infeasibility_;
 
-        jnlst_->Printf(J_DETAILED, J_MAIN, "  new penalty parameter %e with "
-                                           "infeasibility reduction: %e\n",
+        jnlst_->Printf(J_DETAILED, J_MAIN,
+                       "  new penalty parameter %e with "
+                       "infeasibility reduction: %e\n",
                        current_penalty_parameter_,
                        candidate_infeasibility_reduction);
       }
@@ -1830,9 +1887,10 @@ void SqpSolver::update_penalty_parameter_()
   // Increase this a bit to take care of potential numerical error
   predicted_infeasibility_reduction += numerical_error_buffer_();
 
-  jnlst_->Printf(J_DETAILED, J_MAIN, "  Make sure that predicted reduction >= "
-                                     "(%e) * predicted infeasibility "
-                                     "reduction:\n",
+  jnlst_->Printf(J_DETAILED, J_MAIN,
+                 "  Make sure that predicted reduction >= "
+                 "(%e) * predicted infeasibility "
+                 "reduction:\n",
                  eps2_);
   jnlst_->Printf(J_DETAILED, J_MAIN,
                  "    pred reduction = %e, pred infeas reduction = %e\n",
@@ -1842,11 +1900,13 @@ void SqpSolver::update_penalty_parameter_()
   while (predicted_reduction_ < eps2_ * current_penalty_parameter_ *
                                     predicted_infeasibility_reduction) {
 
-    jnlst_->Printf(J_DETAILED, J_MAIN, "    Test not satisfied (%23.16e < "
-                                       "%23.16e), increase penalty "
-                                       "parameter.\n",
-                   predicted_reduction_, eps2_ * current_penalty_parameter_ *
-                                             predicted_infeasibility_reduction);
+    jnlst_->Printf(J_DETAILED, J_MAIN,
+                   "    Test not satisfied (%23.16e < "
+                   "%23.16e), increase penalty "
+                   "parameter.\n",
+                   predicted_reduction_,
+                   eps2_ * current_penalty_parameter_ *
+                       predicted_infeasibility_reduction);
     increase_penalty_parameter_();
 
     // Update the predicted reduction to match the new penalty parameter
@@ -1898,10 +1958,9 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   reg_options->SetRegisteringCategory("Starting Point");
   reg_options->AddStringOption3(
       "starting_mode", "Specifies how much starting information is available.",
-      "primal-dual",
-      "primal", "only primal point is provided",
-      "primal-dual", "primal and dual variables are provided.",
-      "warm-start", "primal-dual starting point and intial working set is provided.");
+      "primal-dual", "primal", "only primal point is provided", "primal-dual",
+      "primal and dual variables are provided.", "warm-start",
+      "primal-dual starting point and intial working set is provided.");
 
   reg_options->SetRegisteringCategory("Trust-region");
   reg_options->AddBoundedNumberOption(
@@ -1937,25 +1996,27 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "increased, then it will be set as gamma_e*delta,"
       "where delta is current trust-region radius.");
 
-  reg_options->AddLowerBoundedNumberOption("trust_region_init_size",
-                                           "Initial trust-region radius",
-                                           0., true, 10.);
   reg_options->AddLowerBoundedNumberOption(
-      "trust_region_max_value", "Maximum value of trust-region radius "
-                                "allowed for the radius update",
+      "trust_region_init_size", "Initial trust-region radius", 0., true, 10.);
+  reg_options->AddLowerBoundedNumberOption(
+      "trust_region_max_value",
+      "Maximum value of trust-region radius "
+      "allowed for the radius update",
       0., true, 1e10);
   reg_options->AddLowerBoundedNumberOption(
-      "trust_region_min_value", "Minimum value of trust-region radius "
-                                "allowed for the radius update",
+      "trust_region_min_value",
+      "Minimum value of trust-region radius "
+      "allowed for the radius update",
       0., true, 1e-16);
   reg_options->AddStringOption2(
       "disable_trust_region", "Indicates whether trust region should be used.",
       "no", "no", "do usual trust region method", "yes",
       "every trial step will be accepted");
   reg_options->AddLowerBoundedIntegerOption(
-      "watchdog_min_wait_iterations", "Minimum number of watchdog wait iterations.",
-      0, 10,
-      "Specifies the number of iterations the watchdog should sleep after a rejected trial step.  0 switches the watchdog technique off.");
+      "watchdog_min_wait_iterations",
+      "Minimum number of watchdog wait iterations.", 0, 10,
+      "Specifies the number of iterations the watchdog should sleep after a "
+      "rejected trial step.  0 switches the watchdog technique off.");
 
   reg_options->SetRegisteringCategory("Penalty Update");
   reg_options->AddLowerBoundedNumberOption(
@@ -1993,13 +2054,16 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                 "NLP",
                                 0);
   reg_options->AddStringOption2(
-      "auto_gen_tol", "Tell the algorithm to automatically"
-                      "generate the tolerance level for optimality test "
-                      "based on information from NLP",
-      "no", "no", "will use user-defined values of tolerance for"
-                  " the optimality test",
-      "yes", "will automatically generate the tolerance "
-             "level for the optimality test");
+      "auto_gen_tol",
+      "Tell the algorithm to automatically"
+      "generate the tolerance level for optimality test "
+      "based on information from NLP",
+      "no", "no",
+      "will use user-defined values of tolerance for"
+      " the optimality test",
+      "yes",
+      "will automatically generate the tolerance "
+      "level for the optimality test");
 
   const double default_tol = 1e-6;
   reg_options->AddNumberOption("active_set_tol", "",
@@ -2072,9 +2136,10 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
   //		    "qpOASES");
 
   reg_options->AddStringOption2(
-      "qore_init_primal_variables", "Specifies whether QORE should initialize "
-                                    "the primal soluiton (the step and the "
-                                    "penatly variables) to zero.",
+      "qore_init_primal_variables",
+      "Specifies whether QORE should initialize "
+      "the primal soluiton (the step and the "
+      "penatly variables) to zero.",
       "no", "no", "reuse the internal solution from the most recent solve.",
       "yes", "initialize the values to zero.");
   reg_options->AddLowerBoundedNumberOption(
@@ -2082,8 +2147,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       false, 0., "Number that is added to the diagonal of the QP Hessian");
   reg_options->AddStringOption2(
       "qore_dump_file", "Indicates whether QORE should write a dump file.",
-      "no", "no", "Do not write dump file.",
-      "yes", "Write dump files (for QP and LP separately).");
+      "no", "no", "Do not write dump file.", "yes",
+      "Write dump files (for QP and LP separately).");
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);
@@ -2101,14 +2166,11 @@ void SqpSolver::get_option_values_()
   options_->GetStringValue("starting_mode", sval, "");
   if (sval == "primal") {
     starting_mode_ = SM_PRIMAL_ONLY;
-  }
-  else if (sval == "primal-dual") {
+  } else if (sval == "primal-dual") {
     starting_mode_ = SM_PRIMAL_DUAL;
-  }
-  else if (sval == "warm-start") {
+  } else if (sval == "warm-start") {
     starting_mode_ = SM_WARM_START;
-  }
-  else {
+  } else {
     assert(false && "Invalid string value for starting_mode option");
   }
 
@@ -2134,8 +2196,7 @@ void SqpSolver::get_option_values_()
                             trust_region_increase_factor_, "");
   options_->GetBoolValue("disable_trust_region", disable_trust_region_, "");
   options_->GetIntegerValue("watchdog_min_wait_iterations",
-                             watchdog_min_wait_iterations_, "");
-
+                            watchdog_min_wait_iterations_, "");
 
   options_->GetNumericValue("penalty_parameter_init_value",
                             penalty_parameter_init_value_, "");
@@ -2232,9 +2293,10 @@ void SqpSolver::second_order_correction_()
 
 void SqpSolver::print_final_stats_()
 {
-  jnlst_->Printf(J_SUMMARY, J_MAIN, "======================================"
-                                    "===================================="
-                                    "==================================\n");
+  jnlst_->Printf(J_SUMMARY, J_MAIN,
+                 "======================================"
+                 "===================================="
+                 "==================================\n");
 
   // Determine string describing the exit status
   string exit_message;
@@ -2440,14 +2502,20 @@ bool SqpSolver::eval_hessian_(shared_ptr<const Vector> x,
 void SqpSolver::store_watchdog_backups_()
 {
   backup_current_iterate_ = make_shared<Vector>(*current_iterate_);
-  backup_current_constraint_multipliers_ = make_shared<Vector>(*current_constraint_multipliers_);
-  backup_current_bound_multipliers_ = make_shared<Vector>(*current_bound_multipliers_);
+  backup_current_constraint_multipliers_ =
+      make_shared<Vector>(*current_constraint_multipliers_);
+  backup_current_bound_multipliers_ =
+      make_shared<Vector>(*current_bound_multipliers_);
 
   backup_current_objective_value_ = current_objective_value_;
-  backup_current_objective_gradient_ = make_shared<Vector>(*current_objective_gradient_);
-  backup_current_constraint_values_ = make_shared<Vector>(*current_constraint_values_);
-  backup_current_constraint_jacobian_ = make_shared<SparseTripletMatrix>(*current_constraint_jacobian_);
-  backup_current_lagrangian_hessian_ = make_shared<SparseTripletMatrix>(*current_lagrangian_hessian_);
+  backup_current_objective_gradient_ =
+      make_shared<Vector>(*current_objective_gradient_);
+  backup_current_constraint_values_ =
+      make_shared<Vector>(*current_constraint_values_);
+  backup_current_constraint_jacobian_ =
+      make_shared<SparseTripletMatrix>(*current_constraint_jacobian_);
+  backup_current_lagrangian_hessian_ =
+      make_shared<SparseTripletMatrix>(*current_lagrangian_hessian_);
 
   backup_current_infeasibility_ = current_infeasibility_;
   backup_predicted_reduction_ = predicted_reduction_;
@@ -2455,14 +2523,16 @@ void SqpSolver::store_watchdog_backups_()
   backup_trust_region_radius_ = trust_region_radius_;
 
   backup_trial_step_ = make_shared<Vector>(*trial_step_);
-  backup_trial_constraint_multipliers_ = make_shared<Vector>(*trial_constraint_multipliers_);
-  backup_trial_bound_multipliers_ = make_shared<Vector>(*trial_bound_multipliers_);
+  backup_trial_constraint_multipliers_ =
+      make_shared<Vector>(*trial_constraint_multipliers_);
+  backup_trial_bound_multipliers_ =
+      make_shared<Vector>(*trial_bound_multipliers_);
   backup_trial_model_infeasibility_ = trial_model_infeasibility_;
 }
 
 void SqpSolver::delete_watchdog_backups_()
 {
-  backup_current_iterate_ .reset();
+  backup_current_iterate_.reset();
   backup_current_constraint_multipliers_.reset();
   backup_current_bound_multipliers_.reset();
 
@@ -2501,4 +2571,4 @@ void SqpSolver::restore_watchdog_backups_()
   // Tell QP solver that all data has changed
   qp_update_tracker_.trigger_all_updates();
 }
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp

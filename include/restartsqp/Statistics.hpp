@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-05
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-05
+ */
 #ifndef SQPHOTSTART_STATISTICS_HPP
 #define SQPHOTSTART_STATISTICS_HPP
 
@@ -21,9 +21,7 @@ public:
   }
 
   /** Destructor*/
-  ~Statistics()
-  {
-  }
+  ~Statistics() {}
 
   /** Reset all counters to 0. */
   void reset()
@@ -106,6 +104,6 @@ public:
   double final_penalty_parameter_;
 };
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp
 
 #endif /* SQPHOTSTART_STATS_HPP*/

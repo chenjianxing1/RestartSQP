@@ -19,14 +19,10 @@ class Matrix
 {
 public:
   /** Default constructor. */
-  Matrix()
-  {
-  }
+  Matrix() {}
 
   /** Default destructor. */
-  virtual ~Matrix()
-  {
-  }
+  virtual ~Matrix() {}
 
   /** This methods add the multiple of the matrix with the vector p to the
    * result vector. */
@@ -209,7 +205,7 @@ private:
 private:
   bool is_allocated_;
   bool is_symmetric_;   /**< is the matrix symmetric, if yes, the non-diagonal
-                                 *data will only be stored for once*/
+                         *data will only be stored for once*/
   double* values_;      /**< the entry data of a matrix */
   int num_columns_;     /**< the number columns of a matrix */
   int num_entries_;     /**< number of non-zero entries in  matrix */
@@ -217,6 +213,6 @@ private:
   int* column_indices_; /**< the column number of a matrix entry */
   int* row_indices_;    /**< the row number of a matrix entry */
 };
-}
+} // namespace RestartSqp
 
 #endif

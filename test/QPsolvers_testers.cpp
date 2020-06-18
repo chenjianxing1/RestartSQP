@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-extern "C" {
+extern "C"
+{
 #include <qpsolver.h>
 }
 

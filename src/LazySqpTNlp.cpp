@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-07
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 
 #include "restartsqp/LazySqpTNlp.hpp"
 #include "restartsqp/SqpIpoptTNlp.hpp"
@@ -25,22 +25,20 @@ LazySqpTNlp::LazySqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
  , previous_optimal_solution_(nullptr)
  , previous_optimal_bound_multipliers_(nullptr)
  , previous_optimal_constraint_multipliers_(nullptr)
-{
-}
+{}
 
 LazySqpTNlp::LazySqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp)
-  : sqp_tnlp_(make_shared<SqpIpoptTNlp>(ipopt_tnlp))
-  , num_constraints_(-1)
-  , constraint_indices_(nullptr)
-  , sqp_jac_map_(nullptr)
-  , bound_activity_status_(nullptr)
-  , constraint_activity_status_(nullptr)
-  , has_been_solved_before_(false)
-  , previous_optimal_solution_(nullptr)
-  , previous_optimal_bound_multipliers_(nullptr)
-  , previous_optimal_constraint_multipliers_(nullptr)
- {
- }
+ : sqp_tnlp_(make_shared<SqpIpoptTNlp>(ipopt_tnlp))
+ , num_constraints_(-1)
+ , constraint_indices_(nullptr)
+ , sqp_jac_map_(nullptr)
+ , bound_activity_status_(nullptr)
+ , constraint_activity_status_(nullptr)
+ , has_been_solved_before_(false)
+ , previous_optimal_solution_(nullptr)
+ , previous_optimal_bound_multipliers_(nullptr)
+ , previous_optimal_constraint_multipliers_(nullptr)
+{}
 
 /** Default constructor*/
 LazySqpTNlp::~LazySqpTNlp()
@@ -568,4 +566,4 @@ bool LazySqpTNlp::add_new_constraints(
 
   return true;
 }
-}
+} // namespace RestartSqp

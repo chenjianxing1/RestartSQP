@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-06
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 
 #include "restartsqp/CrossoverSqpSolver.hpp"
 #include "IpIpoptApplication.hpp"
@@ -39,9 +39,7 @@ CrossoverSqpSolver::CrossoverSqpSolver()
 /**
  * Destructor
  */
-CrossoverSqpSolver::~CrossoverSqpSolver()
-{
-}
+CrossoverSqpSolver::~CrossoverSqpSolver() {}
 
 double
 CrossoverSqpSolver::determine_obj_scaling_factor_(IpoptSqpTNlp& ipopt_tnlp)
@@ -124,8 +122,8 @@ void CrossoverSqpSolver::determine_activities_(
     // Check if this is a fixed variable
     if (variable_lower_bounds[i] == variable_upper_bounds[i]) {
       jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e\n", i, z_L_sol[i],
-                     z_U_sol[i]);
+                     " Variable %5d: FIXED: z_L = %15.8e z_U = %15.8e\n", i,
+                     z_L_sol[i], z_U_sol[i]);
       // choose any activity, should not matter
       bound_activity_status[i] = ACTIVE_ABOVE;
 #if 0
@@ -157,8 +155,9 @@ void CrossoverSqpSolver::determine_activities_(
     jnlst_->Printf(J_MOREDETAILED, J_MAIN,
                    " Variable %5d: LOWER: slack/mult = %15.8e/%15.8e=%15.8e", i,
                    slack_lower, mult_lower, ratio_lower);
-    jnlst_->Printf(J_MOREDETAILED, J_MAIN, " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ",
-                   i, slack_upper, mult_upper, ratio_upper);
+    jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                   " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ", i,
+                   slack_upper, mult_upper, ratio_upper);
 
     if (ratio_lower > active_bound_tol && ratio_upper > active_bound_tol) {
       bound_activity_status[i] = INACTIVE;
@@ -221,10 +220,11 @@ void CrossoverSqpSolver::determine_activities_(
     double ratio_lower = slack_lower / mult_lower;
     double ratio_upper = slack_upper / mult_upper;
     jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                   " constraint %5d: LOWER: slack/mult = %15.8e/%15.8e=%15.8e", i,
-                   slack_lower, mult_lower, ratio_lower);
-    jnlst_->Printf(J_MOREDETAILED, J_MAIN, " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ",
-                   i, slack_upper, mult_upper, ratio_upper);
+                   " constraint %5d: LOWER: slack/mult = %15.8e/%15.8e=%15.8e",
+                   i, slack_lower, mult_lower, ratio_lower);
+    jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                   " | UPPER: slack/mult = %15.8e/%15.8e=%15.8e: ", i,
+                   slack_upper, mult_upper, ratio_upper);
 
     if (ratio_lower > constraint_active_tol &&
         ratio_upper > constraint_active_tol) {
@@ -261,7 +261,7 @@ void CrossoverSqpSolver::determine_activities_(
 }
 
 void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
-                                       const string& options_file_name)
+                                         const string& options_file_name)
 {
   // TODO: Read the option
   max_initial_multipliers_ = 100.;
@@ -305,7 +305,7 @@ void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
   // Determine a scaling factor for the objective in subsequent solves
   objective_scaling_factor_ = 1.;
-  //objective_scaling_factor_ = determine_obj_scaling_factor_(*ipopt_tnlp);
+  // objective_scaling_factor_ = determine_obj_scaling_factor_(*ipopt_tnlp);
 
   jnlst_->Printf(J_SUMMARY, J_MAIN, "Setting SQP solve options:\n");
 
@@ -319,8 +319,9 @@ void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   options->GetNumericValue("objective_scaling_factor", actual_value, "");
 
   if (actual_value != objective_scaling_factor_) {
-    jnlst_->Printf(J_SUMMARY, J_MAIN, "  Objective function scaling factor "
-                                      "given in option file.  Leaving at %e\n",
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "  Objective function scaling factor "
+                   "given in option file.  Leaving at %e\n",
                    actual_value);
     objective_scaling_factor_ = actual_value;
   } else {
@@ -392,8 +393,8 @@ void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   options->SetNumericValue("penalty_parameter_init_value",
                            initial_penalty_parameter);
 
-  // Make sure the trust region is not active in the first iteration by initializing
-  // it to a large value
+  // Make sure the trust region is not active in the first iteration by
+  // initializing it to a large value
   options->SetNumericValue("trust_region_init_size", 1e9);
 
   // Also tell the SQP solver that the starting_mode option should be overwritte
@@ -454,7 +455,6 @@ void CrossoverSqpSolver::solve(shared_ptr<SqpTNlp> sqp_tnlp,
 
 void CrossoverSqpSolver::register_options_(
     SmartPtr<RegisteredOptions> reg_options)
-{
-}
+{}
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp

@@ -60,15 +60,16 @@ void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
   int rv = QPNew(&qore_solver_, num_qp_variables_, num_qp_constraints_,
                  num_nnz_jacobian, num_nnz_hessian);
   if (rv != QPSOLVER_OK) {
-    jnlst_->Printf(J_ERROR, J_MAIN, "QORE QPNew fails and returns rv = %d\n", rv);
-    THROW_EXCEPTION(SQP_EXCEPTION_QP_SOLVER_FAILS, "QORE fails in initialization");
+    jnlst_->Printf(J_ERROR, J_MAIN, "QORE QPNew fails and returns rv = %d\n",
+                   rv);
+    THROW_EXCEPTION(SQP_EXCEPTION_QP_SOLVER_FAILS,
+                    "QORE fails in initialization");
   }
 
   if (qore_dump_file_) {
     if (qp_type_ == QP_TYPE_LP) {
       QPOpenDumpFile(qore_solver_, "qore_dumpfile_lp.csv");
-    }
-    else {
+    } else {
       QPOpenDumpFile(qore_solver_, "qore_dumpfile_qp.csv");
     }
   }
@@ -85,8 +86,8 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
   options->GetIntegerValue("qp_solver_print_level", qp_solver_print_level_, "");
   options->GetIntegerValue("lp_solver_max_num_iterations",
                            lp_solver_max_num_iterations_, "");
-  options->GetBoolValue("qore_init_primal_variables", qore_init_primal_variables_,
-                           "");
+  options->GetBoolValue("qore_init_primal_variables",
+                        qore_init_primal_variables_, "");
   options->GetNumericValue("qore_hessian_regularization",
                            qore_hessian_regularization_, "");
   options->GetBoolValue("qore_dump_file", qore_dump_file_, "");
@@ -169,7 +170,8 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
                        H_col_indices, H_values, pflags);
   }
 
-  // Determine the number of constraints for QORE.  The first are for the varialbe bounds and the remaining for the consrtaints.
+  // Determine the number of constraints for QORE.  The first are for the
+  // varialbe bounds and the remaining for the consrtaints.
   int num_qore_constraints = num_qp_variables_ + num_qp_constraints_;
   // Create arrays that include both variable and constraint bounds
   Vector qore_lb(num_qore_constraints);
@@ -181,8 +183,10 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
   qore_ub.copy_into_subvector(upper_constraint_bounds_, num_qp_variables_);
   if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
     jnlst_->Printf(J_VECTOR, J_MAIN, "QP bounds:\n");
-    for (int i=0; i<num_qore_constraints; i++) {
-      jnlst_->Printf(J_VECTOR, J_MAIN, "lb_qore[%4d] = %23.16e ub_qore[%4d] = %23.16e\n", i, qore_lb.get_value(i), i, qore_ub.get_value(i));
+    for (int i = 0; i < num_qore_constraints; i++) {
+      jnlst_->Printf(J_VECTOR, J_MAIN,
+                     "lb_qore[%4d] = %23.16e ub_qore[%4d] = %23.16e\n", i,
+                     qore_lb.get_value(i), i, qore_ub.get_value(i));
     }
   }
 
@@ -198,25 +202,26 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     }
     double* x_qore = NULL;
     if (qore_init_primal_variables_) {
-    // We set the starting point for the primal variables (search direction and
-    // penalty variables) to zero.
-    // TODO QP: Should we set the penalty variables differently?
-    x_qore = new double[num_qp_variables_ + num_qp_constraints_];
-    for (int i = 0; i < num_qp_variables_ + num_qp_constraints_; ++i) {
-      x_qore[i] = 0.;
-    }
+      // We set the starting point for the primal variables (search direction
+      // and penalty variables) to zero.
+      // TODO QP: Should we set the penalty variables differently?
+      x_qore = new double[num_qp_variables_ + num_qp_constraints_];
+      for (int i = 0; i < num_qp_variables_ + num_qp_constraints_; ++i) {
+        x_qore[i] = 0.;
+      }
     }
     // We ask QORE to use the last dual solution as starting point
     const double* y_qore = NULL;
     // We ask QORE to use the working set from the last iteration
     const qp_int* ws_qore = NULL;
-    linear_objective_coefficients_->print("linear_objective_coefficients", jnlst_, J_VECTOR, J_MAIN);
+    linear_objective_coefficients_->print("linear_objective_coefficients",
+                                          jnlst_, J_VECTOR, J_MAIN);
     qore_retval =
         QPOptimize(qore_solver_, qore_lb.get_values(), qore_ub.get_values(),
                    linear_objective_coefficients_->get_values(), x_qore, y_qore,
                    ws_qore, QPSOLVER_WARM);
     // Free memory
-    delete [] x_qore;
+    delete[] x_qore;
   } else {
     // This is the first SQP iteration.
     //
@@ -257,13 +262,14 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
         if (!backup_bounds_working_set_) {
           assert(!backup_constraints_working_set_);
           backup_bounds_working_set_ = new ActivityStatus[num_qp_variables_];
-          backup_constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
+          backup_constraints_working_set_ =
+              new ActivityStatus[num_qp_constraints_];
         }
 
-        for (int i=0; i<num_qp_variables_; ++i) {
+        for (int i = 0; i < num_qp_variables_; ++i) {
           backup_bounds_working_set_[i] = bounds_working_set_[i];
         }
-        for (int i=0; i<num_qp_constraints_; ++i) {
+        for (int i = 0; i < num_qp_constraints_; ++i) {
           backup_constraints_working_set_[i] = constraints_working_set_[i];
         }
       }
@@ -284,7 +290,7 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
                      linear_objective_coefficients_->get_values(), x_qore,
                      y_qore, ws_qore, QPSOLVER_WARM);
       // Free memory
-      delete [] ws_qore;
+      delete[] ws_qore;
     }
   }
   // Get the solver status
@@ -307,8 +313,9 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     assert(rv == QPSOLVER_OK);
     if (jnlst_->ProduceOutput(J_VECTOR, J_MAIN)) {
       jnlst_->Printf(J_VECTOR, J_MAIN, "QP solution:\n");
-      for (int i=0; i<size; i++) {
-        jnlst_->Printf(J_VECTOR, J_MAIN, "x_qore[%4d] = %23.16e\n", i, qore_primal_solution_[i]);
+      for (int i = 0; i < size; i++) {
+        jnlst_->Printf(J_VECTOR, J_MAIN, "x_qore[%4d] = %23.16e\n", i,
+                       qore_primal_solution_[i]);
       }
     }
 
@@ -357,7 +364,7 @@ QpSolverExitStatus QoreInterface::optimize_impl(shared_ptr<Statistics> stats)
     }
     jnlst_->Printf(J_ERROR, J_MAIN, "qore error (%d): %s\n",
                    (int)qp_solver_exit_status, qore_error_message.c_str());
-    //write_qp_data_to_file("qore_failure_qp.txt");
+    // write_qp_data_to_file("qore_failure_qp.txt");
   }
 
   // Update solver statistics
@@ -391,56 +398,74 @@ QpSolverExitStatus QoreInterface::get_qore_exit_status_()
   }
 }
 
-static string act_to_str(ActivityStatus stat) {
+static string act_to_str(ActivityStatus stat)
+{
   switch (stat) {
-  case ACTIVE_ABOVE:
-    return "upper";
-  case  ACTIVE_BELOW:
-    return "lower";
-  case INACTIVE:
-    return "inact";
+    case ACTIVE_ABOVE:
+      return "upper";
+    case ACTIVE_BELOW:
+      return "lower";
+    case INACTIVE:
+      return "inact";
   }
   assert(false && "include stat in string translation.");
 }
 
 void QoreInterface::print_working_set_differences_()
 {
-  jnlst_->Printf(J_MOREDETAILED, J_MAIN, "\nWorking set changes for QORE solution:\n\n");
+  jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                 "\nWorking set changes for QORE solution:\n\n");
   int num_bound_act_changes = 0;
   int num_constr_act_changes = 0;
 
   if (!bounds_working_set_) {
-    jnlst_->Printf(J_WARNING, J_MAIN, "\nNo working set for QORE available (LP solver needs to be initialized)\n\n");
+    jnlst_->Printf(J_WARNING, J_MAIN,
+                   "\nNo working set for QORE available (LP solver needs to be "
+                   "initialized)\n\n");
     return;
   }
 
   // First we store the new working set in the members of this class
   retrieve_working_set_();
 
-  for (int i=0; i<num_qp_variables_; ++i) {
+  for (int i = 0; i < num_qp_variables_; ++i) {
     if (backup_bounds_working_set_[i] != bounds_working_set_[i]) {
-      if (lower_variable_bounds_->get_value(i) < upper_variable_bounds_->get_value(i)) {
+      if (lower_variable_bounds_->get_value(i) <
+          upper_variable_bounds_->get_value(i)) {
         num_bound_act_changes++;
       }
-      jnlst_->Printf(J_MOREDETAILED, J_MAIN, "%5d  Var %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n", num_bound_act_changes, i,
+      jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                     "%5d  Var %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n",
+                     num_bound_act_changes, i,
                      act_to_str(backup_bounds_working_set_[i]).c_str(),
-                     act_to_str(bounds_working_set_[i]).c_str(), lower_variable_bounds_->get_value(i), upper_variable_bounds_->get_value(i));
+                     act_to_str(bounds_working_set_[i]).c_str(),
+                     lower_variable_bounds_->get_value(i),
+                     upper_variable_bounds_->get_value(i));
     }
   }
 
-  for (int i=0; i<num_qp_constraints_; ++i) {
+  for (int i = 0; i < num_qp_constraints_; ++i) {
     if (backup_constraints_working_set_[i] != constraints_working_set_[i]) {
-      if (lower_constraint_bounds_->get_value(i) < upper_constraint_bounds_->get_value(i)) {
+      if (lower_constraint_bounds_->get_value(i) <
+          upper_constraint_bounds_->get_value(i)) {
         num_constr_act_changes++;
       }
-      jnlst_->Printf(J_MOREDETAILED, J_MAIN, "%5d  Con %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n", num_constr_act_changes, i,
+      jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                     "%5d  Con %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n",
+                     num_constr_act_changes, i,
                      act_to_str(backup_constraints_working_set_[i]).c_str(),
-                     act_to_str(constraints_working_set_[i]).c_str(), lower_constraint_bounds_->get_value(i), upper_constraint_bounds_->get_value(i));
+                     act_to_str(constraints_working_set_[i]).c_str(),
+                     lower_constraint_bounds_->get_value(i),
+                     upper_constraint_bounds_->get_value(i));
     }
   }
 
-  jnlst_->Printf(J_MOREDETAILED, J_MAIN, "\nNumber of changes in working set for bounds......: %d\n", num_bound_act_changes);
-  jnlst_->Printf(J_MOREDETAILED, J_MAIN, "\nNumber of changes in working set for constraints.: %d\n", num_constr_act_changes);
+  jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                 "\nNumber of changes in working set for bounds......: %d\n",
+                 num_bound_act_changes);
+  jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                 "\nNumber of changes in working set for constraints.: %d\n",
+                 num_constr_act_changes);
 }
 
 void QoreInterface::backup_working_set_()
@@ -452,10 +477,12 @@ void QoreInterface::backup_working_set_()
     backup_constraints_working_set_ = new ActivityStatus[num_qp_constraints_];
   }
 
-  working_set_to_sqp_(backup_bounds_working_set_, backup_constraints_working_set_);
+  working_set_to_sqp_(backup_bounds_working_set_,
+                      backup_constraints_working_set_);
 }
 
-void QoreInterface::working_set_to_sqp_(ActivityStatus* bound_ws, ActivityStatus* constr_ws)
+void QoreInterface::working_set_to_sqp_(ActivityStatus* bound_ws,
+                                        ActivityStatus* constr_ws)
 {
 
   // Allocate memory to store the working set from QORE
@@ -512,7 +539,6 @@ void QoreInterface::retrieve_working_set_()
   }
 
   working_set_to_sqp_(bounds_working_set_, constraints_working_set_);
-
 }
 
 void QoreInterface::set_qp_solver_options_()
@@ -522,8 +548,7 @@ void QoreInterface::set_qp_solver_options_()
     // does not print anything
     value = -1;
     QPSetInt(qore_solver_, QPSOLVER_INT_PRTFREQ, &value, 1);
-  }
-  else {
+  } else {
     value = 0;
     QPSetInt(qore_solver_, QPSOLVER_INT_PRTFREQ, &value, 1);
   }
@@ -578,9 +603,10 @@ void QoreInterface::set_objective_hessian(
   // Set the values in our matrix
   hessian_->set_values(triplet_matrix);
 
-  // To regularize and make the QP easier to solve in case the Hessian is singular, add a multiple of the identity
+  // To regularize and make the QP easier to solve in case the Hessian is
+  // singular, add a multiple of the identity
   double factor = qore_hessian_regularization_;
   hessian_->add_multiple_of_identity(factor);
 }
 
-} // SQP_HOTSTART
+} // namespace RestartSqp

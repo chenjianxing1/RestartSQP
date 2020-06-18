@@ -30,8 +30,7 @@ public:
    , update_trust_region_radius_(false)
    , update_jacobian_(false)
    , update_hessian_(false)
-  {
-  }
+  {}
 
   /** Accessor methods */
   //@{
@@ -118,9 +117,7 @@ public:
             update_trust_region_radius_ || update_jacobian_ || update_hessian_);
   }
 
-  ~QpUpdateTracker()
-  {
-  }
+  ~QpUpdateTracker() {}
 
 private:
   /** Hide default methods. */
@@ -292,18 +289,18 @@ public:
   /** @name Setters*/
   //@{
   /**
-  *
-  * @brief setup the bounds for the QP subproblems
-  * according to the information from current iterate
-  *
-  * @param delta      trust region radius
-  * @param x_k 	     current iterate point
-  * @param c_k        current constraint value evaluated at x_k
-  * @param x_l        the lower bounds for variables
-  * @param x_u        the upper bounds for variables
-  * @param c_l        the lower bounds for constraints
-  * @param c_u        the upper bounds for constraints
-  */
+   *
+   * @brief setup the bounds for the QP subproblems
+   * according to the information from current iterate
+   *
+   * @param delta      trust region radius
+   * @param x_k 	     current iterate point
+   * @param c_k        current constraint value evaluated at x_k
+   * @param x_l        the lower bounds for variables
+   * @param x_u        the upper bounds for variables
+   * @param c_l        the lower bounds for constraints
+   * @param c_u        the upper bounds for constraints
+   */
   void set_bounds(double trust_region_radius, std::shared_ptr<const Vector> x_l,
                   std::shared_ptr<const Vector> x_u,
                   std::shared_ptr<const Vector> x_k,
@@ -451,5 +448,5 @@ private:
 #endif
 };
 
-} // namespace SQPhotstart
+} // namespace RestartSqp
 #endif // SQPHOTSTART_QPHANDLER_HPP_

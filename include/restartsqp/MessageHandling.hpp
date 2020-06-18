@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-07
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 
 #ifndef _SQPHOTSTART_MESSAGE_HANDLE_
 #define _SQPHOTSTART_MESSAGE_HANDLE_
@@ -25,8 +25,9 @@
       obj_value_, norm_p_k_, infea_measure_, delta_, rho_,                     \
       myQP_->get_QpOptimalStatus().KKT_error
 #define PENALTY_UPDATE_HEADER                                                  \
-  "%6s %18s %18s %18s \n", "iter", "rho_trial", "infea_measure_model"          \
-                                                "infea_measure_inf"
+  "%6s %18s %18s %18s \n", "iter", "rho_trial",                                \
+      "infea_measure_model"                                                    \
+      "infea_measure_inf"
 #define PENALTY_UPDATE_OUTPUT                                                  \
   "%6i %18e %18e %18e \n", iter, rho_trial, infea_measure_model,               \
       infea_measure_infty

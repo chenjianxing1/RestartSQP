@@ -28,13 +28,10 @@ public:
    , num_constraints_(num_constraints)
    , num_nonzeros_jacobian_(num_nonzeros_jacobian)
    , num_nonzeros_hessian_(num_nonzeros_hessian)
-  {
-  }
+  {}
 
   /** Destructor */
-  ~SqpNlpSizeInfo()
-  {
-  }
+  ~SqpNlpSizeInfo() {}
 
   /** @name Accessor Methods. */
   //@{
@@ -239,6 +236,6 @@ private:
 
   //@}
 };
-}
+} // namespace RestartSqp
 
 #endif // SQPHOTSTART_SqpNlp_HPP

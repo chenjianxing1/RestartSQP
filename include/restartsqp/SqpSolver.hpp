@@ -7,10 +7,10 @@
 #ifndef SQPSOLVER_HPP_
 #define SQPSOLVER_HPP_
 
-#include "restartsqp/Types.hpp"
 #include "IpOptionsList.hpp"
 #include "restartsqp/QpHandler.hpp"
 #include "restartsqp/Statistics.hpp"
+#include "restartsqp/Types.hpp"
 
 namespace RestartSqp {
 /**
@@ -190,7 +190,6 @@ private:
   /** Overloaded Equals Operator */
   void operator=(const SqpSolver&);
   //@}
-
 
   /**
    * @brief set the default option values
@@ -373,10 +372,14 @@ private:
    * corresponding violation of the linearized constraints. */
   void increase_penalty_parameter_();
 
-  /** Store a backup of the relevant values from the current iteration (after QP solve and computation of predicted reduction).  This is used for the watchdog technique. */
+  /** Store a backup of the relevant values from the current iteration (after QP
+   * solve and computation of predicted reduction).  This is used for the
+   * watchdog technique. */
   void store_watchdog_backups_();
 
-  /** Restore a backup of the relevant values from the current iteration (after QP solve and computation of predicted reduction).  This is used for the watchdog technique. */
+  /** Restore a backup of the relevant values from the current iteration (after
+   * QP solve and computation of predicted reduction).  This is used for the
+   * watchdog technique. */
   void restore_watchdog_backups_();
 
   /** Delete backup vectors and matrices stored by store_watchdog_backups_(); */
@@ -526,11 +529,11 @@ private:
    */
   std::shared_ptr<Vector> current_constraint_multipliers_;
   /** Current estimate of the bound multipliers.
-  *
-  *  During the SQP algorithm, these are the internal scaled values.  Once
-  *  the algorithm terminated, these are the unscaled values, consistent with
-  *  the original problem formulation.
-  */
+   *
+   *  During the SQP algorithm, these are the internal scaled values.  Once
+   *  the algorithm terminated, these are the unscaled values, consistent with
+   *  the original problem formulation.
+   */
   std::shared_ptr<Vector> current_bound_multipliers_;
 
   /** Gradient of the objective function at the current iterate. */
@@ -584,7 +587,8 @@ private:
 
   /** Flag indicating in which phase the watchdog strategy is. */
   char watchdog_status_;
-  /** Counts the number of iterations after the most recent rejected watchdog trial step. */
+  /** Counts the number of iterations after the most recent rejected watchdog
+   * trial step. */
   int watchdog_sleep_iterations_;
 
   /** Object that collects the solver statistics (iteration counts, etc) */
@@ -668,7 +672,9 @@ private:
   double trust_region_increase_factor_;
   /** Flag indicating whether every trial step should be accepted. */
   bool disable_trust_region_;
-  /** Specifies the minimum number of successful iterations between trials of the watchdog.  A negative number indicates that the watchdog is switched off. */
+  /** Specifies the minimum number of successful iterations between trials of
+   * the watchdog.  A negative number indicates that the watchdog is switched
+   * off. */
   int watchdog_min_wait_iterations_;
 
   /** Initial penalty parameter value. */
@@ -719,6 +725,6 @@ private:
 
 }; // END_OF_ALG_CLASS
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp
 
 #endif

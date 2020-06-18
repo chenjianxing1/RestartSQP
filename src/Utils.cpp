@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-05
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-05
+ */
 
 #include "restartsqp/Utils.hpp"
 #include <chrono>
@@ -79,4 +79,4 @@ double get_wallclock_time_since_start()
 
   return time_span.count();
 }
-}
+} // namespace RestartSqp

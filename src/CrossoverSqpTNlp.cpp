@@ -1,13 +1,13 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-07
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 
 #include "restartsqp/CrossoverSqpTNlp.hpp"
-#include "restartsqp/Utils.hpp"
 #include "restartsqp/SqpIpoptTNlp.hpp"
+#include "restartsqp/Utils.hpp"
 #include <cassert>
 
 using namespace std;
@@ -22,8 +22,7 @@ CrossoverSqpTNlp::CrossoverSqpTNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
  , previous_optimal_solution_(nullptr)
  , previous_optimal_bound_multipliers_(nullptr)
  , previous_optimal_constraint_multipliers_(nullptr)
-{
-}
+{}
 
 CrossoverSqpTNlp::CrossoverSqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp)
  : sqp_tnlp_(make_shared<SqpIpoptTNlp>(ipopt_tnlp))
@@ -33,8 +32,7 @@ CrossoverSqpTNlp::CrossoverSqpTNlp(Ipopt::SmartPtr<Ipopt::TNLP> ipopt_tnlp)
  , previous_optimal_solution_(nullptr)
  , previous_optimal_bound_multipliers_(nullptr)
  , previous_optimal_constraint_multipliers_(nullptr)
-{
-}
+{}
 
 /** Default constructor*/
 CrossoverSqpTNlp::~CrossoverSqpTNlp()
@@ -47,24 +45,27 @@ CrossoverSqpTNlp::~CrossoverSqpTNlp()
 }
 
 bool CrossoverSqpTNlp::get_nlp_info(int& num_variables, int& num_constraints,
-                               int& num_nonzeros_jacobian,
-                               int& num_nonzeros_hessian, std::string& nlp_name)
+                                    int& num_nonzeros_jacobian,
+                                    int& num_nonzeros_hessian,
+                                    std::string& nlp_name)
 {
   bool retval;
   retval = sqp_tnlp_->get_nlp_info(num_variables, num_constraints,
-                                   num_nonzeros_jacobian,
-                                   num_nonzeros_hessian, nlp_name);
+                                   num_nonzeros_jacobian, num_nonzeros_hessian,
+                                   nlp_name);
   if (!retval) {
     return retval;
   }
 
   if (has_been_solved_before_) {
-    if (num_variables != num_variables_ || num_constraints != num_constraints_) {
-      printf("The number of variables or constraints has changed since the last time.");
-      assert(num_variables == num_variables_ && num_constraints == num_constraints_);
+    if (num_variables != num_variables_ ||
+        num_constraints != num_constraints_) {
+      printf("The number of variables or constraints has changed since the "
+             "last time.");
+      assert(num_variables == num_variables_ &&
+             num_constraints == num_constraints_);
     }
-  }
-  else {
+  } else {
     num_variables_ = num_variables;
     num_constraints_ = num_constraints;
   }
@@ -75,19 +76,18 @@ bool CrossoverSqpTNlp::get_nlp_info(int& num_variables, int& num_constraints,
  *@brief get the bounds information from the NLP object
  */
 bool CrossoverSqpTNlp::get_bounds_info(int num_variabes,
-                                  double* variable_lower_bounds,
-                                  double* variable_upper_bounds,
-                                  int num_constraints,
-                                  double* constraint_lower_bounds,
-                                  double* constraint_upper_bounds)
+                                       double* variable_lower_bounds,
+                                       double* variable_upper_bounds,
+                                       int num_constraints,
+                                       double* constraint_lower_bounds,
+                                       double* constraint_upper_bounds)
 {
   assert(num_constraints == num_constraints_);
 
   bool retval;
   retval = sqp_tnlp_->get_bounds_info(
       num_variabes, variable_lower_bounds, variable_upper_bounds,
-      num_constraints, constraint_lower_bounds,
-      constraint_upper_bounds);
+      num_constraints, constraint_lower_bounds, constraint_upper_bounds);
 
   return retval;
 }
@@ -139,9 +139,9 @@ bool CrossoverSqpTNlp::get_starting_point(
  *@brief Evaluate the objective value
  */
 bool CrossoverSqpTNlp::eval_objective_value(int num_variables,
-                                       const double* primal_variables,
-                                       bool new_primal_variables,
-                                       double& objective_value)
+                                            const double* primal_variables,
+                                            bool new_primal_variables,
+                                            double& objective_value)
 {
   return sqp_tnlp_->eval_objective_value(num_variables, primal_variables,
                                          new_primal_variables, objective_value);
@@ -152,23 +152,23 @@ bool CrossoverSqpTNlp::eval_objective_value(int num_variables,
  *
  */
 bool CrossoverSqpTNlp::eval_constraint_values(int num_variables,
-                                         const double* primal_variables,
-                                         bool new_primal_variables,
-                                         int num_constraints,
-                                         double* constraint_values)
+                                              const double* primal_variables,
+                                              bool new_primal_variables,
+                                              int num_constraints,
+                                              double* constraint_values)
 {
-  return sqp_tnlp_->eval_constraint_values(
-      num_variables, primal_variables, new_primal_variables,
-      num_constraints, constraint_values);
+  return sqp_tnlp_->eval_constraint_values(num_variables, primal_variables,
+                                           new_primal_variables,
+                                           num_constraints, constraint_values);
 }
 
 /**
  *@brief Evaluate gradient at point x
  */
 bool CrossoverSqpTNlp::eval_objective_gradient(int num_variables,
-                                          const double* primal_variables,
-                                          bool new_primal_variables,
-                                          double* objective_gradient)
+                                               const double* primal_variables,
+                                               bool new_primal_variables,
+                                               double* objective_gradient)
 {
   return sqp_tnlp_->eval_objective_gradient(num_variables, primal_variables,
                                             new_primal_variables,
@@ -186,9 +186,8 @@ bool CrossoverSqpTNlp::eval_constraint_jacobian(
     int* row_indices, int* column_indices, double* nonzero_values)
 {
   return sqp_tnlp_->eval_constraint_jacobian(
-        num_variables, primal_variables, new_primal_variables, num_constraints,
-        num_nonzeros_jacobian, row_indices, column_indices,
-        nonzero_values);
+      num_variables, primal_variables, new_primal_variables, num_constraints,
+      num_nonzeros_jacobian, row_indices, column_indices, nonzero_values);
 }
 
 /**
@@ -204,9 +203,9 @@ bool CrossoverSqpTNlp::eval_lagrangian_hessian(
 {
   return sqp_tnlp_->eval_lagrangian_hessian(
       num_variables, primal_variables, new_primal_variables,
-      objective_scaling_factor, num_constraints,
-      constraint_multipliers, new_constraint_multipliers,
-      num_nonzeros_hessian, row_indices, column_indices, nonzero_values);
+      objective_scaling_factor, num_constraints, constraint_multipliers,
+      new_constraint_multipliers, num_nonzeros_hessian, row_indices,
+      column_indices, nonzero_values);
 }
 
 void CrossoverSqpTNlp::finalize_solution(
@@ -221,8 +220,8 @@ void CrossoverSqpTNlp::finalize_solution(
   sqp_tnlp_->finalize_solution(
       status, num_variables, primal_solution, bound_multipliers,
       bound_activity_status, num_constraints, constraint_values,
-      constraint_multipliers, constraint_activity_status,
-      objective_value, stats);
+      constraint_multipliers, constraint_activity_status, objective_value,
+      stats);
 
   // Allocate memory for the working sets
   if (!bound_activity_status_) {
@@ -236,8 +235,7 @@ void CrossoverSqpTNlp::finalize_solution(
     bound_activity_status_[i] = bound_activity_status[i];
   }
   for (int i = 0; i < num_constraints; i++) {
-    constraint_activity_status_[i] =
-        constraint_activity_status[i];
+    constraint_activity_status_[i] = constraint_activity_status[i];
   }
 
   // If this is the first solved problem, allocate memory for the starting point
@@ -249,8 +247,7 @@ void CrossoverSqpTNlp::finalize_solution(
 
     previous_optimal_solution_ = new double[num_variables_];
     previous_optimal_bound_multipliers_ = new double[num_variables_];
-    previous_optimal_constraint_multipliers_ =
-        new double[num_constraints_];
+    previous_optimal_constraint_multipliers_ = new double[num_constraints_];
   }
 
   // Copy the primal and dual solutions
@@ -259,8 +256,7 @@ void CrossoverSqpTNlp::finalize_solution(
     previous_optimal_bound_multipliers_[i] = bound_multipliers[i];
   }
   for (int i = 0; i < num_constraints; ++i) {
-    previous_optimal_constraint_multipliers_[i] =
-        constraint_multipliers[i];
+    previous_optimal_constraint_multipliers_[i] = constraint_multipliers[i];
   }
 }
 
@@ -284,11 +280,10 @@ bool CrossoverSqpTNlp::get_initial_working_sets(
     bounds_working_set[i] = bound_activity_status_[i];
   }
   for (int i = 0; i < num_constraints; i++) {
-    constraints_working_set[i] =
-        constraint_activity_status_[i];
+    constraints_working_set[i] = constraint_activity_status_[i];
   }
 
   return true;
 }
 
-}
+} // namespace RestartSqp

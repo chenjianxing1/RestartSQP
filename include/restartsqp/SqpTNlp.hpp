@@ -9,8 +9,8 @@
 
 #include "restartsqp/Statistics.hpp"
 #include "restartsqp/Types.hpp"
-#include <memory>
 #include <cassert>
+#include <memory>
 
 namespace RestartSqp {
 
@@ -24,14 +24,10 @@ class SqpTNlp
 
 public:
   /** @brief Default Constructor */
-  SqpTNlp()
-  {
-  }
+  SqpTNlp() {}
 
   /** Default destructor*/
-  virtual ~SqpTNlp()
-  {
-  }
+  virtual ~SqpTNlp() {}
 
   /** Method that returns the dimensions of the problem: double of variables,
    * constraints, nonzeros in the Jacobian and nonzeros on the Hessian. */
@@ -135,11 +131,12 @@ public:
 
   /** Set the initial working set. */
   virtual bool get_initial_working_sets(int num_variables,
-                                ActivityStatus* bounds_working_set,
-                                int num_constraints,
-                                ActivityStatus* constraints_working_set)
+                                        ActivityStatus* bounds_working_set,
+                                        int num_constraints,
+                                        ActivityStatus* constraints_working_set)
   {
-    assert("get_initial_working_sets not implemented, but use_initial_working_set returned true.");
+    assert("get_initial_working_sets not implemented, but "
+           "use_initial_working_set returned true.");
     return false;
   }
 
@@ -151,6 +148,6 @@ private:
   void operator=(const SqpTNlp&);
   //@}
 };
-}
+} // namespace RestartSqp
 
 #endif // SQPHOTSTART_SqpTnlp_HPP

@@ -162,6 +162,6 @@ private:
   double obj_value_;
   //@}
 };
-}
+} // namespace RestartSqp
 
 #endif // SQPHOTSTART_IpoptSqpNlp_HPP

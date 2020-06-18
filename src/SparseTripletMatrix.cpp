@@ -29,24 +29,25 @@ SparseTripletMatrix::SparseTripletMatrix(int nnz, int num_rows, int num_columns,
 }
 
 SparseTripletMatrix::SparseTripletMatrix(const SparseTripletMatrix& rhs)
-  : is_allocated_(rhs.is_allocated_)
-  , is_symmetric_(rhs.is_symmetric_)
-  , num_columns_(rhs.num_columns_)
-  , num_entries_(rhs.num_entries_)
-  , num_rows_(rhs.num_rows_)
+ : is_allocated_(rhs.is_allocated_)
+ , is_symmetric_(rhs.is_symmetric_)
+ , num_columns_(rhs.num_columns_)
+ , num_entries_(rhs.num_entries_)
+ , num_rows_(rhs.num_rows_)
 {
   assert(is_allocated_);
 
-  // Reserve space for the arrays (TODO: To save memory we could store the structure in a separate object)
+  // Reserve space for the arrays (TODO: To save memory we could store the
+  // structure in a separate object)
   values_ = new double[num_entries_];
   column_indices_ = new int[num_entries_];
   row_indices_ = new int[num_entries_];
 
-  std::copy(rhs.values_, rhs.values_+num_entries_, values_);
-  std::copy(rhs.column_indices_, rhs.column_indices_+num_entries_, column_indices_);
-  std::copy(rhs.row_indices_, rhs.row_indices_+num_entries_, row_indices_);
+  std::copy(rhs.values_, rhs.values_ + num_entries_, values_);
+  std::copy(rhs.column_indices_, rhs.column_indices_ + num_entries_,
+            column_indices_);
+  std::copy(rhs.row_indices_, rhs.row_indices_ + num_entries_, row_indices_);
 }
-
 
 SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
                                          int num_columns, bool row_oriented)
@@ -80,8 +81,8 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
       for (int i = 0; i < num_rows; i++) {
         for (int j = i; j < num_columns; j++) {
           if (data[i * num_columns + j] != 0.) {
-            nonzero_entries.push_back(make_tuple(
-                i, j, data[i * num_columns + j]));
+            nonzero_entries.push_back(
+                make_tuple(i, j, data[i * num_columns + j]));
             num_entries_++;
           }
         }
@@ -90,8 +91,8 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
       for (int i = 0; i < num_rows; i++)
         for (int j = 0; j < num_columns; j++) {
           if (data[i * num_columns + j] != 0.) {
-            nonzero_entries.push_back(make_tuple(
-                i, j, data[i * num_columns + j]));
+            nonzero_entries.push_back(
+                make_tuple(i, j, data[i * num_columns + j]));
             num_entries_++;
           }
         }
@@ -115,8 +116,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
       for (int i = 0; i < num_rows; i++) {
         for (int j = i; j < num_columns; j++) {
           if (data[j * num_rows + i] != 0.) {
-            nonzero_entries.push_back(
-                make_tuple(i, j, data[j * num_rows + i]));
+            nonzero_entries.push_back(make_tuple(i, j, data[j * num_rows + i]));
             num_entries_++;
           }
         }
@@ -125,8 +125,7 @@ SparseTripletMatrix::SparseTripletMatrix(const double* data, int num_rows,
       for (int i = 0; i < num_rows; i++)
         for (int j = 0; j < num_columns; j++) {
           if (data[j * num_rows + i] != 0.) {
-            nonzero_entries.push_back(
-                make_tuple(i, j, data[j * num_rows + i]));
+            nonzero_entries.push_back(make_tuple(i, j, data[j * num_rows + i]));
             num_entries_++;
           }
         }
@@ -206,13 +205,13 @@ void SparseTripletMatrix::print(const string& matrix_name,
                   matrix_name.c_str(), num_entries_);
     for (int i = 0; i < num_entries_; ++i) {
       jnlst->Printf(level, category, "%d %d %23.16e\n", row_indices_[i],
-                    column_indices_[i]+1, values_[i]+1);
+                    column_indices_[i] + 1, values_[i] + 1);
     }
   } else {
     printf("Matrix %s with %d nonzero elements:\n", matrix_name.c_str(),
            num_entries_);
     for (int i = 0; i < num_entries_; ++i) {
-      printf("%d %d %23.16e\n", row_indices_[i]+1, column_indices_[i]+1,
+      printf("%d %d %23.16e\n", row_indices_[i] + 1, column_indices_[i] + 1,
              values_[i]);
     }
   }
@@ -231,9 +230,11 @@ void SparseTripletMatrix::print_dense(const char* name,
   auto dense_matrix = new double[num_rows_ * num_columns_];
 
   for (int i = 0; i < num_entries_; i++) {
-    dense_matrix[num_columns_ * row_indices_[i] + column_indices_[i]] = values_[i];
+    dense_matrix[num_columns_ * row_indices_[i] + column_indices_[i]] =
+        values_[i];
     if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-      dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] = values_[i];
+      dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] =
+          values_[i];
   }
   if (!IsNull(jnlst)) {
     //    if (name != nullptr) {
@@ -296,23 +297,21 @@ void SparseTripletMatrix::multiply(shared_ptr<const Vector> p,
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i],
-            values_[i] * p->get_values()[column_indices_[i]]);
+            row_indices_[i], values_[i] * p->get_values()[column_indices_[i]]);
         if (row_indices_[i] != column_indices_[i]) {
-          result->add_number_to_element(
-              column_indices_[i],
-              values_[i] * p->get_values()[row_indices_[i]]);
+          result->add_number_to_element(column_indices_[i],
+                                        values_[i] *
+                                            p->get_values()[row_indices_[i]]);
         }
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i],
-            -values_[i] * p->get_values()[column_indices_[i]]);
+            row_indices_[i], -values_[i] * p->get_values()[column_indices_[i]]);
         if (row_indices_[i] != column_indices_[i]) {
-          result->add_number_to_element(
-              column_indices_[i],
-              -values_[i] * p->get_values()[row_indices_[i]]);
+          result->add_number_to_element(column_indices_[i],
+                                        -values_[i] *
+                                            p->get_values()[row_indices_[i]]);
         }
       }
     }
@@ -320,14 +319,12 @@ void SparseTripletMatrix::multiply(shared_ptr<const Vector> p,
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i],
-            values_[i] * p->get_values()[column_indices_[i]]);
+            row_indices_[i], values_[i] * p->get_values()[column_indices_[i]]);
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
         result->add_number_to_element(
-            row_indices_[i],
-            -values_[i] * p->get_values()[column_indices_[i]]);
+            row_indices_[i], -values_[i] * p->get_values()[column_indices_[i]]);
       }
     }
   }
@@ -363,15 +360,13 @@ void SparseTripletMatrix::multiply_transpose(shared_ptr<const Vector> p,
   } else {
     if (factor == 1.) {
       for (int i = 0; i < num_entries_; i++) {
-        result->add_number_to_element(column_indices_[i],
-                                      values_[i] *
-                                          p->get_values()[row_indices_[i]]);
+        result->add_number_to_element(
+            column_indices_[i], values_[i] * p->get_values()[row_indices_[i]]);
       }
     } else {
       for (int i = 0; i < num_entries_; i++) {
-        result->add_number_to_element(column_indices_[i],
-                                      -values_[i] *
-                                          p->get_values()[row_indices_[i]]);
+        result->add_number_to_element(
+            column_indices_[i], -values_[i] * p->get_values()[row_indices_[i]]);
       }
     }
   }
@@ -385,17 +380,19 @@ void SparseTripletMatrix::get_dense_matrix(double* dense_matrix,
   }
   if (row_oriented) {
     for (int i = 0; i < num_entries_; i++) {
-      dense_matrix[num_columns_ * row_indices_[i] +
-                   column_indices_[i]] = values_[i];
+      dense_matrix[num_columns_ * row_indices_[i] + column_indices_[i]] =
+          values_[i];
       if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-        dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] = values_[i];
+        dense_matrix[num_columns_ * column_indices_[i] + row_indices_[i]] =
+            values_[i];
     }
   } else {
     for (int i = 0; i < num_entries_; i++) {
       dense_matrix[num_rows_ * column_indices_[i] + row_indices_[i]] =
           values_[i];
       if (is_symmetric_ && row_indices_[i] != column_indices_[i])
-        dense_matrix[num_rows_ * row_indices_[i] + column_indices_[i]] = values_[i];
+        dense_matrix[num_rows_ * row_indices_[i] + column_indices_[i]] =
+            values_[i];
     }
   }
 }
@@ -403,4 +400,4 @@ void SparseTripletMatrix::get_dense_matrix(double* dense_matrix,
 /**
  * qpOASESSparseMatrix
  */
-}
+} // namespace RestartSqp

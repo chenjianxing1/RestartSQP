@@ -75,4 +75,4 @@ void Vector::write_to_file(FILE* file, const string& vector_name) const
     fprintf(file, "%5d %23.16e\n", i, values_[i]);
   }
 }
-}
+} // namespace RestartSqp

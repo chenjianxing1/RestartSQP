@@ -80,9 +80,7 @@ void QpOasesInterface::get_option_values_(SmartPtr<const OptionsList> options)
 }
 
 /**Default destructor*/
-QpOasesInterface::~QpOasesInterface()
-{
-}
+QpOasesInterface::~QpOasesInterface() {}
 
 QpSolverExitStatus QpOasesInterface::get_qpoases_exit_status_()
 {
@@ -488,4 +486,4 @@ void QpOasesInterface::retrieve_working_set_()
   delete[] tmp_W_c;
 }
 
-} // SQPHOTSTART
+} // namespace RestartSqp

@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-06
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 
 #include "restartsqp/LazySqpSolver.hpp"
 #include "restartsqp/MessageHandling.hpp"
@@ -242,8 +242,8 @@ int LazySqpSolver::update_considered_constraints_()
     retval = lazy_sqp_tnlp_->add_new_constraints(num_constraints_added,
                                                  constraints_to_add);
 
-    jnlst_->Printf(J_SUMMARY, J_MAIN, "\n%d constraints added:",
-                   num_constraints_added);
+    jnlst_->Printf(J_SUMMARY, J_MAIN,
+                   "\n%d constraints added:", num_constraints_added);
     for (int i = 0; i < num_constraints_added; ++i) {
       jnlst_->Printf(J_SUMMARY, J_MAIN, " %d", constraints_to_add[i]);
     }
@@ -262,4 +262,4 @@ int LazySqpSolver::update_considered_constraints_()
   return num_constraints_added;
 }
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp

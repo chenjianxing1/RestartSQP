@@ -26,8 +26,7 @@ SparseHbMatrix::SparseHbMatrix(int num_rows, int num_columns,
  , num_fixed_entries_(0)
  , fixed_entries_positions_(nullptr)
  , fixed_entries_values_(nullptr)
-{
-}
+{}
 
 /**
  *@brief A constructor with the number of non-zero entries, row number and
@@ -238,13 +237,13 @@ void SparseHbMatrix::add_triplet_to_element_list_(
 
   int counter = ele_list.size();
   for (int i = 0; i < num_entries_triplet; i++) {
-    ele_list.emplace_back(trip_row_indices[i], trip_column_indices[i],
-                          counter, 0.);
+    ele_list.emplace_back(trip_row_indices[i], trip_column_indices[i], counter,
+                          0.);
     counter++;
     if (is_symmetric_) {
       if (trip_row_indices[i] != trip_column_indices[i]) {
-        ele_list.emplace_back(trip_column_indices[i],
-                              trip_row_indices[i], counter, 0.);
+        ele_list.emplace_back(trip_column_indices[i], trip_row_indices[i],
+                              counter, 0.);
         counter++;
       } else {
         diagonal_is_set[trip_row_indices[i]] = true;
@@ -347,7 +346,7 @@ void SparseHbMatrix::set_structure_from_list_(
   if (num_fixed_entries_ > 0) {
     fixed_entries_positions_ = new int[num_fixed_entries_];
     fixed_entries_values_ = new double[num_fixed_entries_];
-    for (int i=0; i<num_fixed_entries_; ++i) {
+    for (int i = 0; i < num_fixed_entries_; ++i) {
       fixed_entries_positions_[i] = temp_fixed_positions_[i];
       fixed_entries_values_[i] = temp_fixed_values_[i];
     }
@@ -467,12 +466,12 @@ void SparseHbMatrix::set_values(
   // We do not want to make the assumption that there is only one entry
   // in the triplet structure for one matrix element.  So, we initialize
   // the entries all to zero and then add the values
-  for (int i=0; i < num_entries_; ++i) {
+  for (int i = 0; i < num_entries_; ++i) {
     values_[i] = 0.;
   }
 
   // Set the values for the fixed entries
-  for (int i=0; i<num_fixed_entries_; ++i) {
+  for (int i = 0; i < num_fixed_entries_; ++i) {
     values_[fixed_entries_positions_[i]] = fixed_entries_values_[i];
   }
 
@@ -507,17 +506,16 @@ void SparseHbMatrix::add_multiple_of_identity(double factor)
   if (is_compressed_row_format_) {
     i_short = row_indices_;
     i_long = column_indices_;
-  }
-  else {
+  } else {
     i_short = column_indices_;
     i_long = row_indices_;
   }
 
   // Loop over the rows (or columns) and add factor to each diagonal element
-  for (int i = 0; i<num_columns_; ++i) {
-    for (int j=i_short[i]; j<i_short[i+1]; ++j) {
+  for (int i = 0; i < num_columns_; ++i) {
+    for (int j = i_short[i]; j < i_short[i + 1]; ++j) {
       int k = i_long[j];
-      if (k==i) {
+      if (k == i) {
         values_[j] += factor;
       }
     }
@@ -962,4 +960,4 @@ void SparseHbMatrix::print(const char* name,
   }
 }
 //@}
-} // END_OF_NAMESPACE
+} // namespace RestartSqp

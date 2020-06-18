@@ -18,14 +18,10 @@ class IdentityMatrixPositions
 {
 public:
   /** Default constructor. */
-  IdentityMatrixPositions()
-  {
-  }
+  IdentityMatrixPositions() {}
 
   /** Destructor. */
-  ~IdentityMatrixPositions()
-  {
-  }
+  ~IdentityMatrixPositions() {}
 
   /** Add an identity matrix. */
   void add_matrix(int row_offset, int column_offset, int dimension,
@@ -413,6 +409,6 @@ private:
    *
    */
 };
-}
+} // namespace RestartSqp
 
 #endif

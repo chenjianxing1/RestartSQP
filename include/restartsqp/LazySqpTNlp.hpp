@@ -7,8 +7,8 @@
 #ifndef SQPHOTSTART_LAZYSQPTNLP_HPP
 #define SQPHOTSTART_LAZYSQPTNLP_HPP
 
-#include "restartsqp/SqpTNlp.hpp"
 #include "IpTNLP.hpp"
+#include "restartsqp/SqpTNlp.hpp"
 
 namespace RestartSqp {
 /**
@@ -34,7 +34,8 @@ public:
    *  This specifies the setset of constraints of the SqpTNlp provided in the
    *  constructor to be considered for the next solve. The indices start from 0.
    */
-  void set_considered_constraints(int num_constraints, const int* constraint_indices);
+  void set_considered_constraints(int num_constraints,
+                                  const int* constraint_indices);
 
   /**
    *@brief Get problem size information
@@ -194,6 +195,6 @@ private:
    *  There are only set of constraints that have been collected. */
   double* previous_optimal_constraint_multipliers_;
 };
-}
+} // namespace RestartSqp
 
 #endif // SQPHOTSTART_ShortenedSqpTNlp_HPP

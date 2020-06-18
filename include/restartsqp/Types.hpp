@@ -1,15 +1,16 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-06
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-06
+ */
 #ifndef SQPHOTSTART_TYPES_HPP
 #define SQPHOTSTART_TYPES_HPP
 
-// This is necessary for AW's current version of QtCreator (otherwise the error parser does not understand ostream correctly
-#include <ostream>
+// This is necessary for AW's current version of QtCreator (otherwise the error
+// parser does not understand ostream correctly
 #include "IpException.hpp"
+#include <ostream>
 
 /** Declaration of all non-built in types (except for classes) */
 
@@ -111,5 +112,5 @@ typedef struct
   bool Update_g = false;
   bool Update_bounds = false;
 } UpdateFlags;
-}
+} // namespace RestartSqp
 #endif /* SQPHOTSTART_TYPES_HPP*/

@@ -71,7 +71,7 @@ public:
    * Solve a new NLP with the active set method.
    */
   void solve(std::shared_ptr<SqpTNlp> sqp_tnlp,
-            const std::string& options_file_name = "sqp.opt");
+             const std::string& options_file_name = "sqp.opt");
 
   /**
    * ReOptimize a problem with the active set method, using the previous
@@ -115,8 +115,7 @@ public:
     return sqp_solver_->get_num_var();
   }
 
-  inline std::shared_ptr<const Vector>
-  get_current_primal_variables() const
+  inline std::shared_ptr<const Vector> get_current_primal_variables() const
   {
     return sqp_solver_->get_current_primal_variables();
   }
@@ -150,7 +149,8 @@ private:
   /** Register additional options for the restart solver. */
   void register_options_(Ipopt::SmartPtr<Ipopt::RegisteredOptions> reg_options);
 
-  /** Compute a scaling factor for the objective function for all the SQP solves. */
+  /** Compute a scaling factor for the objective function for all the SQP
+   * solves. */
   double determine_obj_scaling_factor_(IpoptSqpTNlp& ipopt_tnlp);
 
   /** Determine the set of active variable bounds and constraints.
@@ -212,6 +212,6 @@ private:
 
 }; // END_OF_ALG_CLASS
 
-} // END_NAMESPACE_SQPHOTSTART
+} // namespace RestartSqp
 
 #endif

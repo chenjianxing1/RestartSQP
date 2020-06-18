@@ -7,7 +7,8 @@
 #ifndef __SQPHOTSTART_QOREINTERFACE_HPP__
 #define __SQPHOTSTART_QOREINTERFACE_HPP__
 
-extern "C" {
+extern "C"
+{
 #include "qpsolver.h"
 }
 
@@ -70,10 +71,12 @@ private:
   /** Method for computing the working set from the most recent solve. */
   void retrieve_working_set_() override;
 
-  /** Method for getting the working set from the most recent solve, generic version. */
+  /** Method for getting the working set from the most recent solve, generic
+   * version. */
   void working_set_to_sqp_(ActivityStatus* bound_ws, ActivityStatus* constr_ws);
 
-  /** Copy the current working set from QORE into a backup in this object.  This is for debugging output. */
+  /** Copy the current working set from QORE into a backup in this object.  This
+   * is for debugging output. */
   void backup_working_set_();
 
   /** Output change in working set done by QORE. */
@@ -123,7 +126,6 @@ private:
   /** Backup of constraints working set before QORE solve for debug output. */
   ActivityStatus* backup_constraints_working_set_;
 
-
   /** @name Algorithmic options */
   //@{
   // Maximum number of QP iterations per QP solve
@@ -143,6 +145,6 @@ private:
   bool qore_dump_file_;
   //@}
 };
-}
+} // namespace RestartSqp
 
 #endif

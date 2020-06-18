@@ -9,9 +9,7 @@ using namespace Ipopt;
 using namespace std;
 using namespace RestartSqp;
 
-int main(
-   int argc,
-   char** args)
+int main(int argc, char** args)
 {
 #if 0
   // We do not do this yet.
@@ -56,7 +54,8 @@ int main(
 
   // Create a suffix handler for bound multipliers suffix ...
   SmartPtr<AmplSuffixHandler> suffix_handler = new AmplSuffixHandler();
-  suffix_handler->AddAvailableSuffix("bound_mult", AmplSuffixHandler::Variable_Source,
+  suffix_handler->AddAvailableSuffix("bound_mult",
+                                     AmplSuffixHandler::Variable_Source,
                                      AmplSuffixHandler::Number_Type);
 
   // ... and suffix for the activity status
@@ -64,28 +63,33 @@ int main(
   // -1: lower bound is active
   // -2: active equality constraints
   //  0: inactice
-  suffix_handler->AddAvailableSuffix("activity", AmplSuffixHandler::Variable_Source,
+  suffix_handler->AddAvailableSuffix("activity",
+                                     AmplSuffixHandler::Variable_Source,
                                      AmplSuffixHandler::Index_Type);
-  suffix_handler->AddAvailableSuffix("activity", AmplSuffixHandler::Constraint_Source,
+  suffix_handler->AddAvailableSuffix("activity",
+                                     AmplSuffixHandler::Constraint_Source,
                                      AmplSuffixHandler::Index_Type);
 
   // Create a suffix for the penalty parameter
   // This is used to carry the parameter from one solve to the next
-  suffix_handler->AddAvailableSuffix("penalty_parameter", AmplSuffixHandler::Objective_Source,
+  suffix_handler->AddAvailableSuffix("penalty_parameter",
+                                     AmplSuffixHandler::Objective_Source,
                                      AmplSuffixHandler::Number_Type);
 
-  // Create the NLP implementation of the AMPL solver interface, based on the one
-  // available from the Ipopt project.  This object has a few specialized methods for
-  // SQP-specific tasks
-  SmartPtr<IpoptAmplTNlp> ipopt_ampl_tnlp =
-      new IpoptAmplTNlp(ConstPtr(sqp_solver.get_jnlst()), sqp_solver.get_ipopt_options_list(), args, suffix_handler);
+  // Create the NLP implementation of the AMPL solver interface, based on the
+  // one available from the Ipopt project.  This object has a few specialized
+  // methods for SQP-specific tasks
+  SmartPtr<IpoptAmplTNlp> ipopt_ampl_tnlp = new IpoptAmplTNlp(
+      ConstPtr(sqp_solver.get_jnlst()), sqp_solver.get_ipopt_options_list(),
+      args, suffix_handler);
 
   // Create the SqpTNlp with the AMPL solver interface
-  shared_ptr<SqpAmplTNlp> sqp_ampl_tnlp = make_shared<SqpAmplTNlp>(ipopt_ampl_tnlp);
+  shared_ptr<SqpAmplTNlp> sqp_ampl_tnlp =
+      make_shared<SqpAmplTNlp>(ipopt_ampl_tnlp);
 
-  // We need to determine whether an initial active has been specified in the model.
-  // If not, we call the crossover method, otherwise, we call the regular SQP method
-  // (through the CrossoverSqpSolver)
+  // We need to determine whether an initial active has been specified in the
+  // model. If not, we call the crossover method, otherwise, we call the regular
+  // SQP method (through the CrossoverSqpSolver)
 
   bool use_initial_working_set = sqp_ampl_tnlp->use_initial_working_set();
   printf("use_initial_working_set = %d\n", use_initial_working_set);
@@ -93,10 +97,10 @@ int main(
   if (!use_initial_working_set) {
     printf("Calling crossover solver for initial solve.\n");
     sqp_solver.crossover_solve(sqp_ampl_tnlp);
-  }
-  else {
+  } else {
     // Get the last penalty parameter
-    double initial_penalty_parameter = sqp_ampl_tnlp->get_initial_penalty_parameter();
+    double initial_penalty_parameter =
+        sqp_ampl_tnlp->get_initial_penalty_parameter();
 
     // Set it as an option
     SmartPtr<OptionsList> options = sqp_solver.get_options_list();
@@ -136,6 +140,5 @@ int main(
    // finalize_solution method in AmplTNLP writes the solution file
 #endif
 
-   return 0;
+  return 0;
 }
-

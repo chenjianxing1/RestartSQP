@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-07
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #include "restartsqp/SqpIpoptTNlp.hpp"
 #include <cassert>
 
@@ -16,17 +16,15 @@ namespace RestartSqp {
 SqpIpoptTNlp::SqpIpoptTNlp(SmartPtr<TNLP> ipopt_tnlp, const string& nlp_name)
  : ipopt_tnlp_(ipopt_tnlp)
  , nlp_name_(nlp_name)
-{
-}
+{}
 
 /** Default constructor*/
-SqpIpoptTNlp::~SqpIpoptTNlp()
-{
-}
+SqpIpoptTNlp::~SqpIpoptTNlp() {}
 
 bool SqpIpoptTNlp::get_nlp_info(int& num_variables, int& num_constraints,
-                               int& num_nonzeros_jacobian,
-                               int& num_nonzeros_hessian, std::string& nlp_name)
+                                int& num_nonzeros_jacobian,
+                                int& num_nonzeros_hessian,
+                                std::string& nlp_name)
 {
   bool retval;
   retval = ipopt_tnlp_->get_nlp_info(num_variables, num_constraints,
@@ -41,11 +39,11 @@ bool SqpIpoptTNlp::get_nlp_info(int& num_variables, int& num_constraints,
  *@brief get the bounds information from the NLP object
  */
 bool SqpIpoptTNlp::get_bounds_info(int num_variabes,
-                                  double* variable_lower_bounds,
-                                  double* variable_upper_bounds,
-                                  int num_constraints,
-                                  double* constraint_lower_bounds,
-                                  double* constraint_upper_bounds)
+                                   double* variable_lower_bounds,
+                                   double* variable_upper_bounds,
+                                   int num_constraints,
+                                   double* constraint_lower_bounds,
+                                   double* constraint_upper_bounds)
 {
   bool retval;
   retval = ipopt_tnlp_->get_bounds_info(
@@ -118,9 +116,9 @@ bool SqpIpoptTNlp::get_starting_point(
  *@brief Evaluate the objective value
  */
 bool SqpIpoptTNlp::eval_objective_value(int num_variables,
-                                       const double* primal_variables,
-                                       bool new_primal_variables,
-                                       double& objective_value)
+                                        const double* primal_variables,
+                                        bool new_primal_variables,
+                                        double& objective_value)
 {
   return ipopt_tnlp_->eval_f(num_variables, primal_variables,
                              new_primal_variables, objective_value);
@@ -130,9 +128,9 @@ bool SqpIpoptTNlp::eval_objective_value(int num_variables,
  *@brief Evaluate gradient at point x
  */
 bool SqpIpoptTNlp::eval_objective_gradient(int num_variables,
-                                          const double* primal_variables,
-                                          bool new_primal_variables,
-                                          double* objective_gradient)
+                                           const double* primal_variables,
+                                           bool new_primal_variables,
+                                           double* objective_gradient)
 {
   return ipopt_tnlp_->eval_grad_f(num_variables, primal_variables,
                                   new_primal_variables, objective_gradient);
@@ -143,10 +141,10 @@ bool SqpIpoptTNlp::eval_objective_gradient(int num_variables,
  *
  */
 bool SqpIpoptTNlp::eval_constraint_values(int num_variables,
-                                         const double* primal_variables,
-                                         bool new_primal_variables,
-                                         int num_constraints,
-                                         double* constraint_values)
+                                          const double* primal_variables,
+                                          bool new_primal_variables,
+                                          int num_constraints,
+                                          double* constraint_values)
 {
   return ipopt_tnlp_->eval_g(num_variables, primal_variables,
                              new_primal_variables, num_constraints,
@@ -169,9 +167,9 @@ bool SqpIpoptTNlp::eval_constraint_jacobian(
 
   // Adjust numbering if necessary;
   if (retval && row_indices && index_style_ == TNLP::FORTRAN_STYLE) {
-    for (int i=0; i<num_nonzeros_jacobian; ++i) {
-      row_indices[i]-=1;
-      column_indices[i]-=1;
+    for (int i = 0; i < num_nonzeros_jacobian; ++i) {
+      row_indices[i] -= 1;
+      column_indices[i] -= 1;
     }
   }
 
@@ -209,9 +207,9 @@ bool SqpIpoptTNlp::eval_lagrangian_hessian(
 
   // Adjust numbering if necessary;
   if (retval && row_indices && index_style_ == TNLP::FORTRAN_STYLE) {
-    for (int i=0; i<num_nonzeros_hessian; ++i) {
-      row_indices[i]-=1;
-      column_indices[i]-=1;
+    for (int i = 0; i < num_nonzeros_hessian; ++i) {
+      row_indices[i] -= 1;
+      column_indices[i] -= 1;
     }
   }
 
@@ -280,4 +278,4 @@ void SqpIpoptTNlp::finalize_solution(
   delete[] lambda;
 }
 
-}
+} // namespace RestartSqp

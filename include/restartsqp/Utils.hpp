@@ -32,5 +32,5 @@ double get_cpu_time_since_start();
 /** Get wallclock clock time since start. */
 double get_wallclock_time_since_start();
 
-} // namespace SQPhotstart
+} // namespace RestartSqp
 #endif

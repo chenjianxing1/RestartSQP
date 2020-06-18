@@ -362,4 +362,4 @@ void QpSolverInterface::write_qp_data_to_file(const string& filename)
   fclose(file);
 }
 
-} // SQPHOTSTART
+} // namespace RestartSqp

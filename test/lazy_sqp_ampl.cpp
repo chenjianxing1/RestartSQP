@@ -1,12 +1,12 @@
 #include "AmplTNLP.hpp"
 #include "IpIpoptApplication.hpp"
 #include "IpTNLP.hpp"
+#include "restartsqp/LazySqpSolver.hpp"
+#include "restartsqp/SqpIpoptTNlp.hpp"
+#include "restartsqp/Utils.hpp"
 #include <cstddef>
 #include <iostream>
 #include <memory>
-#include "restartsqp/SqpIpoptTNlp.hpp"
-#include "restartsqp/LazySqpSolver.hpp"
-#include "restartsqp/Utils.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -94,12 +94,10 @@ int main(int argc, char** args)
   int num_constraints;
   int num_nonzeros_jacobian;
   int num_nonzeros_hessian;
-  sqp_nlp->get_nlp_info(num_variables, num_constraints,
-                        num_nonzeros_jacobian,
-                        num_nonzeros_hessian,
-                        nlp_name);
+  sqp_nlp->get_nlp_info(num_variables, num_constraints, num_nonzeros_jacobian,
+                        num_nonzeros_hessian, nlp_name);
 
-  assert(num_constraints>0);
+  assert(num_constraints > 0);
 
   // Memory for the initially chosen constraints
   int num_initial_constraints; // num_constraints;
@@ -114,11 +112,11 @@ int main(int argc, char** args)
   const ActivityStatus* constraint_activity_status =
       crossover.get_constraints_working_set();
   num_initial_constraints = 0;
-  for (int i=0; i<num_constraints; ++i) {
-    //printf("activity %d = %d\n", i, constraint_activity_status[i]);
+  for (int i = 0; i < num_constraints; ++i) {
+    // printf("activity %d = %d\n", i, constraint_activity_status[i]);
     if (constraint_activity_status[i] != INACTIVE) {
-      constraint_indices[num_initial_constraints] = i+1;
-      //printf("num_initial_constraints = %d\n", num_initial_constraints);
+      constraint_indices[num_initial_constraints] = i + 1;
+      // printf("num_initial_constraints = %d\n", num_initial_constraints);
       num_initial_constraints++;
     }
   }
@@ -130,8 +128,8 @@ int main(int argc, char** args)
 #else
   // Set the initial number of constraints
   num_initial_constraints = 1; // num_constraints;
-  for (int i=0; i<num_initial_constraints; ++i) {
-    constraint_indices[i] = i+1;
+  for (int i = 0; i < num_initial_constraints; ++i) {
+    constraint_indices[i] = i + 1;
   }
 #endif
 
@@ -145,7 +143,7 @@ int main(int argc, char** args)
   writer->write_in_brief(args[1], alg);
 #endif
 
-  delete [] constraint_indices;
+  delete[] constraint_indices;
 
   return 0;
 }

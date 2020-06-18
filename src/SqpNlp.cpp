@@ -1,9 +1,9 @@
 /* Copyright (C) 2019
-* All Rights Reserved.
-*
-* Authors: Xinyi Luo
-* Date:2019-07
-*/
+ * All Rights Reserved.
+ *
+ * Authors: Xinyi Luo
+ * Date:2019-07
+ */
 #include "restartsqp/SqpNlp.hpp"
 
 using namespace std;
@@ -20,9 +20,7 @@ SqpNlp::SqpNlp(std::shared_ptr<SqpTNlp> sqp_tnlp)
 }
 
 /** Default constructor*/
-SqpNlp::~SqpNlp()
-{
-}
+SqpNlp::~SqpNlp() {}
 
 shared_ptr<const SqpNlpSizeInfo> SqpNlp::get_problem_sizes()
 {
@@ -110,9 +108,9 @@ bool SqpNlp::get_starting_point(shared_ptr<Vector> primal_point,
     init_constraint_multipliers = true;
   }
   return sqp_tnlp_->get_starting_point(
-      num_variables_, true, primal_point->get_non_const_values(), init_bound_multipliers,
-      bound_mult_values, num_constraints_, init_constraint_multipliers,
-      constr_mult_values);
+      num_variables_, true, primal_point->get_non_const_values(),
+      init_bound_multipliers, bound_mult_values, num_constraints_,
+      init_constraint_multipliers, constr_mult_values);
 }
 
 /**
@@ -196,9 +194,9 @@ bool SqpNlp::eval_hessian(shared_ptr<const Vector> x,
                           shared_ptr<SparseTripletMatrix> Hessian)
 {
   return sqp_tnlp_->eval_lagrangian_hessian(
-      num_variables_, x->get_values(), true, objective_scaling_factor, num_constraints_,
-      lambda->get_values(), true, num_nonzeros_hessian_, NULL, NULL,
-      Hessian->get_nonconst_values());
+      num_variables_, x->get_values(), true, objective_scaling_factor,
+      num_constraints_, lambda->get_values(), true, num_nonzeros_hessian_, NULL,
+      NULL, Hessian->get_nonconst_values());
 }
 
 void SqpNlp::finalize_solution(SqpSolverExitStatus status,
@@ -226,4 +224,4 @@ void SqpNlp::finalize_solution(SqpSolverExitStatus status,
       status, n, x, bound_mults, bound_activity_status, m, constr_vals,
       constr_mults, constraint_activity_status, objective_value, stats);
 }
-}
+} // namespace RestartSqp

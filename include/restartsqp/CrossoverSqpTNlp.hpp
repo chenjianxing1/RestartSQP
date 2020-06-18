@@ -7,8 +7,8 @@
 #ifndef SQPHOTSTART_CROSSOVERSQPTNLP_HPP
 #define SQPHOTSTART_CROSSOVERSQPTNLP_HPP
 
-#include "restartsqp/SqpTNlp.hpp"
 #include "IpTNLP.hpp"
+#include "restartsqp/SqpTNlp.hpp"
 
 namespace RestartSqp {
 /**
@@ -162,6 +162,6 @@ private:
    *  There are only set of constraints that have been collected. */
   double* previous_optimal_constraint_multipliers_;
 };
-}
+} // namespace RestartSqp
 
 #endif // SQPHOTSTART_ShortenedSqpTNlp_HPP

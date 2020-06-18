@@ -308,5 +308,5 @@ private:
   /** Array with the elements of the vector. */
   double* values_;
 };
-}
+} // namespace RestartSqp
 #endif
