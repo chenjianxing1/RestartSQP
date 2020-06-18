@@ -9,13 +9,6 @@
 
 #include "IpOptionsList.hpp"
 
-#ifdef DEBUG
-#ifdef COMPARE_QP_SOLVER
-#include "restartsqp/QoreInterface.hpp"
-#include "restartsqp/QpOasesInterface.hpp"
-#endif
-#endif
-
 namespace RestartSqp {
 
 /** Class for storing which quantities in a QP need to be updated. */

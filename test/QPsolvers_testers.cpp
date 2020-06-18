@@ -9,11 +9,14 @@ extern "C"
 
 #include "restartsqp/MessageHandling.hpp"
 #include "restartsqp/QoreInterface.hpp"
-#include "restartsqp/QpOasesInterface.hpp"
 #include "restartsqp/SparseHbMatrix.hpp"
 #include "restartsqp/SqpSolver.hpp"
 #include "restartsqp/Vector.hpp"
 #include <memory>
+
+#ifdef USE_QPOASES
+#include "restartsqp/QpOasesInterface.hpp"
+#endif
 
 using namespace RestartSqp;
 using namespace std;
@@ -327,6 +330,8 @@ int main(int argc, char* argv[])
       exitflag_qore = "UNKNOWN";
   }
 
+  // TODO: FIgure out if to keep this
+#ifdef USE_QPOASES
   ///////////////////////////////////////////////////////////
   //                     QPOASES                           //
   ///////////////////////////////////////////////////////////
@@ -459,6 +464,7 @@ int main(int argc, char* argv[])
   printf(DOUBLE_LONG_DIVIDER);
 
   delete pname;
+#endif
   fclose(file);
   return 0;
 }

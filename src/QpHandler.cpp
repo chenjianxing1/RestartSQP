@@ -7,7 +7,10 @@
 #include "restartsqp/QpHandler.hpp"
 #include "IpOptionsList.hpp"
 #include "restartsqp/QoreInterface.hpp"
+
+#ifdef USE_QPOASES
 #include "restartsqp/QpOasesInterface.hpp"
+#endif
 
 using namespace std;
 using namespace Ipopt;
@@ -76,9 +79,14 @@ QpHandler::QpHandler(shared_ptr<const SqpNlpSizeInfo> nlp_sizes, QPType qptype,
   // Create solver objects
   switch (qp_solver_) {
     case QPOASES:
+#ifdef USE_QPOASES
       qp_solver_interface_ = make_shared<QpOasesInterface>(
           num_qp_variables_, num_qp_constraints_, qptype, options, jnlst);
       break;
+#else
+      jnlst_->Printf(J_ERROR, J_MAIN, "ERROR: qpOASES chosen as QP solver but is not available.\n");
+      THROW_EXCEPTION(SQP_EXCEPTION_INVALID_OPTION, "qpOASES chosen but not available.")
+#endif
     case QORE:
       qp_solver_interface_ = make_shared<QoreInterface>(
           num_qp_variables_, num_qp_constraints_, qptype, options, jnlst);

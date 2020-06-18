@@ -25,7 +25,7 @@ option(Debug "Turn on debug mode" OFF)
 
 option(Qore "Link to QORE libraries" ON)
 
-option(qpOASES "Link to qpOASES libraries" ON)
+option(qpOASES "Link to qpOASES libraries" OFF)
 
 ########################################################################
 ## Get QORE

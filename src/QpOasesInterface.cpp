@@ -4,6 +4,12 @@
  * Authors: Xinyi Luo
  * Date:    2019-07
  */
+
+/* Only compile this file if qpOASES is available.
+ * TODO: Do not include this source file in the make. */
+
+#ifdef USE_QPOASES
+
 #include "restartsqp/QpOasesInterface.hpp"
 #include "restartsqp/MessageHandling.hpp"
 
@@ -487,3 +493,5 @@ void QpOasesInterface::retrieve_working_set_()
 }
 
 } // namespace RestartSqp
+
+#endif

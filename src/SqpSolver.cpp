@@ -124,8 +124,10 @@ void SqpSolver::initialize_options_(const string& options_file_name,
     try {
       ifstream is;
       is.open(options_file_name.c_str());
-      bool allow_clobber = true; // The file can overwrite
-      options_->ReadFromStream(*jnlst_, is, allow_clobber);
+      if (is) {
+        bool allow_clobber = true; // The file can overwrite
+        options_->ReadFromStream(*jnlst_, is, allow_clobber);
+      }
     } catch (...) {
       jnlst_->Printf(J_ERROR, J_MAIN, "Error readling options file.");
       assert(false && "Need to add proper exit for this");
