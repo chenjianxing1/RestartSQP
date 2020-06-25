@@ -401,12 +401,12 @@ void CrossoverSqpSolver::crossover_solve(shared_ptr<SqpTNlp> sqp_tnlp,
   // to be a warm start, independent of any options.
   sqp_solver_->force_warm_start();
 
-  // Now call the SQP solver to get the active-set solution for this problem
-  const string local_options_file_name = ""; // CK: this is a duplicate of the
-                                             // function argument, which clang++
-                                             // rejects
+  // Now call the SQP solver to get the active-set solution for this problem.
+  // We don't want to read the options file again.
+  const string empty_options_file_name = "";
+  // And we want to keep writing into the same output file.
   bool keep_output_file = true;
-  sqp_solver_->optimize_nlp(init_solve_tnlp, local_options_file_name,
+  sqp_solver_->optimize_nlp(init_solve_tnlp, empty_options_file_name,
                             keep_output_file);
 
   // Check if the optimization was conclude successfully

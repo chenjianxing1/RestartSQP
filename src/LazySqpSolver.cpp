@@ -155,8 +155,13 @@ void LazySqpSolver::optimize_nlp(shared_ptr<SqpTNlp> orig_sqp_tnlp,
       break;
     }
 
-    // Solve the augmented NLP
-    crossover_sqp_solver_->solve(lazy_sqp_tnlp_);
+    // Make sure that the previous working set is used
+    crossover_sqp_solver_->force_warm_start();
+    // Do not reread the options file
+    const string empty_options_file_name = "";
+    // Solve the model (we cannot call the "resolve" method since the size
+    // of the NLP has changed.
+    crossover_sqp_solver_->solve(lazy_sqp_tnlp_, empty_options_file_name);
   }
 }
 

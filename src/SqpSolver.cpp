@@ -137,7 +137,13 @@ void SqpSolver::initialize_options_(const string& options_file_name,
   // If not file has been opened yet, reset keep_output_file name to
   // false since there is no output file to keep
   if (current_output_file_name_ == "") {
-    keep_output_file = false;
+    // Check if maybe a file journal has already been opened earlier.
+    // For example, in the crossover solver, the file journal might have
+    // been opened already and we do not want to reopen it.
+    SmartPtr<Journal> file_journal = jnlst_->GetJournal("output_file");
+    if (IsNull(file_journal)) {
+      keep_output_file = false;
+    }
   }
 
   if (!keep_output_file) {

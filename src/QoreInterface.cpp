@@ -11,6 +11,9 @@ using namespace Ipopt;
 
 namespace RestartSqp {
 
+// We keep a global variable here as a counter for the dump files
+static int dump_file_number = 1;
+
 QoreInterface::QoreInterface(int num_qp_variables, int num_qp_constraints,
                              QPType qp_type,
                              SmartPtr<const OptionsList> options,
@@ -67,11 +70,15 @@ void QoreInterface::create_qore_solver_(int num_nnz_jacobian,
   }
 
   if (qore_dump_file_) {
+    string filename;
     if (qp_type_ == QP_TYPE_LP) {
-      QPOpenDumpFile(qore_solver_, "qore_dumpfile_lp.csv");
-    } else {
-      QPOpenDumpFile(qore_solver_, "qore_dumpfile_qp.csv");
+      filename = "qore_dumpfile_lp_"+std::to_string(dump_file_number)+".csv";
     }
+    else {
+      filename = "qore_dumpfile_qp_"+std::to_string(dump_file_number)+".csv";
+    }
+    QPOpenDumpFile(qore_solver_, filename.c_str());
+    dump_file_number++;
   }
 
   // Set the options in the QORE object
@@ -124,6 +131,7 @@ static qp_int workingset_sqp_to_qore(ActivityStatus status_sqp)
     default:
       assert("Invalid working set flag" && false);
   }
+  return -2;
 }
 
 /**
@@ -409,6 +417,7 @@ static string act_to_str(ActivityStatus stat)
       return "inact";
   }
   assert(false && "include stat in string translation.");
+  return "should not get here";
 }
 
 void QoreInterface::print_working_set_differences_()
@@ -433,14 +442,14 @@ void QoreInterface::print_working_set_differences_()
       if (lower_variable_bounds_->get_value(i) <
           upper_variable_bounds_->get_value(i)) {
         num_bound_act_changes++;
+        jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                       "%5d  Var %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n",
+                       num_bound_act_changes, i,
+                       act_to_str(backup_bounds_working_set_[i]).c_str(),
+                       act_to_str(bounds_working_set_[i]).c_str(),
+                       lower_variable_bounds_->get_value(i),
+                       upper_variable_bounds_->get_value(i));
       }
-      jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     "%5d  Var %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n",
-                     num_bound_act_changes, i,
-                     act_to_str(backup_bounds_working_set_[i]).c_str(),
-                     act_to_str(bounds_working_set_[i]).c_str(),
-                     lower_variable_bounds_->get_value(i),
-                     upper_variable_bounds_->get_value(i));
     }
   }
 
@@ -449,14 +458,14 @@ void QoreInterface::print_working_set_differences_()
       if (lower_constraint_bounds_->get_value(i) <
           upper_constraint_bounds_->get_value(i)) {
         num_constr_act_changes++;
+        jnlst_->Printf(J_MOREDETAILED, J_MAIN,
+                       "%5d  Con %5d at %s becomes %s (lb=%23.16e ub=%23.16e)\n",
+                       num_constr_act_changes, i,
+                       act_to_str(backup_constraints_working_set_[i]).c_str(),
+                       act_to_str(constraints_working_set_[i]).c_str(),
+                       lower_constraint_bounds_->get_value(i),
+                       upper_constraint_bounds_->get_value(i));
       }
-      jnlst_->Printf(J_MOREDETAILED, J_MAIN,
-                     "%5d  Con %5d at %s becomes %s (lb=%15.8e ub=%15.8e)\n",
-                     num_constr_act_changes, i,
-                     act_to_str(backup_constraints_working_set_[i]).c_str(),
-                     act_to_str(constraints_working_set_[i]).c_str(),
-                     lower_constraint_bounds_->get_value(i),
-                     upper_constraint_bounds_->get_value(i));
     }
   }
 

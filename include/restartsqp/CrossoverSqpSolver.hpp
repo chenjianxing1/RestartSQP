@@ -141,6 +141,14 @@ public:
     return sqp_solver_->get_constraints_working_set();
   }
 
+  /* Calling this method will force the use of a warm start, no matter
+   * what the options are.  This is used when the SQP algorithm is called
+   * for the cross over after the active set is guessed from Ipopt solution. */
+  inline void force_warm_start()
+  {
+    sqp_solver_->force_warm_start();
+  }
+
   //@}
   ///////////////////////////////////////////////////////////
   //                      PRIVATE METHODS                  //

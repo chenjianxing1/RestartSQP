@@ -4,6 +4,8 @@ MESSAGE( "Looking for Ipopt in ${COIN_DIR}" )
 
 FIND_PACKAGE( PkgConfig REQUIRED )
 SET( PKG_CONFIG_USE_CMAKE_PREFIX_PATH 1 )
+# THE FOLLOWING DOES NOT SEEM TO WORK!!!!
+# pkg_config takes the environment variable
 SET ( CMAKE_PREFIX_PATH ${COIN_DIR}/lib/pkgconfig )
 
 ### Look for the Ipopt libraries
