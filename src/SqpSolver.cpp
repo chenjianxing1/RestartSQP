@@ -1021,14 +1021,18 @@ void SqpSolver::initialize_iterates_()
                                        init_constraint_activities_);
 
     // Let's count the number of active bounce to make sure there are not too
-    // many
+    // many.  Also make sure that primal and dual variables are set accordingly.
     int num_active_lower_var = 0;
     int num_active_upper_var = 0;
     for (int i = 0; i < num_variables_; ++i) {
       if (init_bound_activities_[i] == ACTIVE_BELOW) {
         num_active_lower_var++;
+        current_iterate_->set_value(i, lower_variable_bounds_->get_value(i));
       } else if (init_bound_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_var++;
+        current_iterate_->set_value(i, upper_variable_bounds_->get_value(i));
+      } else {
+        current_bound_multipliers_->set_value(i, 0.);
       }
     }
     // Count the number of active inequality constraints
@@ -1044,6 +1048,8 @@ void SqpSolver::initialize_iterates_()
         num_active_lower_con++;
       } else if (init_constraint_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_con++;
+      } else {
+        current_constraint_multipliers_->set_value(i, 0.);
       }
     }
 
@@ -1135,7 +1141,8 @@ void SqpSolver::compute_initial_values_()
     watchdog_sleep_iterations_ = 0;
   }
 
-  // We need to make sure that complementarity holds for the multipliers
+#if 0
+  // TODO: Do we need to enforce complementarity when working set is not given?
   for (int i = 0; i < num_variables_; ++i) {
     if (current_iterate_->get_value(i) > lower_variable_bounds_->get_value(i)) {
       current_bound_multipliers_->set_value(
@@ -1158,7 +1165,9 @@ void SqpSolver::compute_initial_values_()
           i, max(0., current_constraint_multipliers_->get_value(i)));
     }
   }
+#endif
 }
+
 void SqpSolver::initialize_qp_solvers_()
 {
   // Determine the problem size
@@ -1968,7 +1977,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "starting_mode", "Specifies how much starting information is available.",
       "primal-dual", "primal", "only primal point is provided", "primal-dual",
       "primal and dual variables are provided.", "warm-start",
-      "primal-dual starting point and intial working set is provided.");
+      "primal-dual starting point and initial working set is provided.");
 
   reg_options->SetRegisteringCategory("Trust-region");
   reg_options->AddBoundedNumberOption(
