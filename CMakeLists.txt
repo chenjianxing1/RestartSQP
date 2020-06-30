@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # CK: This avoids the use of __cxx11 and __1 inline namespaces with STL data types
 if(APPLE)
-  ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
+  ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=1)
 ENDIF()
 
 LIST( APPEND CMAKE_MODULE_PATH
