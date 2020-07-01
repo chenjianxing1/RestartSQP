@@ -129,7 +129,7 @@ void SqpSolver::initialize_options_(const string& options_file_name,
         options_->ReadFromStream(*jnlst_, is, allow_clobber);
       }
     } catch (...) {
-      jnlst_->Printf(J_ERROR, J_MAIN, "Error readling options file.");
+      jnlst_->Printf(J_ERROR, J_MAIN, "Error reading options file.");
       assert(false && "Need to add proper exit for this");
     }
   }
@@ -2141,17 +2141,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                 "QP solver used for step computation.", "qore",
                                 "qpoases", "", "qore", "");
 
-  //    reg_options->AddStringOption("QPsolverChoice",
-  //		    "The choice of QP solver which will be used in the
-  // Algorithm",
-  //		    "qpOASES");
 
-  reg_options->SetRegisteringCategory("LPsolver");
-  //    reg_options->AddStringOption("LPsolverChoice",
-  //		    "The choice of LP solver which will be used in the
-  // Algorithm",
-  //		    "qpOASES");
-
+  // add QORE's special options
   reg_options->AddStringOption2(
       "qore_init_primal_variables",
       "Specifies whether QORE should initialize "
@@ -2159,6 +2150,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "penatly variables) to zero.",
       "no", "no", "reuse the internal solution from the most recent solve.",
       "yes", "initialize the values to zero.");
+
   reg_options->AddLowerBoundedNumberOption(
       "qore_hessian_regularization", "Regularization parameter for the QP", 0.,
       false, 0., "Number that is added to the diagonal of the QP Hessian");
@@ -2166,6 +2158,35 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "qore_dump_file", "Indicates whether QORE should write a dump file.",
       "no", "no", "Do not write dump file.", "yes",
       "Write dump files (for QP and LP separately).");
+
+  reg_options->AddStringOption4("qore_linear_solver",
+                                "Linear subsystem solver to use in QORE", "auto",
+                                "auto", "", "umfpack", "", "ma27", "", "ma57", "");
+  reg_options->AddStringOption6("qore_umfpack_ordering",
+                                "UMFPACK ordering strategy to use in QORE", "cholmod",
+                                "cholmod", "", "amd", "", "-", "forbidden", "metis", "", "best", "", "none", "");
+  reg_options->AddStringOption6("qore_ma57_ordering",
+                                "MA57 ordering strategy to use in QORE", "amd",
+                                "amd", "", "-", "forbidden", "amd-dense", "", "mindeg", "", "metis", "", "auto", "");
+  reg_options->AddBoundedNumberOption("qore_basis_repair_tol",
+                                      "QORE relative tolerance for cutting off near-zero pivots during basis repair",
+                                      0., true, 1.0e-4, true, 1.0e-14,
+                                      "If pivot < qore_basis_repair_tol * max_pivot, it is considered signular and will be repaired." );
+  reg_options->AddBoundedNumberOption("qore_linear_solver_pivot_tol",
+                                      "UMFPACK and MA57 threshold pivoting tolerance",
+                                      0., true, 1.0, true, 0.1,
+                                      "Please see the UMFPACK and MA57 user manuals.");
+  reg_options->AddBoundedNumberOption("qore_linear_solver_drop_tol",
+                                      "UMFPACK and MA57 near-zero element dtop tolerance",
+                                      0., true, 1.0, true, 2.22e-16,
+                                      "Please see the UMFPACK and MA57 user manuals.");
+  reg_options->AddBoundedNumberOption("qore_ma27_pivot_tol",
+                                      "MA27 threshold pivoting tolerance",
+                                      0., true, 0.5, true, 0.1,
+                                      "Please see the MA27 user manual.");
+
+  reg_options->SetRegisteringCategory("LPsolver");
+
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);

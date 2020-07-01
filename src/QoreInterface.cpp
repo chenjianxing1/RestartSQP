@@ -93,11 +93,22 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
   options->GetIntegerValue("qp_solver_print_level", qp_solver_print_level_, "");
   options->GetIntegerValue("lp_solver_max_num_iterations",
                            lp_solver_max_num_iterations_, "");
+
   options->GetBoolValue("qore_init_primal_variables",
                         qore_init_primal_variables_, "");
   options->GetNumericValue("qore_hessian_regularization",
                            qore_hessian_regularization_, "");
   options->GetBoolValue("qore_dump_file", qore_dump_file_, "");
+
+  options->GetBoolValue("qore_init_primal_variables", qore_init_primal_variables_,
+                           "");
+  options->GetEnumValue("qore_linear_solver", qp_solver_linear_solver_, "");
+  options->GetEnumValue("qore_umfpack_ordering", qore_umfpack_ordering_, "");
+  options->GetEnumValue("qore_ma57_ordering", qore_ma57_ordering_, "");
+  options->GetNumericValue ("qore_basis_repair_tol", qp_solver_basis_repair_tol_, "");
+  options->GetNumericValue ("qore_linear_solver_pivot_tol", qore_linear_solver_pivot_tol_, "");
+  options->GetNumericValue ("qore_linear_solver_drop_tol", qore_linear_solver_drop_tol_, "");
+  options->GetNumericValue ("qore_ma27_pivot_tol", qore_ma27_pivot_tol_, "");
 }
 
 /**
@@ -106,6 +117,7 @@ void QoreInterface::get_option_values_(SmartPtr<const OptionsList> options)
 QoreInterface::~QoreInterface()
 {
   if (qore_solver_) {
+    QPPrintTiming (qore_solver_, 0);
     QPFree(&qore_solver_);
   }
 
@@ -553,6 +565,8 @@ void QoreInterface::retrieve_working_set_()
 void QoreInterface::set_qp_solver_options_()
 {
   int value;
+  double dvalue;
+
   if (qp_solver_print_level_ == 0) {
     // does not print anything
     value = -1;
@@ -571,6 +585,26 @@ void QoreInterface::set_qp_solver_options_()
   double cvtol = 1e20;
   QPSetDbl(qore_solver_, QPSOLVER_DBL_CVTOL, &cvtol, 1);
 #endif
+  value = qp_solver_linear_solver_;
+  QPSetInt(qore_solver_, QPSOLVER_INT_LINEAR_SOLVER, &value, 1);
+
+  value = qore_umfpack_ordering_;
+  QPSetInt(qore_solver_, QPSOLVER_INT_UMFPACK_ORDERING, &value, 1);
+
+  value = qore_ma57_ordering_;
+  QPSetInt(qore_solver_, QPSOLVER_INT_MA57_ORDERING, &value, 1);
+
+  dvalue = qp_solver_basis_repair_tol_;
+  QPSetDbl(qore_solver_, QPSOLVER_DBL_REPAIR_TOL, &dvalue, 1);
+
+  dvalue = qore_linear_solver_pivot_tol_;
+  QPSetDbl(qore_solver_, QPSOLVER_DBL_PIVOT_TOL, &dvalue, 1);
+
+  dvalue = qore_linear_solver_drop_tol_;
+  QPSetDbl(qore_solver_, QPSOLVER_DBL_DROP_TOL, &dvalue, 1);
+
+  dvalue = qore_ma27_pivot_tol_;
+  QPSetDbl(qore_solver_, QPSOLVER_DBL_MA27_PIVOT_TOL, &dvalue, 1);
 }
 
 void QoreInterface::set_constraint_jacobian(
