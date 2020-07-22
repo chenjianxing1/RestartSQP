@@ -3,9 +3,10 @@ file(GLOB SOURCES *.cpp ${PROJECT_SRC_DIR}/src/*.cpp)
 
 message(STATUS "HEADERS in src ${HEADERS}")
 # add_library(restartsqp STATIC ${SOURCES} ${HEADERS})
-add_library(restartsqp SHARED ${SOURCES} ${HEADERS})
 
-#target_link_libraries(restartsqp)
+# to build shared library, have to mark SHARED and link libraries
+add_library(restartsqp SHARED ${SOURCES} ${HEADERS})
+target_link_libraries(restartsqp ${QORE_LIBRARIES} ${IPOPT_LIBRARIES})
 
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
