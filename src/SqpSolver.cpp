@@ -129,7 +129,7 @@ void SqpSolver::initialize_options_(const string& options_file_name,
         options_->ReadFromStream(*jnlst_, is, allow_clobber);
       }
     } catch (...) {
-      jnlst_->Printf(J_ERROR, J_MAIN, "Error readling options file.");
+      jnlst_->Printf(J_ERROR, J_MAIN, "Error reading options file.");
       assert(false && "Need to add proper exit for this");
     }
   }
@@ -1021,14 +1021,18 @@ void SqpSolver::initialize_iterates_()
                                        init_constraint_activities_);
 
     // Let's count the number of active bounce to make sure there are not too
-    // many
+    // many.  Also make sure that primal and dual variables are set accordingly.
     int num_active_lower_var = 0;
     int num_active_upper_var = 0;
     for (int i = 0; i < num_variables_; ++i) {
       if (init_bound_activities_[i] == ACTIVE_BELOW) {
         num_active_lower_var++;
+        current_iterate_->set_value(i, lower_variable_bounds_->get_value(i));
       } else if (init_bound_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_var++;
+        current_iterate_->set_value(i, upper_variable_bounds_->get_value(i));
+      } else {
+        current_bound_multipliers_->set_value(i, 0.);
       }
     }
     // Count the number of active inequality constraints
@@ -1044,6 +1048,8 @@ void SqpSolver::initialize_iterates_()
         num_active_lower_con++;
       } else if (init_constraint_activities_[i] == ACTIVE_ABOVE) {
         num_active_upper_con++;
+      } else {
+        current_constraint_multipliers_->set_value(i, 0.);
       }
     }
 
@@ -1135,7 +1141,8 @@ void SqpSolver::compute_initial_values_()
     watchdog_sleep_iterations_ = 0;
   }
 
-  // We need to make sure that complementarity holds for the multipliers
+#if 0
+  // TODO: Do we need to enforce complementarity when working set is not given?
   for (int i = 0; i < num_variables_; ++i) {
     if (current_iterate_->get_value(i) > lower_variable_bounds_->get_value(i)) {
       current_bound_multipliers_->set_value(
@@ -1158,7 +1165,9 @@ void SqpSolver::compute_initial_values_()
           i, max(0., current_constraint_multipliers_->get_value(i)));
     }
   }
+#endif
 }
+
 void SqpSolver::initialize_qp_solvers_()
 {
   // Determine the problem size
@@ -1968,7 +1977,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "starting_mode", "Specifies how much starting information is available.",
       "primal-dual", "primal", "only primal point is provided", "primal-dual",
       "primal and dual variables are provided.", "warm-start",
-      "primal-dual starting point and intial working set is provided.");
+      "primal-dual starting point and initial working set is provided.");
 
   reg_options->SetRegisteringCategory("Trust-region");
   reg_options->AddBoundedNumberOption(
@@ -2132,17 +2141,8 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
                                 "QP solver used for step computation.", "qore",
                                 "qpoases", "", "qore", "");
 
-  //    reg_options->AddStringOption("QPsolverChoice",
-  //		    "The choice of QP solver which will be used in the
-  // Algorithm",
-  //		    "qpOASES");
 
-  reg_options->SetRegisteringCategory("LPsolver");
-  //    reg_options->AddStringOption("LPsolverChoice",
-  //		    "The choice of LP solver which will be used in the
-  // Algorithm",
-  //		    "qpOASES");
-
+  // add QORE's special options
   reg_options->AddStringOption2(
       "qore_init_primal_variables",
       "Specifies whether QORE should initialize "
@@ -2150,6 +2150,7 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "penatly variables) to zero.",
       "no", "no", "reuse the internal solution from the most recent solve.",
       "yes", "initialize the values to zero.");
+
   reg_options->AddLowerBoundedNumberOption(
       "qore_hessian_regularization", "Regularization parameter for the QP", 0.,
       false, 0., "Number that is added to the diagonal of the QP Hessian");
@@ -2157,6 +2158,35 @@ void SqpSolver::register_options_(SmartPtr<RegisteredOptions> reg_options,
       "qore_dump_file", "Indicates whether QORE should write a dump file.",
       "no", "no", "Do not write dump file.", "yes",
       "Write dump files (for QP and LP separately).");
+
+  reg_options->AddStringOption4("qore_linear_solver",
+                                "Linear subsystem solver to use in QORE", "auto",
+                                "auto", "", "umfpack", "", "ma27", "", "ma57", "");
+  reg_options->AddStringOption6("qore_umfpack_ordering",
+                                "UMFPACK ordering strategy to use in QORE", "cholmod",
+                                "cholmod", "", "amd", "", "-", "forbidden", "metis", "", "best", "", "none", "");
+  reg_options->AddStringOption6("qore_ma57_ordering",
+                                "MA57 ordering strategy to use in QORE", "amd",
+                                "amd", "", "-", "forbidden", "amd-dense", "", "mindeg", "", "metis", "", "auto", "");
+  reg_options->AddBoundedNumberOption("qore_basis_repair_tol",
+                                      "QORE relative tolerance for cutting off near-zero pivots during basis repair",
+                                      0., true, 1.0e-4, true, 1.0e-14,
+                                      "If pivot < qore_basis_repair_tol * max_pivot, it is considered signular and will be repaired." );
+  reg_options->AddBoundedNumberOption("qore_linear_solver_pivot_tol",
+                                      "UMFPACK and MA57 threshold pivoting tolerance",
+                                      0., true, 1.0, true, 0.1,
+                                      "Please see the UMFPACK and MA57 user manuals.");
+  reg_options->AddBoundedNumberOption("qore_linear_solver_drop_tol",
+                                      "UMFPACK and MA57 near-zero element dtop tolerance",
+                                      0., true, 1.0, true, 2.22e-16,
+                                      "Please see the UMFPACK and MA57 user manuals.");
+  reg_options->AddBoundedNumberOption("qore_ma27_pivot_tol",
+                                      "MA27 threshold pivoting tolerance",
+                                      0., true, 0.5, true, 0.1,
+                                      "Please see the MA27 user manual.");
+
+  reg_options->SetRegisteringCategory("LPsolver");
+
 
   reg_options->AddIntegerOption("testOption_LP",
                                 "Level of Optimality test for LP", -99);

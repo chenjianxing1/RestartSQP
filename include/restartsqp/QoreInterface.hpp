@@ -137,12 +137,29 @@ private:
   // Flag indicating whether the primal variables should be initialized
   // to zero after the first iteration
   bool qore_init_primal_variables_;
+
   // Regularization factor for the QP Hessian
   double qore_hessian_regularization_;
   // Flag indicating whether QORE should write some dump files that store
   // all QORE call so that the calls can be reproduce separately
   // for debugging.
   bool qore_dump_file_;
+
+  // Linear solver choice for QORE
+  int qp_solver_linear_solver_;
+  // QORE ordering strategy for UMFPACK
+  int qore_umfpack_ordering_;
+  // QORE ordering strategy for MA57
+  int qore_ma57_ordering_;
+  // QORE basis repair tolerance for detecting near-zero pivots
+  double qp_solver_basis_repair_tol_;
+  // MA57/UMFPACK threshold pivoting tolerance in (0,1.0)
+  double qore_linear_solver_pivot_tol_;
+  // MA57/UMFPACK near-zero element drop tolerance
+  double qore_linear_solver_drop_tol_;
+  // MA27 threshold pivoting tolerance in (0,0.5)
+  double qore_ma27_pivot_tol_;
+
   //@}
 };
 } // namespace RestartSqp
